@@ -12,7 +12,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project
 
 # Copy source (for initial build; volume mount overrides in dev)
-COPY rpc_stream_prototype/ ./rpc_stream_prototype/
+COPY adk_agent_sim/ ./adk_agent_sim/
 
 # Install the project itself now that source is available
 RUN uv sync --frozen

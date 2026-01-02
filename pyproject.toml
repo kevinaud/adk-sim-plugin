@@ -1,7 +1,7 @@
 [project]
-name = "rpc-stream-prototype"
+name = "adk-agent-sim"
 version = "0.1.0"
-description = "Proto-type of shared session communication using gRPC streaming across two clients"
+description = "ADK Agent Simulator - Remote Brain Protocol"
 authors = [
     { name = "Kevin Aud" }
 ]
@@ -33,11 +33,10 @@ dev = [
 ]
 
 [project.scripts]
-rpc-server = "rpc_stream_prototype.backend.main:main"
-rpc-cli = "rpc_stream_prototype.cli.main:app"
+adk-sim-server = "adk_agent_sim.server.main:main"
 
 [tool.setuptools]
-packages = ["rpc_stream_prototype"]
+packages = ["adk_agent_sim"]
 
 [tool.uv]
 package = true
@@ -80,7 +79,7 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 # IGNORE generated files for all these new strict rules
-"rpc_stream_prototype/generated/**" = [
+"adk_agent_sim/generated/**" = [
     "E501",
     "UP",
     "TC",
@@ -94,7 +93,7 @@ select = [
     "RET",
     "DTZ",
 ]
-"rpc_stream_prototype/generated_check_tmp/**" = [
+"adk_agent_sim/generated_check_tmp/**" = [
     "E501",
     "UP",
     "TC",

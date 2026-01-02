@@ -20,7 +20,7 @@ build/
 *.egg-info/
 
 # Generated code (regenerated in container)
-rpc_stream_prototype/generated/
+adk_agent_sim/generated/
 
 # Logs
 logs/

@@ -1,5 +1,5 @@
 {
-  "name": "rpc-stream-prototype (Py3.14, uv)",
+  "name": "ADK Agent Sim",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."

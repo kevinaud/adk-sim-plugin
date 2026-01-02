@@ -6,7 +6,7 @@ services:
     ports:
       - "50051:50051"
     volumes:
-      - ./rpc_stream_prototype:/app/rpc_stream_prototype:cached
+      - ./adk_agent_sim:/app/adk_agent_sim:cached
       - ./logs:/app/logs
     environment:
       - PYTHONPATH=/app
@@ -15,8 +15,8 @@ services:
     command: >
       uv run watchfiles
       --filter python
-      "python -m rpc_stream_prototype.backend.main"
-      /app/rpc_stream_prototype
+      "python -m adk_agent_sim.server.main"
+      /app/adk_agent_sim
 
   frontend:
     build:
