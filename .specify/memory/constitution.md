@@ -2,21 +2,24 @@
 ================================================================================
 SYNC IMPACT REPORT
 ================================================================================
-Version change: 1.0.0 → 1.1.0 (new section added)
+Version change: 1.1.0 → 1.2.0 (new principles added)
 
 Modified sections:
-- (none)
+- IV. Classicist Unit Testing: Added CRITICAL prohibition on mocks without explicit user permission
 
 Added sections:
-- Frontend Architecture & Standards (6 rules for Angular development)
+- V. Small, Focused Pull Requests (100-200 LOC max, tests included, no unrelated changes)
+- VI. Git Town Branch Management (mandatory git-town for dependent branch chains)
+- VII. Sequential PR Planning (~50 PRs per feature, spec plans must be framed as PR sequences)
+- VIII. Presubmit Gate (./scripts/presubmit.sh must pass before any push to remote)
 
 Removed sections:
 - (none)
 
 Templates validation:
-- ✅ plan-template.md: Compatible (Constitution Check section present)
+- ✅ plan-template.md: Compatible (Constitution Check section present - recommend adding PR planning)
 - ✅ spec-template.md: Compatible (no direct constitution references)
-- ✅ tasks-template.md: Compatible (test organization aligns with Classicist approach)
+- ✅ tasks-template.md: Compatible (task organization supports incremental PR delivery)
 
 Follow-up TODOs: None
 ================================================================================
@@ -75,11 +78,91 @@ Unit tests MUST follow the "Classicist" (Detroit School) approach with the follo
    - Fakes MUST be implemented as shared, reusable components (e.g., `FakePaymentGateway` class)
    - Fakes MUST be located in `tests/fixtures/` and used consistently across the test suite
    - Ad-hoc or inline fakes for individual tests are PROHIBITED
-3. **Mocks/Stubs (Last Resort)**: Use ONLY for non-deterministic behavior or error states that cannot be reproduced with Fakes
+3. **Mocks/Stubs (ABSOLUTELY LAST RESORT)**: Use ONLY for non-deterministic behavior or error states that cannot be reproduced with Fakes
+
+**⚠️ CRITICAL: MOCKING REQUIRES EXPLICIT PERMISSION**
+
+Mocking ANY dependency in a unit test is PROHIBITED without explicit, documented permission from the user/project owner. Before introducing ANY mock:
+
+1. The agent MUST ask the user for explicit permission
+2. The user MUST approve the specific mock in writing
+3. The rationale for why a real implementation or fake is insufficient MUST be documented
+
+Violations of this rule are considered severe and will require immediate remediation.
 
 **Verification Style**: Tests MUST use State-Based Verification (checking return values or state changes) rather than Interaction-Based Verification (checking which methods were called).
 
-**Rationale**: Classicist testing produces more resilient tests that verify behavior rather than implementation details.
+**Rationale**: Classicist testing produces more resilient tests that verify behavior rather than implementation details. Mocks couple tests to implementation and make refactoring painful.
+
+### V. Small, Focused Pull Requests
+
+All code contributions MUST be submitted as small, focused pull requests.
+
+- **Maximum Size**: 100-200 lines of changed code per pull request (HARD LIMIT)
+- **Minimum Size**: No minimum—a 1-line PR is acceptable if it makes logical sense
+- **Focus**: Each PR MUST address a single, cohesive concern
+  - PRs containing unrelated changes are PROHIBITED
+  - A PR that "also fixes" or "also adds" unrelated functionality MUST be split
+- **Tests Included**: Implementation and corresponding tests MUST be submitted in the same PR
+  - Submitting implementation without tests (or tests without implementation) is PROHIBITED
+- **Incremental Building**: Large classes or features MUST be built incrementally across multiple PRs
+  - Each PR adds a coherent slice of functionality
+  - The codebase MUST remain functional after each PR merge
+
+**Rationale**: Small PRs enable faster reviews, easier rollbacks, cleaner git history, and reduce merge conflicts. They enforce disciplined, incremental development.
+
+### VI. Git Town Branch Management
+
+All git branches MUST be managed using `git-town`.
+
+- Creating branches with raw `git checkout -b` or `git branch` is PROHIBITED for feature work
+- Use `git town hack <branch>` to create new feature branches
+- Use `git town append <branch>` to create dependent/stacked branches off the current branch
+- Use `git town sync` to synchronize branch chains with upstream changes
+- Use `git town ship` to merge completed branches
+
+**Dependent Branch Chains**: Features MUST be developed as chains of dependent PRs:
+
+- PR #2 branches off PR #1 (not main)
+- PR #3 branches off PR #2
+- When PR #1 merges, git-town automatically re-parents PR #2 onto main
+
+**Rationale**: Git-town enables stacked PRs that can be reviewed independently while maintaining proper dependency chains. This is essential for the small-PR workflow.
+
+### VII. Sequential PR Planning
+
+Every feature specification plan MUST be framed as a sequence of pull requests.
+
+- Plans MUST enumerate the specific PRs required to implement the feature
+- A typical feature should result in approximately **50 PRs** (adjust based on complexity)
+- Each PR in the plan MUST have:
+  - A clear, single-purpose description
+  - An estimated line count (target: 100-200 lines)
+  - Dependencies on previous PRs in the chain
+- The PR sequence MUST be executable in order—each PR builds on the previous
+
+**Planning Example**:
+```
+PR 1: Add empty UserService class with constructor (50 lines)
+PR 2: Add UserService.create() method stub (80 lines)
+PR 3: Implement UserService.create() validation logic (120 lines)
+PR 4: Add UserService.create() persistence (100 lines)
+PR 5: Add unit tests for UserService.create() (150 lines)
+...
+```
+
+**Rationale**: Pre-planning the PR sequence ensures disciplined incremental delivery and prevents scope creep.
+
+### VIII. Presubmit Gate
+
+Code MUST NOT be pushed to any remote branch until `./scripts/presubmit.sh` passes.
+
+- Running `git push` is PROHIBITED if presubmit checks are failing
+- The presubmit script includes all quality gates: linting, type checking, tests
+- Agents MUST run `./scripts/presubmit.sh` and verify success before any `git push` command
+- Pushing code that fails presubmit—even to a feature branch—is a violation
+
+**Rationale**: Ensures all remote branches maintain quality standards and CI remains green.
 
 ## Development Tooling
 
@@ -209,10 +292,12 @@ async consumeStream(stream: AsyncIterable<Event>) {
 
 Before any code is considered complete:
 
-1. `./scripts/check_quality.sh` MUST pass with zero errors
-2. All new functionality MUST have corresponding unit tests
-3. Tests MUST follow the Classicist hierarchy (real → fake → mock)
-4. Shared fakes MUST be placed in `tests/fixtures/`
+1. `./scripts/presubmit.sh` MUST pass with zero errors (required before any push)
+2. `./scripts/check_quality.sh` MUST pass with zero errors
+3. All new functionality MUST have corresponding unit tests (submitted in same PR)
+4. Tests MUST follow the Classicist hierarchy (real → fake → mock WITH EXPLICIT PERMISSION ONLY)
+5. Shared fakes MUST be placed in `tests/fixtures/`
+6. PRs MUST be ≤200 lines and single-purpose
 
 ## Governance
 
@@ -222,4 +307,4 @@ This constitution supersedes all other development practices for this repository
 - Amendments require updating this document with version increment
 - Version follows semantic versioning: MAJOR (principle changes), MINOR (new sections), PATCH (clarifications)
 
-**Version**: 1.1.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2025-12-30
+**Version**: 1.2.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2026-01-02
