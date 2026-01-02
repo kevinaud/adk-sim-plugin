@@ -49,6 +49,10 @@ Load only the minimal necessary context from each artifact:
 
 - Architecture/stack choices
 - Data Model references
+- **PR Sequence** (PR count, line estimates, dependencies)
+- Phases
+- Technical constraints
+- Data Model references
 - Phases
 - Technical constraints
 
@@ -56,9 +60,10 @@ Load only the minimal necessary context from each artifact:
 
 - Task IDs
 - Descriptions
-- Phase grouping
+- **PR groupings** (PR labels on each task)
 - Parallel markers [P]
 - Referenced file paths
+- **Line count estimates per PR**
 
 **From constitution:**
 
@@ -71,6 +76,7 @@ Create internal representations (do not include raw artifacts in output):
 - **Requirements inventory**: Each functional + non-functional requirement with a stable key (derive slug based on imperative phrase; e.g., "User can upload file" → `user-can-upload-file`)
 - **User story/action inventory**: Discrete user actions with acceptance criteria
 - **Task coverage mapping**: Map each task to one or more requirements or stories (inference by keyword / explicit reference patterns like IDs or key phrases)
+- **PR mapping**: Map tasks to PRs; validate line estimates
 - **Constitution rule set**: Extract principle names and MUST/SHOULD normative statements
 
 ### 4. Detection Passes (Token-Efficient Analysis)
@@ -97,12 +103,17 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 
 - Any requirement or plan element conflicting with a MUST principle
 - Missing mandated sections or quality gates from constitution
+- **PR Size Violations**: Any PR estimated >200 LOC
+- **Missing PR Labels**: Tasks without [PR#] label
+- **Tests Separate from Implementation**: Test tasks in different PR than their implementation
+- **Mock Usage**: Any test task that might require mocking (flag for user review)
 
 #### E. Coverage Gaps
 
 - Requirements with zero associated tasks
 - Tasks with no mapped requirement/story
 - Non-functional requirements not reflected in tasks (e.g., performance, security)
+- **PRs without tests**: Any PR with implementation but no test tasks
 
 #### F. Inconsistency
 
@@ -110,14 +121,16 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 - Data entities referenced in plan but absent in spec (or vice versa)
 - Task ordering contradictions (e.g., integration tasks before foundational setup tasks without dependency note)
 - Conflicting requirements (e.g., one requires Next.js while other specifies Vue)
+- **PR sequence mismatch**: Tasks reference PRs not in plan.md sequence
+- **Dependency violations**: PR depends on later PR
 
 ### 5. Severity Assignment
 
 Use this heuristic to prioritize findings:
 
-- **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
-- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
+- **CRITICAL**: Violates constitution MUST (including PR size >200 LOC, mocks without permission), missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
+- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, tests separate from implementation
+- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case, missing PR labels
 - **LOW**: Style/wording improvements, minor redundancy not affecting execution order
 
 ### 6. Produce Compact Analysis Report

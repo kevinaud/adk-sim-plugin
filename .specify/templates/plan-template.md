@@ -31,7 +31,33 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Required Gates** (from `.specify/memory/constitution.md`):
+
+- [ ] **Small PRs**: Feature decomposed into PRs of 100-200 LOC max
+- [ ] **Git Town**: All branches will be managed via `git-town` commands
+- [ ] **Presubmit**: `./scripts/presubmit.sh` must pass before any push
+- [ ] **No Mocks**: Unit tests use real implementations or fakes; mocks require explicit user permission
+- [ ] **Tests Included**: Each PR includes implementation AND corresponding tests
+
+## Pull Request Sequence
+
+*REQUIRED: Every plan MUST enumerate the specific PRs needed to implement this feature.*
+
+**Target PR Count**: ~50 PRs (adjust based on feature complexity)
+
+| PR # | Branch Name | Description | Est. Lines | Depends On |
+|------|-------------|-------------|------------|------------|
+| 1 | `feature/001-initial-scaffold` | Project structure and empty classes | ~50 | - |
+| 2 | `feature/002-core-types` | Core data types and interfaces | ~100 | PR 1 |
+| 3 | `feature/003-validation-logic` | Input validation implementation | ~150 | PR 2 |
+| ... | ... | ... | ... | ... |
+
+**PR Planning Rules**:
+- Each PR MUST be 100-200 lines max (HARD LIMIT)
+- Each PR MUST include tests for the code it introduces
+- PRs MUST be single-purpose (no unrelated changes)
+- Use `git town append` to create dependent branches
+- Large classes are built incrementally across multiple PRs
 
 ## Project Structure
 
