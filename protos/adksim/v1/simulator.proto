@@ -14,7 +14,7 @@ service SimulatorService {
   // Subscribe opens a bidirectional event stream for a session.
   // Server MUST replay all historical events before streaming live ones.
   // Used by both Plugin and UI to receive real-time updates.
-  rpc Subscribe(SubscribeRequest) returns (stream SessionEvent);
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
 
   // SubmitRequest publishes an intercepted LLM request to the session.
   // Called by the Plugin when an agent triggers a model call.
@@ -60,6 +60,12 @@ message SubscribeRequest {
   string session_id = 1;
   // Client identifier for debug/logging purposes (UUID).
   string client_id = 2;
+}
+
+// SubscribeResponse wraps a SessionEvent in the subscription stream.
+message SubscribeResponse {
+  // The event being streamed.
+  SessionEvent event = 1;
 }
 
 // SessionEvent is the core envelope for all events in a session.
@@ -116,6 +122,7 @@ message Content {
 
 // Part represents a piece of content (text, function call, etc.).
 message Part {
+  // The data contained in this part - exactly one of these fields will be set.
   oneof data {
     // Text content.
     string text = 1;
