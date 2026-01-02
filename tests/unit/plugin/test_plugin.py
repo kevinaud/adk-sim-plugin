@@ -47,7 +47,7 @@ class TestSimulatorPlugin:
 
   @pytest.mark.asyncio
   async def test_before_model_callback_not_implemented(self) -> None:
-    """Test that before_model_callback raises NotImplementedError for intercepted agents."""
+    """Test that before_model_callback raises NotImplementedError."""
     plugin = SimulatorPlugin()
     with pytest.raises(NotImplementedError):
       await plugin.before_model_callback({}, "test_agent")

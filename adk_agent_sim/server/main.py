@@ -17,11 +17,12 @@ async def serve() -> None:
   # Configure logging first
   configure_logging()
 
-  # Create the service
-  simulator_service = SimulatorService()
+  # Create the service (will be used once protos are wired up)
+  _simulator_service = SimulatorService()
 
   # TODO: SimulatorService needs to inherit from the generated base class
   # For now, we'll use an empty services list until protos are wired up
+  # Once ready: services = [_simulator_service]
   services: list = []
 
   # Enable Reflection for debugging tools like grpcurl

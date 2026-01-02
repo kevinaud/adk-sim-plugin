@@ -16,14 +16,10 @@ Usage:
     agent.register_plugin(plugin)
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import os
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-  from collections.abc import Set
+from typing import Any
 
 
 class SimulatorPlugin:
@@ -48,7 +44,7 @@ class SimulatorPlugin:
   def __init__(
     self,
     server_url: str | None = None,
-    target_agents: Set[str] | None = None,
+    target_agents: set[str] | None = None,
   ) -> None:
     """Initialize the SimulatorPlugin.
 
@@ -65,15 +61,17 @@ class SimulatorPlugin:
     if target_agents is None:
       targets_env = os.environ.get("ADK_SIM_TARGETS", "")
       if targets_env:
-        self.target_agents = {name.strip() for name in targets_env.split(",") if name.strip()}
+        self.target_agents: set[str] = {
+          name.strip() for name in targets_env.split(",") if name.strip()
+        }
       else:
         self.target_agents = set()
     else:
       self.target_agents = target_agents
 
     self.session_id: str | None = None
-    self._pending_futures: dict[str, asyncio.Future] = {}
-    self._listen_task: asyncio.Task | None = None
+    self._pending_futures: dict[str, asyncio.Future[Any]] = {}
+    self._listen_task: asyncio.Task[None] | None = None
 
   def should_intercept(self, agent_name: str) -> bool:
     """Check if a given agent should be intercepted.
@@ -153,8 +151,6 @@ class SimulatorPlugin:
     """Clean up resources and close connections."""
     if self._listen_task:
       self._listen_task.cancel()
-      try:
+      with contextlib.suppress(asyncio.CancelledError):
         await self._listen_task
-      except asyncio.CancelledError:
-        pass
     # TODO: Close gRPC channel
