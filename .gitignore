@@ -1,0 +1,53 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+.env.secrets
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+.DS_Store
+
+# Node.js
+node_modules/
+*.log
+npm-debug.log*
+yarn-error.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/
+
+# Generated code (regenerated from protos via `make generate`)
+rpc_stream_prototype/generated/
+frontend/src/app/generated/
+.proto-generated
+
+# Logs (keep directory structure via logs/.gitkeep)
+logs/*.log
+
+# Angular / Frontend
+.angular/cache
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+__screenshots__/
+out-tsc/
+bazel-out/
+frontend/dist/
+frontend/.angular/

@@ -1,0 +1,51 @@
+# Docker ignore for dev container builds
+# Speeds up build context transfer by excluding unnecessary files
+
+# Git
+.git/
+
+# Node.js (will be installed in container)
+node_modules/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Generated code (regenerated in container)
+rpc_stream_prototype/generated/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files (secrets)
+.env
+.env.secrets
+.env.local
+
+# Test artifacts
+coverage/
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Angular build artifacts
+frontend/dist/
+frontend/.angular/
