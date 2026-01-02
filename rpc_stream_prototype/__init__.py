@@ -1,1 +1,0 @@
-"""rpc-stream-prototype package."""

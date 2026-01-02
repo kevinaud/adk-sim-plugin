@@ -1,5 +1,5 @@
 # ============================================================
-# RPC Stream Prototype - Developer Makefile
+# ADK Agent Simulator - Developer Makefile
 # ============================================================
 # This Makefile is the entry point for all common developer workflows.
 # It ensures proto generation is always run before dependent tasks.
@@ -13,13 +13,13 @@
 #   make quality     - Run all quality checks
 # ============================================================
 
-.PHONY: help generate clean server frontend test test-unit test-integration quality lint format all dev cli docker-up docker-up-d docker-down docker-rebuild
+.PHONY: help generate clean server frontend test test-unit test-integration quality lint format all dev docker-up docker-up-d docker-down docker-rebuild
 
 # Default target
 .DEFAULT_GOAL := help
 
 # Directories
-PYTHON_GEN_DIR := rpc_stream_prototype/generated
+PYTHON_GEN_DIR := adk_agent_sim/generated
 TS_GEN_DIR := frontend/src/app/generated
 
 # Marker file to track when protos were last generated
@@ -33,7 +33,7 @@ PROTO_FILES := $(shell find protos -name '*.proto' 2>/dev/null)
 # Help
 # ============================================================
 help:
-	@echo "RPC Stream Prototype - Developer Commands"
+	@echo "ADK Agent Simulator - Developer Commands"
 	@echo ""
 	@echo "Proto Generation:"
 	@echo "  make generate     - Generate proto code (Python + TypeScript)"
@@ -59,9 +59,6 @@ help:
 	@echo "  make quality      - Run all quality checks (lint, format, types)"
 	@echo "  make lint         - Run linters only"
 	@echo "  make format       - Auto-format all code"
-	@echo ""
-	@echo "CLI:"
-	@echo "  make cli          - Run the proposer CLI"
 
 # ============================================================
 # Proto Generation
@@ -71,7 +68,7 @@ help:
 $(PROTO_MARKER): $(PROTO_FILES) buf.yaml buf.gen.yaml
 	@echo "🔧 Generating code from proto files..."
 	@rm -rf "$(PYTHON_GEN_DIR)" "$(TS_GEN_DIR)"
-	@buf generate
+	@PATH="$(PWD)/.venv/bin:$$PATH" buf generate
 	@touch "$(PYTHON_GEN_DIR)/__init__.py"
 	@echo "🎨 Formatting Python generated code..."
 	@uv run ruff check --fix "$(PYTHON_GEN_DIR)" 2>/dev/null || true
@@ -98,8 +95,8 @@ clean:
 # ============================================================
 
 server: generate
-	@echo "🚀 Starting backend gRPC server..."
-	uv run python -m rpc_stream_prototype.backend.main
+	@echo "🚀 Starting ADK Agent Simulator server..."
+	uv run python -m adk_agent_sim.server.main
 
 frontend: generate
 	@echo "🚀 Starting frontend Angular dev server..."
@@ -136,14 +133,6 @@ docker-rebuild:
 	docker compose down -v
 	docker compose build --no-cache
 	@echo "✅ Docker rebuild complete! Run 'make docker-up' to start."
-
-# ============================================================
-# CLI
-# ============================================================
-
-cli: generate
-	@echo "🖥️  Starting Proposer CLI..."
-	uv run python -m rpc_stream_prototype.cli.main
 
 # ============================================================
 # Testing
