@@ -80,3 +80,47 @@ class EventRepository:
     await self._database.execute(query, values)
 
     return event
+
+  async def get_by_session(self, session_id: str) -> list[SessionEvent]:
+    """Get all events for a session ordered by timestamp.
+
+    Args:
+        session_id: The session ID to filter by.
+
+    Returns:
+        List of SessionEvents ordered by timestamp ASC (oldest first).
+    """
+    from adk_agent_sim.generated.adksim.v1 import SessionEvent
+
+    query = f"""
+      SELECT {events.c.proto_blob.name}
+      FROM {events.name}
+      WHERE {events.c.session_id.name} = :session_id
+      ORDER BY {events.c.timestamp.name} ASC
+    """
+
+    rows = await self._database.fetch_all(query, {"session_id": session_id})
+
+    return [SessionEvent().parse(row["proto_blob"]) for row in rows]
+
+  async def get_by_turn_id(self, turn_id: str) -> list[SessionEvent]:
+    """Get all events for a turn (usually request/response pair).
+
+    Args:
+        turn_id: The turn ID to filter by.
+
+    Returns:
+        List of SessionEvents ordered by timestamp ASC.
+    """
+    from adk_agent_sim.generated.adksim.v1 import SessionEvent
+
+    query = f"""
+      SELECT {events.c.proto_blob.name}
+      FROM {events.name}
+      WHERE {events.c.turn_id.name} = :turn_id
+      ORDER BY {events.c.timestamp.name} ASC
+    """
+
+    rows = await self._database.fetch_all(query, {"turn_id": turn_id})
+
+    return [SessionEvent().parse(row["proto_blob"]) for row in rows]

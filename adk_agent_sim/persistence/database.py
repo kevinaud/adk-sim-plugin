@@ -63,16 +63,19 @@ class Database:
 
     engine.dispose()
 
-  async def fetch_all(self, query: str) -> list[dict[str, Any]]:
+  async def fetch_all(
+    self, query: str, values: dict[str, Any] | None = None
+  ) -> list[dict[str, Any]]:
     """Execute a query and fetch all results.
 
     Args:
         query: SQL query string.
+        values: Optional dictionary of parameter values.
 
     Returns:
         List of row dictionaries.
     """
-    rows = await self._client.fetch_all(query)  # pyright: ignore[reportUnknownMemberType]
+    rows = await self._client.fetch_all(query, values)  # pyright: ignore[reportUnknownMemberType]
     return [dict(row._mapping) for row in rows]  # pyright: ignore[reportUnknownMemberType]
 
   async def execute(self, query: str, values: dict[str, Any] | None = None) -> None:

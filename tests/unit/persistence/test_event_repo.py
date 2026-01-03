@@ -149,3 +149,171 @@ class TestEventRepositoryInsert:
     assert restored.llm_request.model == "gemini-1.5-flash"
 
     await db.disconnect()
+
+
+class TestEventRepositoryGetBySession:
+  """Tests for EventRepository.get_by_session()."""
+
+  @pytest.mark.asyncio
+  async def test_get_by_session_returns_events_in_timestamp_order(self) -> None:
+    """Events are returned ordered by timestamp (oldest first)."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+
+    repo = EventRepository(db)
+    session_id = f"sess-{uuid4()}"
+
+    # Insert events out of timestamp order
+    event2 = SessionEvent(
+      event_id=f"evt-2-{uuid4()}",
+      session_id=session_id,
+      timestamp=datetime(2026, 1, 3, 12, 0, 2, tzinfo=UTC),
+      turn_id="turn-002",
+      agent_name="agent",
+      llm_request=GenerateContentRequest(model="gemini-pro"),
+    )
+    event1 = SessionEvent(
+      event_id=f"evt-1-{uuid4()}",
+      session_id=session_id,
+      timestamp=datetime(2026, 1, 3, 12, 0, 0, tzinfo=UTC),
+      turn_id="turn-001",
+      agent_name="agent",
+      llm_request=GenerateContentRequest(model="gemini-pro"),
+    )
+    event3 = SessionEvent(
+      event_id=f"evt-3-{uuid4()}",
+      session_id=session_id,
+      timestamp=datetime(2026, 1, 3, 12, 0, 1, tzinfo=UTC),
+      turn_id="turn-001",
+      agent_name="agent",
+      llm_response=GenerateContentResponse(),
+    )
+
+    await repo.insert(event2)
+    await repo.insert(event1)
+    await repo.insert(event3)
+
+    result = await repo.get_by_session(session_id)
+
+    assert len(result) == 3
+    # Ordered by timestamp: event1 (12:00:00), event3 (12:00:01), event2 (12:00:02)
+    assert result[0].event_id == event1.event_id
+    assert result[1].event_id == event3.event_id
+    assert result[2].event_id == event2.event_id
+
+    await db.disconnect()
+
+  @pytest.mark.asyncio
+  async def test_get_by_session_returns_empty_for_nonexistent(self) -> None:
+    """Returns empty list for non-existent session."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+
+    repo = EventRepository(db)
+
+    result = await repo.get_by_session("nonexistent-session-id")
+
+    assert result == []
+
+    await db.disconnect()
+
+  @pytest.mark.asyncio
+  async def test_get_by_session_filters_by_session_id(self) -> None:
+    """Only returns events for the specified session."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+
+    repo = EventRepository(db)
+    session_a = f"sess-a-{uuid4()}"
+    session_b = f"sess-b-{uuid4()}"
+
+    event_a = SessionEvent(
+      event_id=f"evt-a-{uuid4()}",
+      session_id=session_a,
+      timestamp=datetime(2026, 1, 3, 12, 0, 0, tzinfo=UTC),
+      turn_id="turn-001",
+      agent_name="agent",
+      llm_request=GenerateContentRequest(model="gemini-pro"),
+    )
+    event_b = SessionEvent(
+      event_id=f"evt-b-{uuid4()}",
+      session_id=session_b,
+      timestamp=datetime(2026, 1, 3, 12, 0, 0, tzinfo=UTC),
+      turn_id="turn-001",
+      agent_name="agent",
+      llm_request=GenerateContentRequest(model="gemini-pro"),
+    )
+
+    await repo.insert(event_a)
+    await repo.insert(event_b)
+
+    result = await repo.get_by_session(session_a)
+
+    assert len(result) == 1
+    assert result[0].event_id == event_a.event_id
+
+    await db.disconnect()
+
+
+class TestEventRepositoryGetByTurnId:
+  """Tests for EventRepository.get_by_turn_id()."""
+
+  @pytest.mark.asyncio
+  async def test_get_by_turn_id_returns_request_response_pair(self) -> None:
+    """Returns request and response events for a turn."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+
+    repo = EventRepository(db)
+    session_id = f"sess-{uuid4()}"
+    turn_id = f"turn-{uuid4()}"
+
+    # Insert request and response for same turn
+    request_event = SessionEvent(
+      event_id=f"evt-req-{uuid4()}",
+      session_id=session_id,
+      timestamp=datetime(2026, 1, 3, 12, 0, 0, tzinfo=UTC),
+      turn_id=turn_id,
+      agent_name="agent",
+      llm_request=GenerateContentRequest(model="gemini-pro"),
+    )
+    response_event = SessionEvent(
+      event_id=f"evt-resp-{uuid4()}",
+      session_id=session_id,
+      timestamp=datetime(2026, 1, 3, 12, 0, 1, tzinfo=UTC),
+      turn_id=turn_id,
+      agent_name="agent",
+      llm_response=GenerateContentResponse(),
+    )
+
+    await repo.insert(request_event)
+    await repo.insert(response_event)
+
+    result = await repo.get_by_turn_id(turn_id)
+
+    assert len(result) == 2
+    # Should be ordered by timestamp: request first, then response
+    assert result[0].event_id == request_event.event_id
+    assert result[0].llm_request.model == "gemini-pro"
+    assert result[1].event_id == response_event.event_id
+
+    await db.disconnect()
+
+  @pytest.mark.asyncio
+  async def test_get_by_turn_id_returns_empty_for_nonexistent(self) -> None:
+    """Returns empty list for non-existent turn_id."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+
+    repo = EventRepository(db)
+
+    result = await repo.get_by_turn_id("nonexistent-turn-id")
+
+    assert result == []
+
+    await db.disconnect()
