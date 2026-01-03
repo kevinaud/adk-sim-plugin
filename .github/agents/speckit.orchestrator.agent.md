@@ -158,16 +158,22 @@ Repeat the following for each PR (1 to N):
    "
    ```
 
-2. **Monitor CI status**:
+2. **Monitor CI status** (non-blocking):
    ```bash
-   gh run watch
+   # Get the latest run ID for this branch
+   gh run list --branch $(git branch --show-current) --limit 1 --json databaseId,status,conclusion
+   
+   # Poll status (DO NOT use `gh run watch` - it's interactive and blocks)
+   # Check status periodically with:
+   gh run view <run-id> --json status,conclusion
    ```
-   - Wait for CI workflow to complete
+   - Poll every 30 seconds until status is "completed"
+   - **NEVER use `gh run watch`** - it is interactive and will cause the agent to hang
 
 3. **Handle CI Failure** (if applicable):
    - Retrieve failure logs:
      ```bash
-     gh run view --log-failed
+     gh run view <run-id> --log-failed
      ```
    - Extract relevant error messages
    - Re-invoke `speckit.implement` with error context:
