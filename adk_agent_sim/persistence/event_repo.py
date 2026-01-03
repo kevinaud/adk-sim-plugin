@@ -1,0 +1,82 @@
+"""Event repository for persisting SessionEvent protos.
+
+Uses the Promoted Field pattern: full proto stored as BLOB with
+queryable fields (event_id, session_id, timestamp, turn_id, payload_type)
+promoted to dedicated columns.
+"""
+
+from typing import TYPE_CHECKING
+
+import betterproto
+
+from adk_agent_sim.persistence.schema import events
+
+if TYPE_CHECKING:
+  from adk_agent_sim.generated.adksim.v1 import SessionEvent
+  from adk_agent_sim.persistence.database import Database
+
+
+class EventRepository:
+  """Repository for SessionEvent persistence operations."""
+
+  def __init__(self, database: Database) -> None:
+    """Initialize the repository with a database connection.
+
+    Args:
+        database: The database connection manager.
+    """
+    self._database = database
+
+  async def insert(self, event: SessionEvent) -> SessionEvent:
+    """Insert a SessionEvent into the database.
+
+    Extracts promoted fields from the event and stores the full
+    proto as a BLOB for future retrieval.
+
+    Args:
+        event: The SessionEvent to insert.
+
+    Returns:
+        The inserted SessionEvent (unchanged).
+    """
+    # Determine payload type from oneof field using betterproto helper
+    field_name, _ = betterproto.which_one_of(event, "payload")
+    payload_type = field_name if field_name else "unknown"
+
+    # Convert timestamp to Unix milliseconds
+    timestamp_ms = int(event.timestamp.timestamp() * 1000)
+
+    # Serialize the full proto to bytes
+    proto_blob = bytes(event)
+
+    # Build insert query using schema column names
+    query = f"""
+      INSERT INTO {events.name} (
+        {events.c.event_id.name},
+        {events.c.session_id.name},
+        {events.c.timestamp.name},
+        {events.c.turn_id.name},
+        {events.c.payload_type.name},
+        {events.c.proto_blob.name}
+      ) VALUES (
+        :event_id,
+        :session_id,
+        :timestamp,
+        :turn_id,
+        :payload_type,
+        :proto_blob
+      )
+    """
+
+    values = {
+      "event_id": event.event_id,
+      "session_id": event.session_id,
+      "timestamp": timestamp_ms,
+      "turn_id": event.turn_id,
+      "payload_type": payload_type,
+      "proto_blob": proto_blob,
+    }
+
+    await self._database.execute(query, values)
+
+    return event

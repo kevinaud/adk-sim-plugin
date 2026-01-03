@@ -74,3 +74,12 @@ class Database:
     """
     rows = await self._client.fetch_all(query)  # pyright: ignore[reportUnknownMemberType]
     return [dict(row._mapping) for row in rows]  # pyright: ignore[reportUnknownMemberType]
+
+  async def execute(self, query: str, values: dict[str, Any] | None = None) -> None:
+    """Execute a query without returning results.
+
+    Args:
+        query: SQL query string.
+        values: Optional dictionary of parameter values.
+    """
+    await self._client.execute(query, values)  # pyright: ignore[reportUnknownMemberType]

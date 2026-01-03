@@ -6,6 +6,7 @@ pattern.
 """
 
 from adk_agent_sim.persistence.database import Database
+from adk_agent_sim.persistence.event_repo import EventRepository
 from adk_agent_sim.persistence.schema import events, metadata, sessions
 
-__all__ = ["Database", "events", "metadata", "sessions"]
+__all__ = ["Database", "EventRepository", "events", "metadata", "sessions"]
