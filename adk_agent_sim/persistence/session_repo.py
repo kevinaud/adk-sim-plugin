@@ -5,13 +5,28 @@ queryable fields extracted into SQL columns for efficient filtering.
 """
 
 import base64
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select
+
+from adk_agent_sim.generated.adksim.v1 import SessionStatus
 from adk_agent_sim.persistence.schema import sessions
 
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorSession
   from adk_agent_sim.persistence.database import Database
+
+
+@dataclass
+class PaginatedSessions:
+  """Result of a paginated session query."""
+
+  sessions: list[SimulatorSession]
+  """List of sessions for the current page."""
+
+  next_page_token: str | None
+  """Token to fetch the next page, or None if this is the last page."""
 
 
 class SessionRepository:
@@ -30,7 +45,9 @@ class SessionRepository:
     self._database = database
 
   async def create(
-    self, session: SimulatorSession, status: str = "active"
+    self,
+    session: SimulatorSession,
+    status: SessionStatus = SessionStatus.ACTIVE,
   ) -> SimulatorSession:
     """Create a new session in the database.
 
@@ -39,7 +56,7 @@ class SessionRepository:
 
     Args:
         session: The SimulatorSession proto to persist.
-        status: Session status (default: "active").
+        status: Session status (default: ACTIVE).
 
     Returns:
         The same session object that was stored.
@@ -55,7 +72,7 @@ class SessionRepository:
     query = sessions.insert().values(
       id=session_id,
       created_at=created_at,
-      status=status,
+      status=status.name,
       proto_blob=proto_blob,
     )
     await self._database.execute(query)
@@ -71,9 +88,7 @@ class SessionRepository:
     Returns:
         The deserialized SimulatorSession if found, None otherwise.
     """
-    # Import here to avoid circular imports at module level
-    from sqlalchemy import select
-
+    # Import here to deserialize proto
     from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
     # Build select query using SQLAlchemy Core
@@ -84,11 +99,11 @@ class SessionRepository:
       return None
 
     # Deserialize proto blob back to SimulatorSession
-    return SimulatorSession.FromString(row["proto_blob"])
+    return SimulatorSession().parse(row["proto_blob"])
 
   async def list_all(
     self, page_size: int = 10, page_token: str | None = None
-  ) -> tuple[list[SimulatorSession], str | None]:
+  ) -> PaginatedSessions:
     """List sessions with cursor-based pagination.
 
     Args:
@@ -96,11 +111,9 @@ class SessionRepository:
         page_token: Base64-encoded timestamp cursor for pagination.
 
     Returns:
-        Tuple of (list of sessions, next_page_token or None).
+        PaginatedSessions containing the sessions and optional next page token.
     """
-
-    from sqlalchemy import select
-
+    # Import here to deserialize proto
     from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
     # Build query using SQLAlchemy Core
@@ -121,7 +134,7 @@ class SessionRepository:
     has_more = len(rows) > page_size
     rows = rows[:page_size]
 
-    session_list = [SimulatorSession.FromString(row["proto_blob"]) for row in rows]
+    session_list = [SimulatorSession().parse(row["proto_blob"]) for row in rows]
 
     # Generate next_page_token if more results exist
     next_token = None
@@ -129,9 +142,9 @@ class SessionRepository:
       last_ts = rows[-1]["created_at"]
       next_token = base64.b64encode(str(last_ts).encode("utf-8")).decode("utf-8")
 
-    return session_list, next_token
+    return PaginatedSessions(sessions=session_list, next_page_token=next_token)
 
-  async def update_status(self, session_id: str, status: str) -> bool:
+  async def update_status(self, session_id: str, status: SessionStatus) -> bool:
     """Update the status of a session.
 
     Args:
@@ -142,6 +155,8 @@ class SessionRepository:
         True if the session was updated, False if not found.
     """
     # Build update query using SQLAlchemy Core
-    query = sessions.update().where(sessions.c.id == session_id).values(status=status)
+    query = (
+      sessions.update().where(sessions.c.id == session_id).values(status=status.name)
+    )
     result = await self._database.execute(query)
     return result > 0

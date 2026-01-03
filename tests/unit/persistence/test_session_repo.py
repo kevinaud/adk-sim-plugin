@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import pytest
 from sqlalchemy import select
 
-from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+from adk_agent_sim.generated.adksim.v1 import SessionStatus, SimulatorSession
 from adk_agent_sim.persistence import SessionRepository
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.schema import sessions as sessions_table
@@ -62,7 +62,7 @@ class TestSessionRepositoryCreate:
       description="Testing promoted fields",
     )
 
-    await repo.create(session, status="pending")
+    await repo.create(session, status=SessionStatus.COMPLETED)
 
     query = select(
       sessions_table.c.id,
@@ -75,7 +75,7 @@ class TestSessionRepositoryCreate:
     row = rows[0]
     assert row["id"] == session_id
     assert row["created_at"] == int(created_time.timestamp())
-    assert row["status"] == "pending"
+    assert row["status"] == "COMPLETED"
 
     await db.disconnect()
 
@@ -129,7 +129,7 @@ class TestSessionRepositoryCreate:
     query = select(sessions_table.c.status).where(sessions_table.c.id == session_id)
     rows = await db.fetch_all(query)
     assert len(rows) == 1
-    assert rows[0]["status"] == "active"
+    assert rows[0]["status"] == "ACTIVE"
 
     await db.disconnect()
 
@@ -223,14 +223,14 @@ class TestSessionRepositoryListAll:
       await repo.create(session)
       sessions.append(session)
 
-    result, next_token = await repo.list_all()
+    result = await repo.list_all()
 
-    assert len(result) == 3
+    assert len(result.sessions) == 3
     # Newest first (Jan 3, Jan 2, Jan 1)
-    assert result[0].id == sessions[2].id
-    assert result[1].id == sessions[1].id
-    assert result[2].id == sessions[0].id
-    assert next_token is None
+    assert result.sessions[0].id == sessions[2].id
+    assert result.sessions[1].id == sessions[1].id
+    assert result.sessions[2].id == sessions[0].id
+    assert result.next_page_token is None
 
     await db.disconnect()
 
@@ -254,24 +254,24 @@ class TestSessionRepositoryListAll:
       sessions.append(session)
 
     # First page: get 2 sessions
-    page1, token1 = await repo.list_all(page_size=2)
-    assert len(page1) == 2
-    assert page1[0].id == sessions[4].id  # Jan 5
-    assert page1[1].id == sessions[3].id  # Jan 4
-    assert token1 is not None
+    page1 = await repo.list_all(page_size=2)
+    assert len(page1.sessions) == 2
+    assert page1.sessions[0].id == sessions[4].id  # Jan 5
+    assert page1.sessions[1].id == sessions[3].id  # Jan 4
+    assert page1.next_page_token is not None
 
     # Second page: use token
-    page2, token2 = await repo.list_all(page_size=2, page_token=token1)
-    assert len(page2) == 2
-    assert page2[0].id == sessions[2].id  # Jan 3
-    assert page2[1].id == sessions[1].id  # Jan 2
-    assert token2 is not None
+    page2 = await repo.list_all(page_size=2, page_token=page1.next_page_token)
+    assert len(page2.sessions) == 2
+    assert page2.sessions[0].id == sessions[2].id  # Jan 3
+    assert page2.sessions[1].id == sessions[1].id  # Jan 2
+    assert page2.next_page_token is not None
 
     # Third page: last session
-    page3, token3 = await repo.list_all(page_size=2, page_token=token2)
-    assert len(page3) == 1
-    assert page3[0].id == sessions[0].id  # Jan 1
-    assert token3 is None  # No more pages
+    page3 = await repo.list_all(page_size=2, page_token=page2.next_page_token)
+    assert len(page3.sessions) == 1
+    assert page3.sessions[0].id == sessions[0].id  # Jan 1
+    assert page3.next_page_token is None  # No more pages
 
     await db.disconnect()
 
@@ -289,14 +289,14 @@ class TestSessionRepositoryUpdateStatus:
 
     session_id = f"status-update-{uuid.uuid4()}"
     session = SimulatorSession(id=session_id, created_at=datetime.now(UTC))
-    await repo.create(session, status="active")
+    await repo.create(session, status=SessionStatus.ACTIVE)
 
-    result = await repo.update_status(session_id, "completed")
+    result = await repo.update_status(session_id, SessionStatus.COMPLETED)
 
     assert result is True
     query = select(sessions_table.c.status).where(sessions_table.c.id == session_id)
     rows = await db.fetch_all(query)
-    assert rows[0]["status"] == "completed"
+    assert rows[0]["status"] == "COMPLETED"
 
     await db.disconnect()
 
@@ -308,7 +308,7 @@ class TestSessionRepositoryUpdateStatus:
     await db.create_tables()
     repo = SessionRepository(db)
 
-    result = await repo.update_status("nonexistent-session", "completed")
+    result = await repo.update_status("nonexistent-session", SessionStatus.COMPLETED)
 
     assert result is False
 
