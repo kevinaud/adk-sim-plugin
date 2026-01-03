@@ -4,6 +4,7 @@ Implements the Promoted Field pattern: stores full proto as blob with
 queryable fields extracted into SQL columns for efficient filtering.
 """
 
+import base64
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -83,3 +84,65 @@ class SessionRepository:
 
     # Deserialize proto blob back to SimulatorSession
     return SimulatorSession.FromString(row["proto_blob"])
+
+  async def list_all(
+    self, page_size: int = 10, page_token: str | None = None
+  ) -> tuple[list[SimulatorSession], str | None]:
+    """List sessions with cursor-based pagination.
+
+    Args:
+        page_size: Maximum number of sessions to return.
+        page_token: Base64-encoded timestamp cursor for pagination.
+
+    Returns:
+        Tuple of (list of sessions, next_page_token or None).
+    """
+    from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+
+    # Decode page_token to get cursor timestamp
+    if page_token:
+      cursor_ts = int(base64.b64decode(page_token).decode("utf-8"))
+      query = """
+        SELECT proto_blob, created_at FROM sessions
+        WHERE created_at < :cursor
+        ORDER BY created_at DESC
+        LIMIT :limit
+      """
+      values = {"cursor": cursor_ts, "limit": page_size + 1}
+    else:
+      query = """
+        SELECT proto_blob, created_at FROM sessions
+        ORDER BY created_at DESC
+        LIMIT :limit
+      """
+      values = {"limit": page_size + 1}
+
+    rows = await self._database.fetch_all(query, values)
+
+    # Check if there are more results
+    has_more = len(rows) > page_size
+    rows = rows[:page_size]
+
+    sessions = [SimulatorSession.FromString(row["proto_blob"]) for row in rows]
+
+    # Generate next_page_token if more results exist
+    next_token = None
+    if has_more and rows:
+      last_ts = rows[-1]["created_at"]
+      next_token = base64.b64encode(str(last_ts).encode("utf-8")).decode("utf-8")
+
+    return sessions, next_token
+
+  async def update_status(self, session_id: str, status: str) -> bool:
+    """Update the status of a session.
+
+    Args:
+        session_id: The unique identifier of the session.
+        status: The new status value.
+
+    Returns:
+        True if the session was updated, False if not found.
+    """
+    query = "UPDATE sessions SET status = :status WHERE id = :id"
+    result = await self._database.execute(query, {"id": session_id, "status": status})
+    return result > 0

@@ -193,3 +193,116 @@ class TestSessionRepositoryGetById:
     assert result == original_session
 
     await db.disconnect()
+
+
+class TestSessionRepositoryListAll:
+  """Tests for SessionRepository.list_all()."""
+
+  @pytest.mark.asyncio
+  async def test_list_all_returns_sessions_in_descending_order(self) -> None:
+    """list_all() returns sessions ordered by created_at DESC."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+    await db.execute("DELETE FROM sessions")  # Clear any existing data
+    repo = SessionRepository(db)
+
+    # Create sessions with different timestamps
+    sessions: list[SimulatorSession] = []
+    for i in range(3):
+      session = SimulatorSession(
+        id=f"list-order-{uuid.uuid4()}",
+        created_at=datetime(2025, 1, i + 1, 12, 0, 0, tzinfo=UTC),
+      )
+      await repo.create(session)
+      sessions.append(session)
+
+    result, next_token = await repo.list_all()
+
+    assert len(result) == 3
+    # Newest first (Jan 3, Jan 2, Jan 1)
+    assert result[0].id == sessions[2].id
+    assert result[1].id == sessions[1].id
+    assert result[2].id == sessions[0].id
+    assert next_token is None
+
+    await db.disconnect()
+
+  @pytest.mark.asyncio
+  async def test_list_all_pagination_with_page_token(self) -> None:
+    """list_all() paginates correctly using page_token."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+    await db.execute("DELETE FROM sessions")  # Clear any existing data
+    repo = SessionRepository(db)
+
+    # Create 5 sessions
+    sessions: list[SimulatorSession] = []
+    for i in range(5):
+      session = SimulatorSession(
+        id=f"paginate-{uuid.uuid4()}",
+        created_at=datetime(2025, 1, i + 1, 12, 0, 0, tzinfo=UTC),
+      )
+      await repo.create(session)
+      sessions.append(session)
+
+    # First page: get 2 sessions
+    page1, token1 = await repo.list_all(page_size=2)
+    assert len(page1) == 2
+    assert page1[0].id == sessions[4].id  # Jan 5
+    assert page1[1].id == sessions[3].id  # Jan 4
+    assert token1 is not None
+
+    # Second page: use token
+    page2, token2 = await repo.list_all(page_size=2, page_token=token1)
+    assert len(page2) == 2
+    assert page2[0].id == sessions[2].id  # Jan 3
+    assert page2[1].id == sessions[1].id  # Jan 2
+    assert token2 is not None
+
+    # Third page: last session
+    page3, token3 = await repo.list_all(page_size=2, page_token=token2)
+    assert len(page3) == 1
+    assert page3[0].id == sessions[0].id  # Jan 1
+    assert token3 is None  # No more pages
+
+    await db.disconnect()
+
+
+class TestSessionRepositoryUpdateStatus:
+  """Tests for SessionRepository.update_status()."""
+
+  @pytest.mark.asyncio
+  async def test_update_status_changes_status_correctly(self) -> None:
+    """update_status() successfully updates the session status."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+    repo = SessionRepository(db)
+
+    session_id = f"status-update-{uuid.uuid4()}"
+    session = SimulatorSession(id=session_id, created_at=datetime.now(UTC))
+    await repo.create(session, status="active")
+
+    result = await repo.update_status(session_id, "completed")
+
+    assert result is True
+    rows = await db.fetch_all(f"SELECT status FROM sessions WHERE id = '{session_id}'")
+    assert rows[0]["status"] == "completed"
+
+    await db.disconnect()
+
+  @pytest.mark.asyncio
+  async def test_update_status_returns_false_for_nonexistent(self) -> None:
+    """update_status() returns False when session does not exist."""
+    db = Database(TEST_DB_URL)
+    await db.connect()
+    await db.create_tables()
+    repo = SessionRepository(db)
+
+    result = await repo.update_status("nonexistent-session", "completed")
+
+    assert result is False
+
+    await db.disconnect()
