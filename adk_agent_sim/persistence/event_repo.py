@@ -49,35 +49,17 @@ class EventRepository:
     # Serialize the full proto to bytes
     proto_blob = bytes(event)
 
-    # Build insert query using schema column names
-    query = f"""
-      INSERT INTO {events.name} (
-        {events.c.event_id.name},
-        {events.c.session_id.name},
-        {events.c.timestamp.name},
-        {events.c.turn_id.name},
-        {events.c.payload_type.name},
-        {events.c.proto_blob.name}
-      ) VALUES (
-        :event_id,
-        :session_id,
-        :timestamp,
-        :turn_id,
-        :payload_type,
-        :proto_blob
-      )
-    """
+    # Build insert query using SQLAlchemy Core
+    query = events.insert().values(
+      event_id=event.event_id,
+      session_id=event.session_id,
+      timestamp=timestamp_ms,
+      turn_id=event.turn_id,
+      payload_type=payload_type,
+      proto_blob=proto_blob,
+    )
 
-    values = {
-      "event_id": event.event_id,
-      "session_id": event.session_id,
-      "timestamp": timestamp_ms,
-      "turn_id": event.turn_id,
-      "payload_type": payload_type,
-      "proto_blob": proto_blob,
-    }
-
-    await self._database.execute(query, values)
+    await self._database.execute(query)
 
     return event
 
@@ -90,16 +72,18 @@ class EventRepository:
     Returns:
         List of SessionEvents ordered by timestamp ASC (oldest first).
     """
+    from sqlalchemy import select
+
     from adk_agent_sim.generated.adksim.v1 import SessionEvent
 
-    query = f"""
-      SELECT {events.c.proto_blob.name}
-      FROM {events.name}
-      WHERE {events.c.session_id.name} = :session_id
-      ORDER BY {events.c.timestamp.name} ASC
-    """
+    # Build query using SQLAlchemy Core
+    query = (
+      select(events.c.proto_blob)
+      .where(events.c.session_id == session_id)
+      .order_by(events.c.timestamp.asc())
+    )
 
-    rows = await self._database.fetch_all(query, {"session_id": session_id})
+    rows = await self._database.fetch_all(query)
 
     return [SessionEvent().parse(row["proto_blob"]) for row in rows]
 
@@ -112,15 +96,17 @@ class EventRepository:
     Returns:
         List of SessionEvents ordered by timestamp ASC.
     """
+    from sqlalchemy import select
+
     from adk_agent_sim.generated.adksim.v1 import SessionEvent
 
-    query = f"""
-      SELECT {events.c.proto_blob.name}
-      FROM {events.name}
-      WHERE {events.c.turn_id.name} = :turn_id
-      ORDER BY {events.c.timestamp.name} ASC
-    """
+    # Build query using SQLAlchemy Core
+    query = (
+      select(events.c.proto_blob)
+      .where(events.c.turn_id == turn_id)
+      .order_by(events.c.timestamp.asc())
+    )
 
-    rows = await self._database.fetch_all(query, {"turn_id": turn_id})
+    rows = await self._database.fetch_all(query)
 
     return [SessionEvent().parse(row["proto_blob"]) for row in rows]
