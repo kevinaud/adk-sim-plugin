@@ -7,6 +7,9 @@ implements the same async interface as the real repository.
 
 from typing import TYPE_CHECKING, Any
 
+from adk_agent_sim.generated.adksim.v1 import SessionStatus
+from adk_agent_sim.persistence import PaginatedSessions
+
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
@@ -27,12 +30,12 @@ class FakeSessionRepository:
   def __init__(self) -> None:
     """Initialize with empty storage."""
     # Using Any for runtime since SimulatorSession is only available for type checking
-    self._sessions: dict[str, tuple[Any, str]] = {}
+    self._sessions: dict[str, tuple[Any, SessionStatus]] = {}
 
   async def create(
     self,
     session: SimulatorSession,
-    status: str = "active",
+    status: SessionStatus = SessionStatus.ACTIVE,
   ) -> SimulatorSession:
     """Store a session in the in-memory dict.
 
@@ -64,7 +67,7 @@ class FakeSessionRepository:
     self,
     page_size: int = 10,
     page_token: str | None = None,
-  ) -> tuple[list[SimulatorSession], str | None]:
+  ) -> PaginatedSessions:
     """Return paginated list of sessions.
 
     Sessions are returned in insertion order (dict order in Python 3.7+).
@@ -74,7 +77,7 @@ class FakeSessionRepository:
         page_token: Opaque token for pagination (session ID to start after).
 
     Returns:
-        Tuple of (list of sessions, next page token or None).
+        PaginatedSessions with list of sessions and next page token.
     """
     # Get all session IDs in order
     all_ids = list(self._sessions.keys())
@@ -99,9 +102,9 @@ class FakeSessionRepository:
     if end_idx < len(all_ids):
       next_token = page_ids[-1] if page_ids else None
 
-    return sessions, next_token
+    return PaginatedSessions(sessions=sessions, next_page_token=next_token)
 
-  async def update_status(self, session_id: str, status: str) -> bool:
+  async def update_status(self, session_id: str, status: SessionStatus) -> bool:
     """Update the status of a stored session.
 
     Args:
@@ -119,14 +122,14 @@ class FakeSessionRepository:
     self._sessions[session_id] = (session, status)
     return True
 
-  def get_status(self, session_id: str) -> str | None:
+  def get_status(self, session_id: str) -> SessionStatus | None:
     """Get the status of a session (helper for test assertions).
 
     Args:
         session_id: The session ID to look up.
 
     Returns:
-        The status string if found, None otherwise.
+        The status if found, None otherwise.
     """
     entry = self._sessions.get(session_id)
     if entry is None:

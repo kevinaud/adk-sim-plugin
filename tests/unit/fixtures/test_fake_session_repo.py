@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pytest
 
-from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+from adk_agent_sim.generated.adksim.v1 import SessionStatus, SimulatorSession
 from tests.fixtures import FakeSessionRepository
 
 
@@ -64,19 +64,19 @@ class TestFakeSessionRepositoryCreateAndGet:
     repo = FakeSessionRepository()
     session = make_session()
 
-    await repo.create(session, status="completed")
+    await repo.create(session, status=SessionStatus.COMPLETED)
 
-    assert repo.get_status(session.id) == "completed"
+    assert repo.get_status(session.id) == SessionStatus.COMPLETED
 
   @pytest.mark.asyncio
   async def test_create_default_status_is_active(self) -> None:
-    """Create without status defaults to 'active'."""
+    """Create without status defaults to ACTIVE."""
     repo = FakeSessionRepository()
     session = make_session()
 
     await repo.create(session)
 
-    assert repo.get_status(session.id) == "active"
+    assert repo.get_status(session.id) == SessionStatus.ACTIVE
 
 
 class TestFakeSessionRepositoryListAll:
@@ -87,10 +87,10 @@ class TestFakeSessionRepositoryListAll:
     """list_all on empty repo returns empty list."""
     repo = FakeSessionRepository()
 
-    sessions, next_token = await repo.list_all()
+    result = await repo.list_all()
 
-    assert sessions == []
-    assert next_token is None
+    assert result.sessions == []
+    assert result.next_page_token is None
 
   @pytest.mark.asyncio
   async def test_list_all_returns_all_sessions(self) -> None:
@@ -101,12 +101,12 @@ class TestFakeSessionRepositoryListAll:
     await repo.create(session1)
     await repo.create(session2)
 
-    sessions, next_token = await repo.list_all()
+    result = await repo.list_all()
 
-    assert len(sessions) == 2
-    assert session1 in sessions
-    assert session2 in sessions
-    assert next_token is None
+    assert len(result.sessions) == 2
+    assert session1 in result.sessions
+    assert session2 in result.sessions
+    assert result.next_page_token is None
 
   @pytest.mark.asyncio
   async def test_list_all_respects_page_size(self) -> None:
@@ -115,10 +115,10 @@ class TestFakeSessionRepositoryListAll:
     for _ in range(5):
       await repo.create(make_session())
 
-    sessions, next_token = await repo.list_all(page_size=3)
+    result = await repo.list_all(page_size=3)
 
-    assert len(sessions) == 3
-    assert next_token is not None
+    assert len(result.sessions) == 3
+    assert result.next_page_token is not None
 
   @pytest.mark.asyncio
   async def test_list_all_pagination_continues(self) -> None:
@@ -129,22 +129,22 @@ class TestFakeSessionRepositoryListAll:
       await repo.create(s)
 
     # Get first page
-    page1, token1 = await repo.list_all(page_size=2)
-    assert len(page1) == 2
-    assert token1 is not None
+    page1 = await repo.list_all(page_size=2)
+    assert len(page1.sessions) == 2
+    assert page1.next_page_token is not None
 
     # Get second page using token
-    page2, token2 = await repo.list_all(page_size=2, page_token=token1)
-    assert len(page2) == 2
-    assert token2 is not None
+    page2 = await repo.list_all(page_size=2, page_token=page1.next_page_token)
+    assert len(page2.sessions) == 2
+    assert page2.next_page_token is not None
 
     # Get third page (last)
-    page3, token3 = await repo.list_all(page_size=2, page_token=token2)
-    assert len(page3) == 1
-    assert token3 is None
+    page3 = await repo.list_all(page_size=2, page_token=page2.next_page_token)
+    assert len(page3.sessions) == 1
+    assert page3.next_page_token is None
 
     # Verify all sessions were returned across pages
-    all_returned = page1 + page2 + page3
+    all_returned = page1.sessions + page2.sessions + page3.sessions
     assert len(all_returned) == 5
 
   @pytest.mark.asyncio
@@ -156,9 +156,9 @@ class TestFakeSessionRepositoryListAll:
     await repo.create(session1)
     await repo.create(session2)
 
-    sessions, _ = await repo.list_all(page_token="invalid-token")
+    result = await repo.list_all(page_token="invalid-token")
 
-    assert len(sessions) == 2
+    assert len(result.sessions) == 2
 
 
 class TestFakeSessionRepositoryUpdateStatus:
@@ -169,19 +169,19 @@ class TestFakeSessionRepositoryUpdateStatus:
     """update_status updates status of existing session."""
     repo = FakeSessionRepository()
     session = make_session()
-    await repo.create(session, status="active")
+    await repo.create(session, status=SessionStatus.ACTIVE)
 
-    result = await repo.update_status(session.id, "completed")
+    result = await repo.update_status(session.id, SessionStatus.COMPLETED)
 
     assert result is True
-    assert repo.get_status(session.id) == "completed"
+    assert repo.get_status(session.id) == SessionStatus.COMPLETED
 
   @pytest.mark.asyncio
   async def test_update_status_returns_false_for_missing(self) -> None:
     """update_status returns False for non-existent session."""
     repo = FakeSessionRepository()
 
-    result = await repo.update_status("nonexistent-id", "completed")
+    result = await repo.update_status("nonexistent-id", SessionStatus.COMPLETED)
 
     assert result is False
 
@@ -192,7 +192,7 @@ class TestFakeSessionRepositoryUpdateStatus:
     session = make_session(description="original description")
     await repo.create(session)
 
-    await repo.update_status(session.id, "completed")
+    await repo.update_status(session.id, SessionStatus.COMPLETED)
 
     retrieved = await repo.get_by_id(session.id)
     assert retrieved is not None
@@ -207,9 +207,9 @@ class TestFakeSessionRepositoryHelpers:
     """get_status returns the status of a session."""
     repo = FakeSessionRepository()
     session = make_session()
-    await repo.create(session, status="custom")
+    await repo.create(session, status=SessionStatus.CANCELLED)
 
-    assert repo.get_status(session.id) == "custom"
+    assert repo.get_status(session.id) == SessionStatus.CANCELLED
 
   @pytest.mark.asyncio
   async def test_get_status_returns_none_for_missing(self) -> None:
@@ -227,5 +227,5 @@ class TestFakeSessionRepositoryHelpers:
 
     repo.clear()
 
-    sessions, _ = await repo.list_all()
-    assert sessions == []
+    result = await repo.list_all()
+    assert result.sessions == []
