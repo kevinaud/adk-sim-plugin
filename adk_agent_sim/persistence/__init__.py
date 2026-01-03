@@ -7,6 +7,13 @@ pattern.
 
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.schema import events, metadata, sessions
-from adk_agent_sim.persistence.session_repo import SessionRepository
+from adk_agent_sim.persistence.session_repo import PaginatedSessions, SessionRepository
 
-__all__ = ["Database", "SessionRepository", "events", "metadata", "sessions"]
+__all__ = [
+  "Database",
+  "PaginatedSessions",
+  "SessionRepository",
+  "events",
+  "metadata",
+  "sessions",
+]
