@@ -4,15 +4,22 @@ Provides lifecycle management for database connections and table creation
 using SQLAlchemy Core metadata definitions.
 """
 
+from pathlib import Path
 from typing import Any
 
 from databases import Database as DatabaseClient
 from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateIndex, CreateTable
+from sqlalchemy.sql import ClauseElement
 
 from adk_agent_sim.persistence.schema import metadata
 
-DEFAULT_DATABASE_URL = "sqlite+aiosqlite:///./simulator.db"
+# Type alias for SQLAlchemy query constructs (ClauseElement is the base for all)
+QueryType = ClauseElement
+
+# Default database location in user's home directory
+_DEFAULT_DB_DIR = Path.home() / ".adk-sim"
+DEFAULT_DATABASE_URL = f"sqlite+aiosqlite:///{_DEFAULT_DB_DIR}/simulator.db"
 
 
 class Database:
@@ -38,6 +45,11 @@ class Database:
 
   async def connect(self) -> None:
     """Establish database connection."""
+    # Ensure database directory exists for file-based databases
+    if self.url.startswith("sqlite") and ":memory:" not in self.url:
+      # Extract path from URL (after sqlite+aiosqlite:///)
+      db_path = Path(self.url.split("///")[1].split("?")[0])
+      db_path.parent.mkdir(parents=True, exist_ok=True)
     await self._client.connect()
 
   async def disconnect(self) -> None:
@@ -63,26 +75,31 @@ class Database:
 
     engine.dispose()
 
-  async def execute(self, query: str, values: dict[str, Any] | None = None) -> int:
-    """Execute a query without returning results.
+  async def execute(
+    self, query: QueryType, values: dict[str, Any] | None = None
+  ) -> int:
+    """Execute a query and return affected row count.
 
     Args:
-        query: SQL query string.
-        values: Optional dictionary of parameter values.
+        query: SQLAlchemy query construct (e.g., table.insert(), table.update()).
+        values: Optional dict of values for parameterized queries.
 
     Returns:
-        Number of rows affected.
+        Number of affected rows.
     """
-    return await self._client.execute(query, values)  # pyright: ignore[reportUnknownMemberType, reportReturnType]
+    result = await self._client.execute(query, values)  # pyright: ignore[reportUnknownMemberType]
+    # For INSERT, returns last row id; for UPDATE/DELETE, returns rowcount
+    # The databases library returns different things depending on the operation
+    return result if isinstance(result, int) else 1
 
   async def fetch_all(
-    self, query: str, values: dict[str, Any] | None = None
+    self, query: QueryType, values: dict[str, Any] | None = None
   ) -> list[dict[str, Any]]:
     """Execute a query and fetch all results.
 
     Args:
-        query: SQL query string.
-        values: Optional dictionary of parameter values.
+        query: SQLAlchemy query construct (e.g., table.select()).
+        values: Optional dict of values for parameterized queries.
 
     Returns:
         List of row dictionaries.
@@ -91,16 +108,16 @@ class Database:
     return [dict(row._mapping) for row in rows]  # pyright: ignore[reportUnknownMemberType]
 
   async def fetch_one(
-    self, query: str, values: dict[str, Any] | None = None
+    self, query: QueryType, values: dict[str, Any] | None = None
   ) -> dict[str, Any] | None:
-    """Execute a query and fetch a single result.
+    """Execute a query and fetch one result.
 
     Args:
-        query: SQL query string.
-        values: Optional dictionary of parameter values.
+        query: SQLAlchemy query construct (e.g., table.select().where(...)).
+        values: Optional dict of values for parameterized queries.
 
     Returns:
-        Row dictionary if found, None otherwise.
+        Row dictionary or None if not found.
     """
     row = await self._client.fetch_one(query, values)  # pyright: ignore[reportUnknownMemberType]
     if row is None:

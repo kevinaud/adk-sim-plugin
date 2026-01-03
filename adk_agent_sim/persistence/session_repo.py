@@ -7,6 +7,8 @@ queryable fields extracted into SQL columns for efficient filtering.
 import base64
 from typing import TYPE_CHECKING
 
+from adk_agent_sim.persistence.schema import sessions
+
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorSession
   from adk_agent_sim.persistence.database import Database
@@ -49,18 +51,14 @@ class SessionRepository:
     # Serialize full proto to bytes
     proto_blob = bytes(session)
 
-    # Insert into sessions table
-    query = """
-      INSERT INTO sessions (id, created_at, status, proto_blob)
-      VALUES (:id, :created_at, :status, :proto_blob)
-    """
-    values = {
-      "id": session_id,
-      "created_at": created_at,
-      "status": status,
-      "proto_blob": proto_blob,
-    }
-    await self._database.execute(query, values)
+    # Build insert query using SQLAlchemy Core
+    query = sessions.insert().values(
+      id=session_id,
+      created_at=created_at,
+      status=status,
+      proto_blob=proto_blob,
+    )
+    await self._database.execute(query)
 
     return session
 
@@ -74,10 +72,13 @@ class SessionRepository:
         The deserialized SimulatorSession if found, None otherwise.
     """
     # Import here to avoid circular imports at module level
+    from sqlalchemy import select
+
     from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
-    query = "SELECT proto_blob FROM sessions WHERE id = :id"
-    row = await self._database.fetch_one(query, {"id": session_id})
+    # Build select query using SQLAlchemy Core
+    query = select(sessions.c.proto_blob).where(sessions.c.id == session_id)
+    row = await self._database.fetch_one(query)
 
     if row is None:
       return None
@@ -97,33 +98,30 @@ class SessionRepository:
     Returns:
         Tuple of (list of sessions, next_page_token or None).
     """
+
+    from sqlalchemy import select
+
     from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+
+    # Build query using SQLAlchemy Core
+    query = select(sessions.c.proto_blob, sessions.c.created_at).order_by(
+      sessions.c.created_at.desc()
+    )
 
     # Decode page_token to get cursor timestamp
     if page_token:
       cursor_ts = int(base64.b64decode(page_token).decode("utf-8"))
-      query = """
-        SELECT proto_blob, created_at FROM sessions
-        WHERE created_at < :cursor
-        ORDER BY created_at DESC
-        LIMIT :limit
-      """
-      values = {"cursor": cursor_ts, "limit": page_size + 1}
-    else:
-      query = """
-        SELECT proto_blob, created_at FROM sessions
-        ORDER BY created_at DESC
-        LIMIT :limit
-      """
-      values = {"limit": page_size + 1}
+      query = query.where(sessions.c.created_at < cursor_ts)
 
-    rows = await self._database.fetch_all(query, values)
+    query = query.limit(page_size + 1)
+
+    rows = await self._database.fetch_all(query)
 
     # Check if there are more results
     has_more = len(rows) > page_size
     rows = rows[:page_size]
 
-    sessions = [SimulatorSession.FromString(row["proto_blob"]) for row in rows]
+    session_list = [SimulatorSession.FromString(row["proto_blob"]) for row in rows]
 
     # Generate next_page_token if more results exist
     next_token = None
@@ -131,7 +129,7 @@ class SessionRepository:
       last_ts = rows[-1]["created_at"]
       next_token = base64.b64encode(str(last_ts).encode("utf-8")).decode("utf-8")
 
-    return sessions, next_token
+    return session_list, next_token
 
   async def update_status(self, session_id: str, status: str) -> bool:
     """Update the status of a session.
@@ -143,6 +141,7 @@ class SessionRepository:
     Returns:
         True if the session was updated, False if not found.
     """
-    query = "UPDATE sessions SET status = :status WHERE id = :id"
-    result = await self._database.execute(query, {"id": session_id, "status": status})
+    # Build update query using SQLAlchemy Core
+    query = sessions.update().where(sessions.c.id == session_id).values(status=status)
+    result = await self._database.execute(query)
     return result > 0

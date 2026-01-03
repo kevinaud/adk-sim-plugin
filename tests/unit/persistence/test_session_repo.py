@@ -4,10 +4,12 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy import select
 
 from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 from adk_agent_sim.persistence import SessionRepository
 from adk_agent_sim.persistence.database import Database
+from adk_agent_sim.persistence.schema import sessions as sessions_table
 
 # In-memory SQLite URL with shared cache for testing
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:?cache=shared"
@@ -36,8 +38,9 @@ class TestSessionRepositoryCreate:
     # Should return the same session
     assert result == session
 
-    # Verify it was stored in the database
-    rows = await db.fetch_all(f"SELECT * FROM sessions WHERE id = '{session_id}'")
+    # Verify it was stored in the database using SQLAlchemy Core
+    query = select(sessions_table).where(sessions_table.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
     assert rows[0]["id"] == session_id
 
@@ -61,9 +64,12 @@ class TestSessionRepositoryCreate:
 
     await repo.create(session, status="pending")
 
-    rows = await db.fetch_all(
-      f"SELECT id, created_at, status FROM sessions WHERE id = '{session_id}'"
-    )
+    query = select(
+      sessions_table.c.id,
+      sessions_table.c.created_at,
+      sessions_table.c.status,
+    ).where(sessions_table.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
 
     row = rows[0]
@@ -90,9 +96,8 @@ class TestSessionRepositoryCreate:
 
     await repo.create(session)
 
-    rows = await db.fetch_all(
-      f"SELECT proto_blob FROM sessions WHERE id = '{session_id}'"
-    )
+    query = select(sessions_table.c.proto_blob).where(sessions_table.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
 
     # Deserialize the stored blob and verify all fields
@@ -121,7 +126,8 @@ class TestSessionRepositoryCreate:
 
     await repo.create(session)
 
-    rows = await db.fetch_all(f"SELECT status FROM sessions WHERE id = '{session_id}'")
+    query = select(sessions_table.c.status).where(sessions_table.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
     assert rows[0]["status"] == "active"
 
@@ -204,7 +210,7 @@ class TestSessionRepositoryListAll:
     db = Database(TEST_DB_URL)
     await db.connect()
     await db.create_tables()
-    await db.execute("DELETE FROM sessions")  # Clear any existing data
+    await db.execute(sessions_table.delete())  # Clear any existing data
     repo = SessionRepository(db)
 
     # Create sessions with different timestamps
@@ -234,7 +240,7 @@ class TestSessionRepositoryListAll:
     db = Database(TEST_DB_URL)
     await db.connect()
     await db.create_tables()
-    await db.execute("DELETE FROM sessions")  # Clear any existing data
+    await db.execute(sessions_table.delete())  # Clear any existing data
     repo = SessionRepository(db)
 
     # Create 5 sessions
@@ -288,7 +294,8 @@ class TestSessionRepositoryUpdateStatus:
     result = await repo.update_status(session_id, "completed")
 
     assert result is True
-    rows = await db.fetch_all(f"SELECT status FROM sessions WHERE id = '{session_id}'")
+    query = select(sessions_table.c.status).where(sessions_table.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert rows[0]["status"] == "completed"
 
     await db.disconnect()
