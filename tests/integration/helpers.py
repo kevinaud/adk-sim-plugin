@@ -8,8 +8,6 @@ WARNING: These helpers make real API calls and incur costs.
          Do NOT import from unit tests.
 """
 
-from __future__ import annotations
-
 import importlib
 import os
 from typing import TYPE_CHECKING, Any
