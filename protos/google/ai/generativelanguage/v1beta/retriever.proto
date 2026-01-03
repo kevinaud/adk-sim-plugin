@@ -53,12 +53,10 @@ message Corpus {
   string display_name = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // Output only. The Timestamp of when the `Corpus` was created.
-  google.protobuf.Timestamp create_time = 3
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The Timestamp of when the `Corpus` was last updated.
-  google.protobuf.Timestamp update_time = 4
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // A `Document` is a collection of `Chunk`s.
@@ -89,16 +87,13 @@ message Document {
 
   // Optional. User provided custom metadata stored as key-value pairs used for
   // querying. A `Document` can have a maximum of 20 `CustomMetadata`.
-  repeated CustomMetadata custom_metadata = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated CustomMetadata custom_metadata = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Output only. The Timestamp of when the `Document` was last updated.
-  google.protobuf.Timestamp update_time = 4
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The Timestamp of when the `Document` was created.
-  google.protobuf.Timestamp create_time = 5
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // User provided string values assigned to a single metadata key.
@@ -235,16 +230,13 @@ message Chunk {
 
   // Optional. User provided custom metadata stored as key-value pairs.
   // The maximum number of `CustomMetadata` per chunk is 20.
-  repeated CustomMetadata custom_metadata = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated CustomMetadata custom_metadata = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Output only. The Timestamp of when the `Chunk` was created.
-  google.protobuf.Timestamp create_time = 4
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. The Timestamp of when the `Chunk` was last updated.
-  google.protobuf.Timestamp update_time = 5
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Current state of the `Chunk`.
   State state = 6 [(google.api.field_behavior) = OUTPUT_ONLY];

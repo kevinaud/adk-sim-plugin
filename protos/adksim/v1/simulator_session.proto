@@ -1,8 +1,8 @@
 syntax = "proto3";
 package adksim.v1;
 
-import "google/protobuf/timestamp.proto";
 import "google/ai/generativelanguage/v1beta/generative_service.proto";
+import "google/protobuf/timestamp.proto";
 
 // SimulatorSession represents a simulation session's metadata.
 // Named to avoid collision with the ADK concept of Session.

@@ -44,16 +44,15 @@ service GenerativeService {
   // tuned models. Refer to the [model
   // guide](https://ai.google.dev/gemini-api/docs/models/gemini) and [tuning
   // guide](https://ai.google.dev/gemini-api/docs/model-tuning) for details.
-  rpc GenerateContent(GenerateContentRequest)
-      returns (GenerateContentResponse) {
+  rpc GenerateContent(GenerateContentRequest) returns (GenerateContentResponse) {
     option (google.api.http) = {
       post: "/v1beta/{model=models/*}:generateContent"
       body: "*"
-      additional_bindings {
+      additional_bindings: {
         post: "/v1beta/{model=tunedModels/*}:generateContent"
         body: "*"
       }
-      additional_bindings {
+      additional_bindings: {
         post: "/v1beta/{model=dynamic/*}:generateContent"
         body: "*"
       }
@@ -68,23 +67,21 @@ service GenerativeService {
       post: "/v1beta/{model=models/*}:generateAnswer"
       body: "*"
     };
-    option (google.api.method_signature) =
-        "model,contents,safety_settings,answer_style";
+    option (google.api.method_signature) = "model,contents,safety_settings,answer_style";
   }
 
   // Generates a [streamed
   // response](https://ai.google.dev/gemini-api/docs/text-generation?lang=python#generate-a-text-stream)
   // from the model given an input `GenerateContentRequest`.
-  rpc StreamGenerateContent(GenerateContentRequest)
-      returns (stream GenerateContentResponse) {
+  rpc StreamGenerateContent(GenerateContentRequest) returns (stream GenerateContentResponse) {
     option (google.api.http) = {
       post: "/v1beta/{model=models/*}:streamGenerateContent"
       body: "*"
-      additional_bindings {
+      additional_bindings: {
         post: "/v1beta/{model=tunedModels/*}:streamGenerateContent"
         body: "*"
       }
-      additional_bindings {
+      additional_bindings: {
         post: "/v1beta/{model=dynamic/*}:streamGenerateContent"
         body: "*"
       }
@@ -106,8 +103,7 @@ service GenerativeService {
   // Generates multiple embedding vectors from the input `Content` which
   // consists of a batch of strings represented as `EmbedContentRequest`
   // objects.
-  rpc BatchEmbedContents(BatchEmbedContentsRequest)
-      returns (BatchEmbedContentsResponse) {
+  rpc BatchEmbedContents(BatchEmbedContentsRequest) returns (BatchEmbedContentsResponse) {
     option (google.api.http) = {
       post: "/v1beta/{model=models/*}:batchEmbedContents"
       body: "*"
@@ -128,8 +124,7 @@ service GenerativeService {
 
   // Low-Latency bidirectional streaming API that supports audio and video
   // streaming inputs can produce multimodal output streams (audio and text).
-  rpc BidiGenerateContent(stream BidiGenerateContentClientMessage)
-      returns (stream BidiGenerateContentServerMessage) {}
+  rpc BidiGenerateContent(stream BidiGenerateContentClientMessage) returns (stream BidiGenerateContentServerMessage) {}
 }
 
 // Type of task for which the embedding will be used.
@@ -169,16 +164,13 @@ message GenerateContentRequest {
   // Format: `models/{model}`.
   string model = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {
-      type: "generativelanguage.googleapis.com/Model"
-    }
+    (google.api.resource_reference) = {type: "generativelanguage.googleapis.com/Model"}
   ];
 
   // Optional. Developer set [system
   // instruction(s)](https://ai.google.dev/gemini-api/docs/system-instructions).
   // Currently, text only.
-  optional Content system_instruction = 8
-      [(google.api.field_behavior) = OPTIONAL];
+  optional Content system_instruction = 8 [(google.api.field_behavior) = OPTIONAL];
 
   // Required. The content of the current conversation with the model.
   //
@@ -223,21 +215,17 @@ message GenerateContentRequest {
   // for detailed information on available safety settings. Also refer to the
   // [Safety guidance](https://ai.google.dev/gemini-api/docs/safety-guidance) to
   // learn how to incorporate safety considerations in your AI applications.
-  repeated SafetySetting safety_settings = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated SafetySetting safety_settings = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Configuration options for model generation and outputs.
-  optional GenerationConfig generation_config = 4
-      [(google.api.field_behavior) = OPTIONAL];
+  optional GenerationConfig generation_config = 4 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The name of the content
   // [cached](https://ai.google.dev/gemini-api/docs/caching) to use as context
   // to serve the prediction. Format: `cachedContents/{cachedContent}`
   optional string cached_content = 9 [
     (google.api.field_behavior) = OPTIONAL,
-    (google.api.resource_reference) = {
-      type: "generativelanguage.googleapis.com/CachedContent"
-    }
+    (google.api.resource_reference) = {type: "generativelanguage.googleapis.com/CachedContent"}
   ];
 }
 
@@ -269,8 +257,7 @@ message SpeakerVoiceConfig {
 // The configuration for the multi-speaker setup.
 message MultiSpeakerVoiceConfig {
   // Required. All the enabled speaker voices.
-  repeated SpeakerVoiceConfig speaker_voice_configs = 2
-      [(google.api.field_behavior) = REQUIRED];
+  repeated SpeakerVoiceConfig speaker_voice_configs = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // The speech generation config.
@@ -280,8 +267,7 @@ message SpeechConfig {
 
   // Optional. The configuration for the multi-speaker setup.
   // It is mutually exclusive with the voice_config field.
-  MultiSpeakerVoiceConfig multi_speaker_voice_config = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  MultiSpeakerVoiceConfig multi_speaker_voice_config = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Language code (in BCP 47 format, e.g. "en-US") for speech
   // synthesis.
@@ -503,8 +489,7 @@ message GenerationConfig {
   // hits the
   // [max_output_tokens][google.ai.generativelanguage.v1beta.GenerationConfig.max_output_tokens]
   // limit.
-  optional float frequency_penalty = 16
-      [(google.api.field_behavior) = OPTIONAL];
+  optional float frequency_penalty = 16 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. If true, export the logprobs results in response.
   optional bool response_logprobs = 17 [(google.api.field_behavior) = OPTIONAL];
@@ -518,8 +503,7 @@ message GenerationConfig {
 
   // Optional. Enables enhanced civic answers. It may not be available for all
   // models.
-  optional bool enable_enhanced_civic_answers = 19
-      [(google.api.field_behavior) = OPTIONAL];
+  optional bool enable_enhanced_civic_answers = 19 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The requested modalities of the response. Represents the set of
   // modalities that the model can return, and should be expected in the
@@ -530,28 +514,23 @@ message GenerationConfig {
   // error will be returned.
   //
   // An empty list is equivalent to requesting only text.
-  repeated Modality response_modalities = 20
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated Modality response_modalities = 20 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The speech generation config.
-  optional SpeechConfig speech_config = 21
-      [(google.api.field_behavior) = OPTIONAL];
+  optional SpeechConfig speech_config = 21 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Config for thinking features.
   // An error will be returned if this field is set for models that don't
   // support thinking.
-  optional ThinkingConfig thinking_config = 22
-      [(google.api.field_behavior) = OPTIONAL];
+  optional ThinkingConfig thinking_config = 22 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Config for image generation.
   // An error will be returned if this field is set for models that don't
   // support these config options.
-  optional ImageConfig image_config = 27
-      [(google.api.field_behavior) = OPTIONAL];
+  optional ImageConfig image_config = 27 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. If specified, the media resolution specified will be used.
-  optional MediaResolution media_resolution = 23
-      [(google.api.field_behavior) = OPTIONAL];
+  optional MediaResolution media_resolution = 23 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Configuration for retrieving grounding content from a `Corpus` or
@@ -567,15 +546,13 @@ message SemanticRetrieverConfig {
 
   // Optional. Filters for selecting `Document`s and/or `Chunk`s from the
   // resource.
-  repeated MetadataFilter metadata_filters = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated MetadataFilter metadata_filters = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Maximum number of relevant `Chunk`s to retrieve.
   optional int32 max_chunks_count = 4 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Minimum relevance score for retrieved relevant `Chunk`s.
-  optional float minimum_relevance_score = 5
-      [(google.api.field_behavior) = OPTIONAL];
+  optional float minimum_relevance_score = 5 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Response from the model supporting multiple candidate responses.
@@ -638,8 +615,7 @@ message GenerateContentResponse {
     int32 candidates_token_count = 2;
 
     // Output only. Number of tokens present in tool-use prompt(s).
-    int32 tool_use_prompt_token_count = 8
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    int32 tool_use_prompt_token_count = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. Number of tokens of thoughts for thinking models.
     int32 thoughts_token_count = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
@@ -649,22 +625,18 @@ message GenerateContentResponse {
     int32 total_token_count = 3;
 
     // Output only. List of modalities that were processed in the request input.
-    repeated ModalityTokenCount prompt_tokens_details = 5
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    repeated ModalityTokenCount prompt_tokens_details = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. List of modalities of the cached content in the request
     // input.
-    repeated ModalityTokenCount cache_tokens_details = 6
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    repeated ModalityTokenCount cache_tokens_details = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. List of modalities that were returned in the response.
-    repeated ModalityTokenCount candidates_tokens_details = 7
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    repeated ModalityTokenCount candidates_tokens_details = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. List of modalities that were processed for tool-use request
     // inputs.
-    repeated ModalityTokenCount tool_use_prompt_tokens_details = 9
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    repeated ModalityTokenCount tool_use_prompt_tokens_details = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
   }
 
   // Candidate responses from the model.
@@ -778,8 +750,7 @@ message Candidate {
   // This field may be populated with recitation information for any text
   // included in the `content`. These are passages that are "recited" from
   // copyrighted material in the foundational LLM's training data.
-  CitationMetadata citation_metadata = 6
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  CitationMetadata citation_metadata = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Token count for this candidate.
   int32 token_count = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
@@ -788,25 +759,21 @@ message Candidate {
   // grounded answer.
   //
   // This field is populated for `GenerateAnswer` calls.
-  repeated GroundingAttribution grounding_attributions = 8
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated GroundingAttribution grounding_attributions = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Grounding metadata for the candidate.
   //
   // This field is populated for `GenerateContent` calls.
-  GroundingMetadata grounding_metadata = 9
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  GroundingMetadata grounding_metadata = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Average log probability score of the candidate.
   double avg_logprobs = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Log-likelihood scores for the response tokens and top tokens
-  LogprobsResult logprobs_result = 11
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  LogprobsResult logprobs_result = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Metadata related to url context retrieval tool.
-  UrlContextMetadata url_context_metadata = 13
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  UrlContextMetadata url_context_metadata = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Metadata related to url context retrieval tool.
@@ -924,15 +891,13 @@ message RetrievalMetadata {
   // least likely and 1 is the most likely. This score is only populated when
   // google search grounding and dynamic retrieval is enabled. It will be
   // compared to the threshold to determine whether to trigger google search.
-  float google_search_dynamic_retrieval_score = 2
-      [(google.api.field_behavior) = OPTIONAL];
+  float google_search_dynamic_retrieval_score = 2 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Metadata returned to client when grounding is enabled.
 message GroundingMetadata {
   // Optional. Google search entry for the following-up web searches.
-  optional SearchEntryPoint search_entry_point = 1
-      [(google.api.field_behavior) = OPTIONAL];
+  optional SearchEntryPoint search_entry_point = 1 [(google.api.field_behavior) = OPTIONAL];
 
   // List of supporting references retrieved from specified grounding source.
   repeated GroundingChunk grounding_chunks = 2;
@@ -950,8 +915,7 @@ message GroundingMetadata {
   // used with the PlacesContextElement widget in order to render contextual
   // data. Only populated in the case that grounding with Google Maps is
   // enabled.
-  optional string google_maps_widget_context_token = 7
-      [(google.api.field_behavior) = OPTIONAL];
+  optional string google_maps_widget_context_token = 7 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Google search entry point.
@@ -1040,8 +1004,7 @@ message GroundingChunk {
     Web web = 1;
 
     // Optional. Grounding chunk from context retrieved by the file search tool.
-    RetrievedContext retrieved_context = 2
-        [(google.api.field_behavior) = OPTIONAL];
+    RetrievedContext retrieved_context = 2 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. Grounding chunk from Google Maps.
     Maps maps = 3 [(google.api.field_behavior) = OPTIONAL];
@@ -1116,9 +1079,7 @@ message GenerateAnswerRequest {
   // Format: `model=models/{model}`.
   string model = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {
-      type: "generativelanguage.googleapis.com/Model"
-    }
+    (google.api.resource_reference) = {type: "generativelanguage.googleapis.com/Model"}
   ];
 
   // Required. The content of the current conversation with the `Model`. For
@@ -1150,8 +1111,7 @@ message GenerateAnswerRequest {
   // for detailed information on available safety settings. Also refer to the
   // [Safety guidance](https://ai.google.dev/gemini-api/docs/safety-guidance) to
   // learn how to incorporate safety considerations in your AI applications.
-  repeated SafetySetting safety_settings = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated SafetySetting safety_settings = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Controls the randomness of the output.
   //
@@ -1183,8 +1143,7 @@ message GenerateAnswerResponse {
 
     // Optional. If set, the input was blocked and no candidates are returned.
     // Rephrase the input.
-    optional BlockReason block_reason = 1
-        [(google.api.field_behavior) = OPTIONAL];
+    optional BlockReason block_reason = 1 [(google.api.field_behavior) = OPTIONAL];
 
     // Ratings for safety of the input.
     // There is at most one rating per category.
@@ -1212,8 +1171,7 @@ message GenerateAnswerResponse {
   // * Fall back to a general-purpose LLM that answers the question from world
   // knowledge. The threshold and nature of such fallbacks will depend on
   // individual use cases. `0.5` is a good starting threshold.
-  optional float answerable_probability = 2
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional float answerable_probability = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Feedback related to the input data used to answer the
   // question, as opposed to the model-generated response to the question.
@@ -1225,8 +1183,7 @@ message GenerateAnswerResponse {
   // `GenerateAnswerRequest.content`
   // - Grounding sources (`GenerateAnswerRequest.semantic_retriever` or
   // `GenerateAnswerRequest.inline_passages`)
-  optional InputFeedback input_feedback = 3
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional InputFeedback input_feedback = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Request containing the `Content` for the model to embed.
@@ -1239,9 +1196,7 @@ message EmbedContentRequest {
   // Format: `models/{model}`
   string model = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {
-      type: "generativelanguage.googleapis.com/Model"
-    }
+    (google.api.resource_reference) = {type: "generativelanguage.googleapis.com/Model"}
   ];
 
   // Required. The content to embed. Only the `parts.text` fields will be
@@ -1263,8 +1218,7 @@ message EmbedContentRequest {
   // excessive values in the output embedding are truncated from the end.
   // Supported by newer models since 2024 only. You cannot set this value if
   // using the earlier model (`models/embedding-001`).
-  optional int32 output_dimensionality = 5
-      [(google.api.field_behavior) = OPTIONAL];
+  optional int32 output_dimensionality = 5 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // A list of floats representing an embedding.
@@ -1289,23 +1243,19 @@ message BatchEmbedContentsRequest {
   // Format: `models/{model}`
   string model = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {
-      type: "generativelanguage.googleapis.com/Model"
-    }
+    (google.api.resource_reference) = {type: "generativelanguage.googleapis.com/Model"}
   ];
 
   // Required. Embed requests for the batch. The model in each of these requests
   // must match the model specified `BatchEmbedContentsRequest.model`.
-  repeated EmbedContentRequest requests = 2
-      [(google.api.field_behavior) = REQUIRED];
+  repeated EmbedContentRequest requests = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // The response to a `BatchEmbedContentsRequest`.
 message BatchEmbedContentsResponse {
   // Output only. The embeddings for each request, in the same order as provided
   // in the batch request.
-  repeated ContentEmbedding embeddings = 1
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ContentEmbedding embeddings = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Counts the number of tokens in the `prompt` sent to a model.
@@ -1321,9 +1271,7 @@ message CountTokensRequest {
   // Format: `models/{model}`
   string model = 1 [
     (google.api.field_behavior) = REQUIRED,
-    (google.api.resource_reference) = {
-      type: "generativelanguage.googleapis.com/Model"
-    }
+    (google.api.resource_reference) = {type: "generativelanguage.googleapis.com/Model"}
   ];
 
   // Optional. The input given to the model as a prompt. This field is ignored
@@ -1338,8 +1286,7 @@ message CountTokensRequest {
   // `Model`s/`Content`s and `generate_content_request`s are mutually
   // exclusive. You can either send `Model` + `Content`s or a
   // `generate_content_request`, but never both.
-  GenerateContentRequest generate_content_request = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  GenerateContentRequest generate_content_request = 3 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // A response from `CountTokens`.
@@ -1354,12 +1301,10 @@ message CountTokensResponse {
   int32 cached_content_token_count = 5;
 
   // Output only. List of modalities that were processed in the request input.
-  repeated ModalityTokenCount prompt_tokens_details = 6
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ModalityTokenCount prompt_tokens_details = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. List of modalities that were processed in the cached content.
-  repeated ModalityTokenCount cache_tokens_details = 7
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ModalityTokenCount cache_tokens_details = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Configures the realtime input behavior in `BidiGenerateContent`.
@@ -1395,26 +1340,22 @@ message RealtimeInputConfig {
     optional bool disabled = 2 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. Determines how likely speech is to be detected.
-    optional StartSensitivity start_of_speech_sensitivity = 3
-        [(google.api.field_behavior) = OPTIONAL];
+    optional StartSensitivity start_of_speech_sensitivity = 3 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. The required duration of detected speech before start-of-speech
     // is committed. The lower this value, the more sensitive the
     // start-of-speech detection is and shorter speech can be recognized.
     // However, this also increases the probability of false positives.
-    optional int32 prefix_padding_ms = 4
-        [(google.api.field_behavior) = OPTIONAL];
+    optional int32 prefix_padding_ms = 4 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. Determines how likely detected speech is ended.
-    optional EndSensitivity end_of_speech_sensitivity = 5
-        [(google.api.field_behavior) = OPTIONAL];
+    optional EndSensitivity end_of_speech_sensitivity = 5 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. The required duration of detected non-speech (e.g. silence)
     // before end-of-speech is committed. The larger this value, the longer
     // speech gaps can be without interrupting the user's activity but this will
     // increase the model's latency.
-    optional int32 silence_duration_ms = 6
-        [(google.api.field_behavior) = OPTIONAL];
+    optional int32 silence_duration_ms = 6 [(google.api.field_behavior) = OPTIONAL];
   }
 
   // The different ways of handling user activity.
@@ -1449,16 +1390,13 @@ message RealtimeInputConfig {
   // Optional. If not set, automatic activity detection is enabled by default.
   // If automatic voice detection is disabled, the client must send activity
   // signals.
-  AutomaticActivityDetection automatic_activity_detection = 1
-      [(google.api.field_behavior) = OPTIONAL];
+  AutomaticActivityDetection automatic_activity_detection = 1 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Defines what effect activity has.
-  optional ActivityHandling activity_handling = 3
-      [(google.api.field_behavior) = OPTIONAL];
+  optional ActivityHandling activity_handling = 3 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Defines which input is included in the user's turn.
-  optional TurnCoverage turn_coverage = 4
-      [(google.api.field_behavior) = OPTIONAL];
+  optional TurnCoverage turn_coverage = 4 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Session resumption configuration.
@@ -1540,8 +1478,7 @@ message BidiGenerateContentSetup {
   //  - `stop_sequence`
   //  - `routing_config`
   //  - `audio_timestamp`
-  GenerationConfig generation_config = 2
-      [(google.api.field_behavior) = OPTIONAL];
+  GenerationConfig generation_config = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The user provided system instructions for the model.
   //
@@ -1558,32 +1495,27 @@ message BidiGenerateContentSetup {
   repeated Tool tools = 4 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Configures the handling of realtime input.
-  RealtimeInputConfig realtime_input_config = 6
-      [(google.api.field_behavior) = OPTIONAL];
+  RealtimeInputConfig realtime_input_config = 6 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Configures session resumption mechanism.
   //
   // If included, the server will send `SessionResumptionUpdate` messages.
-  SessionResumptionConfig session_resumption = 7
-      [(google.api.field_behavior) = OPTIONAL];
+  SessionResumptionConfig session_resumption = 7 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Configures a context window compression mechanism.
   //
   // If included, the server will automatically reduce the size of the context
   // when it exceeds the configured length.
-  ContextWindowCompressionConfig context_window_compression = 8
-      [(google.api.field_behavior) = OPTIONAL];
+  ContextWindowCompressionConfig context_window_compression = 8 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. If set, enables transcription of voice input. The transcription
   // aligns with the input audio language, if configured.
-  AudioTranscriptionConfig input_audio_transcription = 10
-      [(google.api.field_behavior) = OPTIONAL];
+  AudioTranscriptionConfig input_audio_transcription = 10 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. If set, enables transcription of the model's audio output. The
   // transcription aligns with the language code specified for the output
   // audio, if configured.
-  AudioTranscriptionConfig output_audio_transcription = 11
-      [(google.api.field_behavior) = OPTIONAL];
+  AudioTranscriptionConfig output_audio_transcription = 11 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Incremental update of the current conversation delivered from the client.
@@ -1675,8 +1607,7 @@ message BidiGenerateContentRealtimeInput {
 // messages.
 message BidiGenerateContentToolResponse {
   // Optional. The response to the function calls.
-  repeated FunctionResponse function_responses = 1
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated FunctionResponse function_responses = 1 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Messages sent by the client in the BidiGenerateContent call.
@@ -1688,16 +1619,13 @@ message BidiGenerateContentClientMessage {
 
     // Optional. Incremental update of the current conversation delivered from
     // the client.
-    BidiGenerateContentClientContent client_content = 2
-        [(google.api.field_behavior) = OPTIONAL];
+    BidiGenerateContentClientContent client_content = 2 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. User input that is sent in real time.
-    BidiGenerateContentRealtimeInput realtime_input = 3
-        [(google.api.field_behavior) = OPTIONAL];
+    BidiGenerateContentRealtimeInput realtime_input = 3 [(google.api.field_behavior) = OPTIONAL];
 
     // Optional. Response to a `ToolCallMessage` received from the server.
-    BidiGenerateContentToolResponse tool_response = 4
-        [(google.api.field_behavior) = OPTIONAL];
+    BidiGenerateContentToolResponse tool_response = 4 [(google.api.field_behavior) = OPTIONAL];
   }
 }
 
@@ -1735,14 +1663,12 @@ message BidiGenerateContentServerContent {
   bool interrupted = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Grounding metadata for the generated content.
-  GroundingMetadata grounding_metadata = 4
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  GroundingMetadata grounding_metadata = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Input audio transcription. The transcription is sent
   // independently of the other server messages and there is no guaranteed
   // ordering.
-  BidiGenerateContentTranscription input_transcription = 6
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  BidiGenerateContentTranscription input_transcription = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Output audio transcription. These transcriptions are part of
   // the Generation output of the server. The last output transcription of this
@@ -1750,11 +1676,9 @@ message BidiGenerateContentServerContent {
   // turn are followed by `turn_complete`. There is no guaranteed exact ordering
   // between transcriptions and other `model_turn` output but the server tries
   // to send the transcripts close to the corresponding audio output.
-  BidiGenerateContentTranscription output_transcription = 7
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  BidiGenerateContentTranscription output_transcription = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  UrlContextMetadata url_context_metadata = 9
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  UrlContextMetadata url_context_metadata = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. If true, indicates that the model is not generating content
   // because it is waiting for more input from the user, e.g. because it expects
@@ -1766,8 +1690,7 @@ message BidiGenerateContentServerContent {
 // responses with the matching `id`s.
 message BidiGenerateContentToolCall {
   // Output only. The function call to be executed.
-  repeated FunctionCall function_calls = 2
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated FunctionCall function_calls = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Notification for the client that a previously issued `ToolCallMessage`
@@ -1819,30 +1742,25 @@ message BidiGenerateContentServerMessage {
   oneof message_type {
     // Output only. Sent in response to a `BidiGenerateContentSetup` message
     // from the client when setup is complete.
-    BidiGenerateContentSetupComplete setup_complete = 2
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    BidiGenerateContentSetupComplete setup_complete = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. Content generated by the model in response to client
     // messages.
-    BidiGenerateContentServerContent server_content = 3
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    BidiGenerateContentServerContent server_content = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. Request for the client to execute the `function_calls` and
     // return the responses with the matching `id`s.
-    BidiGenerateContentToolCall tool_call = 4
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    BidiGenerateContentToolCall tool_call = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. Notification for the client that a previously issued
     // `ToolCallMessage` with the specified `id`s should be cancelled.
-    BidiGenerateContentToolCallCancellation tool_call_cancellation = 5
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    BidiGenerateContentToolCallCancellation tool_call_cancellation = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. A notice that the server will soon disconnect.
     GoAway go_away = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 
     // Output only. Update of the session resumption state.
-    SessionResumptionUpdate session_resumption_update = 7
-        [(google.api.field_behavior) = OUTPUT_ONLY];
+    SessionResumptionUpdate session_resumption_update = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
   }
 
   // Output only. Usage metadata about the response(s).
@@ -1864,8 +1782,7 @@ message UsageMetadata {
   int32 response_token_count = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Number of tokens present in tool-use prompt(s).
-  int32 tool_use_prompt_token_count = 8
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  int32 tool_use_prompt_token_count = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Number of tokens of thoughts for thinking models.
   int32 thoughts_token_count = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
@@ -1875,19 +1792,15 @@ message UsageMetadata {
   int32 total_token_count = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. List of modalities that were processed in the request input.
-  repeated ModalityTokenCount prompt_tokens_details = 5
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ModalityTokenCount prompt_tokens_details = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. List of modalities of the cached content in the request input.
-  repeated ModalityTokenCount cache_tokens_details = 6
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ModalityTokenCount cache_tokens_details = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. List of modalities that were returned in the response.
-  repeated ModalityTokenCount response_tokens_details = 7
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ModalityTokenCount response_tokens_details = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. List of modalities that were processed for tool-use request
   // inputs.
-  repeated ModalityTokenCount tool_use_prompt_tokens_details = 9
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated ModalityTokenCount tool_use_prompt_tokens_details = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
 }

@@ -1,8 +1,8 @@
 syntax = "proto3";
 package adksim.v1;
 
-import "google/ai/generativelanguage/v1beta/generative_service.proto";
 import "adksim/v1/simulator_session.proto";
+import "google/ai/generativelanguage/v1beta/generative_service.proto";
 
 // SimulatorService provides the "Remote Brain" protocol for the ADK Agent Simulator.
 // It enables human-in-the-loop validation of agent workflows by intercepting LLM calls

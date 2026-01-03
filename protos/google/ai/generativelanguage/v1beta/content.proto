@@ -214,12 +214,10 @@ message FileData {
 // Metadata describes the input video content.
 message VideoMetadata {
   // Optional. The start offset of the video.
-  google.protobuf.Duration start_offset = 1
-      [(google.api.field_behavior) = OPTIONAL];
+  google.protobuf.Duration start_offset = 1 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The end offset of the video.
-  google.protobuf.Duration end_offset = 2
-      [(google.api.field_behavior) = OPTIONAL];
+  google.protobuf.Duration end_offset = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The frame rate of the video sent to the model. If not specified,
   // the default value will be 1.0. The fps range is (0.0, 24.0].
@@ -293,8 +291,7 @@ message Tool {
     // Optional. Filter search results to a specific time range.
     // If customers set a start time, they must set an end time (and vice
     // versa).
-    google.type.Interval time_range_filter = 2
-        [(google.api.field_behavior) = OPTIONAL];
+    google.type.Interval time_range_filter = 2 [(google.api.field_behavior) = OPTIONAL];
   }
 
   // Computer Use tool type.
@@ -316,8 +313,7 @@ message Tool {
     // automatically included. This can serve two purposes:
     // 1. Using a more restricted / different action space.
     // 2. Improving the definitions / instructions of predefined functions.
-    repeated string excluded_predefined_functions = 5
-        [(google.api.field_behavior) = OPTIONAL];
+    repeated string excluded_predefined_functions = 5 [(google.api.field_behavior) = OPTIONAL];
   }
 
   // Optional. A list of `FunctionDeclarations` available to the model that can
@@ -333,12 +329,10 @@ message Tool {
   // [FunctionResponse][google.ai.generativelanguage.v1beta.Part.function_response]
   // with the [Content.role][google.ai.generativelanguage.v1beta.Content.role]
   // "function" generation context for the next model turn.
-  repeated FunctionDeclaration function_declarations = 1
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated FunctionDeclaration function_declarations = 1 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Retrieval tool that is powered by Google search.
-  GoogleSearchRetrieval google_search_retrieval = 2
-      [(google.api.field_behavior) = OPTIONAL];
+  GoogleSearchRetrieval google_search_retrieval = 2 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Enables the model to execute code as part of generation.
   CodeExecution code_execution = 3 [(google.api.field_behavior) = OPTIONAL];
@@ -399,8 +393,7 @@ message FileSearch {
   // Required. Semantic retrieval resources to retrieve from.
   // Currently only supports one corpus. In the future we may open up multiple
   // corpora support.
-  repeated RetrievalResource retrieval_resources = 1
-      [(google.api.field_behavior) = REQUIRED];
+  repeated RetrievalResource retrieval_resources = 1 [(google.api.field_behavior) = REQUIRED];
 
   // Optional. The configuration for the retrieval.
   RetrievalConfig retrieval_config = 2 [(google.api.field_behavior) = OPTIONAL];
@@ -442,8 +435,7 @@ message CodeExecution {}
 // in the request.
 message ToolConfig {
   // Optional. Function calling config.
-  FunctionCallingConfig function_calling_config = 1
-      [(google.api.field_behavior) = OPTIONAL];
+  FunctionCallingConfig function_calling_config = 1 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Retrieval config.
   RetrievalConfig retrieval_config = 2 [(google.api.field_behavior) = OPTIONAL];
@@ -501,8 +493,7 @@ message FunctionCallingConfig {
   // This should only be set when the Mode is ANY or VALIDATED. Function names
   // should match [FunctionDeclaration.name]. When set, model will
   // predict a function call from only allowed function names.
-  repeated string allowed_function_names = 2
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated string allowed_function_names = 2 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Structured representation of a function declaration as defined by the
@@ -559,8 +550,7 @@ message FunctionDeclaration {
   // ```
   //
   // This field is mutually exclusive with `parameters`.
-  optional google.protobuf.Value parameters_json_schema = 6
-      [(google.api.field_behavior) = OPTIONAL];
+  optional google.protobuf.Value parameters_json_schema = 6 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Describes the output from this function in JSON Schema format.
   // Reflects the Open API 3.03 Response Object. The Schema defines the type
@@ -571,8 +561,7 @@ message FunctionDeclaration {
   // The value specified by the schema is the response value of the function.
   //
   // This field is mutually exclusive with `response`.
-  optional google.protobuf.Value response_json_schema = 7
-      [(google.api.field_behavior) = OPTIONAL];
+  optional google.protobuf.Value response_json_schema = 7 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Specifies the function Behavior.
   // Currently only supported by the BidiGenerateContent method.
@@ -593,8 +582,7 @@ message FunctionCall {
   string name = 1 [(google.api.field_behavior) = REQUIRED];
 
   // Optional. The function parameters and values in JSON object format.
-  optional google.protobuf.Struct args = 2
-      [(google.api.field_behavior) = OPTIONAL];
+  optional google.protobuf.Struct args = 2 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // The result output from a `FunctionCall` that contains a string
@@ -639,8 +627,7 @@ message FunctionResponse {
 
   // Optional. Ordered `Parts` that constitute a function response. Parts may
   // have different IANA MIME types.
-  repeated FunctionResponsePart parts = 8
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated FunctionResponsePart parts = 8 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Signals that function call continues, and more responses will be
   // returned, turning the function call into a generator.
@@ -735,8 +722,7 @@ message Schema {
   // Optional. The order of the properties.
   // Not a standard field in open api spec. Used to determine the order of the
   // properties in the response.
-  repeated string property_ordering = 23
-      [(google.api.field_behavior) = OPTIONAL];
+  repeated string property_ordering = 23 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. Default value of the field. Per JSON Schema, this field is
   // intended for documentation generators and doesn't affect validation. Thus

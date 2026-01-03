@@ -5,8 +5,6 @@ Reusable utilities for testing code built on Google ADK.
 See docs/developer/unit_testing.md for usage patterns.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from google.adk.agents import LlmAgent, RunConfig
@@ -110,7 +108,7 @@ class FakeLlm(BaseLlm):
     self,
     llm_request: LlmRequest,
     stream: bool = False,
-  ) -> AsyncGenerator[LlmResponse, None]:
+  ) -> AsyncGenerator[LlmResponse]:
     """Generate content from scripted responses."""
     self.requests.append(llm_request)
 
