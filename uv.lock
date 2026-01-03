@@ -8,12 +8,14 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "broadcaster" },
+    { name = "databases", extra = ["aiosqlite"] },
     { name = "google-adk" },
     { name = "httpx" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "rich" },
+    { name = "sqlalchemy" },
     { name = "structlog" },
     { name = "tenacity" },
     { name = "typer" },
@@ -36,12 +38,14 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "broadcaster", specifier = ">=0.3.1" },
+    { name = "databases", extras = ["aiosqlite"], specifier = ">=0.9.0" },
     { name = "google-adk", specifier = ">=1.21.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pydantic", specifier = ">=2.10.0" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "rich", specifier = ">=13.8.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.0" },
     { name = "structlog", specifier = ">=25.5.0" },
     { name = "tenacity", specifier = ">=9.1.2" },
     { name = "typer", specifier = ">=0.12.5" },
@@ -377,6 +381,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/6e/1c8331ddf91ca4730ab3086a0f1be19c65510a33b5a441cb334e7a2d2560/cryptography-46.0.3-cp38-abi3-win32.whl", hash = "sha256:6276eb85ef938dc035d59b87c8a7dc559a232f954962520137529d77b18ff1df", size = 3036695, upload-time = "2025-10-15T23:18:08.672Z" },
     { url = "https://files.pythonhosted.org/packages/90/45/b0d691df20633eff80955a0fc7695ff9051ffce8b69741444bd9ed7bd0db/cryptography-46.0.3-cp38-abi3-win_amd64.whl", hash = "sha256:416260257577718c05135c55958b674000baef9a1c7d9e8f306ec60d71db850f", size = 3501720, upload-time = "2025-10-15T23:18:10.632Z" },
     { url = "https://files.pythonhosted.org/packages/e8/cb/2da4cc83f5edb9c3257d09e1e7ab7b23f049c7962cae8d842bbef0a9cec9/cryptography-46.0.3-cp38-abi3-win_arm64.whl", hash = "sha256:d89c3468de4cdc4f08a57e214384d0471911a3830fcdaf7a8cc587e42a866372", size = 2918740, upload-time = "2025-10-15T23:18:12.277Z" },
+]
+
+[[package]]
+name = "databases"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/76/de/ea55722907bd1b2389b01e362faa3c66a09d5a8463c13d44c80da7b32497/databases-0.9.0.tar.gz", hash = "sha256:d2f259677609bf187737644c95fa41701072e995dfeb8d2882f335795c5b61b0", size = 31084, upload-time = "2024-03-01T17:39:28.378Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d5/43/6035922af5471f1a196851831a1d5f403447401b395f474bf673efa8959f/databases-0.9.0-py3-none-any.whl", hash = "sha256:9ee657c9863b34f8d3a06c06eafbe1bda68af2a434b56996312edf1f1c0b6297", size = 25580, upload-time = "2024-03-01T17:39:26.352Z" },
+]
+
+[package.optional-dependencies]
+aiosqlite = [
+    { name = "aiosqlite" },
 ]
 
 [[package]]
