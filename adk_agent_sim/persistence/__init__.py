@@ -5,6 +5,7 @@ for storing SimulatorSession and SessionEvent protos using the Promoted Field
 pattern.
 """
 
+from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.schema import events, metadata, sessions
 
-__all__ = ["events", "metadata", "sessions"]
+__all__ = ["Database", "events", "metadata", "sessions"]
