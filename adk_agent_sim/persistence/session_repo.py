@@ -6,6 +6,8 @@ queryable fields extracted into SQL columns for efficient filtering.
 
 from typing import TYPE_CHECKING
 
+from adk_agent_sim.persistence.schema import sessions
+
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorSession
   from adk_agent_sim.persistence.database import Database
@@ -48,17 +50,13 @@ class SessionRepository:
     # Serialize full proto to bytes
     proto_blob = bytes(session)
 
-    # Insert into sessions table
-    query = """
-      INSERT INTO sessions (id, created_at, status, proto_blob)
-      VALUES (:id, :created_at, :status, :proto_blob)
-    """
-    values = {
-      "id": session_id,
-      "created_at": created_at,
-      "status": status,
-      "proto_blob": proto_blob,
-    }
-    await self._database.execute(query, values)
+    # Build insert query using SQLAlchemy Core
+    query = sessions.insert().values(
+      id=session_id,
+      created_at=created_at,
+      status=status,
+      proto_blob=proto_blob,
+    )
+    await self._database.execute(query)
 
     return session

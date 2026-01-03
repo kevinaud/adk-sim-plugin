@@ -1,6 +1,7 @@
 """Tests for the Database connection manager."""
 
 import pytest
+from sqlalchemy import Column, MetaData, Table, select
 
 from adk_agent_sim.persistence import metadata
 from adk_agent_sim.persistence.database import DEFAULT_DATABASE_URL, Database
@@ -8,6 +9,14 @@ from adk_agent_sim.persistence.database import DEFAULT_DATABASE_URL, Database
 # In-memory SQLite URL with shared cache for testing
 # (shared cache is required for in-memory DBs with the databases library)
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:?cache=shared"
+
+# Define sqlite_master table for querying table names
+_sqlite_master = Table(
+  "sqlite_master",
+  MetaData(),
+  Column("type"),
+  Column("name"),
+)
 
 
 class TestDatabaseConnection:
@@ -42,8 +51,12 @@ class TestDatabaseTables:
     await db.connect()
     await db.create_tables()
 
-    # Verify tables exist by querying sqlite_master
-    query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    # Verify tables exist by querying sqlite_master using SQLAlchemy Core
+    query = (
+      select(_sqlite_master.c.name)
+      .where(_sqlite_master.c.type == "table")
+      .order_by(_sqlite_master.c.name)
+    )
     rows = await db.fetch_all(query)
     table_names = [row["name"] for row in rows]
 
@@ -62,7 +75,7 @@ class TestDatabaseTables:
 
     # Verify all metadata tables were created
     expected_tables = set(metadata.tables.keys())
-    query = "SELECT name FROM sqlite_master WHERE type='table'"
+    query = select(_sqlite_master.c.name).where(_sqlite_master.c.type == "table")
     rows = await db.fetch_all(query)
     actual_tables = {row["name"] for row in rows}
 
