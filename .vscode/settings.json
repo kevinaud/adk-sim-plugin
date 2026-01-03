@@ -29,5 +29,6 @@
     },
     "protobuf.externalLinter.enabled": true,
     "protobuf.externalLinter.linter": "buf",
-    "protobuf.externalLinter.bufPath": "/usr/local/bin/buf"
+    "protobuf.externalLinter.bufPath": "/usr/local/bin/buf",
+    "protobuf.buf.path": "/usr/local/bin/buf"
 }
