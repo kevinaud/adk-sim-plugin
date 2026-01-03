@@ -141,6 +141,7 @@ reportUnknownParameterType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
 reportUnknownLambdaType = false
+reportUnknownMemberType = false
 reportMissingTypeArgument = false
 reportAttributeAccessIssue = false
 reportPrivateUsage = false
