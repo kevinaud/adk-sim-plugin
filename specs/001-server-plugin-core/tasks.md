@@ -22,470 +22,517 @@
 - Include exact file paths in descriptions
 - Each PR groups related tasks that fit within 100-200 LOC
 
-## User Story Coverage
+## User Story → PR Mapping
 
 | User Story | Priority | PRs |
 |------------|----------|-----|
-| US1: Basic Agent Interception | P1 | PR 21-30, PR 31 |
-| US2: Selective Agent Interception | P1 | PR 29, PR 32 |
-| US3: Session Persistence | P2 | PR 3-9, PR 34 |
-| US4: Sequential Request Queueing | P2 | PR 13-14, PR 33 |
-| US5: Environment Configuration | P3 | PR 21 |
+| US1: Basic Agent Interception | P1 | PR 9-18, PR 19-29 |
+| US2: Selective Agent Interception | P1 | PR 28 (target_agents filtering) |
+| US3: Session Persistence | P2 | PR 1-8 (data layer), PR 29 (reconnect) |
+| US4: Sequential Request Queueing | P2 | PR 11, PR 12, PR 15 |
+| US5: Environment Configuration | P3 | PR 19 |
 
 ---
 
-## Phase 1: Foundation & Data Layer (PRs 1-10)
+## Phase 1: Foundation & Data Layer
 
 ---
 
-## PR 1: SimulatorSession Model (~80 lines)
+## PR 1: Database Schema (~80 lines)
 
-**Branch**: `git town hack feature/001-session-model`
+**Branch**: `git town hack feature/001-db-schema`
 **Depends on**: -
-**Goal**: Define SimulatorSession dataclass with validation
+**Goal**: SQLAlchemy Core schema definitions for sessions and events tables
+**User Stories**: US3 (Session Persistence)
 
-- [ ] T001 [PR1] Create models package with `__init__.py` in `adk_agent_sim/models/__init__.py`
-- [ ] T002 [PR1] Define SimulatorSession dataclass with id, created_at, description, status fields in `adk_agent_sim/models/session.py`
-- [ ] T003 [PR1] Add validation for status transitions (active → completed only) in `adk_agent_sim/models/session.py`
-- [ ] T004 [PR1] Add SimulatorSession tests in `tests/unit/models/test_session.py`
+- [ ] T001 [PR1] Create `adk_agent_sim/persistence/__init__.py` with module exports
+- [ ] T002 [PR1] Define `sessions` table with promoted fields (id, created_at, status, proto_blob) in `adk_agent_sim/persistence/schema.py`
+- [ ] T003 [PR1] Define `events` table with promoted fields (event_id, session_id, timestamp, turn_id, payload_type, proto_blob) in `adk_agent_sim/persistence/schema.py`
+- [ ] T004 [PR1] Add composite indexes for session timeline and turn_id queries in `adk_agent_sim/persistence/schema.py`
 
 ---
 
-## PR 2: Event Types (~120 lines)
+## PR 2: Database Connection (~100 lines)
 
-**Branch**: `git town append feature/002-event-types`
+**Branch**: `git town append feature/002-db-connection`
 **Depends on**: PR 1
-**Goal**: Define SessionEvent, SimulatedLlmRequest, HumanResponse dataclasses
+**Goal**: Async database connection manager using `databases` library
+**User Stories**: US3 (Session Persistence)
 
-- [ ] T005 [PR2] Define SessionEvent dataclass with event_id, session_id, timestamp, turn_id, agent_name, payload in `adk_agent_sim/models/events.py`
-- [ ] T006 [PR2] Define SimulatedLlmRequest dataclass with contents, system_instruction, tools fields in `adk_agent_sim/models/events.py`
-- [ ] T007 [PR2] Define HumanResponse dataclass with candidates field in `adk_agent_sim/models/events.py`
-- [ ] T008 [PR2] Add event type tests in `tests/unit/models/test_events.py`
-
----
-
-## PR 3: SQLite Schema (~100 lines)
-
-**Branch**: `git town append feature/003-db-schema`
-**Depends on**: PR 1
-**Goal**: Define SQLite schema for sessions and events tables
-
-- [ ] T009 [PR3] Create persistence package with `__init__.py` in `adk_agent_sim/persistence/__init__.py`
-- [ ] T010 [PR3] Define schema SQL constants (CREATE TABLE sessions, events) in `adk_agent_sim/persistence/schema.py`
-- [ ] T011 [PR3] Add indexes for session_id and turn_id lookups in `adk_agent_sim/persistence/schema.py`
-- [ ] T012 [PR3] Add schema validation tests in `tests/unit/persistence/test_schema.py`
+- [ ] T005 [PR2] Create `Database` connection class with `connect()` and `disconnect()` in `adk_agent_sim/persistence/database.py`
+- [ ] T006 [PR2] Implement `create_tables()` using SQLAlchemy metadata in `adk_agent_sim/persistence/database.py`
+- [ ] T007 [PR2] Add database URL configuration (default: `sqlite:///./simulator.db`) in `adk_agent_sim/persistence/database.py`
+- [ ] T008 [PR2] Add database connection tests in `tests/unit/persistence/test_database.py`
 
 ---
 
-## PR 4: Database Connection Manager (~120 lines)
+## PR 3: SessionRepository.create() (~150 lines)
 
-**Branch**: `git town append feature/004-db-connection`
-**Depends on**: PR 3
-**Goal**: Async SQLite connection manager using aiosqlite
-
-- [ ] T013 [PR4] Implement DatabaseManager class with async context manager in `adk_agent_sim/persistence/database.py`
-- [ ] T014 [PR4] Add connect(), close(), execute() methods in `adk_agent_sim/persistence/database.py`
-- [ ] T015 [PR4] Add schema initialization on first connect in `adk_agent_sim/persistence/database.py`
-- [ ] T016 [PR4] Add DatabaseManager tests with real SQLite (in-memory) in `tests/unit/persistence/test_database.py`
-
----
-
-## PR 5: SessionRepository.create() (~150 lines)
-
-**Branch**: `git town append feature/005-session-repo-create`
-**Depends on**: PR 4
-**Goal**: Implement session creation in repository
-
-- [ ] T017 [PR5] Create SessionRepository class skeleton in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T018 [PR5] Implement SessionRepository.create(description) method in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T019 [PR5] Add UUID generation and timestamp handling in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T020 [PR5] Add SessionRepository.create() tests in `tests/unit/persistence/test_session_repo.py`
-
----
-
-## PR 6: SessionRepository.get_by_id() (~100 lines)
-
-**Branch**: `git town append feature/006-session-repo-get`
-**Depends on**: PR 5
-**Goal**: Implement session retrieval by ID
-
-- [ ] T021 [PR6] Implement SessionRepository.get_by_id(session_id) method in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T022 [PR6] Add row-to-model mapping helper in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T023 [PR6] Add get_by_id tests (found, not found cases) in `tests/unit/persistence/test_session_repo.py`
-
----
-
-## PR 7: SessionRepository.list_all() (~120 lines)
-
-**Branch**: `git town append feature/007-session-repo-list`
-**Depends on**: PR 6
-**Goal**: Implement session listing with pagination
-
-- [ ] T024 [PR7] Implement SessionRepository.list_all(limit, offset) method in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T025 [PR7] Add order by created_at DESC in `adk_agent_sim/persistence/session_repo.py`
-- [ ] T026 [PR7] Add list_all tests (empty, pagination, ordering) in `tests/unit/persistence/test_session_repo.py`
-
----
-
-## PR 8: EventRepository.insert() (~100 lines)
-
-**Branch**: `git town append feature/008-event-repo-insert`
-**Depends on**: PR 4
-**Goal**: Implement event insertion
-
-- [ ] T027 [PR8] Create EventRepository class skeleton in `adk_agent_sim/persistence/event_repo.py`
-- [ ] T028 [PR8] Implement EventRepository.insert(event) method with proto serialization in `adk_agent_sim/persistence/event_repo.py`
-- [ ] T029 [PR8] Add EventRepository.insert() tests in `tests/unit/persistence/test_event_repo.py`
-
----
-
-## PR 9: EventRepository.get_by_session() (~120 lines)
-
-**Branch**: `git town append feature/009-event-repo-query`
-**Depends on**: PR 8
-**Goal**: Implement event retrieval by session
-
-- [ ] T030 [PR9] Implement EventRepository.get_by_session(session_id) method in `adk_agent_sim/persistence/event_repo.py`
-- [ ] T031 [PR9] Add proto deserialization for payload reconstruction in `adk_agent_sim/persistence/event_repo.py`
-- [ ] T032 [PR9] Add get_by_session tests (multiple events, ordering) in `tests/unit/persistence/test_event_repo.py`
-
----
-
-## PR 10: Fake Repositories (~150 lines)
-
-**Branch**: `git town append feature/010-fake-repos`
-**Depends on**: PR 9
-**Goal**: Create in-memory fake implementations for testing
-
-- [ ] T033 [PR10] Create test fixtures package in `tests/fixtures/__init__.py`
-- [ ] T034 [PR10] [P] Implement FakeSessionRepository in `tests/fixtures/fake_session_repo.py`
-- [ ] T035 [PR10] [P] Implement FakeEventRepository in `tests/fixtures/fake_event_repo.py`
-- [ ] T036 [PR10] Add fake repository tests verifying behavior parity in `tests/fixtures/test_fakes.py`
-
----
-
-## Phase 2: Server Core (PRs 11-20)
-
----
-
-## PR 11: SessionManager Shell + create_session() (~120 lines)
-
-**Branch**: `git town append feature/011-session-manager`
-**Depends on**: PR 10
-**Goal**: SessionManager class with session creation
-
-- [ ] T037 [PR11] Create SessionManager class with repository injection in `adk_agent_sim/server/session_manager.py`
-- [ ] T038 [PR11] Implement SessionManager.create_session(description) method in `adk_agent_sim/server/session_manager.py`
-- [ ] T039 [PR11] Add SessionManager.create_session() tests using FakeSessionRepository in `tests/unit/server/test_session_manager.py`
-
----
-
-## PR 12: SessionManager.get_session() (~100 lines)
-
-**Branch**: `git town append feature/012-session-manager-get`
-**Depends on**: PR 11
-**Goal**: Session retrieval with reconnection support
-
-- [ ] T040 [PR12] Implement SessionManager.get_session(session_id) method in `adk_agent_sim/server/session_manager.py`
-- [ ] T041 [PR12] Add session validation (exists, active status) in `adk_agent_sim/server/session_manager.py`
-- [ ] T042 [PR12] Add get_session tests (found, not found, completed) in `tests/unit/server/test_session_manager.py`
-
----
-
-## PR 13: RequestQueue Implementation (~150 lines)
-
-**Branch**: `git town append feature/013-request-queue`
+**Branch**: `git town append feature/003-session-repo-create`
 **Depends on**: PR 2
-**Goal**: FIFO request queue per session (FR-004, US4)
+**Goal**: Create sessions with Promoted Field pattern
+**User Stories**: US3 (Session Persistence)
 
-- [ ] T043 [PR13] Define RequestQueue class using asyncio.Queue in `adk_agent_sim/models/queue.py`
-- [ ] T044 [PR13] Implement enqueue(request_event) method in `adk_agent_sim/models/queue.py`
-- [ ] T045 [PR13] Implement dequeue(), peek(), is_empty() methods in `adk_agent_sim/models/queue.py`
-- [ ] T046 [PR13] Add RequestQueue tests (FIFO ordering, concurrent enqueue) in `tests/unit/models/test_queue.py`
+- [ ] T009 [PR3] Create `SessionRepository` class with `__init__(database)` in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T010 [PR3] Implement `create(session: SimulatorSession, status: str = "active")` with proto blob serialization in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T011 [PR3] Add `create()` tests verifying proto serialization and promoted field extraction in `tests/unit/persistence/test_session_repo.py`
 
 ---
 
-## PR 14: EventBroadcaster (~120 lines)
+## PR 4: SessionRepository.get_by_id() (~100 lines)
 
-**Branch**: `git town append feature/014-event-broadcaster`
+**Branch**: `git town append feature/004-session-repo-get`
+**Depends on**: PR 3
+**Goal**: Retrieve sessions by ID with proto deserialization
+**User Stories**: US3 (Session Persistence)
+
+- [ ] T012 [PR4] Implement `get_by_id(session_id: str) -> SimulatorSession | None` in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T013 [PR4] Add proto blob deserialization using `SimulatorSession().parse()` in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T014 [PR4] Add `get_by_id()` tests for existing and non-existent sessions in `tests/unit/persistence/test_session_repo.py`
+
+---
+
+## PR 5: SessionRepository.list_all() (~120 lines)
+
+**Branch**: `git town append feature/005-session-repo-list`
+**Depends on**: PR 4
+**Goal**: List sessions with pagination support
+**User Stories**: US3 (Session Persistence)
+
+- [ ] T015 [PR5] Implement `list_all(page_size: int, page_token: str | None)` in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T016 [PR5] Add pagination using `created_at` cursor-based approach in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T017 [PR5] Implement `update_status(session_id: str, status: str)` for session lifecycle in `adk_agent_sim/persistence/session_repo.py`
+- [ ] T018 [PR5] Add `list_all()` and `update_status()` tests in `tests/unit/persistence/test_session_repo.py`
+
+---
+
+## PR 6: EventRepository.insert() (~120 lines)
+
+**Branch**: `git town append feature/006-event-repo-insert`
+**Depends on**: PR 2
+**Goal**: Insert events with proto blob serialization
+**User Stories**: US3 (Session Persistence)
+
+- [ ] T019 [PR6] Create `EventRepository` class with `__init__(database)` in `adk_agent_sim/persistence/event_repo.py`
+- [ ] T020 [PR6] Implement `insert(event: SessionEvent)` with promoted field extraction in `adk_agent_sim/persistence/event_repo.py`
+- [ ] T021 [PR6] Determine `payload_type` from oneof field (`llm_request` vs `llm_response`) in `adk_agent_sim/persistence/event_repo.py`
+- [ ] T022 [PR6] Add `insert()` tests for request and response events in `tests/unit/persistence/test_event_repo.py`
+
+---
+
+## PR 7: EventRepository.get_by_session() (~120 lines)
+
+**Branch**: `git town append feature/007-event-repo-query`
+**Depends on**: PR 6
+**Goal**: Query events by session for replay
+**User Stories**: US3 (Session Persistence)
+
+- [ ] T023 [PR7] Implement `get_by_session(session_id: str) -> list[SessionEvent]` ordered by timestamp in `adk_agent_sim/persistence/event_repo.py`
+- [ ] T024 [PR7] Implement `get_by_turn_id(turn_id: str) -> list[SessionEvent]` for correlation lookup in `adk_agent_sim/persistence/event_repo.py`
+- [ ] T025 [PR7] Add `get_by_session()` and `get_by_turn_id()` tests in `tests/unit/persistence/test_event_repo.py`
+
+---
+
+## PR 8: Fake Repositories (~150 lines)
+
+**Branch**: `git town append feature/008-fake-repos`
+**Depends on**: PR 7
+**Goal**: In-memory fakes for unit testing (no mocks per Constitution)
+**User Stories**: All (testing infrastructure)
+
+- [ ] T026 [PR8] Create `FakeSessionRepository` with in-memory dict storage in `tests/fixtures/fake_session_repo.py`
+- [ ] T027 [PR8] [P] Create `FakeEventRepository` with in-memory list storage in `tests/fixtures/fake_event_repo.py`
+- [ ] T028 [PR8] Create `tests/fixtures/__init__.py` exporting both fakes
+- [ ] T029 [PR8] Add fake repository tests verifying same interface as real repos in `tests/unit/fixtures/test_fakes.py`
+
+---
+
+## Phase 2: Server Core
+
+---
+
+## PR 9: SessionManager Shell + create_session() (~120 lines)
+
+**Branch**: `git town append feature/009-session-manager`
+**Depends on**: PR 8
+**Goal**: Session lifecycle management - creation
+**User Stories**: US1 (Basic Interception)
+
+- [ ] T030 [PR9] Create `SessionManager` class with `__init__(session_repo, event_repo)` in `adk_agent_sim/server/session_manager.py`
+- [ ] T031 [PR9] Implement `create_session(description: str | None) -> SimulatorSession` generating UUID and timestamp in `adk_agent_sim/server/session_manager.py`
+- [ ] T032 [PR9] Store active sessions in memory dict for fast lookup in `adk_agent_sim/server/session_manager.py`
+- [ ] T033 [PR9] Add `create_session()` tests using `FakeSessionRepository` in `tests/unit/server/test_session_manager.py`
+
+---
+
+## PR 10: SessionManager.get_session() + Reconnection (~100 lines)
+
+**Branch**: `git town append feature/010-session-manager-get`
+**Depends on**: PR 9
+**Goal**: Session retrieval with reconnection support
+**User Stories**: US1 (Basic Interception), US3 (Persistence)
+
+- [ ] T034 [PR10] Implement `get_session(session_id: str) -> SimulatorSession | None` checking memory then DB in `adk_agent_sim/server/session_manager.py`
+- [ ] T035 [PR10] Load session into memory cache on reconnection in `adk_agent_sim/server/session_manager.py`
+- [ ] T036 [PR10] Add `get_session()` tests for cache hit, cache miss + DB hit, and not found in `tests/unit/server/test_session_manager.py`
+
+---
+
+## PR 11: RequestQueue (~150 lines)
+
+**Branch**: `git town append feature/011-request-queue`
+**Depends on**: PR 8
+**Goal**: FIFO queue per session for sequential request handling
+**User Stories**: US4 (Sequential Queueing)
+
+- [ ] T037 [PR11] Create `RequestQueue` class with `asyncio.Queue` per session in `adk_agent_sim/server/queue.py`
+- [ ] T038 [PR11] Implement `enqueue(event: SessionEvent)` adding to session queue in `adk_agent_sim/server/queue.py`
+- [ ] T039 [PR11] Implement `dequeue(session_id: str) -> SessionEvent` with await in `adk_agent_sim/server/queue.py`
+- [ ] T040 [PR11] Implement `get_current(session_id: str) -> SessionEvent | None` returning head without removal in `adk_agent_sim/server/queue.py`
+- [ ] T041 [PR11] Add `RequestQueue` tests verifying FIFO order and per-session isolation in `tests/unit/server/test_queue.py`
+
+---
+
+## PR 12: EventBroadcaster (~120 lines)
+
+**Branch**: `git town append feature/012-event-broadcaster`
+**Depends on**: PR 11
+**Goal**: Broadcast events to all subscribers for a session
+**User Stories**: US4 (Sequential Queueing), US1 (Basic Interception)
+
+- [ ] T042 [PR12] Create `EventBroadcaster` class managing subscriber sets per session in `adk_agent_sim/server/broadcaster.py`
+- [ ] T043 [PR12] Implement `subscribe(session_id: str) -> AsyncIterator[SessionEvent]` using asyncio.Queue per subscriber in `adk_agent_sim/server/broadcaster.py`
+- [ ] T044 [PR12] Implement `broadcast(session_id: str, event: SessionEvent)` pushing to all subscriber queues in `adk_agent_sim/server/broadcaster.py`
+- [ ] T045 [PR12] Add `EventBroadcaster` tests for multi-subscriber scenarios in `tests/unit/server/test_broadcaster.py`
+
+---
+
+## PR 13: SimulatorService.create_session() RPC (~120 lines)
+
+**Branch**: `git town append feature/013-grpc-create-session`
+**Depends on**: PR 10
+**Goal**: gRPC endpoint for session creation
+**User Stories**: US1 (Basic Interception)
+
+- [ ] T046 [PR13] Enhance `SimulatorService` with `SessionManager` dependency injection in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T047 [PR13] Implement `create_session(request: CreateSessionRequest) -> CreateSessionResponse` delegating to SessionManager in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T048 [PR13] Add `create_session()` RPC tests using fake repos in `tests/unit/server/test_simulator_service.py`
+
+---
+
+## PR 14: SimulatorService.list_sessions() RPC (~100 lines)
+
+**Branch**: `git town append feature/014-grpc-list-sessions`
 **Depends on**: PR 13
-**Goal**: Broadcast events to connected subscribers
+**Goal**: gRPC endpoint for listing sessions
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T047 [PR14] Create EventBroadcaster class in `adk_agent_sim/server/broadcaster.py`
-- [ ] T048 [PR14] Implement subscribe(session_id) -> AsyncIterator in `adk_agent_sim/server/broadcaster.py`
-- [ ] T049 [PR14] Implement broadcast(session_id, event) method in `adk_agent_sim/server/broadcaster.py`
-- [ ] T050 [PR14] Add EventBroadcaster tests in `tests/unit/server/test_broadcaster.py`
+- [ ] T049 [PR14] Implement `list_sessions(request: ListSessionsRequest) -> ListSessionsResponse` with pagination in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T050 [PR14] Add `list_sessions()` RPC tests verifying pagination in `tests/unit/server/test_simulator_service.py`
 
 ---
 
-## PR 15: gRPC create_session() RPC (~120 lines)
+## PR 15: SimulatorService.submit_request() RPC (~150 lines)
 
-**Branch**: `git town append feature/015-grpc-create-session`
+**Branch**: `git town append feature/015-grpc-submit-request`
 **Depends on**: PR 12
-**Goal**: Implement CreateSession RPC endpoint (FR-005, FR-006)
+**Goal**: gRPC endpoint for plugin to submit intercepted requests
+**User Stories**: US1 (Basic Interception), US4 (Sequential Queueing)
 
-- [ ] T051 [PR15] Add SessionManager dependency to SimulatorService in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T052 [PR15] Implement create_session() RPC with description parameter in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T053 [PR15] Add create_session RPC tests in `tests/unit/server/test_simulator_service.py`
+- [ ] T051 [PR15] Implement `submit_request(request: SubmitRequestRequest) -> SubmitRequestResponse` in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T052 [PR15] Create `SessionEvent` with `llm_request` payload and persist to EventRepository in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T053 [PR15] Enqueue event in RequestQueue and broadcast to subscribers in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T054 [PR15] Add `submit_request()` RPC tests in `tests/unit/server/test_simulator_service.py`
 
 ---
 
-## PR 16: gRPC list_sessions() RPC (~100 lines)
+## PR 16: SimulatorService.submit_decision() RPC (~120 lines)
 
-**Branch**: `git town append feature/016-grpc-list-sessions`
+**Branch**: `git town append feature/016-grpc-submit-decision`
 **Depends on**: PR 15
-**Goal**: Implement ListSessions RPC endpoint (FR-007)
+**Goal**: gRPC endpoint for human to submit response
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T054 [PR16] Implement list_sessions() RPC with pagination in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T055 [PR16] Add proto response mapping in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T056 [PR16] Add list_sessions RPC tests in `tests/unit/server/test_simulator_service.py`
-
----
-
-## PR 17: gRPC submit_request() RPC (~150 lines)
-
-**Branch**: `git town append feature/017-grpc-submit-request`
-**Depends on**: PR 14
-**Goal**: Implement SubmitRequest RPC for agent requests (FR-001)
-
-- [ ] T057 [PR17] Implement submit_request() RPC in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T058 [PR17] Add event creation and persistence in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T059 [PR17] Add request queueing via RequestQueue in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T060 [PR17] Add submit_request RPC tests in `tests/unit/server/test_simulator_service.py`
+- [ ] T055 [PR16] Implement `submit_decision(request: SubmitDecisionRequest) -> SubmitDecisionResponse` in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T056 [PR16] Create `SessionEvent` with `llm_response` payload linked by `turn_id` in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T057 [PR16] Dequeue from RequestQueue and broadcast response event in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T058 [PR16] Add `submit_decision()` RPC tests in `tests/unit/server/test_simulator_service.py`
 
 ---
 
-## PR 18: gRPC submit_decision() RPC (~120 lines)
+## PR 17: SimulatorService.subscribe() with Replay (~180 lines)
 
-**Branch**: `git town append feature/018-grpc-submit-decision`
+**Branch**: `git town append feature/017-grpc-subscribe`
+**Depends on**: PR 16
+**Goal**: gRPC streaming endpoint with historical event replay
+**User Stories**: US1 (Basic Interception), US3 (Persistence)
+
+- [ ] T059 [PR17] Implement `subscribe(request: SubscribeRequest) -> AsyncIterator[SubscribeResponse]` in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T060 [PR17] Load historical events from EventRepository and stream first in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T061 [PR17] Switch to live mode using EventBroadcaster subscription in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T062 [PR17] Handle subscriber disconnection gracefully in `adk_agent_sim/server/services/simulator_service.py`
+- [ ] T063 [PR17] Add `subscribe()` RPC tests for replay and live streaming in `tests/unit/server/test_simulator_service.py`
+
+---
+
+## PR 18: Server Entrypoint (~100 lines)
+
+**Branch**: `git town append feature/018-server-entrypoint`
 **Depends on**: PR 17
-**Goal**: Implement SubmitDecision RPC for human responses
+**Goal**: Main server startup with graceful shutdown
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T061 [PR18] Implement submit_decision() RPC with turn_id correlation in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T062 [PR18] Add response event creation and persistence in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T063 [PR18] Add queue dequeue and broadcast in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T064 [PR18] Add submit_decision RPC tests in `tests/unit/server/test_simulator_service.py`
-
----
-
-## PR 19: gRPC subscribe() with Replay (~180 lines)
-
-**Branch**: `git town append feature/019-grpc-subscribe`
-**Depends on**: PR 18
-**Goal**: Implement Subscribe streaming RPC with event replay (FR-001, FR-003)
-
-- [ ] T065 [PR19] Implement subscribe() streaming RPC in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T066 [PR19] Add historical event replay from EventRepository in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T067 [PR19] Add live event streaming via EventBroadcaster in `adk_agent_sim/server/services/simulator_service.py`
-- [ ] T068 [PR19] Add subscribe RPC tests (replay + live) in `tests/unit/server/test_simulator_service.py`
+- [ ] T064 [PR18] Enhance `main.py` with database initialization on startup in `adk_agent_sim/server/main.py`
+- [ ] T065 [PR18] Wire up `SessionManager`, `EventBroadcaster`, `RequestQueue` dependencies in `adk_agent_sim/server/main.py`
+- [ ] T066 [PR18] Implement graceful shutdown closing database connection in `adk_agent_sim/server/main.py`
+- [ ] T067 [PR18] Add server startup tests verifying dependency wiring in `tests/unit/server/test_main.py`
 
 ---
 
-## PR 20: Server Entrypoint (~100 lines)
-
-**Branch**: `git town append feature/020-server-entrypoint`
-**Depends on**: PR 19
-**Goal**: Server main with graceful shutdown
-
-- [ ] T069 [PR20] Enhance server main() with dependency wiring in `adk_agent_sim/server/main.py`
-- [ ] T070 [PR20] Add graceful shutdown signal handling in `adk_agent_sim/server/main.py`
-- [ ] T071 [PR20] Add server startup/shutdown tests in `tests/unit/server/test_main.py`
+## Phase 3: Plugin Core
 
 ---
 
-## Phase 3: Plugin Core (PRs 21-30)
+## PR 19: PluginConfig (~100 lines)
 
----
-
-## PR 21: PluginConfig (~100 lines)
-
-**Branch**: `git town append feature/021-plugin-config`
+**Branch**: `git town append feature/019-plugin-config`
 **Depends on**: -
-**Goal**: Configuration with env var fallback (FR-015, FR-017, US5)
+**Goal**: Configuration dataclass with environment variable support
+**User Stories**: US5 (Environment Configuration)
 
-- [ ] T072 [PR21] Create PluginConfig dataclass in `adk_agent_sim/plugin/config.py`
-- [ ] T073 [PR21] Add server_url, target_agents, session_description fields in `adk_agent_sim/plugin/config.py`
-- [ ] T074 [PR21] Implement env var parsing (ADK_SIM_SERVER_URL, ADK_SIM_TARGET_AGENTS) in `adk_agent_sim/plugin/config.py`
-- [ ] T075 [PR21] Add PluginConfig tests (constructor precedence) in `tests/unit/plugin/test_config.py`
+- [ ] T068 [PR19] Create `PluginConfig` dataclass with `server_url`, `target_agents`, `session_description` in `adk_agent_sim/plugin/config.py`
+- [ ] T069 [PR19] Implement `from_env()` class method reading `ADK_SIM_SERVER_URL`, `ADK_SIM_TARGET_AGENTS` in `adk_agent_sim/plugin/config.py`
+- [ ] T070 [PR19] Implement `merge(constructor_args, env_config)` with constructor precedence in `adk_agent_sim/plugin/config.py`
+- [ ] T071 [PR19] Add `PluginConfig` tests for env parsing and merge precedence in `tests/unit/plugin/test_config.py`
 
 ---
 
-## PR 22: SimulatorClient Shell (~120 lines)
+## PR 20: ADKProtoConverter (~180 lines)
 
-**Branch**: `git town append feature/022-grpc-client`
+**Branch**: `git town append feature/020-proto-converter`
+**Depends on**: -
+**Goal**: Converter class for ADK/Pydantic ↔ Google/Protobuf transformations
+**User Stories**: US1 (Basic Interception)
+**Reference**: See plan.md § ADKProtoConverter Reference Implementation for complete code
+
+- [ ] T072 [PR20] Create `ADKProtoConverter` class with docstring in `adk_agent_sim/plugin/converter.py`
+- [ ] T073 [PR20] Implement `llm_request_to_proto(adk_request: LlmRequest) -> GenerateContentRequest` with model name mapping in `adk_agent_sim/plugin/converter.py`
+- [ ] T074 [PR20] Implement contents serialization (Pydantic → Proto via `json_format.ParseDict`) in `adk_agent_sim/plugin/converter.py`
+- [ ] T075 [PR20] Implement config unpacking: system_instruction, tools, safety_settings → separate Proto fields in `adk_agent_sim/plugin/converter.py`
+- [ ] T076 [PR20] Implement GenerationConfig mapping (temperature, top_p, max_output_tokens, etc.) in `adk_agent_sim/plugin/converter.py`
+- [ ] T077 [PR20] Implement `proto_to_llm_response(proto_response: GenerateContentResponse) -> LlmResponse` using `LlmResponse.create()` factory in `adk_agent_sim/plugin/converter.py`
+- [ ] T078 [PR20] Add comprehensive converter tests in `tests/unit/plugin/test_converter.py`
+
+---
+
+## PR 21: SimulatorClient Shell (~120 lines)
+
+**Branch**: `git town append feature/021-grpc-client`
+**Depends on**: PR 19
+**Goal**: gRPC client wrapper for server communication
+**User Stories**: US1 (Basic Interception)
+
+- [ ] T079 [PR21] Create `SimulatorClient` class with `__init__(config: PluginConfig)` in `adk_agent_sim/plugin/client.py`
+- [ ] T080 [PR21] Implement `connect()` establishing gRPC channel using `grpclib` in `adk_agent_sim/plugin/client.py`
+- [ ] T081 [PR21] Implement `close()` for clean channel shutdown in `adk_agent_sim/plugin/client.py`
+- [ ] T082 [PR21] Add `SimulatorClient` connection tests in `tests/unit/plugin/test_client.py`
+
+---
+
+## PR 22: SimulatorClient.create_session() (~80 lines)
+
+**Branch**: `git town append feature/022-client-create-session`
 **Depends on**: PR 21
-**Goal**: gRPC client wrapper with connect/close
-
-- [ ] T076 [PR22] Create SimulatorClient class in `adk_agent_sim/plugin/client.py`
-- [ ] T077 [PR22] Implement async connect() method in `adk_agent_sim/plugin/client.py`
-- [ ] T078 [PR22] Implement close() method in `adk_agent_sim/plugin/client.py`
-- [ ] T079 [PR22] Add SimulatorClient connect/close tests in `tests/unit/plugin/test_client.py`
-
----
-
-## PR 23: Client create_session() (~80 lines)
-
-**Branch**: `git town append feature/023-client-create-session`
-**Depends on**: PR 22
 **Goal**: Client method for session creation
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T080 [PR23] Implement SimulatorClient.create_session(description) in `adk_agent_sim/plugin/client.py`
-- [ ] T081 [PR23] Add create_session tests in `tests/unit/plugin/test_client.py`
+- [ ] T083 [PR22] Implement `create_session(description: str | None) -> SimulatorSession` calling server RPC in `adk_agent_sim/plugin/client.py`
+- [ ] T084 [PR22] Store returned `session_id` for subsequent calls in `adk_agent_sim/plugin/client.py`
+- [ ] T085 [PR22] Add `create_session()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 
-## PR 24: Client submit_request() (~100 lines)
+## PR 23: SimulatorClient.submit_request() (~100 lines)
 
-**Branch**: `git town append feature/024-client-submit-request`
+**Branch**: `git town append feature/023-client-submit-request`
+**Depends on**: PR 22
+**Goal**: Client method to submit intercepted LLM requests
+**User Stories**: US1 (Basic Interception)
+
+- [ ] T086 [PR23] Implement `submit_request(turn_id: str, agent_name: str, request: GenerateContentRequest) -> str` in `adk_agent_sim/plugin/client.py`
+- [ ] T087 [PR23] Return `event_id` from server response in `adk_agent_sim/plugin/client.py`
+- [ ] T088 [PR23] Add `submit_request()` tests in `tests/unit/plugin/test_client.py`
+
+---
+
+## PR 24: SimulatorClient.subscribe() (~120 lines)
+
+**Branch**: `git town append feature/024-client-subscribe`
 **Depends on**: PR 23
-**Goal**: Client method for submitting LLM requests (FR-010)
+**Goal**: Client method for event stream subscription
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T082 [PR24] Implement SimulatorClient.submit_request(session_id, request) in `adk_agent_sim/plugin/client.py`
-- [ ] T083 [PR24] Add request serialization from LlmRequest in `adk_agent_sim/plugin/client.py`
-- [ ] T084 [PR24] Add submit_request tests in `tests/unit/plugin/test_client.py`
+- [ ] T089 [PR24] Implement `subscribe() -> AsyncIterator[SessionEvent]` as async generator in `adk_agent_sim/plugin/client.py`
+- [ ] T090 [PR24] Yield events from server stream in `adk_agent_sim/plugin/client.py`
+- [ ] T091 [PR24] Add `subscribe()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 
-## PR 25: Client subscribe() (~120 lines)
+## PR 25: PendingFutureRegistry (~100 lines)
 
-**Branch**: `git town append feature/025-client-subscribe`
+**Branch**: `git town append feature/025-future-registry`
 **Depends on**: PR 24
-**Goal**: Client streaming subscription
+**Goal**: Map turn_id to Future for blocking await
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T085 [PR25] Implement SimulatorClient.subscribe(session_id) -> AsyncIterator in `adk_agent_sim/plugin/client.py`
-- [ ] T086 [PR25] Add event deserialization in `adk_agent_sim/plugin/client.py`
-- [ ] T087 [PR25] Add subscribe tests in `tests/unit/plugin/test_client.py`
+- [ ] T092 [PR25] Create `PendingFutureRegistry` class with `dict[str, asyncio.Future]` in `adk_agent_sim/plugin/futures.py`
+- [ ] T093 [PR25] Implement `create(turn_id: str) -> asyncio.Future` creating and storing future in `adk_agent_sim/plugin/futures.py`
+- [ ] T094 [PR25] Implement `resolve(turn_id: str, response: GenerateContentResponse)` setting future result in `adk_agent_sim/plugin/futures.py`
+- [ ] T095 [PR25] Implement `cancel_all()` for shutdown cleanup in `adk_agent_sim/plugin/futures.py`
+- [ ] T096 [PR25] Add `PendingFutureRegistry` tests in `tests/unit/plugin/test_futures.py`
 
 ---
 
-## PR 26: PendingFutureRegistry (~100 lines)
+## PR 26: Plugin._listen_loop() (~150 lines)
 
-**Branch**: `git town append feature/026-future-registry`
+**Branch**: `git town append feature/026-listen-loop`
 **Depends on**: PR 25
-**Goal**: Turn ID to Future mapping for blocking waits
-
-- [ ] T088 [PR26] Create PendingFutureRegistry class in `adk_agent_sim/plugin/futures.py`
-- [ ] T089 [PR26] Implement register(turn_id) -> Future in `adk_agent_sim/plugin/futures.py`
-- [ ] T090 [PR26] Implement resolve(turn_id, response), cancel(turn_id) in `adk_agent_sim/plugin/futures.py`
-- [ ] T091 [PR26] Add PendingFutureRegistry tests in `tests/unit/plugin/test_futures.py`
-
----
-
-## PR 27: Plugin Listen Loop (~150 lines)
-
-**Branch**: `git town append feature/027-listen-loop`
-**Depends on**: PR 26
 **Goal**: Background task processing server events
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T092 [PR27] Implement SimulatorPlugin._listen_loop() background task in `adk_agent_sim/plugin/core.py`
-- [ ] T093 [PR27] Add response event handling (resolve Future by turn_id) in `adk_agent_sim/plugin/core.py`
-- [ ] T094 [PR27] Add error handling for connection loss in `adk_agent_sim/plugin/core.py`
-- [ ] T095 [PR27] Add _listen_loop tests in `tests/unit/plugin/test_plugin.py`
-
----
-
-## PR 28: Plugin Initialize (~120 lines)
-
-**Branch**: `git town append feature/028-plugin-initialize`
-**Depends on**: PR 27
-**Goal**: Plugin initialization with URL output (FR-012)
-
-- [ ] T096 [PR28] Implement SimulatorPlugin.initialize() method in `adk_agent_sim/plugin/core.py`
-- [ ] T097 [PR28] Add session creation and URL printing in `adk_agent_sim/plugin/core.py`
-- [ ] T098 [PR28] Start _listen_loop background task in `adk_agent_sim/plugin/core.py`
-- [ ] T099 [PR28] Add initialize() tests in `tests/unit/plugin/test_plugin.py`
+- [ ] T097 [PR26] Implement `_listen_loop()` as background asyncio task in `adk_agent_sim/plugin/core.py`
+- [ ] T098 [PR26] Subscribe to server stream via `SimulatorClient.subscribe()` in `adk_agent_sim/plugin/core.py`
+- [ ] T099 [PR26] On `llm_response` event, resolve corresponding Future via `PendingFutureRegistry` in `adk_agent_sim/plugin/core.py`
+- [ ] T100 [PR26] Ignore events for already-resolved turn_ids (idempotency) in `adk_agent_sim/plugin/core.py`
+- [ ] T101 [PR26] Add `_listen_loop()` tests in `tests/unit/plugin/test_plugin.py`
 
 ---
 
-## PR 29: Plugin before_model_callback (~180 lines)
+## PR 27: Plugin.initialize() (~120 lines)
 
-**Branch**: `git town append feature/029-plugin-intercept`
+**Branch**: `git town append feature/027-plugin-initialize`
+**Depends on**: PR 26
+**Goal**: Plugin initialization with session creation and URL output
+**User Stories**: US1 (Basic Interception)
+
+- [ ] T102 [PR27] Implement `initialize()` connecting to server and creating session in `adk_agent_sim/plugin/core.py`
+- [ ] T103 [PR27] Start `_listen_loop()` background task in `adk_agent_sim/plugin/core.py`
+- [ ] T104 [PR27] Print session URL with decorated banner format to stdout in `adk_agent_sim/plugin/core.py`:
+  ```
+  ================================================================
+  [ADK Simulator] Session Started
+  View and Control at: http://localhost:4200/session/<uuid>
+  ================================================================
+  ```
+- [ ] T105 [PR27] Add `initialize()` tests verifying banner format and URL output in `tests/unit/plugin/test_plugin.py`
+
+---
+
+## PR 28: Plugin.before_model_callback() (~180 lines)
+
+**Branch**: `git town append feature/028-plugin-intercept`
+**Depends on**: PR 20, PR 27
+**Goal**: Core interception logic with selective filtering
+**User Stories**: US1 (Basic Interception), US2 (Selective Interception)
+
+- [ ] T106 [PR28] Implement `before_model_callback(callback_context, llm_request)` in `adk_agent_sim/plugin/core.py`
+- [ ] T107 [PR28] Check `target_agents` filter (None or empty = intercept all) - return `None` to proceed to real LLM if not targeted in `adk_agent_sim/plugin/core.py`
+- [ ] T108 [PR28] Generate `turn_id` UUID and create Future via `PendingFutureRegistry` in `adk_agent_sim/plugin/core.py`
+- [ ] T109 [PR28] Use `ADKProtoConverter.llm_request_to_proto()` to transform `LlmRequest` → `GenerateContentRequest` proto in `adk_agent_sim/plugin/core.py` (see plan.md § ADKProtoConverter Reference Implementation)
+- [ ] T110 [PR28] Submit request via `SimulatorClient.submit_request()` in `adk_agent_sim/plugin/core.py`
+- [ ] T111 [PR28] Log waiting state: `[ADK Simulator] Waiting for human input for agent: '<agent_name>'...` in `adk_agent_sim/plugin/core.py`
+- [ ] T112 [PR28] Await Future (blocks indefinitely until response) in `adk_agent_sim/plugin/core.py`
+- [ ] T113 [PR28] Use `ADKProtoConverter.proto_to_llm_response()` to transform `GenerateContentResponse` proto → `LlmResponse` in `adk_agent_sim/plugin/core.py` (see plan.md § ADKProtoConverter Reference Implementation)
+- [ ] T114 [PR28] Add `before_model_callback()` tests for interception and bypass scenarios in `tests/unit/plugin/test_plugin.py`
+
+---
+
+## PR 29: Plugin Reconnection (~150 lines)
+
+**Branch**: `git town append feature/029-plugin-reconnect`
 **Depends on**: PR 28
-**Goal**: Full interception flow (FR-008, FR-009, FR-011, FR-013, FR-014, FR-016, US1, US2)
+**Goal**: Handle connection loss and reconnect to existing session
+**User Stories**: US3 (Session Persistence)
 
-- [ ] T100 [PR29] Implement SimulatorPlugin.before_model_callback() in `adk_agent_sim/plugin/core.py`
-- [ ] T101 [PR29] Add target_agents filtering (skip if not in list) in `adk_agent_sim/plugin/core.py`
-- [ ] T102 [PR29] Add LlmRequest extraction (contents, system_instruction, tools) in `adk_agent_sim/plugin/core.py`
-- [ ] T103 [PR29] Add Future creation, request submission, and blocking await in `adk_agent_sim/plugin/core.py`
-- [ ] T104 [PR29] Add wait state logging in `adk_agent_sim/plugin/core.py`
-- [ ] T105 [PR29] Add before_model_callback tests (intercept, skip, response) in `tests/unit/plugin/test_plugin.py`
+- [ ] T115 [PR29] Detect connection loss in `_listen_loop()` via gRPC exceptions in `adk_agent_sim/plugin/core.py`
+- [ ] T116 [PR29] Implement exponential backoff retry logic in `adk_agent_sim/plugin/core.py`
+- [ ] T117 [PR29] Reconnect using stored `session_id` instead of creating new session in `adk_agent_sim/plugin/core.py`
+- [ ] T118 [PR29] Filter replayed events - ignore already-resolved turn_ids in `adk_agent_sim/plugin/core.py`
+- [ ] T119 [PR29] Add reconnection tests simulating server restart in `tests/unit/plugin/test_plugin.py`
 
 ---
 
-## PR 30: Plugin Reconnection (~150 lines)
+## Phase 4: Integration & Polish
 
-**Branch**: `git town append feature/030-plugin-reconnect`
+---
+
+## PR 30: Integration Test - Basic Round-Trip (~150 lines)
+
+**Branch**: `git town append feature/030-integration-basic`
 **Depends on**: PR 29
-**Goal**: Reconnection on connection loss (US3)
+**Goal**: End-to-end test of single agent interception
+**User Stories**: US1 (Basic Interception)
 
-- [ ] T106 [PR30] Add reconnection logic on connection loss in `adk_agent_sim/plugin/core.py`
-- [ ] T107 [PR30] Store session_id for reconnection in `adk_agent_sim/plugin/core.py`
-- [ ] T108 [PR30] Add duplicate event filtering (ignore completed turn_ids) in `adk_agent_sim/plugin/core.py`
-- [ ] T109 [PR30] Add reconnection tests in `tests/unit/plugin/test_plugin.py`
-
----
-
-## Phase 4: Integration & Polish (PRs 31-35)
+- [ ] T120 [PR30] Create `tests/integration/test_round_trip.py` with pytest-asyncio fixtures
+- [ ] T121 [PR30] Implement fixture starting embedded server with in-memory SQLite
+- [ ] T122 [PR30] Test: Plugin intercepts agent, server receives request, human responds, agent continues
+- [ ] T123 [PR30] Verify session URL printed to stdout
 
 ---
 
-## PR 31: Integration Test - Basic Round-Trip (~150 lines)
+## PR 31: Integration Test - Selective Interception (~120 lines)
 
-**Branch**: `git town append feature/031-integration-basic`
+**Branch**: `git town append feature/031-integration-selective`
 **Depends on**: PR 30
-**Goal**: End-to-end single agent test (US1)
+**Goal**: Test hybrid simulation with targeted agents
+**User Stories**: US2 (Selective Interception)
 
-- [ ] T110 [PR31] Create integration test helpers in `tests/integration/helpers.py`
-- [ ] T111 [PR31] Implement test_single_agent_round_trip in `tests/integration/test_round_trip.py`
-- [ ] T112 [PR31] Verify session URL output, request submission, response handling in `tests/integration/test_round_trip.py`
+- [ ] T124 [PR31] Create `tests/integration/test_selective_intercept.py`
+- [ ] T125 [PR31] Test: `target_agents=["orchestrator"]` only intercepts orchestrator
+- [ ] T126 [PR31] Test: Non-targeted agent proceeds to real LLM (mocked for test)
+- [ ] T127 [PR31] Verify orchestrator waits while sub-agent completes
 
 ---
 
-## PR 32: Integration Test - Selective Interception (~120 lines)
+## PR 32: Integration Test - FIFO Queueing (~150 lines)
 
-**Branch**: `git town append feature/032-integration-selective`
+**Branch**: `git town append feature/032-integration-queue`
 **Depends on**: PR 31
-**Goal**: Hybrid simulation test (US2)
+**Goal**: Test sequential presentation of parallel requests
+**User Stories**: US4 (Sequential Queueing)
 
-- [ ] T113 [PR32] Implement test_selective_interception in `tests/integration/test_selective_intercept.py`
-- [ ] T114 [PR32] Verify targeted agent intercepted, non-targeted passes through in `tests/integration/test_selective_intercept.py`
-- [ ] T115 [PR32] Verify orchestrator re-intercept after sub-agent return in `tests/integration/test_selective_intercept.py`
+- [ ] T128 [PR32] Create `tests/integration/test_fifo_queue.py`
+- [ ] T129 [PR32] Test: Three agents submit simultaneously, requests queued FIFO
+- [ ] T130 [PR32] Test: Responding to first request presents second immediately
+- [ ] T131 [PR32] Verify no request loss or duplication
 
 ---
 
-## PR 33: Integration Test - FIFO Queue (~150 lines)
+## PR 33: Integration Test - Persistence (~120 lines)
 
-**Branch**: `git town append feature/033-integration-queue`
+**Branch**: `git town append feature/033-integration-persist`
 **Depends on**: PR 32
-**Goal**: Parallel request queueing test (US4)
+**Goal**: Test session survival across server restart
+**User Stories**: US3 (Session Persistence)
 
-- [ ] T116 [PR33] Implement test_fifo_queue_ordering in `tests/integration/test_fifo_queue.py`
-- [ ] T117 [PR33] Trigger three simultaneous agent requests in `tests/integration/test_fifo_queue.py`
-- [ ] T118 [PR33] Verify FIFO ordering, sequential presentation in `tests/integration/test_fifo_queue.py`
+- [ ] T132 [PR33] Create `tests/integration/test_persistence.py`
+- [ ] T133 [PR33] Test: Start session, stop server, restart, reconnect succeeds
+- [ ] T134 [PR33] Test: Events replayed on reconnection
+- [ ] T135 [PR33] Test: Pending request resolved after reconnect
 
 ---
 
-## PR 34: Integration Test - Persistence (~120 lines)
+## PR 34: Docker Compose Configuration (~80 lines)
 
-**Branch**: `git town append feature/034-integration-persist`
+**Branch**: `git town append feature/034-docker-compose`
 **Depends on**: PR 33
-**Goal**: Session persistence across restart test (US3, FR-002, FR-003)
+**Goal**: Production-ready container configuration
+**User Stories**: US5 (Environment Configuration)
 
-- [ ] T119 [PR34] Implement test_session_persistence in `tests/integration/test_persistence.py`
-- [ ] T120 [PR34] Start session, stop server, restart, verify reconnection in `tests/integration/test_persistence.py`
-- [ ] T121 [PR34] Verify event replay and continuation in `tests/integration/test_persistence.py`
-
----
-
-## PR 35: Docker Compose Configuration (~80 lines)
-
-**Branch**: `git town append feature/035-docker-compose`
-**Depends on**: PR 34
-**Goal**: Production deployment configuration
-
-- [ ] T122 [PR35] Update docker-compose.yaml with volume mounts for SQLite in `docker-compose.yaml`
-- [ ] T123 [PR35] Update backend.Dockerfile with aiosqlite dependency in `docker/backend.Dockerfile`
-- [ ] T124 [PR35] Add docker-compose smoke test in `tests/integration/test_docker.py`
+- [ ] T136 [PR34] Update `docker/backend.Dockerfile` with persistence volume
+- [ ] T137 [PR34] Update `docker-compose.yaml` with volume mounts for SQLite
+- [ ] T138 [PR34] Add environment variable configuration examples
+- [ ] T139 [PR34] Document container deployment in quickstart.md
 
 ---
 
@@ -495,91 +542,65 @@
 
 ```
 main
- └── PR 1: SimulatorSession Model
-      └── PR 2: Event Types
-      │    └── PR 13: RequestQueue
-      │         └── PR 14: EventBroadcaster
-      └── PR 3: SQLite Schema
-           └── PR 4: Database Connection
-                ├── PR 5: SessionRepository.create()
-                │    └── PR 6: SessionRepository.get_by_id()
-                │         └── PR 7: SessionRepository.list_all()
-                └── PR 8: EventRepository.insert()
-                     └── PR 9: EventRepository.get_by_session()
-                          └── PR 10: Fake Repositories
-                               └── PR 11: SessionManager Shell
-                                    └── PR 12: SessionManager.get_session()
-                                         └── PR 15: gRPC create_session()
-                                              └── PR 16: gRPC list_sessions()
-                                                   └── PR 17: gRPC submit_request()
-                                                        └── PR 18: gRPC submit_decision()
-                                                             └── PR 19: gRPC subscribe()
-                                                                  └── PR 20: Server Entrypoint
+ └── PR 1: DB schema
+      └── PR 2: DB connection
+           ├── PR 3: Session repo create
+           │    └── PR 4: Session repo get
+           │         └── PR 5: Session repo list
+           └── PR 6: Event repo insert
+                └── PR 7: Event repo query
+                     └── PR 8: Fake repos
+                          ├── PR 9: Session manager
+                          │    └── PR 10: Session manager get
+                          │         └── PR 13: gRPC create session
+                          │              └── PR 14: gRPC list sessions
+                          └── PR 11: Request queue
+                               └── PR 12: Event broadcaster
+                                    └── PR 15: gRPC submit request
+                                         └── PR 16: gRPC submit decision
+                                              └── PR 17: gRPC subscribe
+                                                   └── PR 18: Server entrypoint
+                                                        └── (Plugin chain joins here)
 
-PR 21: PluginConfig (independent start)
- └── PR 22: SimulatorClient Shell
-      └── PR 23: Client create_session()
-           └── PR 24: Client submit_request()
-                └── PR 25: Client subscribe()
-                     └── PR 26: PendingFutureRegistry
-                          └── PR 27: Plugin Listen Loop
-                               └── PR 28: Plugin Initialize
-                                    └── PR 29: Plugin before_model_callback()
-                                         └── PR 30: Plugin Reconnection
-                                              └── PR 31: Integration - Basic
-                                                   └── PR 32: Integration - Selective
-                                                        └── PR 33: Integration - Queue
-                                                             └── PR 34: Integration - Persistence
-                                                                  └── PR 35: Docker Compose
+PR 19: Plugin config (independent start)
+ └── PR 21: gRPC client
+      └── PR 22: Client create session
+           └── PR 23: Client submit request
+                └── PR 24: Client subscribe
+                     └── PR 25: Future registry
+                          └── PR 26: Listen loop
+                               └── PR 27: Plugin initialize
+                                    └── PR 28: Plugin intercept ←── PR 20: Proto converter (joins here)
+                                         └── PR 29: Plugin reconnect
+                                              └── PR 30: Integration basic
+                                                   └── PR 31: Integration selective
+                                                        └── PR 32: Integration queue
+                                                             └── PR 33: Integration persist
+                                                                  └── PR 34: Docker compose
+
+PR 20: Proto converter (independent, merges into PR 28)
 ```
 
 ### Git Town Commands
 
 ```bash
-# Start feature (Phase 1)
-git town hack feature/001-session-model
+# Start feature - Phase 1
+git town hack feature/001-db-schema
 
-# Create stacked PRs
-git town append feature/002-event-types
-git town append feature/003-db-schema
-git town append feature/004-db-connection
-git town append feature/005-session-repo-create
-git town append feature/006-session-repo-get
-git town append feature/007-session-repo-list
-git town append feature/008-event-repo-insert
-git town append feature/009-event-repo-query
-git town append feature/010-fake-repos
+# Create stacked PRs for Phase 1
+git town append feature/002-db-connection
+git town append feature/003-session-repo-create
+git town append feature/004-session-repo-get
+git town append feature/005-session-repo-list
+# PR 6 branches from PR 2
+git checkout feature/002-db-connection
+git town append feature/006-event-repo-insert
+git town append feature/007-event-repo-query
+git town append feature/008-fake-repos
 
-# Phase 2: Server Core
-git town append feature/011-session-manager
-git town append feature/012-session-manager-get
-git town append feature/013-request-queue
-git town append feature/014-event-broadcaster
-git town append feature/015-grpc-create-session
-git town append feature/016-grpc-list-sessions
-git town append feature/017-grpc-submit-request
-git town append feature/018-grpc-submit-decision
-git town append feature/019-grpc-subscribe
-git town append feature/020-server-entrypoint
-
-# Phase 3: Plugin Core
-git town append feature/021-plugin-config
-git town append feature/022-grpc-client
-git town append feature/023-client-create-session
-git town append feature/024-client-submit-request
-git town append feature/025-client-subscribe
-git town append feature/026-future-registry
-git town append feature/027-listen-loop
-git town append feature/028-plugin-initialize
-git town append feature/029-plugin-intercept
-git town append feature/030-plugin-reconnect
-
-# Phase 4: Integration
-git town append feature/031-integration-basic
-git town append feature/032-integration-selective
-git town append feature/033-integration-queue
-git town append feature/034-integration-persist
-git town append feature/035-docker-compose
+# Continue with Phase 2...
+git town append feature/009-session-manager
+# ... continue for all PRs
 
 # Sync with upstream
 git town sync
@@ -604,11 +625,11 @@ git push
 
 ### Small PR Workflow
 
-1. Complete all tasks for PR N
+1. Complete all tasks for PR 1
 2. Run `./scripts/presubmit.sh` - must pass
 3. Push and create PR
-4. `git town append feature/0NN-...` for next PR
-5. Repeat for all 35 PRs
+4. `git town append feature/002-...` for next PR
+5. Repeat for all 34 PRs
 
 ### Incremental Delivery
 
@@ -630,43 +651,49 @@ Before submitting any PR:
 
 ### Tests MUST Be In Same PR As Implementation
 
-✅ CORRECT:
-- PR 5 adds `SessionRepository.create()` AND `test_session_repo.py::test_create()`
-
 ❌ WRONG:
-- PR 5 adds `SessionRepository.create()`
-- PR 6 adds tests for create() ← VIOLATION
+- PR 5: Implement SessionRepository.list_all()
+- PR 6: Add SessionRepository.list_all() tests
+
+✅ CORRECT:
+- PR 5: Implement SessionRepository.list_all() + tests (~120 lines total)
 
 ### No Mocks Without Permission
 
-✅ Use FakeSessionRepository (PR 10) for unit tests
-✅ Use in-memory SQLite for persistence tests
-❌ Do NOT use `unittest.mock.Mock` without explicit approval
+Per Constitution IV., mocking requires explicit user permission.
 
-### Test Naming Convention
+Preference hierarchy:
+1. Real implementations (in-memory SQLite for DB tests)
+2. High-fidelity fakes in `tests/fixtures/`
+3. Mocks (ONLY with explicit permission)
 
-```python
-# tests/unit/{module}/test_{component}.py
-def test_{method}_{scenario}_{expected_outcome}():
-    ...
-
-# Example
-def test_create_session_with_description_returns_active_session():
-    ...
-```
+If you believe a mock is necessary:
+1. STOP and document why
+2. Ask user for permission
+3. Only proceed if approved
 
 ---
 
 ## Summary
 
-| Metric | Value |
+| Metric | Count |
 |--------|-------|
-| **Total Tasks** | 124 |
-| **Total PRs** | 35 |
-| **Avg Tasks per PR** | 3.5 |
-| **Avg LOC per PR** | ~115 |
-| **Max LOC (PR 19, 29)** | ~180 |
-| **Parallel Opportunities** | T034/T035 (PR10) |
-| **P1 User Stories Covered** | US1, US2 (PRs 21-32) |
-| **P2 User Stories Covered** | US3, US4 (PRs 3-9, 13-14, 30, 33-34) |
-| **P3 User Stories Covered** | US5 (PR 21) |
+| Total Tasks | 139 |
+| Total PRs | 34 |
+| Phase 1 (Data Layer) | 8 PRs, 29 tasks |
+| Phase 2 (Server Core) | 10 PRs, 38 tasks |
+| Phase 3 (Plugin Core) | 11 PRs, 52 tasks |
+| Phase 4 (Integration) | 5 PRs, 20 tasks |
+| Parallel Opportunities | 4 tasks marked [P] |
+| Estimated Total LOC | ~4,080 lines |
+
+---
+
+## Notes
+
+- [P] tasks = parallelizable within the same PR
+- [PR#] label maps task to specific Pull Request
+- Each PR MUST be 100-200 lines max (HARD LIMIT)
+- Tests and implementation go in SAME PR
+- Run `./scripts/presubmit.sh` before every push
+- Use `git town append` for stacked PRs

@@ -1,7 +1,8 @@
 syntax = "proto3";
 package adksim.v1;
 
-import "google/protobuf/timestamp.proto";
+import "google/ai/generativelanguage/v1beta/generative_service.proto";
+import "adksim/v1/simulator_session.proto";
 
 // SimulatorService provides the "Remote Brain" protocol for the ADK Agent Simulator.
 // It enables human-in-the-loop validation of agent workflows by intercepting LLM calls
@@ -30,16 +31,6 @@ service SimulatorService {
 
 // --- Session Messages ---
 
-// Session represents a simulation session's metadata.
-message Session {
-  // Unique identifier for the session (UUID).
-  string id = 1;
-  // Unix timestamp when the session was created.
-  int64 created_at = 2;
-  // Optional human-readable description/metadata.
-  string description = 3;
-}
-
 // CreateSessionRequest is sent by the Plugin to register a new session.
 message CreateSessionRequest {
   // Optional description for the session.
@@ -49,7 +40,7 @@ message CreateSessionRequest {
 // CreateSessionResponse contains the created or existing session.
 message CreateSessionResponse {
   // The session that was created or retrieved.
-  Session session = 1;
+  SimulatorSession session = 1;
 }
 
 // --- Subscription Messages ---
@@ -68,103 +59,6 @@ message SubscribeResponse {
   SessionEvent event = 1;
 }
 
-// SessionEvent is the core envelope for all events in a session.
-// It wraps either an LLM request (from Plugin) or response (from UI).
-message SessionEvent {
-  // Unique identifier for this event.
-  string event_id = 1;
-  // The session this event belongs to.
-  string session_id = 2;
-  // When this event occurred.
-  google.protobuf.Timestamp timestamp = 3;
-  // Correlation ID linking a request to its decision.
-  string turn_id = 4;
-  // Name of the agent that triggered this event.
-  string agent_name = 5;
-
-  // The event payload - either a request or response.
-  oneof payload {
-    // LLM request intercepted from an agent (Plugin -> UI).
-    // TODO: Replace with google.ai.generativelanguage.v1beta.GenerateContentRequest
-    LlmRequest llm_request = 10;
-    // Human decision/response (UI -> Plugin).
-    // TODO: Replace with google.ai.generativelanguage.v1beta.GenerateContentResponse
-    LlmResponse llm_response = 11;
-  }
-}
-
-// --- Placeholder LLM Messages ---
-// These are temporary stubs until we integrate the official Google Generative AI protos.
-
-// LlmRequest is a placeholder for the full GenerateContentRequest.
-message LlmRequest {
-  // The conversation history and current input.
-  repeated Content contents = 1;
-  // System instructions for the agent.
-  string system_instruction = 2;
-  // Available tools/functions the agent can call.
-  repeated Tool tools = 3;
-}
-
-// LlmResponse is a placeholder for the full GenerateContentResponse.
-message LlmResponse {
-  // The generated content (text or function calls).
-  repeated Content candidates = 1;
-}
-
-// Content represents a single message in the conversation.
-message Content {
-  // The role (user, model, function).
-  string role = 1;
-  // The parts that make up this content.
-  repeated Part parts = 2;
-}
-
-// Part represents a piece of content (text, function call, etc.).
-message Part {
-  // The data contained in this part - exactly one of these fields will be set.
-  oneof data {
-    // Text content.
-    string text = 1;
-    // A function call made by the model.
-    FunctionCall function_call = 2;
-    // A function response from tool execution.
-    FunctionResponse function_response = 3;
-  }
-}
-
-// FunctionCall represents a tool invocation by the model.
-message FunctionCall {
-  // The name of the function to call.
-  string name = 1;
-  // JSON-encoded arguments for the function.
-  string args = 2;
-}
-
-// FunctionResponse represents the result of a tool execution.
-message FunctionResponse {
-  // The name of the function that was called.
-  string name = 1;
-  // JSON-encoded response from the function.
-  string response = 2;
-}
-
-// Tool represents an available function the agent can call.
-message Tool {
-  // Function declarations available in this tool.
-  repeated FunctionDeclaration function_declarations = 1;
-}
-
-// FunctionDeclaration describes a callable function.
-message FunctionDeclaration {
-  // The name of the function.
-  string name = 1;
-  // Human-readable description.
-  string description = 2;
-  // JSON Schema describing the function parameters.
-  string parameters = 3;
-}
-
 // --- Submit Messages ---
 
 // SubmitRequestRequest publishes an intercepted LLM request.
@@ -176,7 +70,7 @@ message SubmitRequestRequest {
   // Name of the agent making the request.
   string agent_name = 3;
   // The intercepted LLM request.
-  LlmRequest request = 4;
+  google.ai.generativelanguage.v1beta.GenerateContentRequest request = 4;
 }
 
 // SubmitRequestResponse confirms the request was received.
@@ -192,7 +86,7 @@ message SubmitDecisionRequest {
   // Correlation ID linking to the original request.
   string turn_id = 2;
   // The human's response.
-  LlmResponse response = 3;
+  google.ai.generativelanguage.v1beta.GenerateContentResponse response = 3;
 }
 
 // SubmitDecisionResponse confirms the decision was received.
@@ -214,7 +108,7 @@ message ListSessionsRequest {
 // ListSessionsResponse contains the requested sessions.
 message ListSessionsResponse {
   // The sessions matching the query.
-  repeated Session sessions = 1;
+  repeated SimulatorSession sessions = 1;
   // Token for fetching the next page, if any.
   string next_page_token = 2;
 }
