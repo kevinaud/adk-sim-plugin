@@ -21,6 +21,11 @@ else
 fi
 
 # ------------------------------------------------------------
+# Python Dependency Sync
+# ------------------------------------------------------------
+uv sync
+
+# ------------------------------------------------------------
 # Clone Repositories (Idempotent)
 # ------------------------------------------------------------
 # Only clones if the directory does not already exist in /workspaces
@@ -52,9 +57,5 @@ for url in "${REPOS[@]}"; do
     fi
 done
 
-# ------------------------------------------------------------
-# Python Dependency Sync
-# ------------------------------------------------------------
-cd /workspaces/adk-sim-plugin
 
-uv sync
+cd /workspaces/adk-sim-plugin
