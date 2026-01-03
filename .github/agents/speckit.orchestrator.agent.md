@@ -61,10 +61,9 @@ Repeat the following for each PR (1 to N):
    - Format: `feature/<pr-number>-<brief-description>`
    - Example: `feature/001-initial-scaffold`
 
-3. **Confirm scope with user**:
+3. **Log scope** (no pause):
    - Display: PR number, task list, estimated LOC
-   - Ask: "Proceed with PR X implementation? (yes/no)"
-   - Wait for confirmation before continuing
+   - Proceed immediately to implementation
 
 ---
 
@@ -185,30 +184,57 @@ Repeat the following for each PR (1 to N):
 
 ---
 
-### Phase 6: Human Review Gate
+### Phase 6: Record PR for Batch Review
 
-1. **Notify user**:
-   - Display: "PR X is ready for review"
-   - Provide PR URL: `gh pr view --web` or display link
-   - Ask: "Please review. Reply with 'approved', 'changes needed', or specific feedback."
+1. **Log PR completion**:
+   - Record: PR number, branch name, PR URL, tasks completed, LOC
+   - Add to batch review queue (in-memory list)
 
-2. **PAUSE and wait for user response**
+2. **Continue to next PR** (no pause):
+   - If more PRs remain in the batch: return to Phase 1
+   - If all PRs complete: proceed to Batch Review Gate
 
-3. **Handle feedback**:
-
-   **If "approved"**:
-   - Proceed to Phase 7 (Finalize)
-
-   **If "changes needed" or specific feedback**:
-   - Parse the feedback
-   - Re-invoke `speckit.implement` with:
-     - Original task context
-     - User feedback as additional requirements
-   - After changes: commit → push → monitor CI → return to Review Gate
+**DO NOT PAUSE HERE** — continue processing remaining PRs.
 
 ---
 
-### Phase 7: Finalize PR
+### Phase 7: Batch Review Gate (after ALL PRs complete)
+
+This phase runs **ONCE** after all requested PRs have been implemented.
+
+1. **Present batch summary**:
+   - List all PRs created with links
+   - Show tasks completed per PR
+   - Display total LOC across all PRs
+
+2. **Request batch review**:
+   - Ask: "All N PRs are ready for review. Please review and reply with:
+     - 'approved' to merge all
+     - 'approved PR X, Y' to merge specific PRs
+     - 'changes needed PR X: <feedback>' for specific changes"
+
+3. **PAUSE and wait for user response**
+
+4. **Handle feedback**:
+
+   **If "approved" (all)**:
+   - Proceed to Phase 8 (Finalize) for each PR in order
+
+   **If "approved PR X, Y, ..."**:
+   - Finalize only the approved PRs
+   - Report which PRs remain as draft
+
+   **If "changes needed PR X: <feedback>"**:
+   - Switch to the relevant branch
+   - Re-invoke `speckit.implement` with feedback
+   - After changes: commit → push → monitor CI
+   - Return to Batch Review Gate with updated status
+
+---
+
+### Phase 8: Finalize PRs
+
+Run this for each approved PR, in dependency order (PR 1 first, then PR 2, etc.):
 
 1. **Squash and merge**:
    ```bash
@@ -226,16 +252,17 @@ Repeat the following for each PR (1 to N):
    ```
    - This propagates changes to any child branches
 
-4. **Report completion**:
-   - "PR X merged successfully"
-   - Display: tasks completed, files changed, final line count
+4. **Log completion**:
+   - Record: "PR X merged successfully"
+   - Continue to next approved PR (no pause)
 
 ---
 
 ### Loop Control
 
-- If `N > 1` and more PRs remain: return to Phase 1 for next PR
-- If all requested PRs are complete: proceed to Final Report
+- After Phase 6: if more PRs remain, return to Phase 1 for next PR (no pause)
+- After all PRs complete Phase 6: proceed to Phase 7 (Batch Review Gate)
+- After Phase 8 completes for approved PRs: proceed to Final Report
 
 ---
 
@@ -264,18 +291,35 @@ After completing all requested PRs, provide a summary:
 
 ## Rules & Constraints
 
+### Autonomy Principle
+
+**Work autonomously through ALL requested PRs without pausing.** Only pause when:
+
+1. **Permission required**: An action violates a prohibition (e.g., mocking in tests) and needs explicit user approval
+2. **Genuinely blocked**: Cannot proceed without user input (ambiguous requirements, conflicting constraints)
+3. **Batch review**: All requested PRs are complete and ready for human review
+4. **Max retries exceeded**: 3 CI failures on the same issue
+
+**DO NOT pause to**:
+- Confirm scope before each PR (just log and proceed)
+- Ask permission for routine operations
+- Request approval between PRs in a batch
+
 ### PROHIBITED Actions (Orchestrator NEVER does these)
 - ❌ Write or modify source code files
 - ❌ Run tests directly (delegate to implementer)
 - ❌ Run `./scripts/presubmit.sh` directly (delegate to implementer)
 - ❌ Use raw `git checkout -b` or `git branch` (use Git Town)
+- ❌ Pause for confirmation before each PR (work autonomously)
+- ❌ Pause for review after each PR (batch reviews at the end)
 
 ### REQUIRED Behaviors
 - ✅ Always use `git town` commands for branch management
 - ✅ Always create Draft PRs first, then mark ready after CI passes
-- ✅ Always wait for user approval before merging
+- ✅ Always wait for user approval before merging (but batch the review)
 - ✅ Always sync after merging to propagate to stacked branches
 - ✅ Always provide clear context when delegating to implementer
+- ✅ Process all requested PRs before pausing for review
 
 ### Error Escalation
 - After 3 CI failures on the same issue: STOP and ask user for guidance
