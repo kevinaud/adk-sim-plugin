@@ -49,34 +49,16 @@ class EventRepository:
     # Serialize the full proto to bytes
     proto_blob = bytes(event)
 
-    # Build insert query using schema column names
-    query = f"""
-      INSERT INTO {events.name} (
-        {events.c.event_id.name},
-        {events.c.session_id.name},
-        {events.c.timestamp.name},
-        {events.c.turn_id.name},
-        {events.c.payload_type.name},
-        {events.c.proto_blob.name}
-      ) VALUES (
-        :event_id,
-        :session_id,
-        :timestamp,
-        :turn_id,
-        :payload_type,
-        :proto_blob
-      )
-    """
+    # Build insert query using SQLAlchemy Core
+    query = events.insert().values(
+      event_id=event.event_id,
+      session_id=event.session_id,
+      timestamp=timestamp_ms,
+      turn_id=event.turn_id,
+      payload_type=payload_type,
+      proto_blob=proto_blob,
+    )
 
-    values = {
-      "event_id": event.event_id,
-      "session_id": event.session_id,
-      "timestamp": timestamp_ms,
-      "turn_id": event.turn_id,
-      "payload_type": payload_type,
-      "proto_blob": proto_blob,
-    }
-
-    await self._database.execute(query, values)
+    await self._database.execute(query)
 
     return event

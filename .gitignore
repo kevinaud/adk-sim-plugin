@@ -51,3 +51,4 @@ out-tsc/
 bazel-out/
 frontend/dist/
 frontend/.angular/
+":memory:?cache=shared"
