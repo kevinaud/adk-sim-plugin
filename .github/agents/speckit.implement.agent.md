@@ -44,6 +44,27 @@ Parse these from `$ARGUMENTS`.
 - Match the style of surrounding code
 - Write clear, self-documenting code with appropriate comments
 
+### Project-Specific Conventions
+
+#### Python Imports
+- **All imports at module top**: Never import inside methods or functions
+- Exception: `TYPE_CHECKING` imports belong in the `if TYPE_CHECKING:` block
+- Runtime imports go at module level; type-only imports go in TYPE_CHECKING
+
+#### betterproto Serialization
+- **Serialize**: `bytes(instance)` — NOT `instance.SerializeToString()`
+- **Deserialize**: `SomeMessage().parse(bytes_data)` — NOT `SomeMessage.FromString()`
+- betterproto uses a different API than standard protobuf
+
+#### Type Design
+- **Enums over strings**: When a field needs constrained values (e.g., status), add an enum to the proto definition rather than using `str`
+- **Dataclasses for complex returns**: When a return type would be a complex tuple (e.g., `tuple[list[X], str | None]`), introduce a `@dataclass` to represent it with named fields
+
+#### Database Access (SQLAlchemy)
+- **SQLAlchemy Core over raw SQL**: Use SQLAlchemy's query builder (`select()`, `insert()`, `update()`) instead of raw SQL strings
+- Import `select`, `insert`, etc. from `sqlalchemy` at module top
+- Use table objects (e.g., `sessions.c.id`) for column references
+
 ---
 
 ## Execution Workflow

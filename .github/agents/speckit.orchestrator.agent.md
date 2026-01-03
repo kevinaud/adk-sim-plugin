@@ -44,6 +44,106 @@ You are the **Orchestrator Agent** — a manager responsible for coordinating th
    ```
    - If not authenticated, STOP and provide setup instructions.
 
+---
+
+## Git Town Reference
+
+Git Town automates branch management for stacked changes. Master these commands and patterns.
+
+### Core Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `git town hack <name>` | Create branch off `main` | First PR in a new feature, independent work |
+| `git town append <name>` | Create branch off current | Subsequent PRs that depend on current branch |
+| `git town prepend <name>` | Insert branch between current and parent | Need to add prerequisite work |
+| `git town sync --all` | Sync all branches with remote | Before starting work, after merges |
+| `git town sync --stack` | Sync only current stack | When you only need your stack updated |
+| `git town propose` | Create PR for current branch | After pushing, to create GitHub PR |
+| `git town propose --stack` | Create PRs for entire stack | Create all PRs at once |
+| `git town ship` | Merge branch via fast-forward | Ship without using GitHub UI |
+| `git town branch` | Show branch hierarchy | Understand current stack structure |
+| `git town switch` | Interactive branch switcher | Navigate between branches |
+
+### Error Recovery Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `git town continue` | Resume after conflict resolution | After resolving merge conflicts |
+| `git town skip` | Skip current branch, continue sync | When conflicts can't be resolved now |
+| `git town undo` | Undo last Git Town command | When something goes wrong |
+
+### Stacked Changes Workflow
+
+**Creating a Stack:**
+```bash
+# Start on main
+git town hack feature/001-first-change    # Creates: main → 001
+
+# Build on top
+git town append feature/002-second-change  # Creates: main → 001 → 002
+git town append feature/003-third-change   # Creates: main → 001 → 002 → 003
+```
+
+**Visualize Stack:**
+```bash
+git town branch
+# Output:
+#   main
+#    \
+#     feature/001-first-change
+#      \
+#       feature/002-second-change
+#        \
+#   *     feature/003-third-change
+```
+
+### Best Practices
+
+1. **Sync frequently**: Run `git town sync --all` often to avoid phantom conflicts
+2. **Ship oldest first**: Always merge PRs from oldest to newest in a stack
+3. **One responsibility per branch**: Keep each branch focused on a single change
+4. **Avoid unnecessary stacking**: Only stack branches that truly depend on each other
+5. **Handle conflicts immediately**: When sync fails, resolve and run `git town continue`
+
+### Merge Conflict Resolution
+
+When `git town sync` or `git town continue` hits a conflict:
+
+1. **Resolve the conflict** in your editor
+2. **Stage resolved files**: `git add <files>`
+3. **Continue Git Town**: `git town continue`
+
+If you can't resolve:
+- **Skip this branch**: `git town skip` (continues with other branches)
+- **Abort everything**: `git town undo` (reverts to pre-command state)
+
+### After Merging a PR
+
+When a PR is merged (via GitHub or `gh pr merge`):
+
+1. **Sync to clean up**: `git town sync --all`
+   - Deletes the local branch (tracking branch is gone)
+   - Updates child branches to point to new parent
+   - Propagates changes through the stack
+
+2. **Update child PRs**: Child PRs may need base branch updates
+   ```bash
+   gh pr edit <number> --base <new-parent-branch>
+   ```
+
+### Common Issues & Solutions
+
+| Issue | Solution |
+|-------|----------|
+| "Branch has diverged" | Run `git town sync` to reconcile |
+| Phantom merge conflicts | Conflicts from squash-merge; use `git town sync` frequently |
+| Child PR shows wrong diff | Update PR base: `gh pr edit <n> --base <parent>` |
+| Stale local branches | `git town sync --all --gone` removes shipped branches |
+| Need to reorder stack | `git town swap` switches current with parent |
+
+---
+
 ## Main Orchestration Loop
 
 Repeat the following for each PR (1 to N):
@@ -73,19 +173,25 @@ Repeat the following for each PR (1 to N):
    ```bash
    git town sync --all
    ```
+   - This pulls updates, deletes shipped branches, and propagates changes through stacks
+   - If conflicts occur: resolve them, then `git town continue`
 
 2. **Determine parent branch**:
-   - If this is PR 1: parent is `main`
-   - If this is PR N (N > 1): parent is the previous PR's branch
+   - If this is PR 1: parent is `main` → use `git town hack`
+   - If this is PR N (N > 1): parent is the previous PR's branch → use `git town append`
 
-3. **Create stacked branch**:
+3. **Create the branch**:
    ```bash
+   # For first PR (off main):
+   git town hack <branch-name>
+   
+   # For subsequent PRs (stacked on current):
    git town append <branch-name>
    ```
-   - This creates a new branch stacked on the parent
 
 4. **Verify branch state**:
    ```bash
+   git town branch          # Shows stack hierarchy
    git branch --show-current
    git status
    ```
@@ -242,23 +348,33 @@ This phase runs **ONCE** after all requested PRs have been implemented.
 
 Run this for each approved PR, in dependency order (PR 1 first, then PR 2, etc.):
 
-1. **Squash and merge**:
+1. **Update child PR base branches** (if stacked):
+   - Before merging, ensure child PRs target the correct base
+   - After merge, child PRs may need their base updated to `main` or the new parent
    ```bash
-   gh pr merge --squash --delete-branch
+   gh pr edit <child-pr-number> --base <new-parent>
    ```
 
-2. **Clean up remote branch** (if not auto-deleted):
+2. **Squash and merge**:
    ```bash
-   git push origin --delete <branch-name>
+   gh pr merge --squash --delete-branch
    ```
 
 3. **Sync Git Town state**:
    ```bash
    git town sync --all
    ```
-   - This propagates changes to any child branches
+   - Deletes local branch (remote tracking is gone)
+   - Propagates merged changes to child branches
+   - Updates stack hierarchy automatically
+   - If conflicts occur: resolve and `git town continue`
 
-4. **Log completion**:
+4. **Clean up stale branches** (if any remain):
+   ```bash
+   git town sync --all --gone
+   ```
+
+5. **Log completion**:
    - Record: "PR X merged successfully"
    - Continue to next approved PR (no pause)
 
