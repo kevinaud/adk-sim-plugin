@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import pytest
 from sqlalchemy import select
 
-from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+from adk_agent_sim.generated.adksim.v1 import SessionStatus, SimulatorSession
 from adk_agent_sim.persistence import SessionRepository
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.schema import sessions
@@ -62,18 +62,20 @@ class TestSessionRepositoryCreate:
       description="Testing promoted fields",
     )
 
-    await repo.create(session, status="pending")
+    await repo.create(session, status=SessionStatus.COMPLETED)
 
-    query = select(sessions.c.id, sessions.c.created_at, sessions.c.status).where(
-      sessions.c.id == session_id
-    )
+    query = select(
+      sessions.c.id,
+      sessions.c.created_at,
+      sessions.c.status,
+    ).where(sessions.c.id == session_id)
     rows = await db.fetch_all(query)
     assert len(rows) == 1
 
     row = rows[0]
     assert row["id"] == session_id
     assert row["created_at"] == int(created_time.timestamp())
-    assert row["status"] == "pending"
+    assert row["status"] == "COMPLETED"
 
     await db.disconnect()
 
@@ -127,7 +129,7 @@ class TestSessionRepositoryCreate:
     query = select(sessions.c.status).where(sessions.c.id == session_id)
     rows = await db.fetch_all(query)
     assert len(rows) == 1
-    assert rows[0]["status"] == "active"
+    assert rows[0]["status"] == "ACTIVE"
 
     await db.disconnect()
 

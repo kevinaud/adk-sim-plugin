@@ -6,6 +6,9 @@ queryable fields extracted into SQL columns for efficient filtering.
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select
+
+from adk_agent_sim.generated.adksim.v1 import SessionStatus
 from adk_agent_sim.persistence.schema import sessions
 
 if TYPE_CHECKING:
@@ -29,7 +32,9 @@ class SessionRepository:
     self._database = database
 
   async def create(
-    self, session: SimulatorSession, status: str = "active"
+    self,
+    session: SimulatorSession,
+    status: SessionStatus = SessionStatus.ACTIVE,
   ) -> SimulatorSession:
     """Create a new session in the database.
 
@@ -38,7 +43,7 @@ class SessionRepository:
 
     Args:
         session: The SimulatorSession proto to persist.
-        status: Session status (default: "active").
+        status: Session status (default: ACTIVE).
 
     Returns:
         The same session object that was stored.
@@ -54,7 +59,7 @@ class SessionRepository:
     query = sessions.insert().values(
       id=session_id,
       created_at=created_at,
-      status=status,
+      status=status.name,
       proto_blob=proto_blob,
     )
     await self._database.execute(query)
@@ -70,9 +75,7 @@ class SessionRepository:
     Returns:
         The deserialized SimulatorSession if found, None otherwise.
     """
-    # Import here to avoid circular imports at module level
-    from sqlalchemy import select
-
+    # Import here to deserialize proto
     from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
     # Build select query using SQLAlchemy Core
@@ -83,4 +86,4 @@ class SessionRepository:
       return None
 
     # Deserialize proto blob back to SimulatorSession
-    return SimulatorSession.FromString(row["proto_blob"])
+    return SimulatorSession().parse(row["proto_blob"])
