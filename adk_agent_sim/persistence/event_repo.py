@@ -8,11 +8,12 @@ promoted to dedicated columns.
 from typing import TYPE_CHECKING
 
 import betterproto
+from sqlalchemy import select
 
+from adk_agent_sim.generated.adksim.v1 import SessionEvent
 from adk_agent_sim.persistence.schema import events
 
 if TYPE_CHECKING:
-  from adk_agent_sim.generated.adksim.v1 import SessionEvent
   from adk_agent_sim.persistence.database import Database
 
 
@@ -62,3 +63,43 @@ class EventRepository:
     await self._database.execute(query)
 
     return event
+
+  async def get_by_session(self, session_id: str) -> list[SessionEvent]:
+    """Get all events for a session ordered by timestamp.
+
+    Args:
+        session_id: The session ID to filter by.
+
+    Returns:
+        List of SessionEvents ordered by timestamp ASC (oldest first).
+    """
+    # Build query using SQLAlchemy Core
+    query = (
+      select(events.c.proto_blob)
+      .where(events.c.session_id == session_id)
+      .order_by(events.c.timestamp.asc())
+    )
+
+    rows = await self._database.fetch_all(query)
+
+    return [SessionEvent().parse(row["proto_blob"]) for row in rows]
+
+  async def get_by_turn_id(self, turn_id: str) -> list[SessionEvent]:
+    """Get all events for a turn (usually request/response pair).
+
+    Args:
+        turn_id: The turn ID to filter by.
+
+    Returns:
+        List of SessionEvents ordered by timestamp ASC.
+    """
+    # Build query using SQLAlchemy Core
+    query = (
+      select(events.c.proto_blob)
+      .where(events.c.turn_id == turn_id)
+      .order_by(events.c.timestamp.asc())
+    )
+
+    rows = await self._database.fetch_all(query)
+
+    return [SessionEvent().parse(row["proto_blob"]) for row in rows]
