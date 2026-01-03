@@ -108,6 +108,8 @@ Repeat the following for each PR (1 to N):
 3. **Verify implementation output**:
    - Check `git status` for changes
    - Verify tasks were checked off in `tasks.md`
+   - Verify that changes align with the intended implementation plan and meet the requirements
+     - Request updates from implement agent if needed
    - Confirm presubmit was run successfully
 
 ---
