@@ -49,4 +49,17 @@ if [ -f "frontend/package.json" ]; then
     (cd frontend && npm install)
 fi
 
+# ------------------------------------------------------------
+# Development-only setup (skipped in CI)
+# ------------------------------------------------------------
+if [ "$CI" != "true" ]; then
+    echo "🔧 Running development-only setup..."
+    
+    # Clone ADK repos for AI agent reference (add your clone commands here)
+    # git clone https://github.com/... /path/to/adk-repo
+    
+else
+    echo "⏭️  Skipping development-only setup (CI detected)"
+fi
+
 echo "✅ Dev container initialization complete!"
