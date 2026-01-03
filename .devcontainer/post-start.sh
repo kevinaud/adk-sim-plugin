@@ -26,36 +26,39 @@ fi
 uv sync
 
 # ------------------------------------------------------------
-# Clone Repositories (Idempotent)
+# Clone Repositories (Idempotent) - Skipped in CI
 # ------------------------------------------------------------
 # Only clones if the directory does not already exist in /workspaces
 # ------------------------------------------------------------
 
-REPOS=(
-    "https://github.com/google/adk-python"
-    "https://github.com/google/adk-java"
-    "https://github.com/google/adk-docs"
-)
+if [ "$CI" != "true" ]; then
+    REPOS=(
+        "https://github.com/google/adk-python"
+        "https://github.com/google/adk-java"
+        "https://github.com/google/adk-docs"
+    )
 
-# 1. Create the directory as root (required for /workspaces sometimes)
-sudo mkdir -p /workspaces/adk-repos
+    # 1. Create the directory as root (required for /workspaces sometimes)
+    sudo mkdir -p /workspaces/adk-repos
 
-# 2. FIX: Change ownership to the current user (vscode) so git can write to it
-sudo chown -R $USER /workspaces/adk-repos
+    # 2. FIX: Change ownership to the current user (vscode) so git can write to it
+    sudo chown -R $USER /workspaces/adk-repos
 
-# Navigate to the repo directory
-cd /workspaces/adk-repos || exit 1
+    # Navigate to the repo directory
+    cd /workspaces/adk-repos || exit 1
 
-for url in "${REPOS[@]}"; do
-    repo_name=$(basename "$url" .git)
+    for url in "${REPOS[@]}"; do
+        repo_name=$(basename "$url" .git)
 
-    if [ ! -d "$repo_name" ]; then
-        echo "⬇️  Cloning $repo_name..."
-        git clone "$url"
-    else
-        echo "✅  $repo_name already exists. Skipping clone."
-    fi
-done
+        if [ ! -d "$repo_name" ]; then
+            echo "⬇️  Cloning $repo_name..."
+            git clone "$url"
+        else
+            echo "✅  $repo_name already exists. Skipping clone."
+        fi
+    done
 
-
-cd /workspaces/adk-sim-plugin
+    cd /workspaces/adk-sim-plugin
+else
+    echo "⏭️  Skipping ADK repo cloning (CI detected)"
+fi

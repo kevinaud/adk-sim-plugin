@@ -122,8 +122,8 @@ A developer deploys their ADK application in a Docker Compose environment. They 
 #### Python Plugin (Client)
 
 - **FR-008**: The plugin MUST implement the `google.adk.plugins.BasePlugin` interface using the `before_model_callback` hook.
-- **FR-009**: The plugin MUST extract and serialize the following from `LlmRequest`: `contents` (history/inputs), `system_instruction`, `tools`, and `output_schema`.
-- **FR-010**: The plugin MUST transmit serialized request data to the Simulator Server via gRPC.
+- **FR-009**: The plugin MUST use ADK's internal conversion utilities to transform the intercepted `LlmRequest` into a `GenerateContentRequest` proto.
+- **FR-010**: The plugin MUST transmit the `GenerateContentRequest` to the Simulator Server via gRPC.
 - **FR-011**: The plugin MUST block application execution while waiting for a human response—no timeout enforced.
 - **FR-012**: The plugin MUST print a clickable session URL to stdout upon initialization in the format: `http://localhost:4200/session/<uuid>`.
 - **FR-013**: The plugin MUST support conditional interception based on agent names via the `target_agents` parameter.
@@ -134,10 +134,11 @@ A developer deploys their ADK application in a Docker Compose environment. They 
 
 ### Key Entities
 
-- **SimulatorSession**: Represents a simulation run. Contains a unique ID (UUID), creation timestamp, optional description, current state (active/completed), and associated request queue.
-- **SimulatedLlmRequest**: The serialized data sent from plugin to server containing conversation history, system instructions, available tools, and expected output schema.
-- **HumanResponse**: The response provided by the human via the server, containing either a tool call selection with arguments or a final text/structured response.
-- **RequestQueue**: A FIFO queue per session holding pending LLM requests from potentially parallel agents.
+- **SimulatorSession** (`adksim.v1.SimulatorSession`): Represents a simulation run. Contains a unique ID (UUID), creation timestamp, and optional description.
+- **SessionEvent** (`adksim.v1.SessionEvent`): The core event envelope wrapping all session activity. Contains `event_id`, `session_id`, `timestamp`, `turn_id`, `agent_name`, and a payload that is either `llm_request` or `llm_response`.
+- **llm_request** (`google.ai.generativelanguage.v1beta.GenerateContentRequest`): The LLM request payload within a SessionEvent, containing contents, system_instruction, tools, and generation_config.
+- **llm_response** (`google.ai.generativelanguage.v1beta.GenerateContentResponse`): The human-provided response payload within a SessionEvent, containing candidates with the chosen response.
+- **RequestQueue**: A FIFO queue per session holding pending `SessionEvent` objects from potentially parallel agents.
 
 ## Success Criteria *(mandatory)*
 

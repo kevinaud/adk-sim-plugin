@@ -10,14 +10,20 @@ Implement the Simulator Server (gRPC backend with SQLite persistence) and Python
 ## Technical Context
 
 **Language/Version**: Python 3.14  
-**Primary Dependencies**: grpclib (async gRPC), betterproto (proto codegen), SQLite (persistence)  
-**Storage**: SQLite via aiosqlite for async session/event persistence  
+**Primary Dependencies**: grpclib (async gRPC), betterproto (proto codegen), databases + SQLAlchemy Core (persistence)  
+**Storage**: SQLite via `databases` library with "Promoted Field" pattern  
 **Testing**: pytest with pytest-asyncio  
 **Target Platform**: Linux (dev container), cross-platform Python  
 **Project Type**: Single project (backend library + server)  
 **Performance Goals**: <500ms request submission latency (SC-003)  
 **Constraints**: Indefinite blocking wait for human response, no timeout  
 **Scale/Scope**: Single developer simulation sessions, FIFO queueing
+
+### Design Decisions
+
+**Proto as Single Source of Truth**: Use betterproto-generated classes directly (`SimulatorSession`, `SessionEvent`, etc.) instead of defining redundant Python model classes. This avoids maintenance toil and keeps the proto definition authoritative.
+
+**Promoted Field Pattern**: Persistence stores full proto objects as BLOBs, with only queryable fields (IDs, timestamps, status) promoted to dedicated SQL columns.
 
 ## Constitution Check
 
@@ -35,62 +41,61 @@ Implement the Simulator Server (gRPC backend with SQLite persistence) and Python
 
 *REQUIRED: Every plan MUST enumerate the specific PRs needed to implement this feature.*
 
-**Target PR Count**: ~35 PRs (feature is focused on server + plugin only)
+**Target PR Count**: ~34 PRs (feature is focused on server + plugin only)
 
-### Phase 1: Foundation & Data Layer (PRs 1-10)
-
-| PR # | Branch Name | Description | Est. Lines | Depends On |
-|------|-------------|-------------|------------|------------|
-| 1 | `feature/001-session-model` | SimulatorSession dataclass + basic validation | ~80 | - |
-| 2 | `feature/002-event-types` | SessionEvent, SimulatedLlmRequest, HumanResponse types | ~120 | PR 1 |
-| 3 | `feature/003-db-schema` | SQLite schema definitions (sessions, events tables) | ~100 | PR 1 |
-| 4 | `feature/004-db-connection` | Async SQLite connection manager using aiosqlite | ~120 | PR 3 |
-| 5 | `feature/005-session-repo-create` | SessionRepository.create() + tests | ~150 | PR 4 |
-| 6 | `feature/006-session-repo-get` | SessionRepository.get_by_id() + tests | ~100 | PR 5 |
-| 7 | `feature/007-session-repo-list` | SessionRepository.list_all() with pagination + tests | ~120 | PR 6 |
-| 8 | `feature/008-event-repo-insert` | EventRepository.insert() + tests | ~100 | PR 4 |
-| 9 | `feature/009-event-repo-query` | EventRepository.get_by_session() + tests | ~120 | PR 8 |
-| 10 | `feature/010-fake-repos` | FakeSessionRepository, FakeEventRepository for testing | ~150 | PR 9 |
-
-### Phase 2: Server Core (PRs 11-20)
+### Phase 1: Foundation & Data Layer (PRs 1-8)
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 11 | `feature/011-session-manager` | SessionManager class shell + create_session() | ~120 | PR 10 |
-| 12 | `feature/012-session-manager-get` | SessionManager.get_session() + reconnection logic | ~100 | PR 11 |
-| 13 | `feature/013-request-queue` | RequestQueue (FIFO per session) implementation | ~150 | PR 2 |
-| 14 | `feature/014-event-broadcaster` | EventBroadcaster for streaming to subscribers | ~120 | PR 13 |
-| 15 | `feature/015-grpc-create-session` | SimulatorService.create_session() RPC | ~120 | PR 12 |
-| 16 | `feature/016-grpc-list-sessions` | SimulatorService.list_sessions() RPC | ~100 | PR 15 |
-| 17 | `feature/017-grpc-submit-request` | SimulatorService.submit_request() RPC | ~150 | PR 14 |
-| 18 | `feature/018-grpc-submit-decision` | SimulatorService.submit_decision() RPC | ~120 | PR 17 |
-| 19 | `feature/019-grpc-subscribe` | SimulatorService.subscribe() with replay | ~180 | PR 18 |
-| 20 | `feature/020-server-entrypoint` | Server main entrypoint with graceful shutdown | ~100 | PR 19 |
+| 1 | `feature/001-db-schema` | SQLAlchemy Core schema definitions (sessions, events tables) | ~80 | - |
+| 2 | `feature/002-db-connection` | Database connection manager using `databases` library | ~100 | PR 1 |
+| 3 | `feature/003-session-repo-create` | SessionRepository.create() with Promoted Field pattern + tests | ~150 | PR 2 |
+| 4 | `feature/004-session-repo-get` | SessionRepository.get_by_id() + tests | ~100 | PR 3 |
+| 5 | `feature/005-session-repo-list` | SessionRepository.list_all() with pagination + tests | ~120 | PR 4 |
+| 6 | `feature/006-event-repo-insert` | EventRepository.insert() with proto blob serialization + tests | ~120 | PR 2 |
+| 7 | `feature/007-event-repo-query` | EventRepository.get_by_session() + tests | ~120 | PR 6 |
+| 8 | `feature/008-fake-repos` | FakeSessionRepository, FakeEventRepository for testing | ~150 | PR 7 |
 
-### Phase 3: Plugin Core (PRs 21-30)
+### Phase 2: Server Core (PRs 9-18)
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 21 | `feature/021-plugin-config` | PluginConfig dataclass with env var parsing | ~100 | - |
-| 22 | `feature/022-grpc-client` | SimulatorClient gRPC wrapper (connect, close) | ~120 | PR 21 |
-| 23 | `feature/023-client-create-session` | SimulatorClient.create_session() | ~80 | PR 22 |
-| 24 | `feature/024-client-submit-request` | SimulatorClient.submit_request() | ~100 | PR 23 |
-| 25 | `feature/025-client-subscribe` | SimulatorClient.subscribe() async iterator | ~120 | PR 24 |
-| 26 | `feature/026-future-registry` | PendingFutureRegistry (turn_id -> Future map) | ~100 | PR 25 |
-| 27 | `feature/027-listen-loop` | Plugin._listen_loop() background task | ~150 | PR 26 |
-| 28 | `feature/028-plugin-initialize` | Plugin.initialize() with URL output | ~120 | PR 27 |
-| 29 | `feature/029-plugin-intercept` | Plugin.before_model_callback() full flow | ~180 | PR 28 |
-| 30 | `feature/030-plugin-reconnect` | Reconnection logic on connection loss | ~150 | PR 29 |
+| 9 | `feature/009-session-manager` | SessionManager class shell + create_session() | ~120 | PR 8 |
+| 10 | `feature/010-session-manager-get` | SessionManager.get_session() + reconnection logic | ~100 | PR 9 |
+| 11 | `feature/011-request-queue` | RequestQueue (FIFO per session) implementation | ~150 | PR 8 |
+| 12 | `feature/012-event-broadcaster` | EventBroadcaster for streaming to subscribers | ~120 | PR 11 |
+| 13 | `feature/013-grpc-create-session` | SimulatorService.create_session() RPC | ~120 | PR 10 |
+| 14 | `feature/014-grpc-list-sessions` | SimulatorService.list_sessions() RPC | ~100 | PR 13 |
+| 15 | `feature/015-grpc-submit-request` | SimulatorService.submit_request() RPC | ~150 | PR 12 |
+| 16 | `feature/016-grpc-submit-decision` | SimulatorService.submit_decision() RPC | ~120 | PR 15 |
+| 17 | `feature/017-grpc-subscribe` | SimulatorService.subscribe() with replay | ~180 | PR 16 |
+| 18 | `feature/018-server-entrypoint` | Server main entrypoint with graceful shutdown | ~100 | PR 17 |
 
-### Phase 4: Integration & Polish (PRs 31-35)
+### Phase 3: Plugin Core (PRs 19-29)
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 31 | `feature/031-integration-basic` | Basic integration test: single agent round-trip | ~150 | PR 30 |
-| 32 | `feature/032-integration-selective` | Integration test: selective agent interception | ~120 | PR 31 |
-| 33 | `feature/033-integration-queue` | Integration test: FIFO queueing of parallel requests | ~150 | PR 32 |
-| 34 | `feature/034-integration-persist` | Integration test: session persistence across restart | ~120 | PR 33 |
-| 35 | `feature/035-docker-compose` | Docker compose configuration for server | ~80 | PR 34 |
+| 19 | `feature/019-plugin-config` | PluginConfig dataclass with env var parsing | ~100 | - |
+| 20 | `feature/020-proto-converter` | ADKProtoConverter for LlmRequest ↔ GenerateContentRequest | ~180 | - |
+| 21 | `feature/021-grpc-client` | SimulatorClient gRPC wrapper (connect, close) | ~120 | PR 19 |
+| 22 | `feature/022-client-create-session` | SimulatorClient.create_session() | ~80 | PR 21 |
+| 23 | `feature/023-client-submit-request` | SimulatorClient.submit_request() | ~100 | PR 22 |
+| 24 | `feature/024-client-subscribe` | SimulatorClient.subscribe() async iterator | ~120 | PR 23 |
+| 25 | `feature/025-future-registry` | PendingFutureRegistry (turn_id -> Future map) | ~100 | PR 24 |
+| 26 | `feature/026-listen-loop` | Plugin._listen_loop() background task | ~150 | PR 25 |
+| 27 | `feature/027-plugin-initialize` | Plugin.initialize() with URL output | ~120 | PR 26 |
+| 28 | `feature/028-plugin-intercept` | Plugin.before_model_callback() full flow | ~180 | PR 20, PR 27 |
+| 29 | `feature/029-plugin-reconnect` | Reconnection logic on connection loss | ~150 | PR 28 |
+
+### Phase 4: Integration & Polish (PRs 30-34)
+
+| PR # | Branch Name | Description | Est. Lines | Depends On |
+|------|-------------|-------------|------------|------------|
+| 30 | `feature/030-integration-basic` | Basic integration test: single agent round-trip | ~150 | PR 29 |
+| 31 | `feature/031-integration-selective` | Integration test: selective agent interception | ~120 | PR 30 |
+| 32 | `feature/032-integration-queue` | Integration test: FIFO queueing of parallel requests | ~150 | PR 31 |
+| 33 | `feature/033-integration-persist` | Integration test: session persistence across restart | ~120 | PR 32 |
+| 34 | `feature/034-docker-compose` | Docker compose configuration for server | ~80 | PR 33 |
 
 **PR Planning Rules Applied**:
 - Each PR is 100-200 lines max ✓
@@ -98,6 +103,7 @@ Implement the Simulator Server (gRPC backend with SQLite persistence) and Python
 - PRs are single-purpose ✓
 - Use `git town append` to create dependent branches ✓
 - Large components (SessionManager, Plugin) built incrementally across multiple PRs ✓
+- **No redundant model classes** - uses betterproto-generated protos directly ✓
 
 ## Project Structure
 
@@ -119,22 +125,20 @@ specs/001-server-plugin-core/
 adk_agent_sim/
 ├── __init__.py
 ├── settings.py
-├── generated/              # Proto-generated code (betterproto)
-│   └── adksim/v1/
-├── models/                 # NEW: Domain models
+├── generated/              # Proto-generated code (betterproto) - SOURCE OF TRUTH
+│   ├── adksim/v1/          # SimulatorSession, SessionEvent, etc.
+│   └── google/ai/generativelanguage/v1beta/  # GenerateContentRequest/Response
+├── persistence/            # NEW: Data access layer (databases + SQLAlchemy Core)
 │   ├── __init__.py
-│   ├── session.py          # SimulatorSession
-│   ├── events.py           # SessionEvent, SimulatedLlmRequest, HumanResponse
-│   └── queue.py            # RequestQueue
-├── persistence/            # NEW: Data access layer
-│   ├── __init__.py
-│   ├── database.py         # Connection manager
-│   ├── session_repo.py     # SessionRepository
-│   └── event_repo.py       # EventRepository
+│   ├── schema.py           # SQLAlchemy Core table definitions
+│   ├── database.py         # Connection manager using `databases` library
+│   ├── session_repo.py     # SessionRepository (Promoted Field pattern)
+│   └── event_repo.py       # EventRepository (Promoted Field pattern)
 ├── plugin/
 │   ├── __init__.py
 │   ├── core.py             # SimulatorPlugin (enhanced)
 │   ├── config.py           # NEW: PluginConfig
+│   ├── converter.py        # NEW: ADKProtoConverter (LlmRequest ↔ Proto)
 │   ├── client.py           # NEW: SimulatorClient (gRPC wrapper)
 │   └── futures.py          # NEW: PendingFutureRegistry
 └── server/
@@ -143,6 +147,7 @@ adk_agent_sim/
     ├── main.py             # Server entrypoint (enhanced)
     ├── session_manager.py  # NEW: SessionManager
     ├── broadcaster.py      # NEW: EventBroadcaster
+    ├── queue.py            # NEW: RequestQueue
     └── services/
         ├── __init__.py
         └── simulator_service.py  # Full implementation
@@ -161,9 +166,6 @@ tests/
 │   └── test_persistence.py         # NEW
 └── unit/
     ├── __init__.py
-    ├── models/                      # NEW
-    │   ├── test_session.py
-    │   └── test_events.py
     ├── persistence/                 # NEW
     │   ├── test_session_repo.py
     │   └── test_event_repo.py
@@ -176,49 +178,260 @@ tests/
         └── test_session_manager.py    # NEW
 ```
 
-**Structure Decision**: Single project structure maintained. New modules (`models/`, `persistence/`, `fixtures/`) added to organize domain logic, data access, and test infrastructure.
+**Structure Decision**: Single project structure maintained. Proto-generated classes used directly (no `models/` directory). New `persistence/` layer uses `databases` + SQLAlchemy Core with Promoted Field pattern.
 
 ## Data Model
 
-### SimulatorSession
+**Source of Truth**: Proto definitions in `protos/adksim/v1/` and `protos/google/ai/generativelanguage/v1beta/`
+
+### SimulatorSession (`adksim.v1.SimulatorSession`)
 
 ```
-SimulatorSession
-├── id: UUID (primary key)
-├── created_at: datetime
-├── description: Optional[str]
-└── status: Literal["active", "completed"]
+SimulatorSession (betterproto.Message)
+├── id: str (UUID, primary key)
+├── created_at: datetime (Timestamp)
+└── description: str (optional)
 ```
 
-### SessionEvent
+### SessionEvent (`adksim.v1.SessionEvent`)
 
 ```
-SessionEvent
-├── event_id: UUID
-├── session_id: UUID (FK)
+SessionEvent (betterproto.Message)
+├── event_id: str (UUID)
+├── session_id: str (FK)
 ├── timestamp: datetime
-├── turn_id: UUID (correlation)
+├── turn_id: str (correlation ID)
 ├── agent_name: str
-└── payload: SimulatedLlmRequest | HumanResponse
+├── llm_request: GenerateContentRequest (oneof payload)
+└── llm_response: GenerateContentResponse (oneof payload)
 ```
 
-### SimulatedLlmRequest
+### LLM Types (`google.ai.generativelanguage.v1beta`)
 
 ```
-SimulatedLlmRequest
+GenerateContentRequest (betterproto.Message)
+├── model: str
 ├── contents: list[Content]
-├── system_instruction: str
-└── tools: list[Tool]
-```
+├── system_instruction: Content
+├── tools: list[Tool]
+└── generation_config: GenerationConfig
 
-### HumanResponse
-
-```
-HumanResponse
-└── candidates: list[Content]
+GenerateContentResponse (betterproto.Message)
+├── candidates: list[Candidate]
+├── prompt_feedback: PromptFeedback
+└── usage_metadata: UsageMetadata
 ```
 
 ## Key Implementation Notes
+
+### Architectural Overview: Server as Opaque Bridge
+
+The Simulator Server acts as an **opaque bridge** between the Plugin and Frontend—it does not interpret or validate the contents of `GenerateContentRequest` or `GenerateContentResponse`. This design keeps the server simple and decoupled from LLM-specific logic.
+
+**Data Flow**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              ADK Application                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Agent declares: tools, system_instruction, output_schema                   │
+│                         ↓                                                   │
+│  ADK Runtime builds: LlmRequest (ADK's internal model)                      │
+│                         ↓                                                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                     SimulatorPlugin                                 │    │
+│  │  1. Intercept LlmRequest in before_model_callback()                 │    │
+│  │  2. Use ADK internals to convert: LlmRequest → GenerateContentReq   │    │
+│  │  3. Submit GenerateContentRequest to server (opaque payload)        │    │
+│  │  4. Block waiting for GenerateContentResponse                       │    │
+│  │  5. Use ADK internals to convert: GenerateContentResponse → LlmResp │    │
+│  │  6. Return LlmResponse to ADK Runtime                               │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                              ↕ gRPC (SessionEvent)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          Simulator Server                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  • Receives SessionEvent with llm_request payload (opaque blob)             │
+│  • Persists event to SQLite                                                 │
+│  • Broadcasts event to all subscribers                                      │
+│  • Receives SessionEvent with llm_response payload (opaque blob)            │
+│  • Does NOT parse or validate GenerateContentRequest/Response contents      │
+└─────────────────────────────────────────────────────────────────────────────┘
+                              ↕ gRPC (SessionEvent)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     Frontend (OUT OF SCOPE)                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  • Subscribes to session events                                             │
+│  • Parses GenerateContentRequest to render UI (tools, history, etc.)        │
+│  • Collects user input and constructs GenerateContentResponse               │
+│  • Publishes response event back to server                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Design Decisions**:
+
+1. **ADK Conversion Utilities**: The plugin MUST use ADK's existing internal utilities for `LlmRequest ↔ GenerateContentRequest` and `GenerateContentResponse ↔ LlmResponse` conversions. This ensures compatibility with ADK's model structure and avoids reimplementing complex serialization logic.
+
+2. **Server is Payload-Agnostic**: The server treats `GenerateContentRequest` and `GenerateContentResponse` as opaque proto blobs. It only inspects promoted fields (`session_id`, `turn_id`, `timestamp`, `payload_type`) for routing and persistence.
+
+3. **Frontend Owns LLM Semantics**: The frontend (out of scope for this phase) is responsible for understanding and rendering `GenerateContentRequest` fields (contents, tools, system_instruction) and constructing valid `GenerateContentResponse` objects.
+
+### ADKProtoConverter Reference Implementation
+
+The plugin MUST use this converter class for `LlmRequest ↔ GenerateContentRequest` and `GenerateContentResponse ↔ LlmResponse` transformations. This implementation mirrors the google.genai SDK's serialization logic.
+
+**File**: `adk_agent_sim/plugin/converter.py`
+
+```python
+from typing import Any, Dict
+
+import google.ai.generativelanguage as glm
+from google.genai import types as genai_types
+from google.protobuf import json_format
+from google.adk.models import LlmRequest, LlmResponse
+
+class ADKProtoConverter:
+  """Handles conversion between ADK/Pydantic objects and Google/Protobuf objects.
+
+  This class serves as a bridge for the Simulator "Remote Brain" protocol,
+  translating internal ADK runtime objects into standard Google Generative AI
+  protocol buffers for transmission over gRPC.
+  """
+
+  @staticmethod
+  def llm_request_to_proto(adk_request: LlmRequest) -> glm.GenerateContentRequest:
+    """Converts an ADK LlmRequest (Pydantic) into a GenerateContentRequest (Protobuf).
+
+    This logic mirrors how the google.genai SDK unpacks the 'config' object
+    into distinct protocol buffer fields.
+
+    Args:
+      adk_request: The ADK LlmRequest Pydantic object to convert.
+
+    Returns:
+      The corresponding Google Generative Language GenerateContentRequest protobuf.
+    """
+    proto_request = glm.GenerateContentRequest()
+
+    # 1. Model Name
+    if adk_request.model:
+      proto_request.model = adk_request.model
+
+    # 2. Contents
+    # Serialize Pydantic contents to dicts, then parse into Proto
+    if adk_request.contents:
+      contents_data = [c.model_dump(mode='json', exclude_none=True) for c in adk_request.contents]
+      for content_dict in contents_data:
+        content_proto = glm.Content()
+        json_format.ParseDict(content_dict, content_proto)
+        proto_request.contents.append(content_proto)
+
+    # 3. Unpack GenerateContentConfig
+    # ADK bundles everything (tools, safety, generation params) into 'config'.
+    # The Proto expects them in separate fields.
+    if adk_request.config:
+      config = adk_request.config
+
+      # A. System Instruction
+      if config.system_instruction:
+        # ADK allows str or Content; normalize to Content for Proto
+        if isinstance(config.system_instruction, str):
+          si_content = glm.Content(parts=[glm.Part(text=config.system_instruction)])
+          proto_request.system_instruction.CopyFrom(si_content)
+        else:
+          si_data = config.system_instruction.model_dump(mode='json', exclude_none=True)
+          json_format.ParseDict(si_data, proto_request.system_instruction)
+
+      # B. Tools
+      if config.tools:
+        for tool in config.tools:
+          # ADK tools can be types.Tool or others.
+          # We serialize the Tool object which contains function_declarations.
+          if hasattr(tool, 'model_dump'):
+            tool_data = tool.model_dump(mode='json', exclude_none=True)
+            tool_proto = glm.Tool()
+            json_format.ParseDict(tool_data, tool_proto)
+            proto_request.tools.append(tool_proto)
+
+      # C. Safety Settings
+      if config.safety_settings:
+        for setting in config.safety_settings:
+          setting_data = setting.model_dump(mode='json', exclude_none=True)
+          setting_proto = glm.SafetySetting()
+          json_format.ParseDict(setting_data, setting_proto)
+          proto_request.safety_settings.append(setting_proto)
+
+      # D. Generation Config (Remaining fields)
+      # Create a dict of just the generation params to parse into GenerationConfig proto
+      gen_config_proto = glm.GenerationConfig()
+
+      # Map specific fields that belong to GenerationConfig
+      # Note: We skip 'tools', 'system_instruction', 'safety_settings' as they are handled above
+      gen_config_map = {
+          'temperature': config.temperature,
+          'top_p': config.top_p,
+          'top_k': config.top_k,
+          'candidate_count': config.candidate_count,
+          'max_output_tokens': config.max_output_tokens,
+          'stop_sequences': config.stop_sequences,
+          'presence_penalty': config.presence_penalty,
+          'frequency_penalty': config.frequency_penalty,
+          'response_mime_type': config.response_mime_type,
+          # JSON Schema is handled specially in some versions, but usually part of gen_config
+      }
+
+      # Remove None values so we don't overwrite proto defaults
+      gen_config_dict = {k: v for k, v in gen_config_map.items() if v is not None}
+
+      if config.response_schema:
+        gen_config_dict['response_schema'] = config.response_schema.model_dump(mode='json', exclude_none=True)
+
+      if gen_config_dict:
+        json_format.ParseDict(gen_config_dict, gen_config_proto)
+        proto_request.generation_config.CopyFrom(gen_config_proto)
+
+    return proto_request
+
+  @staticmethod
+  def proto_to_llm_response(proto_response: glm.GenerateContentResponse) -> LlmResponse:
+    """Converts a GenerateContentResponse (Protobuf) into an ADK LlmResponse (Pydantic).
+
+    This leverages the ADK's existing LlmResponse.create() factory method.
+
+    Args:
+      proto_response: The Google Generative Language GenerateContentResponse
+        protobuf to convert.
+
+    Returns:
+      The corresponding ADK LlmResponse Pydantic object.
+    """
+    # 1. Convert Proto to Dict
+    # preserving_proto_field_name=True ensures keys match the API schema expected by google.genai
+    response_dict = json_format.MessageToDict(
+        proto_response,
+        preserving_proto_field_name=True,
+        use_integers_for_enums=False
+    )
+
+    # 2. Convert Dict to google.genai.types.GenerateContentResponse
+    # The SDK's Pydantic model can validate/parse the raw dictionary
+    genai_response = genai_types.GenerateContentResponse.model_validate(response_dict)
+
+    # 3. Create ADK LlmResponse
+    # Use the logic in google_llm.py to map candidates/usage to LlmResponse
+    return LlmResponse.create(genai_response)
+```
+
+**Key Implementation Notes**:
+
+1. **Serialization Strategy**: Uses `json_format.ParseDict()` to convert Pydantic model dicts to Proto messages, avoiding manual field-by-field mapping.
+
+2. **Config Unpacking**: ADK bundles tools, safety_settings, system_instruction, and generation params into a single `GenerateContentConfig`. This must be unpacked into separate Proto fields.
+
+3. **Response Factory**: Uses `LlmResponse.create()` factory method which handles the candidates/usage mapping logic.
+
+4. **Field Preservation**: `preserving_proto_field_name=True` ensures snake_case field names match the expected API schema.
 
 ### Future Map Pattern (Plugin)
 
@@ -259,7 +472,8 @@ No constitution violations. All gates pass.
 
 **New Dependencies Required** (add to pyproject.toml):
 
-- `aiosqlite>=0.20.0` - Async SQLite for persistence (FR-002, FR-003)
+- `databases[aiosqlite]>=0.9.0` - Async database access with SQLite driver
+- `sqlalchemy>=2.0.0` - Schema definitions and query building (Core only, no ORM)
 
 **Existing Dependencies Used**:
 

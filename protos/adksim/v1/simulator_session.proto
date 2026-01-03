@@ -1,0 +1,39 @@
+syntax = "proto3";
+package adksim.v1;
+
+import "google/ai/generativelanguage/v1beta/generative_service.proto";
+import "google/protobuf/timestamp.proto";
+
+// SimulatorSession represents a simulation session's metadata.
+// Named to avoid collision with the ADK concept of Session.
+message SimulatorSession {
+  // Unique identifier for the session (UUID).
+  string id = 1;
+  // When the session was created.
+  google.protobuf.Timestamp created_at = 2;
+  // Optional human-readable description/metadata.
+  string description = 3;
+}
+
+// SessionEvent is the core envelope for all events in a session.
+// It wraps either an LLM request (from Plugin) or response (from UI).
+message SessionEvent {
+  // Unique identifier for this event.
+  string event_id = 1;
+  // The session this event belongs to.
+  string session_id = 2;
+  // When this event occurred.
+  google.protobuf.Timestamp timestamp = 3;
+  // Correlation ID linking a request to its decision.
+  string turn_id = 4;
+  // Name of the agent that triggered this event.
+  string agent_name = 5;
+
+  // The event payload - either a request or response.
+  oneof payload {
+    // LLM request intercepted from an agent (Plugin -> UI).
+    google.ai.generativelanguage.v1beta.GenerateContentRequest llm_request = 10;
+    // Human decision/response (UI -> Plugin).
+    google.ai.generativelanguage.v1beta.GenerateContentResponse llm_response = 11;
+  }
+}
