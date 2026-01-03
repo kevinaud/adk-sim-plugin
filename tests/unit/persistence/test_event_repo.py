@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import select
 
 from adk_agent_sim.generated.adksim.v1 import SessionEvent
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
@@ -50,8 +51,8 @@ class TestEventRepositoryInsert:
     assert result == event
 
     # Verify promoted fields in database
-    query = f"SELECT * FROM {events.name} WHERE event_id = :event_id"
-    rows = await db.fetch_all(query.replace(":event_id", f"'{event_id}'"))
+    query = select(events).where(events.c.event_id == event_id)
+    rows = await db.fetch_all(query)
 
     assert len(rows) == 1
     row = rows[0]
@@ -96,8 +97,8 @@ class TestEventRepositoryInsert:
     assert result == event
 
     # Verify promoted fields in database
-    query = f"SELECT * FROM {events.name} WHERE event_id = :event_id"
-    rows = await db.fetch_all(query.replace(":event_id", f"'{event_id}'"))
+    query = select(events).where(events.c.event_id == event_id)
+    rows = await db.fetch_all(query)
 
     assert len(rows) == 1
     row = rows[0]
@@ -136,8 +137,8 @@ class TestEventRepositoryInsert:
     await repo.insert(event)
 
     # Retrieve and deserialize
-    query = f"SELECT proto_blob FROM {events.name} WHERE event_id = :event_id"
-    rows = await db.fetch_all(query.replace(":event_id", f"'{event_id}'"))
+    query = select(events.c.proto_blob).where(events.c.event_id == event_id)
+    rows = await db.fetch_all(query)
     proto_blob = rows[0]["proto_blob"]
 
     restored = SessionEvent().parse(proto_blob)
