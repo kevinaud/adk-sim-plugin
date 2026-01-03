@@ -4,10 +4,12 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy import select
 
 from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 from adk_agent_sim.persistence import SessionRepository
 from adk_agent_sim.persistence.database import Database
+from adk_agent_sim.persistence.schema import sessions
 
 # In-memory SQLite URL with shared cache for testing
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:?cache=shared"
@@ -36,8 +38,9 @@ class TestSessionRepositoryCreate:
     # Should return the same session
     assert result == session
 
-    # Verify it was stored in the database
-    rows = await db.fetch_all(f"SELECT * FROM sessions WHERE id = '{session_id}'")
+    # Verify it was stored in the database using SQLAlchemy Core
+    query = select(sessions).where(sessions.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
     assert rows[0]["id"] == session_id
 
@@ -61,9 +64,10 @@ class TestSessionRepositoryCreate:
 
     await repo.create(session, status="pending")
 
-    rows = await db.fetch_all(
-      f"SELECT id, created_at, status FROM sessions WHERE id = '{session_id}'"
+    query = select(sessions.c.id, sessions.c.created_at, sessions.c.status).where(
+      sessions.c.id == session_id
     )
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
 
     row = rows[0]
@@ -90,9 +94,8 @@ class TestSessionRepositoryCreate:
 
     await repo.create(session)
 
-    rows = await db.fetch_all(
-      f"SELECT proto_blob FROM sessions WHERE id = '{session_id}'"
-    )
+    query = select(sessions.c.proto_blob).where(sessions.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
 
     # Deserialize the stored blob and verify all fields
@@ -121,7 +124,8 @@ class TestSessionRepositoryCreate:
 
     await repo.create(session)
 
-    rows = await db.fetch_all(f"SELECT status FROM sessions WHERE id = '{session_id}'")
+    query = select(sessions.c.status).where(sessions.c.id == session_id)
+    rows = await db.fetch_all(query)
     assert len(rows) == 1
     assert rows[0]["status"] == "active"
 
