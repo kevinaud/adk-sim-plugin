@@ -63,6 +63,15 @@ class Database:
 
     engine.dispose()
 
+  async def execute(self, query: str, values: dict[str, Any] | None = None) -> None:
+    """Execute a query without returning results.
+
+    Args:
+        query: SQL query string.
+        values: Optional dictionary of parameter values.
+    """
+    await self._client.execute(query, values)  # pyright: ignore[reportUnknownMemberType]
+
   async def fetch_all(self, query: str) -> list[dict[str, Any]]:
     """Execute a query and fetch all results.
 
