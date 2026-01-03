@@ -8,11 +8,12 @@ promoted to dedicated columns.
 from typing import TYPE_CHECKING
 
 import betterproto
+from sqlalchemy import select
 
+from adk_agent_sim.generated.adksim.v1 import SessionEvent
 from adk_agent_sim.persistence.schema import events
 
 if TYPE_CHECKING:
-  from adk_agent_sim.generated.adksim.v1 import SessionEvent
   from adk_agent_sim.persistence.database import Database
 
 
@@ -72,10 +73,6 @@ class EventRepository:
     Returns:
         List of SessionEvents ordered by timestamp ASC (oldest first).
     """
-    from sqlalchemy import select
-
-    from adk_agent_sim.generated.adksim.v1 import SessionEvent
-
     # Build query using SQLAlchemy Core
     query = (
       select(events.c.proto_blob)
@@ -96,10 +93,6 @@ class EventRepository:
     Returns:
         List of SessionEvents ordered by timestamp ASC.
     """
-    from sqlalchemy import select
-
-    from adk_agent_sim.generated.adksim.v1 import SessionEvent
-
     # Build query using SQLAlchemy Core
     query = (
       select(events.c.proto_blob)
