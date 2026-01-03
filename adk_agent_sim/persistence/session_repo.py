@@ -6,8 +6,6 @@ queryable fields extracted into SQL columns for efficient filtering.
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-
 from adk_agent_sim.generated.adksim.v1 import SessionStatus
 from adk_agent_sim.persistence.schema import sessions
 
@@ -65,25 +63,3 @@ class SessionRepository:
     await self._database.execute(query)
 
     return session
-
-  async def get_by_id(self, session_id: str) -> SimulatorSession | None:
-    """Retrieve a session by its ID.
-
-    Args:
-        session_id: The unique identifier of the session.
-
-    Returns:
-        The deserialized SimulatorSession if found, None otherwise.
-    """
-    # Import here to deserialize proto
-    from adk_agent_sim.generated.adksim.v1 import SimulatorSession
-
-    # Build select query using SQLAlchemy Core
-    query = select(sessions.c.proto_blob).where(sessions.c.id == session_id)
-    row = await self._database.fetch_one(query)
-
-    if row is None:
-      return None
-
-    # Deserialize proto blob back to SimulatorSession
-    return SimulatorSession().parse(row["proto_blob"])
