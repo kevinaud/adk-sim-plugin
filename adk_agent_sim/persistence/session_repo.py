@@ -62,3 +62,24 @@ class SessionRepository:
     await self._database.execute(query, values)
 
     return session
+
+  async def get_by_id(self, session_id: str) -> SimulatorSession | None:
+    """Retrieve a session by its ID.
+
+    Args:
+        session_id: The unique identifier of the session.
+
+    Returns:
+        The deserialized SimulatorSession if found, None otherwise.
+    """
+    # Import here to avoid circular imports at module level
+    from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+
+    query = "SELECT proto_blob FROM sessions WHERE id = :id"
+    row = await self._database.fetch_one(query, {"id": session_id})
+
+    if row is None:
+      return None
+
+    # Deserialize proto blob back to SimulatorSession
+    return SimulatorSession.FromString(row["proto_blob"])

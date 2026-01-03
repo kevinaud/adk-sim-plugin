@@ -83,3 +83,20 @@ class Database:
     """
     rows = await self._client.fetch_all(query)  # pyright: ignore[reportUnknownMemberType]
     return [dict(row._mapping) for row in rows]  # pyright: ignore[reportUnknownMemberType]
+
+  async def fetch_one(
+    self, query: str, values: dict[str, Any] | None = None
+  ) -> dict[str, Any] | None:
+    """Execute a query and fetch a single result.
+
+    Args:
+        query: SQL query string.
+        values: Optional dictionary of parameter values.
+
+    Returns:
+        Row dictionary if found, None otherwise.
+    """
+    row = await self._client.fetch_one(query, values)  # pyright: ignore[reportUnknownMemberType]
+    if row is None:
+      return None
+    return dict(row._mapping)  # pyright: ignore[reportUnknownMemberType]
