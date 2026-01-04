@@ -31,7 +31,3 @@ class SessionEventRepository(Protocol):
   async def insert(self, event: SessionEvent) -> SessionEvent: ...
 
   async def get_by_session(self, session_id: str) -> list[SessionEvent]: ...
-
-
-# Backwards-compatible alias requested by callers.
-SimulatedEventProtocol = SessionEventRepository

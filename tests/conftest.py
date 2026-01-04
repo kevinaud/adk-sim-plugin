@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 async def db() -> "AsyncGenerator[Database]":  # noqa: UP037
   """Provide an in-memory database connection."""
-  database = Database("sqlite:///:memory:")
+  database = Database("sqlite+aiosqlite:///:memory:")
   await database.connect()
   await database.create_tables()
   yield database
