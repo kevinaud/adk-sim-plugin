@@ -1,12 +1,15 @@
 """Tests for SessionManager."""
 
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 
 from adk_agent_sim.generated.adksim.v1 import SimulatorSession
-from adk_agent_sim.server.session_manager import SessionManager
-from tests.fixtures import FakeEventRepository, FakeSessionRepository
+
+if TYPE_CHECKING:
+  from adk_agent_sim.server.session_manager import SessionManager
+  from tests.fixtures import FakeEventRepository, FakeSessionRepository
 
 
 class TestSessionManager:
@@ -129,12 +132,8 @@ class TestGetSession:
   """Test suite for SessionManager.get_session()."""
 
   @pytest.mark.asyncio
-  async def test_get_session_cache_hit(self) -> None:
+  async def test_get_session_cache_hit(self, manager: SessionManager) -> None:
     """Test that get_session returns session from memory cache."""
-    session_repo = FakeSessionRepository()
-    event_repo = FakeEventRepository()
-    manager = SessionManager(session_repo, event_repo)
-
     # Create a session (will be cached)
     created = await manager.create_session(description="Cached session")
 
@@ -146,12 +145,8 @@ class TestGetSession:
     assert retrieved is created  # Same object reference (cache hit)
 
   @pytest.mark.asyncio
-  async def test_get_session_cache_miss_db_hit(self) -> None:
+  async def test_get_session_cache_miss_db_hit(self, manager: SessionManager) -> None:
     """Test that get_session loads from DB when not in cache."""
-    session_repo = FakeSessionRepository()
-    event_repo = FakeEventRepository()
-    manager = SessionManager(session_repo, event_repo)
-
     # Create a session
     created = await manager.create_session(description="DB session")
     session_id = created.id
@@ -169,24 +164,18 @@ class TestGetSession:
     assert session_id in manager._active_sessions
 
   @pytest.mark.asyncio
-  async def test_get_session_not_found(self) -> None:
+  async def test_get_session_not_found(self, manager: SessionManager) -> None:
     """Test that get_session returns None for non-existent session."""
-    session_repo = FakeSessionRepository()
-    event_repo = FakeEventRepository()
-    manager = SessionManager(session_repo, event_repo)
-
     # Try to retrieve a session that doesn't exist
     retrieved = await manager.get_session("non-existent-id")
 
     assert retrieved is None
 
   @pytest.mark.asyncio
-  async def test_get_session_caches_on_reconnection(self) -> None:
+  async def test_get_session_caches_on_reconnection(
+    self, manager: SessionManager
+  ) -> None:
     """Test that sessions loaded from DB are cached for subsequent lookups."""
-    session_repo = FakeSessionRepository()
-    event_repo = FakeEventRepository()
-    manager = SessionManager(session_repo, event_repo)
-
     # Create and then clear cache
     created = await manager.create_session()
     session_id = created.id
