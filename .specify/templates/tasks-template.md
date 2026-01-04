@@ -20,10 +20,11 @@ description: "Task list template for feature implementation"
 - **Presubmit Gate**: Run `./scripts/presubmit.sh` before every `git push`
 - **No Mocks**: Unit tests MUST use real implementations or fakes; mocks require explicit user permission
 
-## Format: `[ID] [PR#] [P?] Description`
+## Format: `[ID] [phNfM] [P?] Description`
 
-- **[PR#]**: Which Pull Request this task belongs to (e.g., PR1, PR2, PR3)
+- **[phNfM]**: Which Pull Request this task belongs to (e.g., ph1f1, ph2f3, ph3f10)
 - **[P]**: Can run in parallel within the same PR (different files, no dependencies)
+- **Task IDs**: Scoped within each phase (each phase starts from T001)
 - Include exact file paths in descriptions
 - Each PR groups related tasks that fit within 100-200 LOC
 
@@ -53,58 +54,58 @@ description: "Task list template for feature implementation"
   ============================================================================
 -->
 
-## PR 1: Initial Scaffold (~50 lines)
+## ph1f1: Initial Scaffold (~50 lines)
 
-**Branch**: `git town hack feature/001-scaffold`
+**Branch**: `git town hack phase/1/feat/1/scaffold`
 **Depends on**: -
 **Goal**: Project structure and configuration
 
-- [ ] T001 [PR1] Create project directory structure per plan.md
-- [ ] T002 [PR1] [P] Add base configuration files
+- [ ] T001 [ph1f1] Create project directory structure per plan.md
+- [ ] T002 [ph1f1] [P] Add base configuration files
 
 ---
 
-## PR 2: Core Types (~100 lines)
+## ph1f2: Core Types (~100 lines)
 
-**Branch**: `git town append feature/002-core-types`
-**Depends on**: PR 1
+**Branch**: `git town append phase/1/feat/2/core-types`
+**Depends on**: ph1f1
 **Goal**: Define foundational type definitions
 
-- [ ] T003 [PR2] Define core interfaces in src/types/
-- [ ] T004 [PR2] Add type tests in tests/unit/test_types.py
+- [ ] T003 [ph1f2] Define core interfaces in src/types/
+- [ ] T004 [ph1f2] Add type tests in tests/unit/test_types.py
 
 ---
 
-## PR 3: Base Model (~120 lines)
+## ph1f3: Base Model (~120 lines)
 
-**Branch**: `git town append feature/003-base-model`
-**Depends on**: PR 2
+**Branch**: `git town append phase/1/feat/3/base-model`
+**Depends on**: ph1f2
 **Goal**: Implement first model with tests
 
-- [ ] T005 [PR3] Create [Entity] model in src/models/[entity].py
-- [ ] T006 [PR3] Add [Entity] model tests in tests/unit/test_[entity].py
+- [ ] T005 [ph1f3] Create [Entity] model in src/models/[entity].py
+- [ ] T006 [ph1f3] Add [Entity] model tests in tests/unit/test_[entity].py
 
 ---
 
-## PR 4: Service Layer - Part 1 (~100 lines)
+## ph2f1: Service Layer - Part 1 (~100 lines)
 
-**Branch**: `git town append feature/004-service-part1`
-**Depends on**: PR 3
+**Branch**: `git town append phase/2/feat/1/service-part1`
+**Depends on**: ph1f3
 **Goal**: First slice of service implementation
 
-- [ ] T007 [PR4] Create [Service] class skeleton in src/services/[service].py
-- [ ] T008 [PR4] Add [Service] constructor tests in tests/unit/test_[service].py
+- [ ] T001 [ph2f1] Create [Service] class skeleton in src/services/[service].py
+- [ ] T002 [ph2f1] Add [Service] constructor tests in tests/unit/test_[service].py
 
 ---
 
-## PR 5: Service Layer - Part 2 (~150 lines)
+## ph2f2: Service Layer - Part 2 (~150 lines)
 
-**Branch**: `git town append feature/005-service-part2`
-**Depends on**: PR 4
+**Branch**: `git town append phase/2/feat/2/service-part2`
+**Depends on**: ph2f1
 **Goal**: Add first method to service
 
-- [ ] T009 [PR5] Implement [Service].create() method
-- [ ] T010 [PR5] Add [Service].create() tests
+- [ ] T003 [ph2f2] Implement [Service].create() method
+- [ ] T004 [ph2f2] Add [Service].create() tests
 
 ---
 
@@ -112,14 +113,14 @@ description: "Task list template for feature implementation"
 
 ---
 
-## PR N: Final Polish (~100 lines)
+## phNfM: Final Polish (~100 lines)
 
-**Branch**: `git town append feature/0NN-polish`
-**Depends on**: PR N-1
+**Branch**: `git town append phase/N/feat/M/polish`
+**Depends on**: phNf(M-1)
 **Goal**: Documentation and cleanup
 
-- [ ] TXXX [PRN] Update documentation in docs/
-- [ ] TXXX [PRN] Add integration tests
+- [ ] T001 [phNfM] Update documentation in docs/
+- [ ] T002 [phNfM] Add integration tests
 
 ---
 
@@ -129,23 +130,23 @@ description: "Task list template for feature implementation"
 
 ```
 main
- └── PR 1: Initial scaffold
-      └── PR 2: Core types
-           └── PR 3: Base model
-                └── PR 4: Service part 1
-                     └── PR 5: Service part 2
+ └── ph1f1: Initial scaffold
+      └── ph1f2: Core types
+           └── ph1f3: Base model
+                └── ph2f1: Service part 1
+                     └── ph2f2: Service part 2
                           └── ... (~50 PRs total)
 ```
 
 ### Git Town Commands
 
 ```bash
-# Start feature
-git town hack feature/001-scaffold
+# Start feature - Phase 1
+git town hack phase/1/feat/1/scaffold
 
-# Create stacked PRs
-git town append feature/002-core-types
-git town append feature/003-base-model
+# Create stacked PRs within Phase 1
+git town append phase/1/feat/2/core-types
+git town append phase/1/feat/3/base-model
 # ... continue for each PR
 
 # Sync with upstream
@@ -171,10 +172,10 @@ git push
 
 ### Small PR Workflow
 
-1. Complete all tasks for PR 1
+1. Complete all tasks for ph1f1
 2. Run `./scripts/presubmit.sh` - must pass
 3. Push and create PR
-4. `git town append feature/002-...` for next PR
+4. `git town append phase/1/feat/2/...` for next PR
 5. Repeat for all ~50 PRs
 
 ### Incremental Delivery
@@ -198,11 +199,11 @@ Before submitting any PR:
 ### Tests MUST Be In Same PR As Implementation
 
 ❌ WRONG:
-- PR 5: Implement UserService
-- PR 6: Add UserService tests
+- ph2f2: Implement UserService
+- ph2f3: Add UserService tests
 
 ✅ CORRECT:
-- PR 5: Implement UserService + tests (~150 lines total)
+- ph2f2: Implement UserService + tests (~150 lines total)
 
 ### No Mocks Without Permission
 
@@ -223,7 +224,8 @@ If you believe a mock is necessary:
 ## Notes
 
 - [P] tasks = parallelizable within the same PR
-- [PR#] label maps task to specific Pull Request
+- [phNfM] label maps task to specific Pull Request (phase N, feature M)
+- Task IDs are phase-scoped (each phase starts from T001)
 - Each PR MUST be 100-200 lines max (HARD LIMIT)
 - Tests and implementation go in SAME PR
 - Run `./scripts/presubmit.sh` before every push
