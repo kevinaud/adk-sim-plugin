@@ -1,0 +1,19 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+      # Use in-memory SQLite for fast E2E tests
+      - ADK_AGENT_SIM_DATABASE_URL=sqlite+aiosqlite:///:memory:
+    command: uv run python -m adk_agent_sim.server.main
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+      start_period: 5s

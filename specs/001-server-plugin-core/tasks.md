@@ -300,11 +300,11 @@
 **Goal**: pytest-docker setup with docker-compose.test.yaml and shared fixtures
 **User Stories**: US1 (Basic Interception - E2E validation)
 
-- [ ] T039 [ph2bf1] Create `docker-compose.test.yaml` with backend service for E2E tests in project root
-- [ ] T040 [ph2bf1] Add `pytest-docker` and `grpclib` to dev dependencies in `pyproject.toml`
-- [ ] T041 [ph2bf1] Create `tests/e2e/__init__.py` and `tests/e2e/conftest.py` with `docker_compose_file` fixture
-- [ ] T042 [ph2bf1] Implement `simulator_server` fixture using `docker_services.wait_until_responsive()` in `tests/e2e/conftest.py`
-- [ ] T043 [ph2bf1] Implement `grpc_channel` fixture returning connected `Channel` to server in `tests/e2e/conftest.py`
+- [x] T039 [ph2bf1] Create `docker-compose.test.yaml` with backend service for E2E tests in project root
+- [x] T040 [ph2bf1] Add `pytest-docker` and `grpclib` to dev dependencies in `pyproject.toml`
+- [x] T041 [ph2bf1] Create `tests/e2e/__init__.py` and `tests/e2e/conftest.py` with `docker_compose_file` fixture
+- [x] T042 [ph2bf1] Implement `simulator_server` fixture using `docker_services.wait_until_responsive()` in `tests/e2e/conftest.py`
+- [x] T043 [ph2bf1] Implement `grpc_channel` fixture returning connected `Channel` to server in `tests/e2e/conftest.py`
 
 ---
 
