@@ -14,6 +14,7 @@ from adk_agent_sim.generated.adksim.v1 import (
   ListSessionsResponse,
   SessionEvent,
   SimulatorServiceBase,
+  SubmitDecisionResponse,
   SubmitRequestResponse,
 )
 from adk_agent_sim.server.logging import get_logger
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import (
     CreateSessionRequest,
     ListSessionsRequest,
+    SubmitDecisionRequest,
     SubmitRequestRequest,
   )
   from adk_agent_sim.persistence.event_repo import EventRepository
@@ -123,3 +125,30 @@ class SimulatorService(SimulatorServiceBase):
     await self._event_broadcaster.broadcast(event.session_id, event)
 
     return SubmitRequestResponse(event_id=event_id)
+
+  async def submit_decision(
+    self, submit_decision_request: SubmitDecisionRequest
+  ) -> SubmitDecisionResponse:
+    """Submit a decision from the UI.
+
+    Args:
+        submit_decision_request: The decision containing LLM response.
+
+    Returns:
+        SubmitDecisionResponse containing the generated event ID.
+    """
+    event_id = str(uuid.uuid4())
+    event = SessionEvent(
+      event_id=event_id,
+      session_id=submit_decision_request.session_id,
+      timestamp=datetime.now(UTC),
+      turn_id=submit_decision_request.turn_id,
+      agent_name="User",
+      llm_response=submit_decision_request.response,
+    )
+
+    await self._event_repo.insert(event)
+    await self._request_queue.dequeue(submit_decision_request.session_id)
+    await self._event_broadcaster.broadcast(event.session_id, event)
+
+    return SubmitDecisionResponse(event_id=event_id)

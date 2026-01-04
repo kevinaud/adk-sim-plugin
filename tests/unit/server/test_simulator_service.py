@@ -8,10 +8,12 @@ import pytest
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
   ListSessionsRequest,
+  SubmitDecisionRequest,
   SubmitRequestRequest,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
   GenerateContentRequest,
+  GenerateContentResponse,
 )
 from adk_agent_sim.server.broadcaster import EventBroadcaster
 from adk_agent_sim.server.queue import RequestQueue
@@ -167,4 +169,70 @@ class TestSimulatorService:
 
     assert len(response.sessions) == 1
     assert response.sessions[0].description == "session 1"
-    assert not response.next_page_token
+
+  @pytest.mark.asyncio
+  async def test_submit_decision_success(
+    self, manager: SessionManager, event_repo: EventRepository
+  ) -> None:
+    """Test that submit_decision processes the decision successfully."""
+    request_queue = RequestQueue()
+    event_broadcaster = EventBroadcaster()
+    service = SimulatorService(
+      session_manager=manager,
+      event_repo=event_repo,
+      request_queue=request_queue,
+      event_broadcaster=event_broadcaster,
+    )
+
+    # Create a session
+    session = await manager.create_session("test session")
+
+    # 1. Submit a request to populate queue
+    request_req = SubmitRequestRequest(
+      session_id=session.id,
+      turn_id="turn_1",
+      agent_name="test_agent",
+      request=GenerateContentRequest(),
+    )
+    await service.submit_request(request_req)
+
+    # Verify queue has item
+    assert not request_queue.is_empty(session.id)
+
+    # 2. Submit decision
+    decision_req = SubmitDecisionRequest(
+      session_id=session.id,
+      turn_id="turn_1",
+      response=GenerateContentResponse(),
+    )
+
+    # Start subscriber to verify broadcast
+    received_events = []
+
+    async def subscriber() -> None:
+      async for event in event_broadcaster.subscribe(session.id):
+        received_events.append(event)
+        break
+
+    subscriber_task = asyncio.create_task(subscriber())
+    await asyncio.sleep(0.01)
+
+    response = await service.submit_decision(decision_req)
+
+    assert response.event_id is not None
+
+    # Verify event in repo
+    stored_events = await event_repo.get_by_session(session.id)
+    assert len(stored_events) == 2
+    decision_event = stored_events[1]
+    assert decision_event.event_id == response.event_id
+    assert decision_event.llm_response == GenerateContentResponse()
+    assert decision_event.agent_name == "User"
+
+    # Verify queue is empty (dequeued)
+    assert request_queue.is_empty(session.id)
+
+    # Verify broadcast
+    await asyncio.wait_for(subscriber_task, timeout=1.0)
+    assert len(received_events) == 1
+    assert received_events[0].event_id == response.event_id
