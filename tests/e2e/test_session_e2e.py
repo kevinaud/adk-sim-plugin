@@ -93,7 +93,7 @@ async def test_session_persists_across_restart(
   because:
   1. pytest-docker's Services doesn't expose execute() for docker-compose restart
   2. Our test compose file uses /tmp/test.db inside the container without a volume
-  
+
   To run this test manually:
   1. Configure docker-compose.test.yaml with a volume for the SQLite database
   2. Remove the @pytest.mark.skip decorator
