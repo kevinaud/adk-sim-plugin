@@ -5,12 +5,16 @@ validation of agent workflows by intercepting LLM calls and routing them to
 a web UI for manual decision-making.
 """
 
+import uuid
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionResponse,
   ListSessionsResponse,
+  SessionEvent,
   SimulatorServiceBase,
+  SubmitRequestResponse,
 )
 from adk_agent_sim.server.logging import get_logger
 
@@ -18,7 +22,11 @@ if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import (
     CreateSessionRequest,
     ListSessionsRequest,
+    SubmitRequestRequest,
   )
+  from adk_agent_sim.persistence.event_repo import EventRepository
+  from adk_agent_sim.server.broadcaster import EventBroadcaster
+  from adk_agent_sim.server.queue import RequestQueue
   from adk_agent_sim.server.session_manager import SessionManager
 
 logger = get_logger("simulator_service")
@@ -33,13 +41,25 @@ class SimulatorService(SimulatorServiceBase):
   - Request/Decision submission (Plugin -> UI -> Plugin flow)
   """
 
-  def __init__(self, session_manager: SessionManager) -> None:
+  def __init__(
+    self,
+    session_manager: SessionManager,
+    event_repo: EventRepository,
+    request_queue: RequestQueue,
+    event_broadcaster: EventBroadcaster,
+  ) -> None:
     """Initialize the SimulatorService.
 
     Args:
         session_manager: SessionManager instance.
+        event_repo: EventRepository instance.
+        request_queue: RequestQueue instance.
+        event_broadcaster: EventBroadcaster instance.
     """
     self._session_manager = session_manager
+    self._event_repo = event_repo
+    self._request_queue = request_queue
+    self._event_broadcaster = event_broadcaster
     logger.info("SimulatorService initialized")
 
   async def create_session(
@@ -76,3 +96,30 @@ class SimulatorService(SimulatorServiceBase):
     return ListSessionsResponse(
       sessions=result.sessions, next_page_token=result.next_page_token or ""
     )
+
+  async def submit_request(
+    self, submit_request_request: SubmitRequestRequest
+  ) -> SubmitRequestResponse:
+    """Submit an LLM request from the plugin.
+
+    Args:
+        submit_request_request: The request containing LLM input.
+
+    Returns:
+        SubmitRequestResponse containing the generated event ID.
+    """
+    event_id = str(uuid.uuid4())
+    event = SessionEvent(
+      event_id=event_id,
+      session_id=submit_request_request.session_id,
+      timestamp=datetime.now(UTC),
+      turn_id=submit_request_request.turn_id,
+      agent_name=submit_request_request.agent_name,
+      llm_request=submit_request_request.request,
+    )
+
+    await self._event_repo.insert(event)
+    await self._request_queue.enqueue(event)
+    await self._event_broadcaster.broadcast(event.session_id, event)
+
+    return SubmitRequestResponse(event_id=event_id)

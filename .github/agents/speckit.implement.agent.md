@@ -92,6 +92,69 @@ class MyClass:
 - Import `select`, `insert`, etc. from `sqlalchemy` at module top
 - Use table objects (e.g., `sessions.c.id`) for column references
 
+#### Pytest Fixtures
+- **Prefer fixtures for test setup**: Extract duplicated setup code into fixtures
+- **File-specific fixtures**: Place fixtures used only in one test file at the top of that file
+- **Shared fixtures**: Place fixtures used across multiple test files in `conftest.py`
+- **Yield fixtures for cleanup**: Use `yield` in fixtures that need teardown logic
+- **Parameterized fixtures**: Use `@pytest.fixture(params=[...])` for testing multiple scenarios
+
+Example file-specific fixture:
+```python
+@pytest.fixture
+def simulator_service() -> SimulatorService:
+  """Create a SimulatorService with test dependencies."""
+  db = Database(engine)
+  broadcaster = EventBroadcaster()
+  return SimulatorService(db=db, broadcaster=broadcaster)
+```
+
+#### dirty-equals for Declarative Assertions
+Use `dirty-equals` for declarative test assertions instead of multiple single-field assertions.
+
+**Philosophy**: Construct full expected objects and compare in one assertion rather than many `assert response.x == y` statements.
+
+**Installation**: Already in dev dependencies
+
+**Common Helpers**:
+| Helper | Purpose | Example |
+|--------|---------|---------|
+| `IsPositiveInt` | Any positive integer | `assert id == IsPositiveInt` |
+| `IsStr()` | Any string, with optional regex | `assert name == IsStr(regex=r'^user_.*')` |
+| `IsUUID` | Valid UUID string | `assert session_id == IsUUID(4)` |
+| `IsNow()` | Datetime close to now | `assert created_at == IsNow(delta=5)` |
+| `IsDatetime()` | Datetime matching constraints | `assert ts == IsDatetime(ge=start_time)` |
+| `IsInstance[T]` | Instance of type T | `assert obj == IsInstance[MyClass]` |
+| `IsPartialDict()` | Dict with at least these keys | `assert d == IsPartialDict(a=1)` |
+| `IsStrictDict()` | Dict with exact keys in order | `assert d == IsStrictDict(a=1, b=2)` |
+| `IsList()` | List with expected elements | `assert items == IsList(x, y, length=2)` |
+| `AnyThing` | Matches any value | `assert d == IsDict(id=AnyThing, name='x')` |
+
+**Example - Before (many assertions)**:
+```python
+# ❌ AVOID: Multiple single-field assertions
+assert len(response.sessions) == 2
+assert response.sessions[0].id > 0
+assert response.sessions[0].description == "test"
+assert response.sessions[1].id > 0
+```
+
+**Example - After (declarative)**:
+```python
+# ✅ PREFER: Construct expected object, single assertion
+from dirty_equals import IsPositiveInt, IsStr, IsNow, IsList
+
+assert response == ListSessionsResponse(
+  sessions=[
+    SessionInfo(id=IsPositiveInt, description="test", created_at=IsNow(delta=5)),
+    SessionInfo(id=IsPositiveInt, description="other", created_at=IsNow(delta=5)),
+  ],
+  next_page_token="",
+)
+```
+
+**Key Pattern**: When testing RPC responses, construct the full expected proto message type and compare against it. Use dirty-equals helpers for dynamic fields (IDs, timestamps).
+
 ---
 
 ## Execution Workflow
