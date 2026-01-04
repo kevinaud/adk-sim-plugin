@@ -109,59 +109,51 @@ def simulator_service() -> SimulatorService:
   return SimulatorService(db=db, broadcaster=broadcaster)
 ```
 
-#### PyHamcrest for Declarative Assertions
-Use `PyHamcrest` for declarative test assertions with proper type checking.
+#### dirty-equals for Declarative Assertions
+Use `dirty-equals` for declarative test assertions instead of multiple single-field assertions.
 
-**Philosophy**: Use matchers to verify object properties cleanly, with full Pyright support.
+**Philosophy**: Construct full expected objects and compare in one assertion rather than many `assert response.x == y` statements.
 
-**Installation**: Already in dev dependencies (`pyhamcrest>=2.1.0`)
+**Installation**: Already in dev dependencies
 
-**Common Matchers**:
-| Matcher | Purpose | Example |
-|---------|---------|---------|
-| `equal_to(x)` | Exact equality | `assert_that(result, equal_to(expected))` |
-| `instance_of(T)` | Type check | `assert_that(obj.id, instance_of(str))` |
-| `has_properties(...)` | Object properties | `assert_that(obj, has_properties(id=instance_of(str), name="x"))` |
-| `has_length(n)` | Collection length | `assert_that(items, has_length(3))` |
-| `contains_exactly(...)` | Exact list match | `assert_that(items, contains_exactly(a, b, c))` |
-| `has_item(x)` | Contains element | `assert_that(items, has_item(x))` |
-| `starts_with(s)` | String prefix | `assert_that(name, starts_with("user_"))` |
-| `greater_than(n)` | Numeric comparison | `assert_that(count, greater_than(0))` |
+**Common Helpers**:
+| Helper | Purpose | Example |
+|--------|---------|---------|
+| `IsPositiveInt` | Any positive integer | `assert id == IsPositiveInt` |
+| `IsStr()` | Any string, with optional regex | `assert name == IsStr(regex=r'^user_.*')` |
+| `IsUUID` | Valid UUID string | `assert session_id == IsUUID(4)` |
+| `IsNow()` | Datetime close to now | `assert created_at == IsNow(delta=5)` |
+| `IsDatetime()` | Datetime matching constraints | `assert ts == IsDatetime(ge=start_time)` |
+| `IsInstance[T]` | Instance of type T | `assert obj == IsInstance[MyClass]` |
+| `IsPartialDict()` | Dict with at least these keys | `assert d == IsPartialDict(a=1)` |
+| `IsStrictDict()` | Dict with exact keys in order | `assert d == IsStrictDict(a=1, b=2)` |
+| `IsList()` | List with expected elements | `assert items == IsList(x, y, length=2)` |
+| `AnyThing` | Matches any value | `assert d == IsDict(id=AnyThing, name='x')` |
 
-**Usage Patterns**:
-
-1. **Fully deterministic output** - use `equal_to`:
+**Example - Before (many assertions)**:
 ```python
-from hamcrest import assert_that, equal_to
-
-assert_that(result, equal_to(expected))
+# ❌ AVOID: Multiple single-field assertions
+assert len(response.sessions) == 2
+assert response.sessions[0].id > 0
+assert response.sessions[0].description == "test"
+assert response.sessions[1].id > 0
 ```
 
-2. **Fuzzy matching dynamic fields** - use `has_properties`:
+**Example - After (declarative)**:
 ```python
-from hamcrest import assert_that, has_properties, instance_of
+# ✅ PREFER: Construct expected object, single assertion
+from dirty_equals import IsPositiveInt, IsStr, IsNow, IsList
 
-# Check object properties with matchers for dynamic fields
-assert_that(response.session, has_properties(
-    id=instance_of(str),           # Dynamic: just verify it's a string
-    description="test session",    # Static: exact value match
-    status="ACTIVE",               # Static: exact value match
-))
+assert response == ListSessionsResponse(
+  sessions=[
+    SessionInfo(id=IsPositiveInt, description="test", created_at=IsNow(delta=5)),
+    SessionInfo(id=IsPositiveInt, description="other", created_at=IsNow(delta=5)),
+  ],
+  next_page_token="",
+)
 ```
 
-3. **Nested object matching**:
-```python
-assert_that(response, has_properties(
-    sessions=has_length(2),
-    next_page_token=instance_of(str),
-))
-assert_that(response.sessions[0], has_properties(
-    id=instance_of(str),
-    description="session 2",
-))
-```
-
-**Key Pattern**: Use `has_properties` with `instance_of(T)` for dynamic fields (IDs, timestamps) and literal values for static fields.
+**Key Pattern**: When testing RPC responses, construct the full expected proto message type and compare against it. Use dirty-equals helpers for dynamic fields (IDs, timestamps).
 
 ---
 
