@@ -8,7 +8,6 @@ pattern.
 from adk_agent_sim.persistence.core import (
   SessionEventRepository,
   SessionRepositoryProtocol,
-  SimulatedEventProtocol,
 )
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.event_repo import EventRepository
@@ -22,7 +21,6 @@ __all__ = [
   "SessionEventRepository",
   "SessionRepository",
   "SessionRepositoryProtocol",
-  "SimulatedEventProtocol",
   "events",
   "metadata",
   "sessions",
