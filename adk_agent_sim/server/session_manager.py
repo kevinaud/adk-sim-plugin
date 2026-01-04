@@ -7,29 +7,15 @@ fast active session lookups.
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import TYPE_CHECKING
 
-from adk_agent_sim.generated.adksim.v1 import SessionStatus, SimulatorSession
+from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
-
-class SessionRepositoryProtocol(Protocol):
-  """Protocol for session repository operations."""
-
-  async def create(
-    self,
-    session: SimulatorSession,
-    status: SessionStatus = SessionStatus.ACTIVE,
-  ) -> SimulatorSession: ...
-
-  async def get_by_id(self, session_id: str) -> SimulatorSession | None: ...
-
-
-class EventRepositoryProtocol(Protocol):
-  """Protocol for event repository operations."""
-
-  async def insert(self, event: Any) -> Any: ...
-
-  async def get_by_session(self, session_id: str) -> list[Any]: ...
+if TYPE_CHECKING:
+  from adk_agent_sim.persistence import (
+    SessionEventRepository,
+    SessionRepositoryProtocol,
+  )
 
 
 class SessionManager:
@@ -52,7 +38,7 @@ class SessionManager:
   def __init__(
     self,
     session_repo: SessionRepositoryProtocol,
-    event_repo: EventRepositoryProtocol,
+    event_repo: SessionEventRepository,
   ) -> None:
     """Initialize the session manager.
 
