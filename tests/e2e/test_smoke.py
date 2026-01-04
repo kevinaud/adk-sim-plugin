@@ -25,5 +25,5 @@ async def test_server_is_reachable(grpc_channel: Channel) -> None:
 
   # Verify we got a valid response with a session
   assert response.session is not None
-  assert response.session.session_id != ""
+  assert response.session.id != ""
   assert response.session.description == "E2E smoke test session"
