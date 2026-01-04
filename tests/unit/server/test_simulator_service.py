@@ -27,6 +27,11 @@ if TYPE_CHECKING:
   from adk_agent_sim.server.session_manager import SessionManager
 
 
+async def _empty_history() -> list[SessionEvent]:
+  """Return empty history for tests that don't need replay."""
+  return []
+
+
 class TestSimulatorService:
   """Test suite for SimulatorService."""
 
@@ -105,7 +110,7 @@ class TestSimulatorService:
     events = []
 
     async def subscriber() -> None:
-      async for event in event_broadcaster.subscribe(session.id):
+      async for event in event_broadcaster.subscribe(session.id, _empty_history):
         events.append(event)
         break  # Stop after receiving one event
 
@@ -132,7 +137,7 @@ class TestSimulatorService:
     assert stored_events[0].llm_request == GenerateContentRequest()
 
     # Verify event in queue
-    queued_event = await request_queue.get_current(session.id)
+    queued_event = request_queue.get_current(session.id)
     assert queued_event is not None
     assert queued_event.event_id == response.event_id
 
@@ -213,7 +218,7 @@ class TestSimulatorService:
     received_events = []
 
     async def subscriber() -> None:
-      async for event in event_broadcaster.subscribe(session.id):
+      async for event in event_broadcaster.subscribe(session.id, _empty_history):
         received_events.append(event)
         break
 

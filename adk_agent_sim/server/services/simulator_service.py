@@ -162,6 +162,8 @@ class SimulatorService(SimulatorServiceBase):
     """Subscribe to session events.
 
     Streams historical events first, then listens for live events.
+    Uses the EventBroadcaster's atomic history+subscribe mechanism
+    to prevent race conditions where events could be missed.
 
     Args:
         subscribe_request: SubscribeRequest containing the session ID.
@@ -169,11 +171,10 @@ class SimulatorService(SimulatorServiceBase):
     Yields:
         SubscribeResponse containing session events.
     """
-    # 1. Replay history
-    history = await self._event_repo.get_by_session(subscribe_request.session_id)
-    for event in history:
-      yield SubscribeResponse(event=event)
+    session_id = subscribe_request.session_id
 
-    # 2. Stream live events
-    async for event in self._event_broadcaster.subscribe(subscribe_request.session_id):
+    async def _fetch_history() -> list[SessionEvent]:
+      return await self._event_repo.get_by_session(session_id)
+
+    async for event in self._event_broadcaster.subscribe(session_id, _fetch_history):
       yield SubscribeResponse(event=event)
