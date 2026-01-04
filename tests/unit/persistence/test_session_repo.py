@@ -11,8 +11,9 @@ from adk_agent_sim.persistence import SessionRepository
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.schema import sessions as sessions_table
 
-# In-memory SQLite URL with shared cache for testing
-TEST_DB_URL = "sqlite+aiosqlite:///:memory:?cache=shared"
+# In-memory SQLite URL with shared cache for testing.
+# See note in test_database.py re: `uri=true` to avoid creating a CWD file.
+TEST_DB_URL = "sqlite+aiosqlite:///file::memory:?cache=shared&uri=true"
 
 
 class TestSessionRepositoryCreate:
