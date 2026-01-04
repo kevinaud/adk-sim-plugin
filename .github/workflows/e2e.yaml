@@ -49,21 +49,8 @@ jobs:
           uv run ruff check --fix adk_agent_sim/generated 2>/dev/null || true
           uv run ruff format adk_agent_sim/generated
 
-      - name: Build and start backend
-        run: |
-          docker compose -f docker-compose.test.yaml up -d --build
-          # Wait for backend to be healthy
-          echo "Waiting for backend to be ready..."
-          timeout 60 bash -c 'until docker compose -f docker-compose.test.yaml ps backend | grep -q "healthy"; do sleep 2; echo "Waiting..."; done'
-          echo "Backend is ready!"
+      # Note: pytest-docker handles container lifecycle automatically
+      # No need to manually start/stop Docker containers
 
       - name: Run E2E tests
         run: uv run pytest tests/e2e --run-e2e -v
-
-      - name: Show backend logs on failure
-        if: failure()
-        run: docker compose -f docker-compose.test.yaml logs backend
-
-      - name: Stop backend
-        if: always()
-        run: docker compose -f docker-compose.test.yaml down -v
