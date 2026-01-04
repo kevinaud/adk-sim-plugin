@@ -1,10 +1,13 @@
 """Server startup script for the ADK Agent Simulator."""
 
 import asyncio
+import sys
+from pathlib import Path
 
 from grpclib.reflection.service import ServerReflection
 from grpclib.server import Server
 from grpclib.utils import graceful_exit
+from sqlalchemy.engine import make_url
 
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.event_repo import EventRepository
@@ -19,10 +22,48 @@ from adk_agent_sim.settings import settings
 logger = get_logger("main")
 
 
+def _ensure_database_dir(url: str) -> None:
+  """Ensures the database directory exists; exits on permission error."""
+  if not url.startswith("sqlite"):
+    return
+
+  db_dir: Path | None = None
+  try:
+    parsed = make_url(url)
+    database_path = parsed.database
+
+    # Skip in-memory databases
+    if (
+      not database_path
+      or database_path == ":memory:"
+      or database_path.startswith("file::memory:")
+    ):
+      return
+
+    db_file = Path(database_path)
+    db_dir = db_file.parent
+    db_dir.mkdir(parents=True, exist_ok=True)
+
+  except PermissionError:
+    logger.critical(
+      "❌ PERMISSION ERROR: Cannot create database directory at: %s\n"
+      "   Please ensure you have write permissions or set "
+      "ADK_AGENT_SIM_DATABASE_URL to a writable path.",
+      db_dir,
+    )
+    sys.exit(1)
+  except Exception as e:
+    logger.critical("❌ Failed to prepare database path: %s", e)
+    sys.exit(1)
+
+
 async def serve() -> None:
   """Start the gRPC server with all services configured."""
   # Configure logging first
   configure_logging()
+
+  # Ensure database directory exists before connecting
+  _ensure_database_dir(settings.database_url)
 
   # Initialize persistence layer
   database = Database(settings.database_url)
