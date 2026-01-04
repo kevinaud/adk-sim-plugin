@@ -7,10 +7,22 @@ sessions while maintaining sequential processing within each session.
 
 import asyncio
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SessionEvent
+
+T = TypeVar("T")
+
+
+class PeekableQueue(asyncio.Queue[T]):
+  """A subclass of asyncio.Queue that allows peeking at the first item."""
+
+  def peek(self) -> T:
+    """Return the first item without removing it. Raises QueueEmpty if empty."""
+    if self.empty():
+      raise asyncio.QueueEmpty
+    return self._queue[0]
 
 
 class RequestQueue:
@@ -21,21 +33,18 @@ class RequestQueue:
   allowing multiple sessions to operate concurrently.
 
   Attributes:
-      _queues: Dict mapping session_id to asyncio.Queue of events.
-      _peeked: Dict mapping session_id to the peeked (current) event.
+      _queues: Dict mapping session_id to PeekableQueue of events.
 
   Example:
       queue = RequestQueue()
       await queue.enqueue(event)
-      current = await queue.get_current(session_id)
+      current = queue.get_current(session_id)
       processed = await queue.dequeue(session_id)
   """
 
   def __init__(self) -> None:
     """Initialize the request queue with empty per-session queues."""
-    self._queues: dict[str, asyncio.Queue[SessionEvent]] = defaultdict(asyncio.Queue)
-    # Stores events that have been peeked (for get_current) but not yet dequeued
-    self._peeked: dict[str, SessionEvent | None] = {}
+    self._queues: dict[str, PeekableQueue[SessionEvent]] = defaultdict(PeekableQueue)
 
   async def enqueue(self, event: SessionEvent) -> None:
     """Add an event to the appropriate session's queue.
@@ -59,17 +68,9 @@ class RequestQueue:
     Returns:
         The next SessionEvent in the queue.
     """
-    # If we have a peeked event, return it and clear the peek
-    if session_id in self._peeked and self._peeked[session_id] is not None:
-      event = self._peeked[session_id]
-      self._peeked[session_id] = None
-      assert event is not None  # Type narrowing for Pyright
-      return event
-
-    # Otherwise get from the queue
     return await self._queues[session_id].get()
 
-  async def get_current(self, session_id: str) -> SessionEvent | None:
+  def get_current(self, session_id: str) -> SessionEvent | None:
     """Get the current (head) event without removing it.
 
     Returns the event currently at the head of the queue for a session,
@@ -81,18 +82,10 @@ class RequestQueue:
     Returns:
         The current SessionEvent, or None if the queue is empty.
     """
-    # If we already peeked, return that
-    if session_id in self._peeked and self._peeked[session_id] is not None:
-      return self._peeked[session_id]
-
-    # If queue is empty, return None
     if session_id not in self._queues or self._queues[session_id].empty():
       return None
 
-    # Peek by getting and storing
-    event = await self._queues[session_id].get()
-    self._peeked[session_id] = event
-    return event
+    return self._queues[session_id].peek()
 
   def is_empty(self, session_id: str) -> bool:
     """Check if a session's queue is empty.
@@ -103,6 +96,4 @@ class RequestQueue:
     Returns:
         True if the queue is empty or doesn't exist, False otherwise.
     """
-    has_peeked = session_id in self._peeked and self._peeked[session_id] is not None
-    has_queued = session_id in self._queues and not self._queues[session_id].empty()
-    return not has_peeked and not has_queued
+    return session_id not in self._queues or self._queues[session_id].empty()
