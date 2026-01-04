@@ -348,33 +348,34 @@ This phase runs **ONCE** after all requested PRs have been implemented.
 
 Run this for each approved PR, in dependency order (PR 1 first, then PR 2, etc.):
 
-1. **Update child PR base branches** (if stacked):
-   - Before merging, ensure child PRs target the correct base
-   - After merge, child PRs may need their base updated to `main` or the new parent
+1. **Squash merge via GitHub**:
+   ```bash
+   gh pr merge <pr-number> --squash --delete-branch
+   ```
+   - This uses GitHub's merge functionality (not local merge)
+   - Automatically deletes the remote branch after merge
+   - GitHub will handle the squash commit
+
+2. **Sync Git Town state**:
+   ```bash
+   git town sync --all
+   ```
+   - Updates local state after remote merge
+   - Deletes local branch (remote tracking is gone)
+   - Propagates merged changes to child branches
+   - Re-parents child branches appropriately
+   - Updates stack hierarchy automatically
+   - If conflicts occur: resolve and `git town continue`
+
+3. **Update child PR base branches** (if needed):
+   - After sync, child PRs are automatically re-parented
+   - Verify PR bases are correct on GitHub
+   - Manually update if needed:
    ```bash
    gh pr edit <child-pr-number> --base <new-parent>
    ```
 
-2. **Squash and merge**:
-   ```bash
-   gh pr merge --squash --delete-branch
-   ```
-
-3. **Sync Git Town state**:
-   ```bash
-   git town sync --all
-   ```
-   - Deletes local branch (remote tracking is gone)
-   - Propagates merged changes to child branches
-   - Updates stack hierarchy automatically
-   - If conflicts occur: resolve and `git town continue`
-
-4. **Clean up stale branches** (if any remain):
-   ```bash
-   git town sync --all --gone
-   ```
-
-5. **Log completion**:
+4. **Log completion**:
    - Record: "PR X merged successfully"
    - Continue to next approved PR (no pause)
 
