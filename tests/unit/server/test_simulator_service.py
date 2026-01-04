@@ -10,10 +10,15 @@ from hamcrest import assert_that, has_properties, instance_of
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
   ListSessionsRequest,
+  SubmitDecisionRequest,
+  SubmitDecisionResponse,
   SubmitRequestRequest,
+  SubscribeRequest,
+  SubscribeResponse,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
   GenerateContentRequest,
+  GenerateContentResponse,
 )
 from adk_agent_sim.server.broadcaster import EventBroadcaster
 from adk_agent_sim.server.queue import RequestQueue
@@ -195,3 +200,253 @@ class TestSimulatorService:
       has_properties(id=instance_of(str), description="session 1"),
     )
     assert response.next_page_token == ""
+
+  @pytest.mark.asyncio
+  async def test_submit_decision_success(
+    self, simulator_service: SimulatorServiceFixture
+  ) -> None:
+    """Test that submit_decision stores event, dequeues request, and broadcasts."""
+    # Create a session first
+    session = await simulator_service.manager.create_session("test session")
+
+    # Submit a request first to have something in the queue
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="turn_1",
+        agent_name="test_agent",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    # Verify request is in queue
+    assert simulator_service.request_queue.get_current(session.id) is not None
+
+    # Subscribe to events to verify broadcast
+    events: list = []
+
+    async def subscriber() -> None:
+      async for event in simulator_service.event_broadcaster.subscribe(
+        session.id, _empty_history
+      ):
+        events.append(event)
+        if len(events) >= 1:
+          break
+
+    subscriber_task = asyncio.create_task(subscriber())
+    await asyncio.sleep(0.01)
+
+    # Submit decision
+    decision_request = SubmitDecisionRequest(
+      session_id=session.id,
+      turn_id="turn_1",
+      response=GenerateContentResponse(),
+    )
+
+    response = await simulator_service.service.submit_decision(decision_request)
+
+    # Verify response
+    assert_that(response, instance_of(SubmitDecisionResponse))
+    assert_that(response, has_properties(event_id=instance_of(str)))
+
+    # Verify event stored in repo (should be 2 events: request + decision)
+    stored_events = await simulator_service.event_repo.get_by_session(session.id)
+    assert len(stored_events) == 2
+    decision_event = stored_events[1]
+    assert decision_event.event_id == response.event_id
+    assert decision_event.llm_response == GenerateContentResponse()
+    assert decision_event.agent_name == "User"
+
+    # Verify queue was dequeued
+    assert simulator_service.request_queue.get_current(session.id) is None
+
+    # Verify broadcast
+    await asyncio.wait_for(subscriber_task, timeout=1.0)
+    assert len(events) == 1
+    assert events[0].event_id == response.event_id
+
+  @pytest.mark.asyncio
+  async def test_submit_decision_links_by_turn_id(
+    self, simulator_service: SimulatorServiceFixture
+  ) -> None:
+    """Test that the decision event links to request via turn_id."""
+    session = await simulator_service.manager.create_session("test session")
+
+    # Submit request with specific turn_id
+    turn_id = "correlation_turn_123"
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id=turn_id,
+        agent_name="test_agent",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    # Submit decision with same turn_id
+    response = await simulator_service.service.submit_decision(
+      SubmitDecisionRequest(
+        session_id=session.id,
+        turn_id=turn_id,
+        response=GenerateContentResponse(),
+      )
+    )
+
+    # Verify both events share the same turn_id
+    stored_events = await simulator_service.event_repo.get_by_session(session.id)
+    assert len(stored_events) == 2
+
+    request_event = stored_events[0]
+    decision_event = stored_events[1]
+
+    assert request_event.turn_id == turn_id
+    assert decision_event.turn_id == turn_id
+    assert decision_event.event_id == response.event_id
+
+  @pytest.mark.asyncio
+  async def test_subscribe_yields_historical_events(
+    self, simulator_service: SimulatorServiceFixture
+  ) -> None:
+    """Test that subscribe yields historical events first."""
+    session = await simulator_service.manager.create_session("test session")
+
+    # Create some historical events by submitting requests
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="turn_1",
+        agent_name="agent1",
+        request=GenerateContentRequest(),
+      )
+    )
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="turn_2",
+        agent_name="agent2",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    # Subscribe and collect events
+    events: list = []
+    subscribe_request = SubscribeRequest(session_id=session.id)
+
+    async def collect_events() -> None:
+      async for response in simulator_service.service.subscribe(subscribe_request):
+        assert_that(response, instance_of(SubscribeResponse))
+        events.append(response.event)
+        if len(events) >= 2:
+          break
+
+    await asyncio.wait_for(collect_events(), timeout=1.0)
+
+    # Verify we got the historical events
+    assert len(events) == 2
+    assert events[0].turn_id == "turn_1"
+    assert events[0].agent_name == "agent1"
+    assert events[1].turn_id == "turn_2"
+    assert events[1].agent_name == "agent2"
+
+  @pytest.mark.asyncio
+  async def test_subscribe_yields_live_events(
+    self, simulator_service: SimulatorServiceFixture
+  ) -> None:
+    """Test that subscribe yields live events after history."""
+    session = await simulator_service.manager.create_session("test session")
+
+    # Create one historical event
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="historical_turn",
+        agent_name="historical_agent",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    events: list = []
+    subscribe_request = SubscribeRequest(session_id=session.id)
+
+    async def collect_events() -> None:
+      async for response in simulator_service.service.subscribe(subscribe_request):
+        events.append(response.event)
+        if len(events) >= 2:
+          break
+
+    # Start subscriber
+    subscriber_task = asyncio.create_task(collect_events())
+    await asyncio.sleep(0.01)
+
+    # Broadcast a live event
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="live_turn",
+        agent_name="live_agent",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    await asyncio.wait_for(subscriber_task, timeout=1.0)
+
+    # Verify we got historical first, then live
+    assert len(events) == 2
+    assert events[0].turn_id == "historical_turn"
+    assert events[1].turn_id == "live_turn"
+
+  @pytest.mark.asyncio
+  async def test_subscribe_streams_all_events_atomically(
+    self, simulator_service: SimulatorServiceFixture
+  ) -> None:
+    """Test no events are missed between history and live subscription."""
+    session = await simulator_service.manager.create_session("test session")
+
+    # Create initial historical event
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="event_1",
+        agent_name="agent",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    events: list = []
+    subscribe_request = SubscribeRequest(session_id=session.id)
+
+    async def collect_events() -> None:
+      async for response in simulator_service.service.subscribe(subscribe_request):
+        events.append(response.event)
+        if len(events) >= 3:
+          break
+
+    # Start subscriber
+    subscriber_task = asyncio.create_task(collect_events())
+    await asyncio.sleep(0.01)
+
+    # Broadcast two more events in quick succession
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="event_2",
+        agent_name="agent",
+        request=GenerateContentRequest(),
+      )
+    )
+    await simulator_service.service.submit_request(
+      SubmitRequestRequest(
+        session_id=session.id,
+        turn_id="event_3",
+        agent_name="agent",
+        request=GenerateContentRequest(),
+      )
+    )
+
+    await asyncio.wait_for(subscriber_task, timeout=1.0)
+
+    # Verify all events received in order, none missed
+    assert len(events) == 3
+    assert events[0].turn_id == "event_1"
+    assert events[1].turn_id == "event_2"
+    assert events[2].turn_id == "event_3"
