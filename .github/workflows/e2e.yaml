@@ -1,0 +1,55 @@
+name: E2E Tests
+
+# ============================================================
+# E2E Tests: Runs integration tests against a real server
+# ============================================================
+# Uses Docker Compose to spin up the backend server and runs
+# pytest E2E tests against it. Triggered on all PRs.
+# ============================================================
+
+on:
+  pull_request:
+
+jobs:
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Build and start backend
+        run: |
+          docker compose -f docker-compose.test.yaml up -d --build
+          # Wait for backend to be healthy
+          echo "Waiting for backend to be ready..."
+          timeout 60 bash -c 'until docker compose -f docker-compose.test.yaml ps backend | grep -q "healthy"; do sleep 2; echo "Waiting..."; done'
+          echo "Backend is ready!"
+
+      - name: Run E2E tests
+        run: uv run pytest tests/e2e --run-e2e -v
+
+      - name: Show backend logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.test.yaml logs backend
+
+      - name: Stop backend
+        if: always()
+        run: docker compose -f docker-compose.test.yaml down -v
