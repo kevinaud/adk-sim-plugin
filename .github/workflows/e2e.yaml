@@ -42,7 +42,8 @@ jobs:
           chmod +x /usr/local/bin/buf
           # Generate Python proto code only (skip TypeScript)
           rm -rf adk_agent_sim/generated
-          buf generate --template buf.gen.python.yaml
+          # Add .venv/bin to PATH so buf can find protoc-gen-python_betterproto
+          PATH="$PWD/.venv/bin:$PATH" buf generate --template buf.gen.python.yaml
           touch adk_agent_sim/generated/__init__.py
           # Format generated code
           uv run ruff check --fix adk_agent_sim/generated 2>/dev/null || true
