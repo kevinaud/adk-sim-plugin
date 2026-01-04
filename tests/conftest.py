@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-async def db() -> "AsyncGenerator[Database]":  # noqa: UP037
+async def db() -> AsyncGenerator[Database]:
   """Provide an in-memory database connection."""
   database = Database("sqlite+aiosqlite:///:memory:")
   await database.connect()

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class PaginatedSessions:
   """Result of a paginated session query."""
 
-  sessions: list["SimulatorSession"]  # noqa: UP037
+  sessions: list[SimulatorSession]
   """List of sessions for the current page."""
 
   next_page_token: str | None
@@ -30,11 +30,11 @@ class SessionRepositoryProtocol(Protocol):
 
   async def create(
     self,
-    session: "SimulatorSession",  # noqa: UP037
+    session: SimulatorSession,
     status: SessionStatus = SessionStatus.ACTIVE,
-  ) -> "SimulatorSession": ...  # noqa: UP037
+  ) -> SimulatorSession: ...
 
-  async def get_by_id(self, session_id: str) -> "SimulatorSession | None": ...  # noqa: UP037
+  async def get_by_id(self, session_id: str) -> SimulatorSession | None: ...
 
   async def list_all(
     self, page_size: int, page_token: str | None
