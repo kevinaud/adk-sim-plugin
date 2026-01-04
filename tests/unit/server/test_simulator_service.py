@@ -1,6 +1,7 @@
 """Tests for SimulatorService."""
 
 import asyncio
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
@@ -8,8 +9,10 @@ import pytest
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
   ListSessionsRequest,
+  SessionEvent,
   SubmitDecisionRequest,
   SubmitRequestRequest,
+  SubscribeRequest,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
   GenerateContentRequest,
@@ -236,3 +239,56 @@ class TestSimulatorService:
     await asyncio.wait_for(subscriber_task, timeout=1.0)
     assert len(received_events) == 1
     assert received_events[0].event_id == response.event_id
+
+  @pytest.mark.asyncio
+  async def test_subscribe_replay_and_live(
+    self, manager: SessionManager, event_repo: EventRepository
+  ) -> None:
+    """Test that subscribe replays history and streams live events."""
+    service = SimulatorService(
+      session_manager=manager,
+      event_repo=event_repo,
+      request_queue=RequestQueue(),
+      event_broadcaster=EventBroadcaster(),
+    )
+
+    # 1. Create session
+    session = await manager.create_session()
+
+    # 2. Insert historical event
+    history_event = SessionEvent(
+      event_id="history_1",
+      session_id=session.id,
+      timestamp=datetime.now(UTC),
+      turn_id="turn_0",
+      agent_name="History",
+    )
+    await event_repo.insert(history_event)
+
+    # 3. Start subscription
+    iterator = service.subscribe(SubscribeRequest(session_id=session.id))
+
+    # 4. Verify history replay
+    response1 = await anext(iterator)
+    assert response1.event.event_id == "history_1"
+
+    # 5. Trigger live event
+    req = SubmitRequestRequest(
+      session_id=session.id,
+      turn_id="turn_1",
+      agent_name="Model",
+      request=GenerateContentRequest(),
+    )
+
+    async def trigger_event() -> None:
+      await asyncio.sleep(0.01)
+      await service.submit_request(req)
+
+    trigger_task = asyncio.create_task(trigger_event())
+
+    # 6. Verify live event
+    response2 = await asyncio.wait_for(anext(iterator), timeout=1.0)
+    assert response2.event.turn_id == "turn_1"
+    assert response2.event.agent_name == "Model"
+
+    await trigger_task

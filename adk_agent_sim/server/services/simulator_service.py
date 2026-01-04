@@ -6,6 +6,7 @@ a web UI for manual decision-making.
 """
 
 import uuid
+from collections.abc import AsyncIterator  # noqa: TC003
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
@@ -16,6 +17,8 @@ from adk_agent_sim.generated.adksim.v1 import (
   SimulatorServiceBase,
   SubmitDecisionResponse,
   SubmitRequestResponse,
+  SubscribeRequest,  # noqa: TC001
+  SubscribeResponse,
 )
 from adk_agent_sim.server.logging import get_logger
 
@@ -152,3 +155,25 @@ class SimulatorService(SimulatorServiceBase):
     await self._event_broadcaster.broadcast(event.session_id, event)
 
     return SubmitDecisionResponse(event_id=event_id)
+
+  async def subscribe(
+    self, subscribe_request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Subscribe to session events.
+
+    Streams historical events first, then listens for live events.
+
+    Args:
+        subscribe_request: SubscribeRequest containing the session ID.
+
+    Yields:
+        SubscribeResponse containing session events.
+    """
+    # 1. Replay history
+    history = await self._event_repo.get_by_session(subscribe_request.session_id)
+    for event in history:
+      yield SubscribeResponse(event=event)
+
+    # 2. Stream live events
+    async for event in self._event_broadcaster.subscribe(subscribe_request.session_id):
+      yield SubscribeResponse(event=event)
