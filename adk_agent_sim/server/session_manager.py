@@ -116,7 +116,7 @@ class SessionManager:
 
   async def list_sessions(
     self, page_size: int, page_token: str | None
-  ) -> "PaginatedSessions":  # noqa: UP037
+  ) -> PaginatedSessions:
     """List sessions with pagination.
 
     Args:
