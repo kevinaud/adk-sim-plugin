@@ -151,14 +151,15 @@ Repeat the following for each PR (1 to N):
 
 ### Phase 1: Analyze Tasks
 
-1. **Read `tasks.md`** and identify the next PR group (e.g., "PR 1", "PR 2"):
+1. **Read `tasks.md`** and identify the next PR group (e.g., "ph1f1", "ph1f2", "ph2f1"):
    - Extract all tasks marked for that PR
    - Note the estimated line count
    - Identify dependencies on previous PRs
 
 2. **Determine branch name**:
-   - Format: `feature/<pr-number>-<brief-description>`
-   - Example: `feature/001-initial-scaffold`
+   - Format: `phase/<phase>/<feat>/<number>/<brief-description>`
+   - Example from PR ID "ph1f1": `phase/1/feat/1/initial-scaffold`
+   - Example from PR ID "ph2f3": `phase/2/feat/3/request-queue`
 
 3. **Log scope** (no pause):
    - Display: PR number, task list, estimated LOC
@@ -176,8 +177,9 @@ Repeat the following for each PR (1 to N):
    - If conflicts occur: resolve them, then `git town continue`
 
 2. **Determine parent branch**:
-   - If this is PR 1: parent is `main` → use `git town hack`
-   - If this is PR N (N > 1): parent is the previous PR's branch → use `git town append`
+   - If this is ph1f1 (first PR in phase 1): parent is `main` → use `git town hack`
+   - If this is phNfM where M > 1 or depends on previous phase: parent is the previous PR's branch → use `git town append`
+   - Check "Depends on" column in plan.md for exact parent
 
 3. **Create the branch**:
    ```bash
@@ -231,7 +233,7 @@ Repeat the following for each PR (1 to N):
 2. **Stage and commit**:
    ```bash
    git add -A
-   git commit -m "PR X: <brief description>
+   git commit -m "phNfM: <brief description>
 
    Tasks completed:
    - T00X: <task description>
@@ -250,7 +252,7 @@ Repeat the following for each PR (1 to N):
 
 1. **Create Draft PR**:
    ```bash
-   git town propose --title "PR X: <description>" --body "## Summary
+   git town propose --title "phNfM: <description>" --body "## Summary
    <brief description of changes>
 
    ## Tasks Completed
@@ -324,8 +326,8 @@ This phase runs **ONCE** after all requested PRs have been implemented.
 2. **Request batch review**:
    - Ask: "All N PRs are ready for review. Please review and reply with:
      - 'approved' to merge all
-     - 'approved PR X, Y' to merge specific PRs
-     - 'changes needed PR X: <feedback>' for specific changes"
+     - 'approved phNfM, phXfY' to merge specific PRs
+     - 'changes needed phNfM: <feedback>' for specific changes"
 
 3. **PAUSE and wait for user response**
 
@@ -334,21 +336,23 @@ This phase runs **ONCE** after all requested PRs have been implemented.
    **If "approved" (all)**:
    - Proceed to Phase 8 (Finalize) for each PR in order
 
-   **If "approved PR X, Y, ..."**:
+   **If "approved phNfM, phXfY, ..."**:
    - Finalize only the approved PRs
    - Report which PRs remain as draft
 
-   **If "changes needed PR X: <feedback>"**:
+   **If "changes needed phNfM: <feedback>"**:
    - Switch to the relevant branch
    - Re-invoke `speckit.implement` with feedback
-   - After changes: commit → push → monitor CI
+   - After changes: commit → push
+   - **CRITICAL**: Run `git town sync --all` to propagate changes to child branches
+   - Monitor CI
    - Return to Batch Review Gate with updated status
 
 ---
 
 ### Phase 8: Finalize PRs
 
-Run this for each approved PR, in dependency order (PR 1 first, then PR 2, etc.):
+Run this for each approved PR, in dependency order (ph1f1 first, then ph1f2, etc., respecting cross-phase dependencies):
 
 1. **Squash merge via GitHub**:
    ```bash
@@ -377,8 +381,27 @@ Run this for each approved PR, in dependency order (PR 1 first, then PR 2, etc.)
    gh pr edit <child-pr-number> --base <new-parent>
    ```
 
-4. **Log completion**:
-   - Record: "PR X merged successfully"
+2. **Squash and merge**:
+   ```bash
+   gh pr merge --squash --delete-branch
+   ```
+
+3. **Sync Git Town state**:
+   ```bash
+   git town sync --all
+   ```
+   - Deletes local branch (remote tracking is gone)
+   - Propagates merged changes to child branches
+   - Updates stack hierarchy automatically
+   - If conflicts occur: resolve and `git town continue`
+
+4. **Clean up stale branches** (if any remain):
+   ```bash
+   git town sync --all --gone
+   ```
+
+5. **Log completion**:
+   - Record: "phNfM merged successfully"
    - Continue to next approved PR (no pause)
 
 ---
@@ -402,8 +425,8 @@ After completing all requested PRs, provide a summary:
 
 | PR | Branch | Status | LOC | Tasks |
 |----|--------|--------|-----|-------|
-| 1  | feature/001-scaffold | ✓ Merged | 85 | 3 |
-| 2  | feature/002-types | ✓ Merged | 120 | 4 |
+| ph1f1  | phase/1/feat/1/scaffold | ✓ Merged | 85 | 3 |
+| ph1f2  | phase/1/feat/2/types | ✓ Merged | 120 | 4 |
 
 ### Remaining Work
 - PRs remaining in tasks.md: Z
@@ -443,6 +466,7 @@ After completing all requested PRs, provide a summary:
 - ✅ Always create Draft PRs first, then mark ready after CI passes
 - ✅ Always wait for user approval before merging (but batch the review)
 - ✅ Always sync after merging to propagate to stacked branches
+- ✅ Always sync after pushing code review fixes to propagate to child branches
 - ✅ Always provide clear context when delegating to implementer
 - ✅ Process all requested PRs before pausing for review
 
