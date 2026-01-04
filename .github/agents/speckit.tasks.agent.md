@@ -101,19 +101,19 @@ Every task MUST strictly follow this format:
 
 1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
 2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **[PR#] label**: REQUIRED - which PR this task belongs to (PR1, PR2, PR3...)
+3. **[PR#] label**: REQUIRED - which PR this task belongs to (ph1f1, ph1f2, ph2f1, etc.)
 4. **[P] marker**: Include ONLY if task is parallelizable within the same PR
 5. **Description**: Clear action with exact file path
 
 **Examples**:
 
-- ✅ CORRECT: `- [ ] T001 [PR1] Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 [PR2] [P] Implement auth middleware in src/middleware/auth.py`
-- ✅ CORRECT: `- [ ] T012 [PR5] [P] Create User model in src/models/user.py`
-- ✅ CORRECT: `- [ ] T013 [PR5] Add User model tests in tests/unit/test_user.py`
+- ✅ CORRECT: `- [ ] T001 [ph1f1] Create project structure per implementation plan`
+- ✅ CORRECT: `- [ ] T005 [ph1f2] [P] Implement auth middleware in src/middleware/auth.py`
+- ✅ CORRECT: `- [ ] T012 [ph2f3] [P] Create User model in src/models/user.py`
+- ✅ CORRECT: `- [ ] T013 [ph2f3] Add User model tests in tests/unit/test_user.py`
 - ❌ WRONG: `- [ ] Create User model` (missing ID and PR label)
 - ❌ WRONG: `- [ ] T001 Create model` (missing PR label)
-- ❌ WRONG: Implementation in PR5, tests in PR6 (tests MUST be same PR)
+- ❌ WRONG: Implementation in ph2f3, tests in ph2f4 (tests MUST be same PR)
 
 ### PR-Based Organization
 
@@ -138,17 +138,17 @@ Every task MUST strictly follow this format:
 ### PR Structure Example
 
 ```markdown
-## PR 1: Initial scaffold (~80 lines)
-- [ ] T001 [PR1] Create directory structure
-- [ ] T002 [PR1] Add base configuration files
+## ph1f1: Initial scaffold (~80 lines)
+- [ ] T001 [ph1f1] Create directory structure
+- [ ] T002 [ph1f1] Add base configuration files
 
-## PR 2: Core types (~120 lines)  
-- [ ] T003 [PR2] Define User interface in src/types/user.ts
-- [ ] T004 [PR2] Add User type tests in tests/unit/test_user_types.ts
+## ph1f2: Core types (~120 lines)  
+- [ ] T003 [ph1f2] Define User interface in src/types/user.ts
+- [ ] T004 [ph1f2] Add User type tests in tests/unit/test_user_types.ts
 
-## PR 3: User model implementation (~150 lines)
-- [ ] T005 [PR3] Implement User model in src/models/user.ts
-- [ ] T006 [PR3] Add User model tests in tests/unit/test_user_model.ts
+## ph1f3: User model implementation (~150 lines)
+- [ ] T005 [ph1f3] Implement User model in src/models/user.ts
+- [ ] T006 [ph1f3] Add User model tests in tests/unit/test_user_model.ts
 ```
 
 ### Git Town Integration
@@ -156,7 +156,7 @@ Every task MUST strictly follow this format:
 Each PR section should include the git-town command:
 
 ```markdown
-## PR N: [Description] (~X lines)
-**Branch**: `git town append feature/00N-description`
-**Depends on**: PR N-1
+## phNfM: [Description] (~X lines)
+**Branch**: `git town append phase/N/feat/M/description`
+**Depends on**: phNfX (previous PR in phase or cross-phase dependency)
 ```
