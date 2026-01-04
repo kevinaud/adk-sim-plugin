@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import Column, MetaData, Table, select
 
 from adk_agent_sim.persistence import metadata
-from adk_agent_sim.persistence.database import DEFAULT_DATABASE_URL, Database
+from adk_agent_sim.persistence.database import Database
 
 # In-memory SQLite URL with shared cache for testing.
 #
@@ -38,10 +38,10 @@ class TestDatabaseConnection:
     assert not db.is_connected
 
   @pytest.mark.asyncio
-  async def test_default_url(self) -> None:
-    """Database uses default SQLite URL when none provided."""
-    db = Database()
-    assert db.url == DEFAULT_DATABASE_URL
+  async def test_stores_provided_url(self) -> None:
+    """Database stores the URL provided to it."""
+    db = Database(TEST_DB_URL)
+    assert db.url == TEST_DB_URL
 
 
 class TestDatabaseTables:
