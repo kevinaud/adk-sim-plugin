@@ -127,10 +127,8 @@ When a PR is merged (via GitHub or `gh pr merge`):
    - Updates child branches to point to new parent
    - Propagates changes through the stack
 
-2. **Update child PRs**: Child PRs may need base branch updates
-   ```bash
-   gh pr edit <number> --base <new-parent-branch>
-   ```
+2. **Note**: Child PR base branches should have been updated **BEFORE** merging (see Phase 8).
+   If a child PR was auto-closed by GitHub, recreate it with `git town propose`.
 
 ### Common Issues & Solutions
 
@@ -352,7 +350,20 @@ This phase runs **ONCE** after all requested PRs have been implemented.
 
 Run this for each approved PR, in dependency order (ph1f1 first, then ph1f2, etc., respecting cross-phase dependencies):
 
-1. **Squash merge via GitHub**:
+1. **CRITICAL: Update child PR base branches BEFORE merging**:
+   - GitHub auto-closes child PRs when their base branch is deleted
+   - Git Town tracks branches locally but cannot prevent GitHub from closing PRs
+   - **MUST** update child PRs to target the parent's base before merging:
+   ```bash
+   # Find child PRs that target the branch being merged
+   gh pr list --base <branch-being-merged> --json number,headRefName
+   
+   # Update each child PR to target the parent's base (e.g., main)
+   gh pr edit <child-pr-number> --base <parent-base-branch>
+   ```
+   - Example: Before merging ph2f5 (based on main), update ph2f6's base from `phase/2/feat/5/...` to `main`
+
+2. **Squash merge via GitHub**:
    ```bash
    gh pr merge <pr-number> --squash --delete-branch
    ```
@@ -360,7 +371,7 @@ Run this for each approved PR, in dependency order (ph1f1 first, then ph1f2, etc
    - Automatically deletes the remote branch after merge
    - GitHub will handle the squash commit
 
-2. **Sync Git Town state**:
+3. **Sync Git Town state**:
    ```bash
    git town sync --all
    ```
@@ -368,28 +379,6 @@ Run this for each approved PR, in dependency order (ph1f1 first, then ph1f2, etc
    - Deletes local branch (remote tracking is gone)
    - Propagates merged changes to child branches
    - Re-parents child branches appropriately
-   - Updates stack hierarchy automatically
-   - If conflicts occur: resolve and `git town continue`
-
-3. **Update child PR base branches** (if needed):
-   - After sync, child PRs are automatically re-parented
-   - Verify PR bases are correct on GitHub
-   - Manually update if needed:
-   ```bash
-   gh pr edit <child-pr-number> --base <new-parent>
-   ```
-
-2. **Squash and merge**:
-   ```bash
-   gh pr merge --squash --delete-branch
-   ```
-
-3. **Sync Git Town state**:
-   ```bash
-   git town sync --all
-   ```
-   - Deletes local branch (remote tracking is gone)
-   - Propagates merged changes to child branches
    - Updates stack hierarchy automatically
    - If conflicts occur: resolve and `git town continue`
 
