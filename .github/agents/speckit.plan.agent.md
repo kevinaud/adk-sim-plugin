@@ -116,15 +116,16 @@ Plans MUST support these constitutional principles:
    ```markdown
    | PR # | Branch Name | Description | Est. Lines | Depends On |
    |------|-------------|-------------|------------|------------|
-   | 1 | feature/001-scaffold | Initial project structure | ~50 | - |
-   | 2 | feature/002-types | Core type definitions | ~100 | PR 1 |
-   | 3 | feature/003-user-model | User model + tests | ~150 | PR 2 |
+   | ph1f1 | phase/1/feat/1/scaffold | Initial project structure | ~50 | - |
+   | ph1f2 | phase/1/feat/2/types | Core type definitions | ~100 | ph1f1 |
+   | ph1f3 | phase/1/feat/3/user-model | User model + tests | ~150 | ph1f2 |
    ```
 
 3. **PR planning rules**:
    - Build large classes incrementally (methods across multiple PRs)
    - Tests go in same PR as implementation they test
-   - Document git-town command for each PR: `git town append feature/00N-name`
+   - Document git-town command for each PR: `git town append phase/N/feat/M/name`
+   - PR IDs use phase-scoped format: ph1f1, ph1f2, ph2f1, etc.
    - No PR contains unrelated changes
 
 4. **Validate PR sequence**:
