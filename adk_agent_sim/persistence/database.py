@@ -4,12 +4,10 @@ Provides lifecycle management for database connections and table creation
 using SQLAlchemy Core metadata definitions.
 """
 
-from pathlib import Path
 from typing import Any
 
 from databases import Database as DatabaseClient
 from sqlalchemy import create_engine
-from sqlalchemy.engine import make_url
 from sqlalchemy.schema import CreateIndex, CreateTable
 from sqlalchemy.sql import ClauseElement
 
@@ -18,25 +16,24 @@ from adk_agent_sim.persistence.schema import metadata
 # Type alias for SQLAlchemy query constructs (ClauseElement is the base for all)
 QueryType = ClauseElement
 
-# Default database location in user's home directory
-_DEFAULT_DB_DIR = Path.home() / ".adk-sim"
-DEFAULT_DATABASE_URL = f"sqlite+aiosqlite:///{_DEFAULT_DB_DIR}/simulator.db"
-
 
 class Database:
   """Async database connection manager.
 
   Manages connection lifecycle and provides table creation utilities.
   Uses the `databases` library for async database operations.
+
+  Note: This class assumes the database directory already exists.
+  Directory creation should be handled by the application bootstrap.
   """
 
-  def __init__(self, url: str | None = None) -> None:
+  def __init__(self, url: str) -> None:
     """Initialize database connection manager.
 
     Args:
-        url: Database URL. Defaults to SQLite file at ./simulator.db.
+        url: Database URL (e.g., sqlite+aiosqlite:///path/to/db.db).
     """
-    self.url = url or DEFAULT_DATABASE_URL
+    self.url = url
     self._client = DatabaseClient(self.url)
 
   @property
@@ -46,13 +43,6 @@ class Database:
 
   async def connect(self) -> None:
     """Establish database connection."""
-    # Ensure database directory exists for file-based databases
-    if self.url.startswith("sqlite"):
-      parsed = make_url(self.url)
-      database = parsed.database or ""
-      if database and not database.startswith(":memory:"):
-        db_path = Path(database)
-        db_path.parent.mkdir(parents=True, exist_ok=True)
     await self._client.connect()
 
   async def disconnect(self) -> None:
