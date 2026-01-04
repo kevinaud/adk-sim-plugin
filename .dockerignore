@@ -19,9 +19,6 @@ dist/
 build/
 *.egg-info/
 
-# Generated code (regenerated in container)
-adk_agent_sim/generated/
-
 # Logs
 logs/
 *.log
