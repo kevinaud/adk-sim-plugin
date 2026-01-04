@@ -71,6 +71,14 @@ Implement the Simulator Server (gRPC backend with SQLite persistence) and Python
 | ph2f9 | `phase/2/feat/9/grpc-subscribe` | SimulatorService.subscribe() with replay | ~180 | ph2f8 |
 | ph2f10 | `phase/2/feat/10/server-entrypoint` | Server main entrypoint with graceful shutdown | ~100 | ph2f9 |
 
+### Phase 2b: E2E Server Tests
+
+| PR # | Branch Name | Description | Est. Lines | Depends On |
+|------|-------------|-------------|------------|------------|
+| ph2bf1 | `phase/2b/feat/1/e2e-infra` | pytest-docker setup, docker-compose.test.yaml, conftest fixtures | ~150 | ph2f10 |
+| ph2bf2 | `phase/2b/feat/2/e2e-session-tests` | E2E tests for CreateSession, ListSessions RPCs | ~120 | ph2bf1 |
+| ph2bf3 | `phase/2b/feat/3/e2e-flow-tests` | E2E tests for SubmitRequest, SubmitDecision, Subscribe flow | ~180 | ph2bf2 |
+
 ### Phase 3: Plugin Core
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
