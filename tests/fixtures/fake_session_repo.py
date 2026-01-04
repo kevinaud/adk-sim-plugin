@@ -70,7 +70,7 @@ class FakeSessionRepository:
   ) -> PaginatedSessions:
     """Return paginated list of sessions.
 
-    Sessions are returned in insertion order (dict order in Python 3.7+).
+    Sessions are returned in descending order of creation time.
 
     Args:
         page_size: Maximum number of sessions to return.
@@ -79,8 +79,10 @@ class FakeSessionRepository:
     Returns:
         PaginatedSessions with list of sessions and next page token.
     """
-    # Get all session IDs in order
-    all_ids = list(self._sessions.keys())
+    # Get all sessions and sort by created_at descending
+    all_sessions = [entry[0] for entry in self._sessions.values()]
+    all_sessions.sort(key=lambda s: s.created_at, reverse=True)
+    all_ids = [s.id for s in all_sessions]
 
     # Find starting index based on page_token
     start_idx = 0
@@ -94,15 +96,14 @@ class FakeSessionRepository:
 
     # Get the page of sessions
     end_idx = start_idx + page_size
-    page_ids = all_ids[start_idx:end_idx]
-    sessions = [self._sessions[sid][0] for sid in page_ids]
+    page_sessions = all_sessions[start_idx:end_idx]
 
     # Determine next page token
     next_token: str | None = None
     if end_idx < len(all_ids):
-      next_token = page_ids[-1] if page_ids else None
+      next_token = page_sessions[-1].id if page_sessions else None
 
-    return PaginatedSessions(sessions=sessions, next_page_token=next_token)
+    return PaginatedSessions(sessions=page_sessions, next_page_token=next_token)
 
   async def update_status(self, session_id: str, status: SessionStatus) -> bool:
     """Update the status of a stored session.

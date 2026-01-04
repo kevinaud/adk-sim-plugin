@@ -6,13 +6,14 @@ pattern.
 """
 
 from adk_agent_sim.persistence.core import (
+  PaginatedSessions,
   SessionEventRepository,
   SessionRepositoryProtocol,
 )
 from adk_agent_sim.persistence.database import Database
 from adk_agent_sim.persistence.event_repo import EventRepository
 from adk_agent_sim.persistence.schema import events, metadata, sessions
-from adk_agent_sim.persistence.session_repo import PaginatedSessions, SessionRepository
+from adk_agent_sim.persistence.session_repo import SessionRepository
 
 __all__ = [
   "Database",

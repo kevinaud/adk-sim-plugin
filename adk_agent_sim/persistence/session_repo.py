@@ -5,28 +5,17 @@ queryable fields extracted into SQL columns for efficient filtering.
 """
 
 import base64
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
 from adk_agent_sim.generated.adksim.v1 import SessionStatus
+from adk_agent_sim.persistence.core import PaginatedSessions
 from adk_agent_sim.persistence.schema import sessions
 
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorSession
   from adk_agent_sim.persistence.database import Database
-
-
-@dataclass
-class PaginatedSessions:
-  """Result of a paginated session query."""
-
-  sessions: list[SimulatorSession]
-  """List of sessions for the current page."""
-
-  next_page_token: str | None
-  """Token to fetch the next page, or None if this is the last page."""
 
 
 class SessionRepository:
