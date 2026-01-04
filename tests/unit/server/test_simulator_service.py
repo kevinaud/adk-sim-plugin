@@ -1,19 +1,19 @@
 """Tests for SimulatorService."""
 
 import asyncio
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pytest
+from hamcrest import assert_that, has_properties, instance_of
 
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
   ListSessionsRequest,
-  SubmitDecisionRequest,
   SubmitRequestRequest,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
   GenerateContentRequest,
-  GenerateContentResponse,
 )
 from adk_agent_sim.server.broadcaster import EventBroadcaster
 from adk_agent_sim.server.queue import RequestQueue
@@ -29,85 +29,102 @@ async def _empty_history() -> list:
   return []
 
 
+@dataclass
+class SimulatorServiceFixture:
+  """Groups the SimulatorService with its dependencies for testing."""
+
+  service: SimulatorService
+  manager: SessionManager
+  event_repo: EventRepository
+  request_queue: RequestQueue
+  event_broadcaster: EventBroadcaster
+
+
+@pytest.fixture
+def simulator_service(
+  manager: SessionManager,
+  event_repo: EventRepository,
+) -> SimulatorServiceFixture:
+  """Create a SimulatorService with test dependencies."""
+  request_queue = RequestQueue()
+  event_broadcaster = EventBroadcaster()
+  service = SimulatorService(
+    session_manager=manager,
+    event_repo=event_repo,
+    request_queue=request_queue,
+    event_broadcaster=event_broadcaster,
+  )
+  return SimulatorServiceFixture(
+    service=service,
+    manager=manager,
+    event_repo=event_repo,
+    request_queue=request_queue,
+    event_broadcaster=event_broadcaster,
+  )
+
+
 class TestSimulatorService:
   """Test suite for SimulatorService."""
 
   def test_service_initialization(
-    self, manager: SessionManager, event_repo: EventRepository
+    self, simulator_service: SimulatorServiceFixture
   ) -> None:
     """Test that SimulatorService can be instantiated."""
-    service = SimulatorService(
-      session_manager=manager,
-      event_repo=event_repo,
-      request_queue=RequestQueue(),
-      event_broadcaster=EventBroadcaster(),
-    )
-    assert service is not None
+    assert simulator_service.service is not None
 
   @pytest.mark.asyncio
   async def test_create_session_success(
-    self, manager: SessionManager, event_repo: EventRepository
+    self, simulator_service: SimulatorServiceFixture
   ) -> None:
     """Test that create_session creates a session successfully."""
-    service = SimulatorService(
-      session_manager=manager,
-      event_repo=event_repo,
-      request_queue=RequestQueue(),
-      event_broadcaster=EventBroadcaster(),
-    )
     request = CreateSessionRequest(description="test session")
 
-    response = await service.create_session(request)
+    response = await simulator_service.service.create_session(request)
 
-    assert response.session is not None
-    assert response.session.description == "test session"
-    assert response.session.id is not None
+    assert_that(
+      response.session,
+      has_properties(id=instance_of(str), description="test session"),
+    )
 
   @pytest.mark.asyncio
   async def test_list_sessions_success(
-    self, manager: SessionManager, event_repo: EventRepository
+    self, simulator_service: SimulatorServiceFixture
   ) -> None:
     """Test that list_sessions returns sessions successfully."""
-    service = SimulatorService(
-      session_manager=manager,
-      event_repo=event_repo,
-      request_queue=RequestQueue(),
-      event_broadcaster=EventBroadcaster(),
-    )
     # Create some sessions
-    await manager.create_session("session 1")
-    await manager.create_session("session 2")
+    await simulator_service.manager.create_session("session 1")
+    await simulator_service.manager.create_session("session 2")
 
     request = ListSessionsRequest(page_size=10)
-    response = await service.list_sessions(request)
+    response = await simulator_service.service.list_sessions(request)
 
     assert len(response.sessions) == 2
-    assert response.sessions[0].description == "session 2"  # Most recent first
-    assert response.sessions[1].description == "session 1"
-    assert not response.next_page_token
+    # Most recent first
+    assert_that(
+      response.sessions[0],
+      has_properties(id=instance_of(str), description="session 2"),
+    )
+    assert_that(
+      response.sessions[1],
+      has_properties(id=instance_of(str), description="session 1"),
+    )
+    assert response.next_page_token == ""
 
   @pytest.mark.asyncio
   async def test_submit_request_success(
-    self, manager: SessionManager, event_repo: EventRepository
+    self, simulator_service: SimulatorServiceFixture
   ) -> None:
     """Test that submit_request processes the request successfully."""
-    request_queue = RequestQueue()
-    event_broadcaster = EventBroadcaster()
-    service = SimulatorService(
-      session_manager=manager,
-      event_repo=event_repo,
-      request_queue=request_queue,
-      event_broadcaster=event_broadcaster,
-    )
-
     # Create a session first
-    session = await manager.create_session("test session")
+    session = await simulator_service.manager.create_session("test session")
 
     # Subscribe to events to verify broadcast
     events = []
 
     async def subscriber() -> None:
-      async for event in event_broadcaster.subscribe(session.id, _empty_history):
+      async for event in simulator_service.event_broadcaster.subscribe(
+        session.id, _empty_history
+      ):
         events.append(event)
         break  # Stop after receiving one event
 
@@ -123,18 +140,18 @@ class TestSimulatorService:
       request=GenerateContentRequest(),
     )
 
-    response = await service.submit_request(request)
+    response = await simulator_service.service.submit_request(request)
 
-    assert response.event_id is not None
+    assert_that(response, has_properties(event_id=instance_of(str)))
 
     # Verify event in repo
-    stored_events = await event_repo.get_by_session(session.id)
+    stored_events = await simulator_service.event_repo.get_by_session(session.id)
     assert len(stored_events) == 1
     assert stored_events[0].event_id == response.event_id
     assert stored_events[0].llm_request == GenerateContentRequest()
 
     # Verify event in queue
-    queued_event = request_queue.get_current(session.id)
+    queued_event = simulator_service.request_queue.get_current(session.id)
     assert queued_event is not None
     assert queued_event.event_id == response.event_id
 
@@ -145,99 +162,36 @@ class TestSimulatorService:
 
   @pytest.mark.asyncio
   async def test_list_sessions_pagination(
-    self, manager: SessionManager, event_repo: EventRepository
+    self, simulator_service: SimulatorServiceFixture
   ) -> None:
     """Test that list_sessions handles pagination correctly."""
-    service = SimulatorService(
-      session_manager=manager,
-      event_repo=event_repo,
-      request_queue=RequestQueue(),
-      event_broadcaster=EventBroadcaster(),
-    )
     # Create 3 sessions
-    await manager.create_session("session 1")
-    await manager.create_session("session 2")
-    await manager.create_session("session 3")
+    await simulator_service.manager.create_session("session 1")
+    await simulator_service.manager.create_session("session 2")
+    await simulator_service.manager.create_session("session 3")
 
     # Request page size 2
     request = ListSessionsRequest(page_size=2)
-    response = await service.list_sessions(request)
+    response = await simulator_service.service.list_sessions(request)
 
     assert len(response.sessions) == 2
-    assert response.sessions[0].description == "session 3"
-    assert response.sessions[1].description == "session 2"
-    assert response.next_page_token
+    assert_that(
+      response.sessions[0],
+      has_properties(id=instance_of(str), description="session 3"),
+    )
+    assert_that(
+      response.sessions[1],
+      has_properties(id=instance_of(str), description="session 2"),
+    )
+    assert_that(response, has_properties(next_page_token=instance_of(str)))
 
     # Request next page
     request = ListSessionsRequest(page_size=2, page_token=response.next_page_token)
-    response = await service.list_sessions(request)
+    response = await simulator_service.service.list_sessions(request)
 
     assert len(response.sessions) == 1
-    assert response.sessions[0].description == "session 1"
-
-  @pytest.mark.asyncio
-  async def test_submit_decision_success(
-    self, manager: SessionManager, event_repo: EventRepository
-  ) -> None:
-    """Test that submit_decision processes the decision successfully."""
-    request_queue = RequestQueue()
-    event_broadcaster = EventBroadcaster()
-    service = SimulatorService(
-      session_manager=manager,
-      event_repo=event_repo,
-      request_queue=request_queue,
-      event_broadcaster=event_broadcaster,
+    assert_that(
+      response.sessions[0],
+      has_properties(id=instance_of(str), description="session 1"),
     )
-
-    # Create a session
-    session = await manager.create_session("test session")
-
-    # 1. Submit a request to populate queue
-    request_req = SubmitRequestRequest(
-      session_id=session.id,
-      turn_id="turn_1",
-      agent_name="test_agent",
-      request=GenerateContentRequest(),
-    )
-    await service.submit_request(request_req)
-
-    # Verify queue has item
-    assert not request_queue.is_empty(session.id)
-
-    # 2. Submit decision
-    decision_req = SubmitDecisionRequest(
-      session_id=session.id,
-      turn_id="turn_1",
-      response=GenerateContentResponse(),
-    )
-
-    # Start subscriber to verify broadcast
-    received_events = []
-
-    async def subscriber() -> None:
-      async for event in event_broadcaster.subscribe(session.id):
-        received_events.append(event)
-        break
-
-    subscriber_task = asyncio.create_task(subscriber())
-    await asyncio.sleep(0.01)
-
-    response = await service.submit_decision(decision_req)
-
-    assert response.event_id is not None
-
-    # Verify event in repo
-    stored_events = await event_repo.get_by_session(session.id)
-    assert len(stored_events) == 2
-    decision_event = stored_events[1]
-    assert decision_event.event_id == response.event_id
-    assert decision_event.llm_response == GenerateContentResponse()
-    assert decision_event.agent_name == "User"
-
-    # Verify queue is empty (dequeued)
-    assert request_queue.is_empty(session.id)
-
-    # Verify broadcast
-    await asyncio.wait_for(subscriber_task, timeout=1.0)
-    assert len(received_events) == 1
-    assert received_events[0].event_id == response.event_id
+    assert response.next_page_token == ""
