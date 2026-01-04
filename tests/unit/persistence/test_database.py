@@ -6,9 +6,12 @@ from sqlalchemy import Column, MetaData, Table, select
 from adk_agent_sim.persistence import metadata
 from adk_agent_sim.persistence.database import DEFAULT_DATABASE_URL, Database
 
-# In-memory SQLite URL with shared cache for testing
-# (shared cache is required for in-memory DBs with the databases library)
-TEST_DB_URL = "sqlite+aiosqlite:///:memory:?cache=shared"
+# In-memory SQLite URL with shared cache for testing.
+#
+# IMPORTANT: ":memory:?cache=shared" is treated as a *filename* unless SQLite
+# is told to parse it as a URI, which can lead to an on-disk file named
+# ':memory:?cache=shared' in the CWD. Use a proper SQLite URI + `uri=true`.
+TEST_DB_URL = "sqlite+aiosqlite:///file::memory:?cache=shared&uri=true"
 
 # Define sqlite_master table for querying table names
 _sqlite_master = Table(

@@ -9,6 +9,7 @@ from typing import Any
 
 from databases import Database as DatabaseClient
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.schema import CreateIndex, CreateTable
 from sqlalchemy.sql import ClauseElement
 
@@ -46,10 +47,12 @@ class Database:
   async def connect(self) -> None:
     """Establish database connection."""
     # Ensure database directory exists for file-based databases
-    if self.url.startswith("sqlite") and ":memory:" not in self.url:
-      # Extract path from URL (after sqlite+aiosqlite:///)
-      db_path = Path(self.url.split("///")[1].split("?")[0])
-      db_path.parent.mkdir(parents=True, exist_ok=True)
+    if self.url.startswith("sqlite"):
+      parsed = make_url(self.url)
+      database = parsed.database or ""
+      if database and not database.startswith(":memory:"):
+        db_path = Path(database)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
     await self._client.connect()
 
   async def disconnect(self) -> None:
