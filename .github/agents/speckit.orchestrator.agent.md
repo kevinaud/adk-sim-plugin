@@ -59,8 +59,7 @@ Git Town automates branch management for stacked changes. Master these commands 
 | `git town prepend <name>` | Insert branch between current and parent | Need to add prerequisite work |
 | `git town sync --all` | Sync all branches with remote | Before starting work, after merges |
 | `git town sync --stack` | Sync only current stack | When you only need your stack updated |
-| `git town propose` | Create PR for current branch | After pushing, to create GitHub PR |
-| `git town propose --stack` | Create PRs for entire stack | Create all PRs at once |
+| `git town propose --title "<title>" --body "<body>"` | Create PR for current branch (non-interactive) | After pushing, to create GitHub PR |
 | `git town ship` | Merge branch via fast-forward | Ship without using GitHub UI |
 | `git town branch` | Show branch hierarchy | Understand current stack structure |
 | `git town switch` | Interactive branch switcher | Navigate between branches |
@@ -251,7 +250,7 @@ Repeat the following for each PR (1 to N):
 
 1. **Create Draft PR**:
    ```bash
-   gh pr create --draft --title "PR X: <description>" --body "## Summary
+   git town propose --title "PR X: <description>" --body "## Summary
    <brief description of changes>
 
    ## Tasks Completed
@@ -263,6 +262,9 @@ Repeat the following for each PR (1 to N):
    - Awaiting CI verification
    "
    ```
+   
+   **IMPORTANT**: Always use `--title` and `--body` flags to run non-interactively.
+   **DO NOT use `git town propose --stack`** — it only supports interactive mode and will cause the agent to hang.
 
 2. **Monitor CI status** (non-blocking):
    ```bash
