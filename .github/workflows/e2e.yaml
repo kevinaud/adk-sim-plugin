@@ -35,6 +35,14 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Generate protos
+        run: |
+          # Install buf CLI
+          curl -sSL https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64 -o /usr/local/bin/buf
+          chmod +x /usr/local/bin/buf
+          # Generate proto code
+          make generate
+
       - name: Build and start backend
         run: |
           docker compose -f docker-compose.test.yaml up -d --build
