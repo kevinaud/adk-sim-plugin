@@ -8,10 +8,13 @@ services:
     volumes:
       - ./adk_agent_sim:/app/adk_agent_sim:cached
       - ./logs:/app/logs
+      - backend-data:/app/data
     environment:
       - PYTHONPATH=/app
       - LOG_LEVEL=INFO
       - LOG_FILE=/app/logs/coordination-service.log
+      # Override default to use the mounted volume path
+      - ADK_AGENT_SIM_DATABASE_URL=sqlite+aiosqlite:////app/data/simulator.db
     command: >
       uv run watchfiles
       --filter python
@@ -37,3 +40,6 @@ services:
       - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
     depends_on:
       - backend
+
+volumes:
+  backend-data:

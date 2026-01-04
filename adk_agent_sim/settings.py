@@ -1,13 +1,19 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Default local path: ~/.adk-sim/simulator.db
+_LOCAL_DB_PATH = Path.home() / ".adk-sim" / "simulator.db"
 
 
 class Settings(BaseSettings):
   log_level: str = "INFO"
-  database_url: str = "sqlite+aiosqlite:///adk_agent_sim.db"
+  # Use absolute path by default
+  database_url: str = f"sqlite+aiosqlite:///{_LOCAL_DB_PATH}"
 
   model_config = SettingsConfigDict(
+    env_prefix="ADK_AGENT_SIM_",
     env_file=(".env", ".env.secrets"),
-    env_file_encoding="utf-8",
     extra="ignore",
   )
 
