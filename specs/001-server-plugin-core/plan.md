@@ -43,59 +43,59 @@ Implement the Simulator Server (gRPC backend with SQLite persistence) and Python
 
 **Target PR Count**: ~34 PRs (feature is focused on server + plugin only)
 
-### Phase 1: Foundation & Data Layer (PRs 1-8)
+### Phase 1: Foundation & Data Layer
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 1 | `feature/001-db-schema` | SQLAlchemy Core schema definitions (sessions, events tables) | ~80 | - |
-| 2 | `feature/002-db-connection` | Database connection manager using `databases` library | ~100 | PR 1 |
-| 3 | `feature/003-session-repo-create` | SessionRepository.create() with Promoted Field pattern + tests | ~150 | PR 2 |
-| 4 | `feature/004-session-repo-get` | SessionRepository.get_by_id() + tests | ~100 | PR 3 |
-| 5 | `feature/005-session-repo-list` | SessionRepository.list_all() with pagination + tests | ~120 | PR 4 |
-| 6 | `feature/006-event-repo-insert` | EventRepository.insert() with proto blob serialization + tests | ~120 | PR 2 |
-| 7 | `feature/007-event-repo-query` | EventRepository.get_by_session() + tests | ~120 | PR 6 |
-| 8 | `feature/008-fake-repos` | FakeSessionRepository, FakeEventRepository for testing | ~150 | PR 7 |
+| ph1f1 | `phase/1/feat/1/db-schema` | SQLAlchemy Core schema definitions (sessions, events tables) | ~80 | - |
+| ph1f2 | `phase/1/feat/2/db-connection` | Database connection manager using `databases` library | ~100 | ph1f1 |
+| ph1f3 | `phase/1/feat/3/session-repo-create` | SessionRepository.create() with Promoted Field pattern + tests | ~150 | ph1f2 |
+| ph1f4 | `phase/1/feat/4/session-repo-get` | SessionRepository.get_by_id() + tests | ~100 | ph1f3 |
+| ph1f5 | `phase/1/feat/5/session-repo-list` | SessionRepository.list_all() with pagination + tests | ~120 | ph1f4 |
+| ph1f6 | `phase/1/feat/6/event-repo-insert` | EventRepository.insert() with proto blob serialization + tests | ~120 | ph1f2 |
+| ph1f7 | `phase/1/feat/7/event-repo-query` | EventRepository.get_by_session() + tests | ~120 | ph1f6 |
+| ph1f8 | `phase/1/feat/8/fake-repos` | FakeSessionRepository, FakeEventRepository for testing | ~150 | ph1f7 |
 
-### Phase 2: Server Core (PRs 9-18)
-
-| PR # | Branch Name | Description | Est. Lines | Depends On |
-|------|-------------|-------------|------------|------------|
-| 9 | `feature/009-session-manager` | SessionManager class shell + create_session() | ~120 | PR 8 |
-| 10 | `feature/010-session-manager-get` | SessionManager.get_session() + reconnection logic | ~100 | PR 9 |
-| 11 | `feature/011-request-queue` | RequestQueue (FIFO per session) implementation | ~150 | PR 8 |
-| 12 | `feature/012-event-broadcaster` | EventBroadcaster for streaming to subscribers | ~120 | PR 11 |
-| 13 | `feature/013-grpc-create-session` | SimulatorService.create_session() RPC | ~120 | PR 10 |
-| 14 | `feature/014-grpc-list-sessions` | SimulatorService.list_sessions() RPC | ~100 | PR 13 |
-| 15 | `feature/015-grpc-submit-request` | SimulatorService.submit_request() RPC | ~150 | PR 12 |
-| 16 | `feature/016-grpc-submit-decision` | SimulatorService.submit_decision() RPC | ~120 | PR 15 |
-| 17 | `feature/017-grpc-subscribe` | SimulatorService.subscribe() with replay | ~180 | PR 16 |
-| 18 | `feature/018-server-entrypoint` | Server main entrypoint with graceful shutdown | ~100 | PR 17 |
-
-### Phase 3: Plugin Core (PRs 19-29)
+### Phase 2: Server Core
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 19 | `feature/019-plugin-config` | PluginConfig dataclass with env var parsing | ~100 | - |
-| 20 | `feature/020-proto-converter` | ADKProtoConverter for LlmRequest ↔ GenerateContentRequest | ~180 | - |
-| 21 | `feature/021-grpc-client` | SimulatorClient gRPC wrapper (connect, close) | ~120 | PR 19 |
-| 22 | `feature/022-client-create-session` | SimulatorClient.create_session() | ~80 | PR 21 |
-| 23 | `feature/023-client-submit-request` | SimulatorClient.submit_request() | ~100 | PR 22 |
-| 24 | `feature/024-client-subscribe` | SimulatorClient.subscribe() async iterator | ~120 | PR 23 |
-| 25 | `feature/025-future-registry` | PendingFutureRegistry (turn_id -> Future map) | ~100 | PR 24 |
-| 26 | `feature/026-listen-loop` | Plugin._listen_loop() background task | ~150 | PR 25 |
-| 27 | `feature/027-plugin-initialize` | Plugin.initialize() with URL output | ~120 | PR 26 |
-| 28 | `feature/028-plugin-intercept` | Plugin.before_model_callback() full flow | ~180 | PR 20, PR 27 |
-| 29 | `feature/029-plugin-reconnect` | Reconnection logic on connection loss | ~150 | PR 28 |
+| ph2f1 | `phase/2/feat/1/session-manager` | SessionManager class shell + create_session() | ~120 | ph1f8 |
+| ph2f2 | `phase/2/feat/2/session-manager-get` | SessionManager.get_session() + reconnection logic | ~100 | ph2f1 |
+| ph2f3 | `phase/2/feat/3/request-queue` | RequestQueue (FIFO per session) implementation | ~150 | ph1f8 |
+| ph2f4 | `phase/2/feat/4/event-broadcaster` | EventBroadcaster for streaming to subscribers | ~120 | ph2f3 |
+| ph2f5 | `phase/2/feat/5/grpc-create-session` | SimulatorService.create_session() RPC | ~120 | ph2f2 |
+| ph2f6 | `phase/2/feat/6/grpc-list-sessions` | SimulatorService.list_sessions() RPC | ~100 | ph2f5 |
+| ph2f7 | `phase/2/feat/7/grpc-submit-request` | SimulatorService.submit_request() RPC | ~150 | ph2f4 |
+| ph2f8 | `phase/2/feat/8/grpc-submit-decision` | SimulatorService.submit_decision() RPC | ~120 | ph2f7 |
+| ph2f9 | `phase/2/feat/9/grpc-subscribe` | SimulatorService.subscribe() with replay | ~180 | ph2f8 |
+| ph2f10 | `phase/2/feat/10/server-entrypoint` | Server main entrypoint with graceful shutdown | ~100 | ph2f9 |
 
-### Phase 4: Integration & Polish (PRs 30-34)
+### Phase 3: Plugin Core
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 30 | `feature/030-integration-basic` | Basic integration test: single agent round-trip | ~150 | PR 29 |
-| 31 | `feature/031-integration-selective` | Integration test: selective agent interception | ~120 | PR 30 |
-| 32 | `feature/032-integration-queue` | Integration test: FIFO queueing of parallel requests | ~150 | PR 31 |
-| 33 | `feature/033-integration-persist` | Integration test: session persistence across restart | ~120 | PR 32 |
-| 34 | `feature/034-docker-compose` | Docker compose configuration for server | ~80 | PR 33 |
+| ph3f1 | `phase/3/feat/1/plugin-config` | PluginConfig dataclass with env var parsing | ~100 | - |
+| ph3f2 | `phase/3/feat/2/proto-converter` | ADKProtoConverter for LlmRequest ↔ GenerateContentRequest | ~180 | - |
+| ph3f3 | `phase/3/feat/3/grpc-client` | SimulatorClient gRPC wrapper (connect, close) | ~120 | ph3f1 |
+| ph3f4 | `phase/3/feat/4/client-create-session` | SimulatorClient.create_session() | ~80 | ph3f3 |
+| ph3f5 | `phase/3/feat/5/client-submit-request` | SimulatorClient.submit_request() | ~100 | ph3f4 |
+| ph3f6 | `phase/3/feat/6/client-subscribe` | SimulatorClient.subscribe() async iterator | ~120 | ph3f5 |
+| ph3f7 | `phase/3/feat/7/future-registry` | PendingFutureRegistry (turn_id -> Future map) | ~100 | ph3f6 |
+| ph3f8 | `phase/3/feat/8/listen-loop` | Plugin._listen_loop() background task | ~150 | ph3f7 |
+| ph3f9 | `phase/3/feat/9/plugin-initialize` | Plugin.initialize() with URL output | ~120 | ph3f8 |
+| ph3f10 | `phase/3/feat/10/plugin-intercept` | Plugin.before_model_callback() full flow | ~180 | ph3f2, ph3f9 |
+| ph3f11 | `phase/3/feat/11/plugin-reconnect` | Reconnection logic on connection loss | ~150 | ph3f10 |
+
+### Phase 4: Integration & Polish
+
+| PR # | Branch Name | Description | Est. Lines | Depends On |
+|------|-------------|-------------|------------|------------|
+| ph4f1 | `phase/4/feat/1/integration-basic` | Basic integration test: single agent round-trip | ~150 | ph3f11 |
+| ph4f2 | `phase/4/feat/2/integration-selective` | Integration test: selective agent interception | ~120 | ph4f1 |
+| ph4f3 | `phase/4/feat/3/integration-queue` | Integration test: FIFO queueing of parallel requests | ~150 | ph4f2 |
+| ph4f4 | `phase/4/feat/4/integration-persist` | Integration test: session persistence across restart | ~120 | ph4f3 |
+| ph4f5 | `phase/4/feat/5/docker-compose` | Docker compose configuration for server | ~80 | ph4f4 |
 
 **PR Planning Rules Applied**:
 - Each PR is 100-200 lines max ✓

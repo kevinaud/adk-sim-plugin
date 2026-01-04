@@ -47,9 +47,9 @@
 
 | PR # | Branch Name | Description | Est. Lines | Depends On |
 |------|-------------|-------------|------------|------------|
-| 1 | `feature/001-initial-scaffold` | Project structure and empty classes | ~50 | - |
-| 2 | `feature/002-core-types` | Core data types and interfaces | ~100 | PR 1 |
-| 3 | `feature/003-validation-logic` | Input validation implementation | ~150 | PR 2 |
+| ph1f1 | `phase/1/feat/1/initial-scaffold` | Project structure and empty classes | ~50 | - |
+| ph1f2 | `phase/1/feat/2/core-types` | Core data types and interfaces | ~100 | ph1f1 |
+| ph1f3 | `phase/1/feat/3/validation-logic` | Input validation implementation | ~150 | ph1f2 |
 | ... | ... | ... | ... | ... |
 
 **PR Planning Rules**:
@@ -58,6 +58,7 @@
 - PRs MUST be single-purpose (no unrelated changes)
 - Use `git town append` to create dependent branches
 - Large classes are built incrementally across multiple PRs
+- PR IDs use phase-scoped format: phNfM (e.g., ph1f1, ph2f3, ph3f10)
 
 ## Project Structure
 
