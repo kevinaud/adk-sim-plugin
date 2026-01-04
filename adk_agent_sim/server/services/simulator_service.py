@@ -9,12 +9,16 @@ from typing import TYPE_CHECKING
 
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionResponse,
+  ListSessionsResponse,
   SimulatorServiceBase,
 )
 from adk_agent_sim.server.logging import get_logger
 
 if TYPE_CHECKING:
-  from adk_agent_sim.generated.adksim.v1 import CreateSessionRequest
+  from adk_agent_sim.generated.adksim.v1 import (
+    CreateSessionRequest,
+    ListSessionsRequest,
+  )
   from adk_agent_sim.server.session_manager import SessionManager
 
 logger = get_logger("simulator_service")
@@ -53,3 +57,22 @@ class SimulatorService(SimulatorServiceBase):
       description=create_session_request.description
     )
     return CreateSessionResponse(session=session)
+
+  async def list_sessions(
+    self,
+    list_sessions_request: "ListSessionsRequest",  # noqa: UP037
+  ) -> ListSessionsResponse:
+    """List sessions with pagination.
+
+    Args:
+        list_sessions_request: ListSessionsRequest with page_size and page_token.
+
+    Returns:
+        ListSessionsResponse containing the list of sessions and next_page_token.
+    """
+    result = await self._session_manager.list_sessions(
+      list_sessions_request.page_size, list_sessions_request.page_token
+    )
+    return ListSessionsResponse(
+      sessions=result.sessions, next_page_token=result.next_page_token or ""
+    )

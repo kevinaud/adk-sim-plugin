@@ -13,6 +13,7 @@ from adk_agent_sim.generated.adksim.v1 import SimulatorSession
 
 if TYPE_CHECKING:
   from adk_agent_sim.persistence import (
+    PaginatedSessions,
     SessionEventRepository,
     SessionRepositoryProtocol,
   )
@@ -112,3 +113,17 @@ class SessionManager:
       self._active_sessions[session_id] = session
 
     return session
+
+  async def list_sessions(
+    self, page_size: int, page_token: str | None
+  ) -> "PaginatedSessions":  # noqa: UP037
+    """List sessions with pagination.
+
+    Args:
+        page_size: Maximum number of sessions to return.
+        page_token: Token for the next page, or None for the first page.
+
+    Returns:
+        PaginatedSessions containing the list of sessions and next page token.
+    """
+    return await self._session_repo.list_all(page_size, page_token)

@@ -5,6 +5,7 @@ This module defines repository protocols used by higher-level components
 concrete persistence implementations.
 """
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from adk_agent_sim.generated.adksim.v1 import SessionStatus
@@ -13,16 +14,31 @@ if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SessionEvent, SimulatorSession
 
 
+@dataclass
+class PaginatedSessions:
+  """Result of a paginated session query."""
+
+  sessions: list["SimulatorSession"]  # noqa: UP037
+  """List of sessions for the current page."""
+
+  next_page_token: str | None
+  """Token to fetch the next page, or None if this is the last page."""
+
+
 class SessionRepositoryProtocol(Protocol):
   """Protocol for session repository operations."""
 
   async def create(
     self,
-    session: SimulatorSession,
+    session: "SimulatorSession",  # noqa: UP037
     status: SessionStatus = SessionStatus.ACTIVE,
-  ) -> SimulatorSession: ...
+  ) -> "SimulatorSession": ...  # noqa: UP037
 
-  async def get_by_id(self, session_id: str) -> SimulatorSession | None: ...
+  async def get_by_id(self, session_id: str) -> "SimulatorSession | None": ...  # noqa: UP037
+
+  async def list_all(
+    self, page_size: int, page_token: str | None
+  ) -> PaginatedSessions: ...
 
 
 class SessionEventRepository(Protocol):
