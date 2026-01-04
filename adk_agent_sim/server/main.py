@@ -6,8 +6,13 @@ from grpclib.reflection.service import ServerReflection
 from grpclib.server import Server
 from grpclib.utils import graceful_exit
 
+from adk_agent_sim.persistence.database import Database
+from adk_agent_sim.persistence.event_repo import EventRepository
+from adk_agent_sim.persistence.session_repo import SessionRepository
 from adk_agent_sim.server.logging import configure_logging, get_logger
 from adk_agent_sim.server.services.simulator_service import SimulatorService
+from adk_agent_sim.server.session_manager import SessionManager
+from adk_agent_sim.settings import settings
 
 logger = get_logger("main")
 
@@ -17,13 +22,19 @@ async def serve() -> None:
   # Configure logging first
   configure_logging()
 
-  # Create the service (will be used once protos are wired up)
-  _simulator_service = SimulatorService()
+  # Initialize persistence layer
+  database = Database(settings.database_url)
+  await database.connect()
+  await database.create_tables()
 
-  # TODO: SimulatorService needs to inherit from the generated base class
-  # For now, we'll use an empty services list until protos are wired up
-  # Once ready: services = [_simulator_service]
-  services: list = []
+  session_repo = SessionRepository(database)
+  event_repo = EventRepository(database)
+  session_manager = SessionManager(session_repo, event_repo)
+
+  # Create the service
+  _simulator_service = SimulatorService(session_manager)
+
+  services: list = [_simulator_service]
 
   # Enable Reflection for debugging tools like grpcurl
   services = ServerReflection.extend(services)
@@ -39,6 +50,7 @@ async def serve() -> None:
     await server.start(host, port)
     logger.info("Server started successfully")
     await server.wait_closed()
+    await database.disconnect()
 
 
 def main() -> None:
