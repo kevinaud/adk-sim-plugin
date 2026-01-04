@@ -26,10 +26,10 @@
 
 | User Story | Priority | PRs |
 |------------|----------|-----|
-| US1: Basic Agent Interception | P1 | Phase 2 (ph2f1-ph2f10), Phase 3 (ph3f1-ph3f11) |
+| US1: Basic Agent Interception | P1 | Phase 2 (ph2f1-ph2f10), Phase 2b (ph2bf1-ph2bf3), Phase 3 (ph3f1-ph3f11) |
 | US2: Selective Agent Interception | P1 | ph3f10 (target_agents filtering) |
-| US3: Session Persistence | P2 | Phase 1 (ph1f1-ph1f8 data layer), ph3f11 (reconnect) |
-| US4: Sequential Request Queueing | P2 | ph2f3, ph2f4, ph2f7 |
+| US3: Session Persistence | P2 | Phase 1 (ph1f1-ph1f8 data layer), ph2bf2 (E2E persistence test), ph3f11 (reconnect) |
+| US4: Sequential Request Queueing | P2 | ph2f3, ph2f4, ph2f7, ph2bf3 (E2E FIFO test) |
 | US5: Environment Configuration | P3 | ph3f1 |
 
 ---
@@ -286,6 +286,53 @@
 - [ ] T036 [ph2f10] Wire up `SessionManager`, `EventBroadcaster`, `RequestQueue` dependencies in `adk_agent_sim/server/main.py`
 - [ ] T037 [ph2f10] Implement graceful shutdown closing database connection in `adk_agent_sim/server/main.py`
 - [ ] T038 [ph2f10] Add server startup tests verifying dependency wiring in `tests/unit/server/test_main.py`
+
+---
+
+## Phase 2b: E2E Server Tests
+
+---
+
+## ph2bf1: E2E Test Infrastructure (~150 lines)
+
+**Branch**: `git town append phase/2b/feat/1/e2e-infra`
+**Depends on**: ph2f10
+**Goal**: pytest-docker setup with docker-compose.test.yaml and shared fixtures
+**User Stories**: US1 (Basic Interception - E2E validation)
+
+- [ ] T039 [ph2bf1] Create `docker-compose.test.yaml` with backend service for E2E tests in project root
+- [ ] T040 [ph2bf1] Add `pytest-docker` and `grpclib` to dev dependencies in `pyproject.toml`
+- [ ] T041 [ph2bf1] Create `tests/e2e/__init__.py` and `tests/e2e/conftest.py` with `docker_compose_file` fixture
+- [ ] T042 [ph2bf1] Implement `simulator_server` fixture using `docker_services.wait_until_responsive()` in `tests/e2e/conftest.py`
+- [ ] T043 [ph2bf1] Implement `grpc_channel` fixture returning connected `Channel` to server in `tests/e2e/conftest.py`
+
+---
+
+## ph2bf2: E2E Session Tests (~120 lines)
+
+**Branch**: `git town append phase/2b/feat/2/e2e-session-tests`
+**Depends on**: ph2bf1
+**Goal**: E2E tests for session management RPCs
+**User Stories**: US1 (Basic Interception), US3 (Session Persistence)
+
+- [ ] T044 [ph2bf2] [P] Create `test_create_session_e2e()` verifying session creation via gRPC in `tests/e2e/test_session_e2e.py`
+- [ ] T045 [ph2bf2] [P] Create `test_list_sessions_e2e()` verifying created sessions are listed in `tests/e2e/test_session_e2e.py`
+- [ ] T046 [ph2bf2] Create `test_session_persists_across_restart()` stopping/starting container in `tests/e2e/test_session_e2e.py`
+
+---
+
+## ph2bf3: E2E Request Flow Tests (~180 lines)
+
+**Branch**: `git town append phase/2b/feat/3/e2e-flow-tests`
+**Depends on**: ph2bf2
+**Goal**: E2E tests for full request/decision/subscribe flow
+**User Stories**: US1 (Basic Interception), US4 (Sequential Queueing)
+
+- [ ] T047 [ph2bf3] Create `test_submit_request_e2e()` verifying request submission and pending state in `tests/e2e/test_flow_e2e.py`
+- [ ] T048 [ph2bf3] Create `test_submit_decision_e2e()` verifying decision resolves pending request in `tests/e2e/test_flow_e2e.py`
+- [ ] T049 [ph2bf3] Create `test_subscribe_receives_events_e2e()` verifying streaming events via Subscribe in `tests/e2e/test_flow_e2e.py`
+- [ ] T050 [ph2bf3] Create `test_full_round_trip_e2e()` verifying complete request→decision→event flow in `tests/e2e/test_flow_e2e.py`
+- [ ] T051 [ph2bf3] Create `test_fifo_ordering_e2e()` verifying parallel requests are queued in order in `tests/e2e/test_flow_e2e.py`
 
 ---
 
