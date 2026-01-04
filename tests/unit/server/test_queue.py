@@ -101,12 +101,12 @@ class TestRequestQueue:
     await queue.enqueue(event2)
 
     # get_current should return first event
-    current = await queue.get_current("session-1")
+    current = queue.get_current("session-1")
     assert current is not None
     assert current.event_id == "event-1"
 
     # Calling get_current again should return the same event
-    current_again = await queue.get_current("session-1")
+    current_again = queue.get_current("session-1")
     assert current_again is not None
     assert current_again.event_id == "event-1"
 
@@ -115,7 +115,7 @@ class TestRequestQueue:
     """Test that get_current returns None for empty queue."""
     queue = RequestQueue()
 
-    current = await queue.get_current("nonexistent-session")
+    current = queue.get_current("nonexistent-session")
 
     assert current is None
 
@@ -130,13 +130,13 @@ class TestRequestQueue:
     await queue.enqueue(event2)
 
     # Current should be first event
-    current = await queue.get_current("session-1")
+    current = queue.get_current("session-1")
     assert current is not None
     assert current.event_id == "event-1"
 
     # After dequeue, current should update to second event
     await queue.dequeue("session-1")
-    current = await queue.get_current("session-1")
+    current = queue.get_current("session-1")
     assert current is not None
     assert current.event_id == "event-2"
 
@@ -149,7 +149,7 @@ class TestRequestQueue:
     await queue.enqueue(event)
     await queue.dequeue("session-1")
 
-    current = await queue.get_current("session-1")
+    current = queue.get_current("session-1")
     assert current is None
 
   @pytest.mark.asyncio
