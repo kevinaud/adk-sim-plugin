@@ -35,13 +35,18 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Generate protos
+      - name: Generate Python protos
         run: |
           # Install buf CLI
           curl -sSL https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64 -o /usr/local/bin/buf
           chmod +x /usr/local/bin/buf
-          # Generate proto code
-          make generate
+          # Generate Python proto code only (skip TypeScript)
+          rm -rf adk_agent_sim/generated
+          buf generate --template buf.gen.python.yaml
+          touch adk_agent_sim/generated/__init__.py
+          # Format generated code
+          uv run ruff check --fix adk_agent_sim/generated 2>/dev/null || true
+          uv run ruff format adk_agent_sim/generated
 
       - name: Build and start backend
         run: |
