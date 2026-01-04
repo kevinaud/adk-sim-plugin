@@ -85,3 +85,30 @@ class SessionManager:
     self._active_sessions[session_id] = session
 
     return session
+
+  async def get_session(self, session_id: str) -> SimulatorSession | None:
+    """Retrieve a session by ID, checking memory cache first then database.
+
+    Implements a read-through caching pattern:
+    1. First checks the in-memory active sessions cache
+    2. If not found, queries the database via the session repository
+    3. If found in database, loads it into the memory cache (reconnection)
+
+    Args:
+        session_id: The unique identifier of the session to retrieve.
+
+    Returns:
+        The SimulatorSession if found, or None if the session doesn't exist.
+    """
+    # Check memory cache first for fast lookup
+    if session_id in self._active_sessions:
+      return self._active_sessions[session_id]
+
+    # Cache miss - try loading from database
+    session = await self._session_repo.get_by_id(session_id)
+
+    if session is not None:
+      # Reconnection scenario: load into cache for subsequent lookups
+      self._active_sessions[session_id] = session
+
+    return session
