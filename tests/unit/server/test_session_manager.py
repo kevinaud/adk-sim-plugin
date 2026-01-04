@@ -1,15 +1,12 @@
 """Tests for SessionManager."""
 
 import uuid
-from typing import TYPE_CHECKING
 
 import pytest
 
 from adk_agent_sim.generated.adksim.v1 import SimulatorSession
-
-if TYPE_CHECKING:
-  from adk_agent_sim.server.session_manager import SessionManager
-  from tests.fixtures import FakeEventRepository, FakeSessionRepository
+from adk_agent_sim.server.session_manager import SessionManager
+from tests.fixtures import FakeEventRepository, FakeSessionRepository
 
 
 class TestSessionManager:
@@ -17,9 +14,9 @@ class TestSessionManager:
 
   def test_initialization(
     self,
-    manager: "SessionManager",  # noqa: UP037
-    session_repo: "FakeSessionRepository",  # noqa: UP037
-    event_repo: "FakeEventRepository",  # noqa: UP037
+    manager: SessionManager,
+    session_repo: FakeSessionRepository,
+    event_repo: FakeEventRepository,
   ) -> None:
     """Test that SessionManager can be initialized with repositories."""
     assert manager is not None
