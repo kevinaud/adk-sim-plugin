@@ -60,7 +60,7 @@ class SimulatorService(SimulatorServiceBase):
 
   async def list_sessions(
     self,
-    list_sessions_request: "ListSessionsRequest",  # noqa: UP037
+    list_sessions_request: ListSessionsRequest,
   ) -> ListSessionsResponse:
     """List sessions with pagination.
 

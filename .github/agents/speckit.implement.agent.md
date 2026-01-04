@@ -51,6 +51,33 @@ Parse these from `$ARGUMENTS`.
 - Exception: `TYPE_CHECKING` imports belong in the `if TYPE_CHECKING:` block
 - Runtime imports go at module level; type-only imports go in TYPE_CHECKING
 
+#### Python TYPE_CHECKING Pattern (CRITICAL)
+When a type is only used in type hints (not at runtime), use this pattern:
+
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from some_module import SomeType  # Only imported during type checking
+
+class MyClass:
+  def my_method(self, param: SomeType) -> SomeType:  # Use type directly, NO quotes
+    ...
+```
+
+**Rules:**
+1. Import types in `if TYPE_CHECKING:` block if they're only used for type hints
+2. Use the types directly in annotations — **NO quoted strings** like `"SomeType"`
+3. **NEVER** use `from __future__ import annotations` (Python 3.14+ has deferred evaluation built-in)
+4. **NEVER** use `# noqa: UP037` to suppress quoted annotation warnings — this is PROHIBITED
+
+**Why this works:** Python 3.14 has PEP 649 deferred annotation evaluation. Annotations are not evaluated at runtime unless explicitly requested, so forward references work without quotes.
+
+**If you see ruff error UP037 (quoted annotation):**
+- Remove the quotes from the annotation
+- Ensure the type is imported in `TYPE_CHECKING` block
+- Do NOT add `# noqa: UP037` — fix the root cause instead
+
 #### betterproto Serialization
 - **Serialize**: `bytes(instance)` — NOT `instance.SerializeToString()`
 - **Deserialize**: `SomeMessage().parse(bytes_data)` — NOT `SomeMessage.FromString()`
