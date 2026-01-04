@@ -92,6 +92,77 @@ class MyClass:
 - Import `select`, `insert`, etc. from `sqlalchemy` at module top
 - Use table objects (e.g., `sessions.c.id`) for column references
 
+#### Pytest Fixtures
+- **Prefer fixtures for test setup**: Extract duplicated setup code into fixtures
+- **File-specific fixtures**: Place fixtures used only in one test file at the top of that file
+- **Shared fixtures**: Place fixtures used across multiple test files in `conftest.py`
+- **Yield fixtures for cleanup**: Use `yield` in fixtures that need teardown logic
+- **Parameterized fixtures**: Use `@pytest.fixture(params=[...])` for testing multiple scenarios
+
+Example file-specific fixture:
+```python
+@pytest.fixture
+def simulator_service() -> SimulatorService:
+  """Create a SimulatorService with test dependencies."""
+  db = Database(engine)
+  broadcaster = EventBroadcaster()
+  return SimulatorService(db=db, broadcaster=broadcaster)
+```
+
+#### PyHamcrest for Declarative Assertions
+Use `PyHamcrest` for declarative test assertions with proper type checking.
+
+**Philosophy**: Use matchers to verify object properties cleanly, with full Pyright support.
+
+**Installation**: Already in dev dependencies (`pyhamcrest>=2.1.0`)
+
+**Common Matchers**:
+| Matcher | Purpose | Example |
+|---------|---------|---------|
+| `equal_to(x)` | Exact equality | `assert_that(result, equal_to(expected))` |
+| `instance_of(T)` | Type check | `assert_that(obj.id, instance_of(str))` |
+| `has_properties(...)` | Object properties | `assert_that(obj, has_properties(id=instance_of(str), name="x"))` |
+| `has_length(n)` | Collection length | `assert_that(items, has_length(3))` |
+| `contains_exactly(...)` | Exact list match | `assert_that(items, contains_exactly(a, b, c))` |
+| `has_item(x)` | Contains element | `assert_that(items, has_item(x))` |
+| `starts_with(s)` | String prefix | `assert_that(name, starts_with("user_"))` |
+| `greater_than(n)` | Numeric comparison | `assert_that(count, greater_than(0))` |
+
+**Usage Patterns**:
+
+1. **Fully deterministic output** - use `equal_to`:
+```python
+from hamcrest import assert_that, equal_to
+
+assert_that(result, equal_to(expected))
+```
+
+2. **Fuzzy matching dynamic fields** - use `has_properties`:
+```python
+from hamcrest import assert_that, has_properties, instance_of
+
+# Check object properties with matchers for dynamic fields
+assert_that(response.session, has_properties(
+    id=instance_of(str),           # Dynamic: just verify it's a string
+    description="test session",    # Static: exact value match
+    status="ACTIVE",               # Static: exact value match
+))
+```
+
+3. **Nested object matching**:
+```python
+assert_that(response, has_properties(
+    sessions=has_length(2),
+    next_page_token=instance_of(str),
+))
+assert_that(response.sessions[0], has_properties(
+    id=instance_of(str),
+    description="session 2",
+))
+```
+
+**Key Pattern**: Use `has_properties` with `instance_of(T)` for dynamic fields (IDs, timestamps) and literal values for static fields.
+
 ---
 
 ## Execution Workflow
