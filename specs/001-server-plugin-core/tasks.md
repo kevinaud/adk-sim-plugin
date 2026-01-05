@@ -315,9 +315,9 @@
 **Goal**: E2E tests for session management RPCs
 **User Stories**: US1 (Basic Interception), US3 (Session Persistence)
 
-- [ ] T044 [ph2bf2] [P] Create `test_create_session_e2e()` verifying session creation via gRPC in `tests/e2e/test_session_e2e.py`
-- [ ] T045 [ph2bf2] [P] Create `test_list_sessions_e2e()` verifying created sessions are listed in `tests/e2e/test_session_e2e.py`
-- [ ] T046 [ph2bf2] Create `test_session_persists_across_restart()` stopping/starting container in `tests/e2e/test_session_e2e.py`
+- [x] T044 [ph2bf2] [P] Create `test_create_session_e2e()` verifying session creation via gRPC in `tests/e2e/test_session_e2e.py`
+- [x] T045 [ph2bf2] [P] Create `test_list_sessions_e2e()` verifying created sessions are listed in `tests/e2e/test_session_e2e.py`
+- [x] T046 [ph2bf2] Create `test_session_persists_across_restart()` stopping/starting container in `tests/e2e/test_session_e2e.py`
 
 ---
 
