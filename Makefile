@@ -13,7 +13,7 @@
 #   make quality     - Run all quality checks
 # ============================================================
 
-.PHONY: help generate clean server frontend test test-unit test-integration quality lint format all dev docker-up docker-up-d docker-down docker-rebuild
+.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild
 
 # Default target
 .DEFAULT_GOAL := help
@@ -54,6 +54,7 @@ help:
 	@echo "  make test         - Run all tests"
 	@echo "  make test-unit    - Run unit tests only"
 	@echo "  make test-int     - Run integration tests only"
+	@echo "  make test-e2e     - Run E2E tests (requires Docker)"
 	@echo ""
 	@echo "Quality:"
 	@echo "  make quality      - Run all quality checks (lint, format, types)"
@@ -149,6 +150,10 @@ test-unit: generate
 test-int: generate
 	@echo "🧪 Running integration tests..."
 	uv run pytest tests/integration -v
+
+test-e2e:
+	@echo "🧪 Running E2E tests (requires Docker)..."
+	uv run pytest tests/e2e --run-e2e -v
 
 # ============================================================
 # Quality Checks
