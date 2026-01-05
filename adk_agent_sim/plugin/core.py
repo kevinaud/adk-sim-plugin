@@ -27,7 +27,8 @@ import betterproto
 from adk_agent_sim.plugin.futures import PendingFutureRegistry
 
 if TYPE_CHECKING:
-  from adk_agent_sim.plugin.client import SimulatorClient
+  from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
+  from adk_agent_sim.plugin.client_factory import SimulatorClientFactory
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,8 @@ class SimulatorPlugin:
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
-    self._client: SimulatorClient | None = None
+    self._factory: SimulatorClientFactory | None = None
+    self._stub: SimulatorServiceStub | None = None
 
   def should_intercept(self, agent_name: str) -> bool:
     """Check if a given agent should be intercepted.
@@ -164,12 +166,17 @@ class SimulatorPlugin:
     Idempotency is handled by PendingFutureRegistry.resolve() which
     returns False for already-resolved or unknown turn_ids.
     """
-    if self._client is None:
-      logger.error("_listen_loop called without client - exiting")
+    from adk_agent_sim.generated.adksim.v1 import SubscribeRequest
+
+    if self._stub is None or self.session_id is None:
+      logger.error("_listen_loop called without stub or session_id - exiting")
       return
 
     try:
-      async for event in self._client.subscribe():
+      async for response in self._stub.subscribe(
+        SubscribeRequest(session_id=self.session_id)
+      ):
+        event = response.event
         # Determine the payload type using betterproto's oneof helper
         field_name, payload = betterproto.which_one_of(event, "payload")
 
