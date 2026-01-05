@@ -311,4 +311,5 @@ async def test_fifo_ordering_e2e(grpc_channel: Channel) -> None:
   for i in range(3):
     assert_that(received_events[i + 3].turn_id, is_(turn_ids[i]))
     assert_that(received_events[i + 3].event_id, is_(decision_event_ids[i]))
-    assert_that(received_events[i + 3].agent_name, is_("User"))
+    # Decision events don't have an agent_name (they come from UI, not an agent)
+    assert_that(received_events[i + 3].agent_name, is_(""))
