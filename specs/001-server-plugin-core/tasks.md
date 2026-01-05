@@ -432,11 +432,11 @@
 **Goal**: Map turn_id to Future for blocking await
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T025 [ph3f7] Create `PendingFutureRegistry` class with `dict[str, asyncio.Future]` in `adk_agent_sim/plugin/futures.py`
-- [ ] T026 [ph3f7] Implement `create(turn_id: str) -> asyncio.Future` creating and storing future in `adk_agent_sim/plugin/futures.py`
-- [ ] T027 [ph3f7] Implement `resolve(turn_id: str, response: GenerateContentResponse)` setting future result in `adk_agent_sim/plugin/futures.py`
-- [ ] T028 [ph3f7] Implement `cancel_all()` for shutdown cleanup in `adk_agent_sim/plugin/futures.py`
-- [ ] T029 [ph3f7] Add `PendingFutureRegistry` tests in `tests/unit/plugin/test_futures.py`
+- [x] T025 [ph3f7] Create `PendingFutureRegistry` class with `dict[str, asyncio.Future]` in `adk_agent_sim/plugin/futures.py`
+- [x] T026 [ph3f7] Implement `create(turn_id: str) -> asyncio.Future` creating and storing future in `adk_agent_sim/plugin/futures.py`
+- [x] T027 [ph3f7] Implement `resolve(turn_id: str, response: GenerateContentResponse)` setting future result in `adk_agent_sim/plugin/futures.py`
+- [x] T028 [ph3f7] Implement `cancel_all()` for shutdown cleanup in `adk_agent_sim/plugin/futures.py`
+- [x] T029 [ph3f7] Add `PendingFutureRegistry` tests in `tests/unit/plugin/test_futures.py`
 
 ---
 
