@@ -21,13 +21,21 @@ import contextlib
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import betterproto
 
-from adk_agent_sim.plugin.client import SimulatorClient
+from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,
+  SubscribeRequest,
+)
+from adk_agent_sim.plugin.client_factory import SimulatorClientFactory
 from adk_agent_sim.plugin.config import PluginConfig
 from adk_agent_sim.plugin.futures import PendingFutureRegistry
+
+if TYPE_CHECKING:
+  from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +90,8 @@ class SimulatorPlugin:
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
-    self._client: SimulatorClient | None = None
+    self._factory: SimulatorClientFactory | None = None
+    self._stub: SimulatorServiceStub | None = None
 
   def should_intercept(self, agent_name: str) -> bool:
     """Check if a given agent should be intercepted.
@@ -116,22 +125,24 @@ class SimulatorPlugin:
     Raises:
         ConnectionError: If unable to connect to the server.
     """
-    # Create config and client
+    # Create config and factory
     config = PluginConfig(server_url=self.server_url)
-    self._client = SimulatorClient(config)
+    self._factory = SimulatorClientFactory(config)
 
-    # Connect to server
-    await self._client.connect()
+    # Get the stub (connects automatically)
+    self._stub = await self._factory.get_simulator_stub()
 
-    # Create session
-    session = await self._client.create_session(description or None)
-    self.session_id = session.id
+    # Create session using stub directly
+    response = await self._stub.create_session(
+      CreateSessionRequest(description=description or "")
+    )
+    self.session_id = response.session.id
 
     # Start background listener task
     self._listen_task = asyncio.create_task(self._listen_loop())
 
     # Build the session URL
-    session_url = self._build_session_url(session.id)
+    session_url = self._build_session_url(self.session_id)
 
     # Print the decorated banner
     self._print_session_banner(session_url)
@@ -229,12 +240,15 @@ class SimulatorPlugin:
     Idempotency is handled by PendingFutureRegistry.resolve() which
     returns False for already-resolved or unknown turn_ids.
     """
-    if self._client is None:
-      logger.error("_listen_loop called without client - exiting")
+    if self._stub is None or self.session_id is None:
+      logger.error("_listen_loop called without stub or session_id - exiting")
       return
 
     try:
-      async for event in self._client.subscribe():
+      async for response in self._stub.subscribe(
+        SubscribeRequest(session_id=self.session_id)
+      ):
+        event = response.event
         # Determine the payload type using betterproto's oneof helper
         field_name, payload = betterproto.which_one_of(event, "payload")
 
@@ -279,4 +293,5 @@ class SimulatorPlugin:
       self._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await self._listen_task
-    # TODO: Close gRPC channel
+    if self._factory:
+      await self._factory.close()
