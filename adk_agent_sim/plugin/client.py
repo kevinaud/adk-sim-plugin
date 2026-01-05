@@ -20,12 +20,24 @@ Usage:
 
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from grpclib.client import Channel
 
-from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
+from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,
+  SimulatorServiceStub,
+  SubmitRequestRequest,
+  SubscribeRequest,
+)
 
 if TYPE_CHECKING:
+  from collections.abc import AsyncIterator
+
+  from adk_agent_sim.generated.adksim.v1 import SessionEvent, SimulatorSession
+  from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
+    GenerateContentRequest,
+  )
   from adk_agent_sim.plugin.config import PluginConfig
 
 
@@ -39,6 +51,7 @@ class SimulatorClient:
       config: The plugin configuration containing server connection details.
       channel: The grpclib Channel (set after connect()).
       stub: The SimulatorServiceStub (set after connect()).
+      session_id: The ID of the current session (set after create_session()).
   """
 
   def __init__(self, config: PluginConfig) -> None:
@@ -50,6 +63,7 @@ class SimulatorClient:
     self._config = config
     self._channel: Channel | None = None
     self._stub: SimulatorServiceStub | None = None
+    self._session_id: str | None = None
 
   @property
   def config(self) -> PluginConfig:
@@ -65,6 +79,11 @@ class SimulatorClient:
   def stub(self) -> SimulatorServiceStub | None:
     """Get the service stub (None if not connected)."""
     return self._stub
+
+  @property
+  def session_id(self) -> str | None:
+    """Get the current session ID (None if no session created)."""
+    return self._session_id
 
   @property
   def is_connected(self) -> bool:
@@ -132,3 +151,97 @@ class SimulatorClient:
       self._channel.close()
       self._channel = None
       self._stub = None
+
+  async def create_session(self, description: str | None = None) -> SimulatorSession:
+    """Create a new simulation session.
+
+    Calls the CreateSession RPC on the server and stores the returned session_id
+    for use in subsequent calls.
+
+    Args:
+        description: Optional human-readable description for the session.
+
+    Returns:
+        The created SimulatorSession containing id, created_at, and description.
+
+    Raises:
+        RuntimeError: If the client is not connected (call connect() first).
+    """
+    if self._stub is None:
+      raise RuntimeError("Client is not connected. Call connect() first.")
+
+    request = CreateSessionRequest(description=description or "")
+    response = await self._stub.create_session(request)
+    self._session_id = response.session.id
+    return response.session
+
+  async def submit_request(
+    self, turn_id: str, agent_name: str, request: GenerateContentRequest
+  ) -> str:
+    """Submit an intercepted LLM request to the server.
+
+    Calls the SubmitRequest RPC on the server using the stored session_id.
+
+    Args:
+        turn_id: Correlation ID for this request/response pair.
+        agent_name: Name of the agent making the request.
+        request: The intercepted GenerateContentRequest from the agent.
+
+    Returns:
+        The event_id assigned to this request by the server.
+
+    Raises:
+        RuntimeError: If the client is not connected (call connect() first).
+        RuntimeError: If no session has been created (call create_session() first).
+    """
+    if self._stub is None:
+      raise RuntimeError("Client is not connected. Call connect() first.")
+
+    if self._session_id is None:
+      raise RuntimeError("No session created. Call create_session() first.")
+
+    submit_request = SubmitRequestRequest(
+      session_id=self._session_id,
+      turn_id=turn_id,
+      agent_name=agent_name,
+      request=request,
+    )
+    response = await self._stub.submit_request(submit_request)
+    return response.event_id
+
+  async def subscribe(
+    self, client_id: str | None = None
+  ) -> AsyncIterator[SessionEvent]:
+    """Subscribe to the event stream for the current session.
+
+    Opens a server-side streaming RPC to receive session events in real-time.
+    The server will first replay any historical events, then stream live events.
+
+    Args:
+        client_id: Optional client identifier for logging/debugging.
+            If not provided, a UUID will be generated.
+
+    Yields:
+        SessionEvent objects as they are received from the server.
+
+    Raises:
+        RuntimeError: If the client is not connected (call connect() first).
+        RuntimeError: If no session has been created (call create_session() first).
+
+    Example:
+        async for event in client.subscribe():
+            print(f"Received event: {event.event_id}")
+    """
+    if self._stub is None:
+      raise RuntimeError("Client is not connected. Call connect() first.")
+
+    if self._session_id is None:
+      raise RuntimeError("No session created. Call create_session() first.")
+
+    request = SubscribeRequest(
+      session_id=self._session_id,
+      client_id=client_id or str(uuid4()),
+    )
+
+    async for response in self._stub.subscribe(request):
+      yield response.event
