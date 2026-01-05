@@ -31,10 +31,10 @@ if TYPE_CHECKING:
 
 @pytest.mark.e2e
 async def test_submit_request_e2e(grpc_channel: Channel) -> None:
-  """Verify request submission creates event with pending state.
+  """Verify request submission returns an event ID.
 
   T047: Create session, submit request with turn_id,
-  verify response contains event_id and status is PENDING.
+  verify response contains event_id.
   """
   stub = SimulatorServiceStub(grpc_channel)
 
@@ -227,7 +227,8 @@ async def test_full_round_trip_e2e(grpc_channel: Channel) -> None:
   # Second event should be the decision
   decision_event = received_events[1]
   assert_that(decision_event.turn_id, is_(turn_id))
-  assert_that(decision_event.agent_name, is_("User"))
+  # Decision events don't have an agent_name (they come from UI, not an agent)
+  assert_that(decision_event.agent_name, is_(""))
   assert_that(decision_event.event_id, is_(decision_response.event_id))
 
 

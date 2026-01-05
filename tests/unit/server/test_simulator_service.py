@@ -255,7 +255,8 @@ class TestSimulatorService:
     decision_event = stored_events[1]
     assert decision_event.event_id == response.event_id
     assert decision_event.llm_response == GenerateContentResponse()
-    assert decision_event.agent_name == "User"
+    # Decision events don't have an agent_name (they come from UI, not an agent)
+    assert decision_event.agent_name == ""
 
     # Verify queue was dequeued
     assert simulator_service.request_queue.get_current(session.id) is None

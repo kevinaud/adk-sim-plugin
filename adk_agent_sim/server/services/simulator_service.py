@@ -146,7 +146,8 @@ class SimulatorService(SimulatorServiceBase):
       session_id=submit_decision_request.session_id,
       timestamp=datetime.now(UTC),
       turn_id=submit_decision_request.turn_id,
-      agent_name="User",
+      # Decision events don't have an agent_name - they come from UI, not an agent
+      agent_name="",
       llm_response=submit_decision_request.response,
     )
 
