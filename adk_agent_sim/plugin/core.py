@@ -28,7 +28,12 @@ from uuid import uuid4
 import betterproto
 from grpclib.exceptions import GRPCError, StreamTerminatedError
 
-from adk_agent_sim.plugin.client import SimulatorClient
+from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,
+  SubmitRequestRequest,
+  SubscribeRequest,
+)
+from adk_agent_sim.plugin.client_factory import SimulatorClientFactory
 from adk_agent_sim.plugin.config import PluginConfig
 from adk_agent_sim.plugin.converter import ADKProtoConverter
 from adk_agent_sim.plugin.futures import PendingFutureRegistry
@@ -36,6 +41,8 @@ from adk_agent_sim.plugin.futures import PendingFutureRegistry
 if TYPE_CHECKING:
   from google.adk.agents.callback_context import CallbackContext
   from google.adk.models import LlmRequest, LlmResponse
+
+  from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +97,8 @@ class SimulatorPlugin:
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
-    self._client: SimulatorClient | None = None
+    self._factory: SimulatorClientFactory | None = None
+    self._stub: SimulatorServiceStub | None = None
     self._shutting_down = False
 
     # Reconnection settings
@@ -130,22 +138,24 @@ class SimulatorPlugin:
     Raises:
         ConnectionError: If unable to connect to the server.
     """
-    # Create config and client
+    # Create config and factory
     config = PluginConfig(server_url=self.server_url)
-    self._client = SimulatorClient(config)
+    self._factory = SimulatorClientFactory(config)
 
-    # Connect to server
-    await self._client.connect()
+    # Get stub (connects automatically if needed)
+    self._stub = await self._factory.get_simulator_stub()
 
     # Create session
-    session = await self._client.create_session(description or None)
-    self.session_id = session.id
+    response = await self._stub.create_session(
+      CreateSessionRequest(description=description or "")
+    )
+    self.session_id = response.session.id
 
     # Start background listener task
     self._listen_task = asyncio.create_task(self._listen_loop())
 
     # Build the session URL
-    session_url = self._build_session_url(session.id)
+    session_url = self._build_session_url(self.session_id)
 
     # Print the decorated banner
     self._print_session_banner(session_url)
@@ -223,8 +233,8 @@ class SimulatorPlugin:
     if not self.should_intercept(agent_name):
       return None
 
-    if self._client is None:
-      logger.error("before_model_callback called without initialized client")
+    if self._stub is None:
+      logger.error("before_model_callback called without initialized stub")
       raise RuntimeError("Plugin not initialized. Call initialize() first.")
 
     # T041: Generate turn_id UUID and create Future via PendingFutureRegistry
@@ -235,8 +245,15 @@ class SimulatorPlugin:
     # LlmRequest → GenerateContentRequest
     proto_request = ADKProtoConverter.llm_request_to_proto(llm_request)
 
-    # T043: Submit request via SimulatorClient.submit_request()
-    await self._client.submit_request(turn_id, agent_name, proto_request)
+    # T043: Submit request via stub.submit_request()
+    await self._stub.submit_request(
+      SubmitRequestRequest(
+        session_id=self.session_id or "",
+        turn_id=turn_id,
+        agent_name=agent_name,
+        request=proto_request,
+      )
+    )
 
     # T044: Log waiting state
     logger.info(
@@ -268,15 +285,21 @@ class SimulatorPlugin:
     Idempotency is handled by PendingFutureRegistry.resolve() which
     returns False for already-resolved or unknown turn_ids (T051).
     """
-    if self._client is None:
-      logger.error("_listen_loop called without client - exiting")
+    if self._stub is None:
+      logger.error("_listen_loop called without stub - exiting")
       return
 
     backoff = self._initial_backoff
 
     while not self._shutting_down:
       try:
-        async for event in self._client.subscribe():
+        async for response in self._stub.subscribe(
+          SubscribeRequest(
+            session_id=self.session_id or "",
+            client_id=str(uuid4()),
+          )
+        ):
+          event = response.event
           # Reset backoff on successful message
           backoff = self._initial_backoff
 
@@ -356,15 +379,14 @@ class SimulatorPlugin:
     if self.session_id is None:
       raise RuntimeError("Cannot reconnect: no session_id stored")
 
-    if self._client is None:
-      raise RuntimeError("Cannot reconnect: client not initialized")
+    if self._factory is None:
+      raise RuntimeError("Cannot reconnect: factory not initialized")
 
-    # Close existing channel if any
-    await self._client.close()
+    # Close existing channel
+    await self._factory.close()
 
-    # Reconnect with existing session_id
-    await self._client.connect()
-    self._client._session_id = self.session_id  # Restore session_id
+    # Get a fresh stub (reconnects automatically)
+    self._stub = await self._factory.get_simulator_stub()
 
   async def close(self) -> None:
     """Clean up resources and close connections."""
@@ -373,5 +395,5 @@ class SimulatorPlugin:
       self._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await self._listen_task
-    if self._client:
-      await self._client.close()
+    if self._factory:
+      await self._factory.close()
