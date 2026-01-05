@@ -63,13 +63,6 @@ class TestSimulatorPlugin:
     assert plugin.should_intercept("router") is True
     assert plugin.should_intercept("other_agent") is False
 
-  @pytest.mark.asyncio
-  async def test_before_model_callback_not_implemented(self) -> None:
-    """Test that before_model_callback raises NotImplementedError."""
-    plugin = SimulatorPlugin()
-    with pytest.raises(NotImplementedError):
-      await plugin.before_model_callback({}, "test_agent")
-
 
 @dataclass
 class FakeSimulatorClient:
@@ -566,3 +559,360 @@ class TestInitialize:
       plugin._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await plugin._listen_task
+
+
+@dataclass
+class FakeCallbackContext:
+  """Fake CallbackContext for testing before_model_callback.
+
+  Provides the minimal interface needed for agent name lookup.
+  """
+
+  agent_name: str
+
+
+@dataclass
+class FakeInterceptingClient:
+  """Fake SimulatorClient for testing before_model_callback.
+
+  Tracks submitted requests and provides controlled response via event stream.
+  Uses an async queue to properly handle concurrent submit/subscribe operations.
+  """
+
+  session_id: str = "session-123"
+  submitted_requests: list[tuple[str, str, GenerateContentRequest]] = field(
+    default_factory=list
+  )
+  response_to_send: GenerateContentResponse | None = None
+  _event_queue: asyncio.Queue[SessionEvent] = field(default_factory=asyncio.Queue)
+
+  async def submit_request(
+    self, turn_id: str, agent_name: str, request: GenerateContentRequest
+  ) -> str:
+    """Record the submitted request and return a fake event_id."""
+    self.submitted_requests.append((turn_id, agent_name, request))
+    # Dynamically create response event for this turn_id and put in queue
+    if self.response_to_send:
+      event = SessionEvent(
+        event_id=f"event-{turn_id}",
+        session_id=self.session_id,
+        timestamp=datetime.now(UTC),
+        turn_id=turn_id,
+        agent_name=agent_name,
+        llm_response=self.response_to_send,
+      )
+      await self._event_queue.put(event)
+    return f"event-{turn_id}"
+
+  async def subscribe(
+    self, client_id: str | None = None
+  ) -> AsyncIterator[SessionEvent]:
+    """Yield events from the queue as they arrive."""
+    while True:
+      event = await self._event_queue.get()
+      yield event
+
+
+class TestBeforeModelCallback:
+  """Tests for SimulatorPlugin.before_model_callback()."""
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_bypasses_non_targeted_agents(self) -> None:
+    """before_model_callback returns None for non-targeted agents."""
+    # Arrange - target only "orchestrator"
+    plugin = SimulatorPlugin(target_agents={"orchestrator"})
+    callback_context = FakeCallbackContext(agent_name="worker_agent")
+
+    # Create a minimal LlmRequest using ADK types
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Hello")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Act
+    result = await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Assert - returns None to let request proceed to real LLM
+    assert_that(result, is_(None))
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_intercepts_all_when_no_targets(self) -> None:
+    """before_model_callback intercepts all agents when target_agents is empty."""
+    # Arrange
+    response_text = "Human provided response"
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text=response_text)],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_client = FakeInterceptingClient(response_to_send=response)
+    plugin = SimulatorPlugin()  # No target_agents = intercept all
+    plugin._client = fake_client  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="any_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Test message")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Start listen loop to resolve futures
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act
+    result = await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - request was submitted
+    assert_that(len(fake_client.submitted_requests), equal_to(1))
+    _, submitted_agent_name, proto_req = fake_client.submitted_requests[0]
+    assert_that(submitted_agent_name, equal_to("any_agent"))
+    assert_that(proto_req.model, equal_to("models/gemini-2.0-flash"))
+
+    # Assert - response was returned
+    assert result is not None
+    assert result.content is not None
+    assert result.content.parts is not None
+    assert_that(result.content.parts[0].text, equal_to(response_text))
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_intercepts_targeted_agent(self) -> None:
+    """before_model_callback intercepts only targeted agents."""
+    # Arrange
+    response_text = "Orchestrator response"
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text=response_text)],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_client = FakeInterceptingClient(response_to_send=response)
+    plugin = SimulatorPlugin(target_agents={"orchestrator", "router"})
+    plugin._client = fake_client  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="orchestrator")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-pro",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Process this")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Start listen loop to resolve futures
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act
+    result = await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - request was intercepted
+    assert_that(len(fake_client.submitted_requests), equal_to(1))
+
+    # Assert - correct response
+    assert result is not None
+    assert result.content is not None
+    assert result.content.parts is not None
+    assert_that(result.content.parts[0].text, equal_to(response_text))
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_raises_without_initialization(self) -> None:
+    """before_model_callback raises RuntimeError when client is not initialized."""
+    # Arrange
+    plugin = SimulatorPlugin()
+    plugin._client = None  # Explicitly not initialized
+    callback_context = FakeCallbackContext(agent_name="test_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Hello")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Act & Assert
+    with pytest.raises(RuntimeError, match="Plugin not initialized"):
+      await plugin.before_model_callback(
+        callback_context,  # type: ignore[arg-type]
+        llm_request,
+      )
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_generates_unique_turn_ids(self) -> None:
+    """before_model_callback generates unique turn_id for each call."""
+    # Arrange
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text="Response")],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_client = FakeInterceptingClient(response_to_send=response)
+    plugin = SimulatorPlugin()
+    plugin._client = fake_client  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="test_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Hello")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Start listen loop
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act - make two calls
+    await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+    await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - two different turn_ids
+    assert_that(len(fake_client.submitted_requests), equal_to(2))
+    turn_id_1 = fake_client.submitted_requests[0][0]
+    turn_id_2 = fake_client.submitted_requests[1][0]
+    assert turn_id_1 != turn_id_2
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_converts_request_to_proto(self) -> None:
+    """before_model_callback correctly converts LlmRequest to GenerateContentRequest."""
+    # Arrange
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text="Response")],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_client = FakeInterceptingClient(response_to_send=response)
+    plugin = SimulatorPlugin()
+    plugin._client = fake_client  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="test_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="What is 2+2?")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(
+        temperature=0.7,
+        system_instruction="You are a math tutor.",
+      ),
+    )
+
+    # Start listen loop
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act
+    await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - proto request was correctly converted
+    _, _, proto_req = fake_client.submitted_requests[0]
+    assert_that(proto_req.model, equal_to("models/gemini-2.0-flash"))
+    assert_that(proto_req.contents[0].parts[0].text, equal_to("What is 2+2?"))
+    assert proto_req.system_instruction is not None
+    assert_that(
+      proto_req.system_instruction.parts[0].text, equal_to("You are a math tutor.")
+    )
