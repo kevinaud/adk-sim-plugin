@@ -406,9 +406,9 @@
 **Goal**: Client method to submit intercepted LLM requests
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T019 [ph3f5] Implement `submit_request(turn_id: str, agent_name: str, request: GenerateContentRequest) -> str` in `adk_agent_sim/plugin/client.py`
-- [ ] T020 [ph3f5] Return `event_id` from server response in `adk_agent_sim/plugin/client.py`
-- [ ] T021 [ph3f5] Add `submit_request()` tests in `tests/unit/plugin/test_client.py`
+- [x] T019 [ph3f5] Implement `submit_request(turn_id: str, agent_name: str, request: GenerateContentRequest) -> str` in `adk_agent_sim/plugin/client.py`
+- [x] T020 [ph3f5] Return `event_id` from server response in `adk_agent_sim/plugin/client.py`
+- [x] T021 [ph3f5] Add `submit_request()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 

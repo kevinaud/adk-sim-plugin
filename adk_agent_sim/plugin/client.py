@@ -26,10 +26,14 @@ from grpclib.client import Channel
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
   SimulatorServiceStub,
+  SubmitRequestRequest,
 )
 
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+  from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
+    GenerateContentRequest,
+  )
   from adk_agent_sim.plugin.config import PluginConfig
 
 
@@ -166,3 +170,37 @@ class SimulatorClient:
     response = await self._stub.create_session(request)
     self._session_id = response.session.id
     return response.session
+
+  async def submit_request(
+    self, turn_id: str, agent_name: str, request: GenerateContentRequest
+  ) -> str:
+    """Submit an intercepted LLM request to the server.
+
+    Calls the SubmitRequest RPC on the server using the stored session_id.
+
+    Args:
+        turn_id: Correlation ID for this request/response pair.
+        agent_name: Name of the agent making the request.
+        request: The intercepted GenerateContentRequest from the agent.
+
+    Returns:
+        The event_id assigned to this request by the server.
+
+    Raises:
+        RuntimeError: If the client is not connected (call connect() first).
+        RuntimeError: If no session has been created (call create_session() first).
+    """
+    if self._stub is None:
+      raise RuntimeError("Client is not connected. Call connect() first.")
+
+    if self._session_id is None:
+      raise RuntimeError("No session created. Call create_session() first.")
+
+    submit_request = SubmitRequestRequest(
+      session_id=self._session_id,
+      turn_id=turn_id,
+      agent_name=agent_name,
+      request=request,
+    )
+    response = await self._stub.submit_request(submit_request)
+    return response.event_id

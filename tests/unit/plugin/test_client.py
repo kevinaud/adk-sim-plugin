@@ -11,6 +11,11 @@ from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionResponse,
   SimulatorServiceStub,
   SimulatorSession,
+  SubmitRequestRequest,  # noqa: TC001  # Used at runtime in FakeSimulatorServiceStub
+  SubmitRequestResponse,
+)
+from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
+  GenerateContentRequest,
 )
 from adk_agent_sim.plugin.client import SimulatorClient
 from adk_agent_sim.plugin.config import PluginConfig
@@ -26,11 +31,17 @@ class FakeSimulatorServiceStub:
   def __init__(self) -> None:
     """Initialize the fake stub with default behavior."""
     self.create_session_calls: list[CreateSessionRequest] = []
+    self.submit_request_calls: list[SubmitRequestRequest] = []
     self._next_session_id: str = str(uuid4())
+    self._next_event_id: str = str(uuid4())
 
   def set_next_session_id(self, session_id: str) -> None:
     """Configure the session ID to return on the next create_session call."""
     self._next_session_id = session_id
+
+  def set_next_event_id(self, event_id: str) -> None:
+    """Configure the event ID to return on the next submit_request call."""
+    self._next_event_id = event_id
 
   async def create_session(
     self,
@@ -48,6 +59,18 @@ class FakeSimulatorServiceStub:
       description=request.description,
     )
     return CreateSessionResponse(session=session)
+
+  async def submit_request(
+    self,
+    request: SubmitRequestRequest,
+    *,
+    timeout: float | None = None,  # noqa: ASYNC109
+    deadline: object | None = None,
+    metadata: object | None = None,
+  ) -> SubmitRequestResponse:
+    """Fake submit_request RPC returning a configurable event ID."""
+    self.submit_request_calls.append(request)
+    return SubmitRequestResponse(event_id=self._next_event_id)
 
 
 class TestSimulatorClientInit:
@@ -366,3 +389,151 @@ class TestSimulatorClientCreateSession:
     session = await client.create_session(description="Expected description")
 
     assert_that(session.description, equal_to("Expected description"))
+
+
+class TestSimulatorClientSubmitRequest:
+  """Tests for SimulatorClient.submit_request()."""
+
+  @pytest.mark.asyncio
+  async def test_submit_request_raises_when_not_connected(self) -> None:
+    """submit_request() raises RuntimeError if not connected."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+
+    with pytest.raises(RuntimeError, match="not connected"):
+      await client.submit_request(
+        turn_id="turn-1",
+        agent_name="test-agent",
+        request=GenerateContentRequest(),
+      )
+
+  @pytest.mark.asyncio
+  async def test_submit_request_raises_when_no_session(self) -> None:
+    """submit_request() raises RuntimeError if no session created."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub (connected but no session)
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    with pytest.raises(RuntimeError, match="No session created"):
+      await client.submit_request(
+        turn_id="turn-1",
+        agent_name="test-agent",
+        request=GenerateContentRequest(),
+      )
+
+  @pytest.mark.asyncio
+  async def test_submit_request_returns_event_id(self) -> None:
+    """submit_request() returns the event_id from the server response."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    expected_event_id = "event-abc-123"
+    fake_stub.set_next_event_id(expected_event_id)
+    fake_stub.set_next_session_id("session-123")
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    event_id = await client.submit_request(
+      turn_id="turn-1",
+      agent_name="test-agent",
+      request=GenerateContentRequest(),
+    )
+
+    assert_that(event_id, equal_to(expected_event_id))
+
+  @pytest.mark.asyncio
+  async def test_submit_request_uses_stored_session_id(self) -> None:
+    """submit_request() uses the session_id from create_session()."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    expected_session_id = "stored-session-789"
+    fake_stub.set_next_session_id(expected_session_id)
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    await client.submit_request(
+      turn_id="turn-1",
+      agent_name="test-agent",
+      request=GenerateContentRequest(),
+    )
+
+    assert_that(len(fake_stub.submit_request_calls), equal_to(1))
+    assert_that(
+      fake_stub.submit_request_calls[0].session_id,
+      equal_to(expected_session_id),
+    )
+
+  @pytest.mark.asyncio
+  async def test_submit_request_passes_turn_id(self) -> None:
+    """submit_request() passes the turn_id to the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    await client.submit_request(
+      turn_id="correlation-turn-456",
+      agent_name="test-agent",
+      request=GenerateContentRequest(),
+    )
+
+    assert_that(
+      fake_stub.submit_request_calls[0].turn_id,
+      equal_to("correlation-turn-456"),
+    )
+
+  @pytest.mark.asyncio
+  async def test_submit_request_passes_agent_name(self) -> None:
+    """submit_request() passes the agent_name to the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    await client.submit_request(
+      turn_id="turn-1",
+      agent_name="my-custom-agent",
+      request=GenerateContentRequest(),
+    )
+
+    assert_that(
+      fake_stub.submit_request_calls[0].agent_name,
+      equal_to("my-custom-agent"),
+    )
+
+  @pytest.mark.asyncio
+  async def test_submit_request_passes_generate_content_request(self) -> None:
+    """submit_request() passes the GenerateContentRequest to the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    llm_request = GenerateContentRequest(model="gemini-pro")
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    await client.submit_request(
+      turn_id="turn-1",
+      agent_name="test-agent",
+      request=llm_request,
+    )
+
+    assert_that(
+      fake_stub.submit_request_calls[0].request,
+      equal_to(llm_request),
+    )
