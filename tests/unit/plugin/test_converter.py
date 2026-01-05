@@ -9,6 +9,15 @@ Tests cover:
 import pytest
 from google.adk.models import LlmRequest, LlmResponse
 from google.genai import types as genai_types
+from hamcrest import (
+  assert_that,
+  contains,
+  equal_to,
+  has_length,
+  has_properties,
+  instance_of,
+  not_none,
+)
 
 import adk_agent_sim.generated.google.ai.generativelanguage.v1beta as glm
 from adk_agent_sim.plugin.converter import ADKProtoConverter
@@ -29,11 +38,18 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.model == "models/gemini-2.0-flash"
-    assert len(proto_request.contents) == 1
-    assert proto_request.contents[0].role == "user"
-    assert len(proto_request.contents[0].parts) == 1
-    assert proto_request.contents[0].parts[0].text == "Hello"
+    assert_that(
+      proto_request,
+      has_properties(
+        model="models/gemini-2.0-flash",
+        contents=contains(
+          has_properties(
+            role="user",
+            parts=contains(has_properties(text="Hello")),
+          )
+        ),
+      ),
+    )
 
   def test_model_name_already_prefixed(self) -> None:
     """Test that model names already prefixed with 'models/' are unchanged."""
@@ -45,7 +61,7 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.model == "models/gemini-1.5-pro"
+    assert_that(proto_request.model, equal_to("models/gemini-1.5-pro"))
 
   def test_empty_model_name(self) -> None:
     """Test handling of empty/None model name."""
@@ -57,7 +73,7 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.model == ""
+    assert_that(proto_request.model, equal_to(""))
 
   def test_multiple_contents_and_parts(self) -> None:
     """Test converting multiple contents with multiple parts."""
@@ -82,10 +98,13 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert len(proto_request.contents) == 2
-    assert proto_request.contents[0].role == "user"
-    assert len(proto_request.contents[0].parts) == 2
-    assert proto_request.contents[1].role == "model"
+    assert_that(
+      proto_request.contents,
+      contains(
+        has_properties(role="user", parts=has_length(2)),
+        has_properties(role="model"),
+      ),
+    )
 
   def test_system_instruction_as_string(self) -> None:
     """Test converting system instruction from string format."""
@@ -99,10 +118,12 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.system_instruction is not None
-    assert len(proto_request.system_instruction.parts) == 1
-    expected_text = "You are a helpful assistant."
-    assert proto_request.system_instruction.parts[0].text == expected_text
+    assert_that(
+      proto_request.system_instruction,
+      has_properties(
+        parts=contains(has_properties(text="You are a helpful assistant."))
+      ),
+    )
 
   def test_system_instruction_as_content(self) -> None:
     """Test converting system instruction from Content format."""
@@ -120,10 +141,15 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.system_instruction is not None
-    assert len(proto_request.system_instruction.parts) == 2
-    assert proto_request.system_instruction.parts[0].text == "System instruction line 1"
-    assert proto_request.system_instruction.parts[1].text == "System instruction line 2"
+    assert_that(
+      proto_request.system_instruction,
+      has_properties(
+        parts=contains(
+          has_properties(text="System instruction line 1"),
+          has_properties(text="System instruction line 2"),
+        )
+      ),
+    )
 
   def test_system_instruction_as_part(self) -> None:
     """Test converting system instruction from single Part format."""
@@ -137,9 +163,10 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.system_instruction is not None
-    assert len(proto_request.system_instruction.parts) == 1
-    assert proto_request.system_instruction.parts[0].text == "System as Part"
+    assert_that(
+      proto_request.system_instruction,
+      has_properties(parts=contains(has_properties(text="System as Part"))),
+    )
 
   def test_system_instruction_as_part_list(self) -> None:
     """Test converting system instruction from list[Part] format."""
@@ -156,10 +183,15 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.system_instruction is not None
-    assert len(proto_request.system_instruction.parts) == 2
-    assert proto_request.system_instruction.parts[0].text == "Part A"
-    assert proto_request.system_instruction.parts[1].text == "Part B"
+    assert_that(
+      proto_request.system_instruction,
+      has_properties(
+        parts=contains(
+          has_properties(text="Part A"),
+          has_properties(text="Part B"),
+        )
+      ),
+    )
 
   def test_tools_conversion(self) -> None:
     """Test converting tools with function declarations."""
@@ -179,11 +211,19 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert len(proto_request.tools) == 1
-    assert len(proto_request.tools[0].function_declarations) == 1
-    func_decl = proto_request.tools[0].function_declarations[0]
-    assert func_decl.name == "get_weather"
-    assert func_decl.description == "Get the weather for a location"
+    assert_that(
+      proto_request.tools,
+      contains(
+        has_properties(
+          function_declarations=contains(
+            has_properties(
+              name="get_weather",
+              description="Get the weather for a location",
+            )
+          )
+        )
+      ),
+    )
 
   def test_safety_settings_conversion(self) -> None:
     """Test converting safety settings with enum mapping."""
@@ -199,11 +239,15 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert len(proto_request.safety_settings) == 1
-    setting = proto_request.safety_settings[0]
-    assert setting.category == glm.HarmCategory.DANGEROUS_CONTENT
-    expected_threshold = glm.SafetySettingHarmBlockThreshold.BLOCK_ONLY_HIGH
-    assert setting.threshold == expected_threshold
+    assert_that(
+      proto_request.safety_settings,
+      contains(
+        has_properties(
+          category=glm.HarmCategory.DANGEROUS_CONTENT,
+          threshold=glm.SafetySettingHarmBlockThreshold.BLOCK_ONLY_HIGH,
+        )
+      ),
+    )
 
   def test_generation_config_conversion(self) -> None:
     """Test converting generation configuration parameters."""
@@ -226,18 +270,23 @@ class TestLlmRequestToProto:
 
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
-    assert proto_request.generation_config is not None
+    assert_that(proto_request.generation_config, not_none())
     gen_config = proto_request.generation_config
-    assert gen_config.temperature == pytest.approx(0.7)
-    assert gen_config.top_p == pytest.approx(0.9)
-    assert gen_config.top_k == 40
-    assert gen_config.max_output_tokens == 1000
-    assert gen_config.candidate_count == 1
-    assert gen_config.stop_sequences == ["STOP", "END"]
-    assert gen_config.presence_penalty == pytest.approx(0.5)
-    assert gen_config.frequency_penalty == pytest.approx(0.5)
-    assert gen_config.seed == 42
-    assert gen_config.response_mime_type == "application/json"
+    assert_that(
+      gen_config,
+      has_properties(
+        temperature=equal_to(pytest.approx(0.7)),
+        top_p=equal_to(pytest.approx(0.9)),
+        top_k=40,
+        max_output_tokens=1000,
+        candidate_count=1,
+        stop_sequences=["STOP", "END"],
+        presence_penalty=equal_to(pytest.approx(0.5)),
+        frequency_penalty=equal_to(pytest.approx(0.5)),
+        seed=42,
+        response_mime_type="application/json",
+      ),
+    )
 
   def test_no_config(self) -> None:
     """Test handling request with no config."""
@@ -250,8 +299,13 @@ class TestLlmRequestToProto:
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
     # Should still work, just with empty/default fields
-    assert proto_request.model == "models/gemini-2.0-flash"
-    assert len(proto_request.contents) == 1
+    assert_that(
+      proto_request,
+      has_properties(
+        model="models/gemini-2.0-flash",
+        contents=has_length(1),
+      ),
+    )
 
   def test_full_request_with_all_fields(self) -> None:
     """Integration test: full request with all supported fields."""
@@ -283,15 +337,22 @@ class TestLlmRequestToProto:
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
     # Verify all fields populated correctly
-    assert proto_request.model == "models/gemini-2.0-flash"
-    assert len(proto_request.contents) == 1
-    assert proto_request.system_instruction is not None
-    assert proto_request.system_instruction.parts[0].text == "You are a math assistant."
-    assert len(proto_request.tools) == 1
-    assert len(proto_request.safety_settings) == 1
-    assert proto_request.generation_config is not None
-    assert proto_request.generation_config.temperature == pytest.approx(0.5)
-    assert proto_request.generation_config.max_output_tokens == 500
+    assert_that(
+      proto_request,
+      has_properties(
+        model="models/gemini-2.0-flash",
+        contents=has_length(1),
+        system_instruction=has_properties(
+          parts=contains(has_properties(text="You are a math assistant."))
+        ),
+        tools=has_length(1),
+        safety_settings=has_length(1),
+        generation_config=has_properties(
+          temperature=equal_to(pytest.approx(0.5)),
+          max_output_tokens=500,
+        ),
+      ),
+    )
 
 
 class TestProtoToLlmResponse:
@@ -315,14 +376,18 @@ class TestProtoToLlmResponse:
 
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
-    assert isinstance(llm_response, LlmResponse)
-    assert llm_response.content is not None
-    assert llm_response.content.role == "model"
-    assert llm_response.content.parts is not None
-    assert len(llm_response.content.parts) == 1
-    assert llm_response.content.parts[0].text == "Hello! How can I help?"
-    assert llm_response.model_version == "gemini-2.0-flash"
-    assert llm_response.finish_reason == genai_types.FinishReason.STOP
+    assert_that(llm_response, instance_of(LlmResponse))
+    assert_that(
+      llm_response,
+      has_properties(
+        content=has_properties(
+          role="model",
+          parts=contains(has_properties(text="Hello! How can I help?")),
+        ),
+        model_version="gemini-2.0-flash",
+        finish_reason=genai_types.FinishReason.STOP,
+      ),
+    )
 
   def test_response_with_multiple_parts(self) -> None:
     """Test converting response with multiple parts."""
@@ -343,11 +408,15 @@ class TestProtoToLlmResponse:
 
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
-    assert llm_response.content is not None
-    assert llm_response.content.parts is not None
-    assert len(llm_response.content.parts) == 2
-    assert llm_response.content.parts[0].text == "Part 1"
-    assert llm_response.content.parts[1].text == "Part 2"
+    assert_that(
+      llm_response.content,
+      has_properties(
+        parts=contains(
+          has_properties(text="Part 1"),
+          has_properties(text="Part 2"),
+        )
+      ),
+    )
 
   def test_response_with_function_call(self) -> None:
     """Test converting response containing a function call.
@@ -376,12 +445,12 @@ class TestProtoToLlmResponse:
 
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
-    assert llm_response.content is not None
-    assert llm_response.content.parts is not None
-    assert len(llm_response.content.parts) == 1
-    part = llm_response.content.parts[0]
-    assert part.function_call is not None
-    assert part.function_call.name == "get_weather"
+    assert_that(
+      llm_response.content,
+      has_properties(
+        parts=contains(has_properties(function_call=has_properties(name="get_weather")))
+      ),
+    )
 
   def test_response_with_usage_metadata(self) -> None:
     """Test converting response with usage metadata."""
@@ -404,10 +473,14 @@ class TestProtoToLlmResponse:
 
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
-    assert llm_response.usage_metadata is not None
-    assert llm_response.usage_metadata.prompt_token_count == 10
-    assert llm_response.usage_metadata.candidates_token_count == 20
-    assert llm_response.usage_metadata.total_token_count == 30
+    assert_that(
+      llm_response.usage_metadata,
+      has_properties(
+        prompt_token_count=10,
+        candidates_token_count=20,
+        total_token_count=30,
+      ),
+    )
 
   def test_response_with_max_tokens_finish_reason(self) -> None:
     """Test converting response that hit max tokens limit."""
@@ -425,7 +498,9 @@ class TestProtoToLlmResponse:
 
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
-    assert llm_response.finish_reason == genai_types.FinishReason.MAX_TOKENS
+    assert_that(
+      llm_response.finish_reason, equal_to(genai_types.FinishReason.MAX_TOKENS)
+    )
 
   def test_empty_response(self) -> None:
     """Test converting empty response (no candidates)."""
@@ -434,8 +509,8 @@ class TestProtoToLlmResponse:
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
     # Empty response should still be valid
-    assert isinstance(llm_response, LlmResponse)
-    assert llm_response.content is None
+    assert_that(llm_response, instance_of(LlmResponse))
+    assert_that(llm_response.content, equal_to(None))
 
 
 class TestRoundTrip:
@@ -459,11 +534,18 @@ class TestRoundTrip:
     proto_request = ADKProtoConverter.llm_request_to_proto(adk_request)
 
     # Verify key data preserved
-    assert proto_request.contents[0].parts[0].text == original_text
-    assert proto_request.system_instruction is not None
-    assert proto_request.system_instruction.parts[0].text == "Be philosophical."
-    assert proto_request.generation_config is not None
-    assert proto_request.generation_config.temperature == pytest.approx(0.8)
+    assert_that(
+      proto_request,
+      has_properties(
+        contents=contains(
+          has_properties(parts=contains(has_properties(text=original_text)))
+        ),
+        system_instruction=has_properties(
+          parts=contains(has_properties(text="Be philosophical."))
+        ),
+        generation_config=has_properties(temperature=equal_to(pytest.approx(0.8))),
+      ),
+    )
 
   def test_response_text_property_works(self) -> None:
     """Test that converted response supports ADK's .text property."""
@@ -485,7 +567,9 @@ class TestRoundTrip:
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 
     # LlmResponse.content is a Content object, which should have parts
-    assert llm_response.content is not None
-    assert llm_response.content.parts is not None
+    assert_that(llm_response.content, not_none())
+    assert llm_response.content is not None  # type narrowing for pyright
+    assert_that(llm_response.content.parts, not_none())
+    assert llm_response.content.parts is not None  # type narrowing for pyright
     combined_text = "".join(p.text for p in llm_response.content.parts if p.text)
-    assert combined_text == "Part A Part B"
+    assert_that(combined_text, equal_to("Part A Part B"))
