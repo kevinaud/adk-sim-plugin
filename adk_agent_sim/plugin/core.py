@@ -18,8 +18,18 @@ Usage:
 
 import asyncio
 import contextlib
+import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING
+
+import betterproto
+
+from adk_agent_sim.plugin.futures import PendingFutureRegistry
+
+if TYPE_CHECKING:
+  from adk_agent_sim.plugin.client import SimulatorClient
+
+logger = logging.getLogger(__name__)
 
 
 class SimulatorPlugin:
@@ -70,8 +80,9 @@ class SimulatorPlugin:
       self.target_agents = target_agents
 
     self.session_id: str | None = None
-    self._pending_futures: dict[str, asyncio.Future[Any]] = {}
+    self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
+    self._client: SimulatorClient | None = None
 
   def should_intercept(self, agent_name: str) -> bool:
     """Check if a given agent should be intercepted.
@@ -142,10 +153,60 @@ class SimulatorPlugin:
     """Background task that listens for responses from the server.
 
     This method subscribes to the session's event stream and resolves
-    pending Futures when responses arrive.
+    pending Futures when llm_response events arrive. The subscription
+    includes historical replay followed by live events.
+
+    The loop handles:
+    - llm_request events: Logged and ignored (originated from this plugin)
+    - llm_response events: Resolved via PendingFutureRegistry if pending
+    - Unknown events: Logged and ignored
+
+    Idempotency is handled by PendingFutureRegistry.resolve() which
+    returns False for already-resolved or unknown turn_ids.
     """
-    # TODO: Implement Subscribe call and Future resolution
-    raise NotImplementedError("_listen_loop not yet implemented")
+    if self._client is None:
+      logger.error("_listen_loop called without client - exiting")
+      return
+
+    try:
+      async for event in self._client.subscribe():
+        # Determine the payload type using betterproto's oneof helper
+        field_name, payload = betterproto.which_one_of(event, "payload")
+
+        if field_name == "llm_response" and payload is not None:
+          # This is a human decision - resolve the pending future
+          resolved = self._pending_futures.resolve(event.turn_id, payload)
+          if resolved:
+            logger.debug(
+              "Resolved future for turn_id=%s, event_id=%s",
+              event.turn_id,
+              event.event_id,
+            )
+          else:
+            # Already resolved or unknown turn_id - idempotent handling
+            logger.debug(
+              "Ignored llm_response for turn_id=%s (not pending)",
+              event.turn_id,
+            )
+        elif field_name == "llm_request":
+          # Request events are our own submissions - just log and skip
+          logger.debug(
+            "Received llm_request event turn_id=%s (ignoring)",
+            event.turn_id,
+          )
+        else:
+          # Unknown payload type
+          logger.warning(
+            "Unknown event payload type: %s for event_id=%s",
+            field_name,
+            event.event_id,
+          )
+    except asyncio.CancelledError:
+      logger.debug("_listen_loop cancelled")
+      raise
+    except Exception:
+      logger.exception("Error in _listen_loop")
+      raise
 
   async def close(self) -> None:
     """Clean up resources and close connections."""
