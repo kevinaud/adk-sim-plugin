@@ -379,10 +379,10 @@
 **Goal**: gRPC client wrapper for server communication
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T012 [ph3f3] Create `SimulatorClient` class with `__init__(config: PluginConfig)` in `adk_agent_sim/plugin/client.py`
-- [ ] T013 [ph3f3] Implement `connect()` establishing gRPC channel using `grpclib` in `adk_agent_sim/plugin/client.py`
-- [ ] T014 [ph3f3] Implement `close()` for clean channel shutdown in `adk_agent_sim/plugin/client.py`
-- [ ] T015 [ph3f3] Add `SimulatorClient` connection tests in `tests/unit/plugin/test_client.py`
+- [x] T012 [ph3f3] Create `SimulatorClient` class with `__init__(config: PluginConfig)` in `adk_agent_sim/plugin/client.py`
+- [x] T013 [ph3f3] Implement `connect()` establishing gRPC channel using `grpclib` in `adk_agent_sim/plugin/client.py`
+- [x] T014 [ph3f3] Implement `close()` for clean channel shutdown in `adk_agent_sim/plugin/client.py`
+- [x] T015 [ph3f3] Add `SimulatorClient` connection tests in `tests/unit/plugin/test_client.py`
 
 ---
 
