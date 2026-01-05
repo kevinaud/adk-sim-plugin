@@ -328,11 +328,11 @@
 **Goal**: E2E tests for full request/decision/subscribe flow
 **User Stories**: US1 (Basic Interception), US4 (Sequential Queueing)
 
-- [ ] T047 [ph2bf3] Create `test_submit_request_e2e()` verifying request submission and pending state in `tests/e2e/test_flow_e2e.py`
-- [ ] T048 [ph2bf3] Create `test_submit_decision_e2e()` verifying decision resolves pending request in `tests/e2e/test_flow_e2e.py`
-- [ ] T049 [ph2bf3] Create `test_subscribe_receives_events_e2e()` verifying streaming events via Subscribe in `tests/e2e/test_flow_e2e.py`
-- [ ] T050 [ph2bf3] Create `test_full_round_trip_e2e()` verifying complete request→decision→event flow in `tests/e2e/test_flow_e2e.py`
-- [ ] T051 [ph2bf3] Create `test_fifo_ordering_e2e()` verifying parallel requests are queued in order in `tests/e2e/test_flow_e2e.py`
+- [x] T047 [ph2bf3] Create `test_submit_request_e2e()` verifying request submission and pending state in `tests/e2e/test_flow_e2e.py`
+- [x] T048 [ph2bf3] Create `test_submit_decision_e2e()` verifying decision resolves pending request in `tests/e2e/test_flow_e2e.py`
+- [x] T049 [ph2bf3] Create `test_subscribe_receives_events_e2e()` verifying streaming events via Subscribe in `tests/e2e/test_flow_e2e.py`
+- [x] T050 [ph2bf3] Create `test_full_round_trip_e2e()` verifying complete request→decision→event flow in `tests/e2e/test_flow_e2e.py`
+- [x] T051 [ph2bf3] Create `test_fifo_ordering_e2e()` verifying parallel requests are queued in order in `tests/e2e/test_flow_e2e.py`
 
 ---
 
