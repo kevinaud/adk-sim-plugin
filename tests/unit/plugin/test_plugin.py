@@ -16,7 +16,14 @@ from hamcrest import (
   is_,
 )
 
-from adk_agent_sim.generated.adksim.v1 import SessionEvent, SimulatorSession
+from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,
+  CreateSessionResponse,
+  SessionEvent,
+  SimulatorSession,
+  SubmitRequestResponse,
+  SubscribeResponse,
+)
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
   Candidate,
   Content,
@@ -28,6 +35,8 @@ from adk_agent_sim.plugin import SimulatorPlugin
 
 if TYPE_CHECKING:
   from collections.abc import AsyncIterator
+
+  from adk_agent_sim.generated.adksim.v1 import SubmitRequestRequest, SubscribeRequest
 
 
 class TestSimulatorPlugin:
@@ -65,8 +74,8 @@ class TestSimulatorPlugin:
 
 
 @dataclass
-class FakeSimulatorClient:
-  """Fake SimulatorClient for testing _listen_loop without real gRPC.
+class FakeSimulatorServiceStub:
+  """Fake SimulatorServiceStub for testing _listen_loop without real gRPC.
 
   This fake allows tests to control the event stream by providing
   a list of events to yield, and optionally simulating errors.
@@ -76,15 +85,16 @@ class FakeSimulatorClient:
   error_after: int | None = None
 
   async def subscribe(
-    self, client_id: str | None = None
-  ) -> AsyncIterator[SessionEvent]:
-    """Yield configured events, optionally raising an error.
+    self, request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Yield configured events wrapped in SubscribeResponse.
 
     Args:
-        client_id: Ignored in fake implementation.
+        request: The SubscribeRequest (ignored in fake implementation).
 
     Yields:
-        SessionEvent objects from the configured events list.
+        SubscribeResponse objects containing SessionEvent from the configured
+        events list.
 
     Raises:
         RuntimeError: If error_after is set and that many events have been yielded.
@@ -92,47 +102,59 @@ class FakeSimulatorClient:
     for i, event in enumerate(self.events):
       if self.error_after is not None and i >= self.error_after:
         raise RuntimeError("Simulated connection error")
-      yield event
+      yield SubscribeResponse(event=event)
 
 
 @dataclass
-class FakeInitializingClient:
-  """Fake SimulatorClient for testing initialize() flow.
+class FakeInitializingStub:
+  """Fake SimulatorServiceStub for testing initialize() flow.
 
-  This fake supports connect(), create_session(), subscribe(), and close()
+  This fake supports create_session() and subscribe()
   for testing the full initialization sequence.
   """
 
   session_id: str = "fake-session-123"
   description: str = ""
   events: list[SessionEvent] = field(default_factory=list)
-  connected: bool = False
   session_created: bool = False
-  closed: bool = False
 
-  async def connect(self) -> None:
-    """Mark the client as connected."""
-    self.connected = True
-
-  async def create_session(self, description: str | None = None) -> SimulatorSession:
+  async def create_session(
+    self, request: CreateSessionRequest
+  ) -> CreateSessionResponse:
     """Create a fake session and return it."""
-    self.description = description or ""
+    self.description = request.description
     self.session_created = True
-    return SimulatorSession(
-      id=self.session_id,
-      created_at=datetime.now(UTC),
-      description=self.description,
+    return CreateSessionResponse(
+      session=SimulatorSession(
+        id=self.session_id,
+        created_at=datetime.now(UTC),
+        description=self.description,
+      )
     )
 
   async def subscribe(
-    self, client_id: str | None = None
-  ) -> AsyncIterator[SessionEvent]:
-    """Yield configured events."""
+    self, request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Yield configured events wrapped in SubscribeResponse."""
     for event in self.events:
-      yield event
+      yield SubscribeResponse(event=event)
+
+
+@dataclass
+class FakeSimulatorClientFactory:
+  """Fake SimulatorClientFactory for testing."""
+
+  stub: FakeInitializingStub
+  connected: bool = False
+  closed: bool = False
+
+  async def get_simulator_stub(self) -> FakeInitializingStub:
+    """Return the fake stub."""
+    self.connected = True
+    return self.stub
 
   async def close(self) -> None:
-    """Mark the client as closed."""
+    """Mark the factory as closed."""
     self.closed = True
 
 
@@ -192,9 +214,10 @@ class TestListenLoop:
     response_text = "Hello from human!"
     response_event = _create_llm_response_event(turn_id, response_text)
 
-    fake_client = FakeSimulatorClient(events=[response_event])
+    fake_stub = FakeSimulatorServiceStub(events=[response_event])
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Create a pending future for this turn_id
     future = plugin._pending_futures.create(turn_id)
@@ -219,9 +242,10 @@ class TestListenLoop:
     request_event = _create_llm_request_event(turn_id)
     response_event = _create_llm_response_event(turn_id)
 
-    fake_client = FakeSimulatorClient(events=[request_event, response_event])
+    fake_stub = FakeSimulatorServiceStub(events=[request_event, response_event])
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Create pending future
     future = plugin._pending_futures.create(turn_id)
@@ -250,9 +274,10 @@ class TestListenLoop:
       turn_id, "Duplicate response", event_id="event-002"
     )
 
-    fake_client = FakeSimulatorClient(events=[response_event1, response_event2])
+    fake_stub = FakeSimulatorServiceStub(events=[response_event1, response_event2])
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Create pending future
     future = plugin._pending_futures.create(turn_id)
@@ -273,9 +298,10 @@ class TestListenLoop:
     # Arrange
     response_event = _create_llm_response_event("unknown-turn-id")
 
-    fake_client = FakeSimulatorClient(events=[response_event])
+    fake_stub = FakeSimulatorServiceStub(events=[response_event])
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # No pending future created - turn_id is unknown
 
@@ -286,45 +312,46 @@ class TestListenLoop:
     assert_that(len(plugin._pending_futures), equal_to(0))
 
   @pytest.mark.asyncio
-  async def test_listen_loop_exits_when_client_is_none(self) -> None:
-    """_listen_loop() exits immediately if client is None."""
+  async def test_listen_loop_exits_when_stub_is_none(self) -> None:
+    """_listen_loop() exits immediately if stub is None."""
     # Arrange
     plugin = SimulatorPlugin()
-    plugin._client = None
+    plugin._stub = None
 
     # Act
     await plugin._listen_loop()
 
     # Assert - no error, just returns
-    assert_that(plugin._client, is_(None))
+    assert_that(plugin._stub, is_(None))
 
   @pytest.mark.asyncio
   async def test_listen_loop_propagates_cancellation(self) -> None:
     """_listen_loop() propagates CancelledError when cancelled during iteration."""
     # Arrange - use an async generator that yields slowly to allow cancellation
     plugin = SimulatorPlugin()
+    plugin.session_id = "session-001"
 
     events_yielded: list[str] = []
 
     async def slow_subscribe(
-      client_id: str | None = None,
-    ) -> AsyncIterator[SessionEvent]:
+      request: SubscribeRequest,
+    ) -> AsyncIterator[SubscribeResponse]:
       """Slow async generator that can be interrupted."""
       for i in range(100):
         events_yielded.append(f"turn-{i}")
-        yield _create_llm_request_event(f"turn-{i}")
+        yield SubscribeResponse(event=_create_llm_request_event(f"turn-{i}"))
         # Small delay to allow cancellation between events
         await asyncio.sleep(0.01)
 
     @dataclass
-    class SlowFakeClient:
+    class SlowFakeStub:
       async def subscribe(
-        self, client_id: str | None = None
-      ) -> AsyncIterator[SessionEvent]:
-        async for event in slow_subscribe(client_id):
-          yield event
+        self, request: SubscribeRequest
+      ) -> AsyncIterator[SubscribeResponse]:
+        async for response in slow_subscribe(request):
+          yield response
 
-    plugin._client = SlowFakeClient()  # type: ignore[assignment]
+    plugin._stub = SlowFakeStub()  # type: ignore[assignment]
 
     # Act
     listen_task = asyncio.create_task(plugin._listen_loop())
@@ -344,9 +371,10 @@ class TestListenLoop:
     """_listen_loop() propagates errors from the event stream."""
     # Arrange - use error_after=0 to raise immediately on first iteration
     events = [_create_llm_request_event("turn-1")]
-    fake_client = FakeSimulatorClient(events=events, error_after=0)
+    fake_stub = FakeSimulatorServiceStub(events=events, error_after=0)
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Act & Assert
     with pytest.raises(RuntimeError, match="Simulated connection error"):
@@ -452,33 +480,35 @@ class TestInitialize:
     """initialize() sets the session_id on the plugin."""
     # Arrange
     session_id = "new-session-id"
-    fake_client = FakeInitializingClient(session_id=session_id)
+    fake_stub = FakeInitializingStub(session_id=session_id)
     plugin = SimulatorPlugin(server_url="localhost:50051")
 
-    # Inject the fake client
-    plugin._client = fake_client  # type: ignore[assignment]
+    # Inject the fake stub
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
-    # We need to simulate what initialize() does when client is already set
+    # We need to simulate what initialize() does when stub is already set
     # Instead, let's test the individual components and one integration test
     # that mocks at a higher level
 
     # Create session directly to verify behavior
-    session = await fake_client.create_session("test description")
+    response = await fake_stub.create_session(
+      CreateSessionRequest(description="test description")
+    )
 
     # Assert
-    assert_that(session.id, equal_to(session_id))
-    assert_that(fake_client.session_created, is_(True))
+    assert_that(response.session.id, equal_to(session_id))
+    assert_that(fake_stub.session_created, is_(True))
 
   @pytest.mark.asyncio
   async def test_initialize_starts_listen_loop_task(self) -> None:
     """initialize() starts the _listen_loop as a background task."""
     # Arrange
     session_id = "task-session"
-    fake_client = FakeInitializingClient(session_id=session_id, events=[])
+    fake_stub = FakeInitializingStub(session_id=session_id, events=[])
     plugin = SimulatorPlugin(server_url="localhost:50051")
 
-    # Inject fake client and manually run initialize logic
-    plugin._client = fake_client  # type: ignore[assignment]
+    # Inject fake stub and manually run initialize logic
+    plugin._stub = fake_stub  # type: ignore[assignment]
     plugin.session_id = session_id
 
     # Act - start the listen loop task
@@ -494,13 +524,14 @@ class TestInitialize:
       await plugin._listen_task
 
   @pytest.mark.asyncio
-  async def test_initialize_integration_with_fake_client(
+  async def test_initialize_integration_with_fake_factory(
     self, monkeypatch: pytest.MonkeyPatch
   ) -> None:
-    """Full initialize() flow with injected fake client."""
+    """Full initialize() flow with injected fake factory."""
     # Arrange
     session_id = "integration-test-session"
-    fake_client = FakeInitializingClient(session_id=session_id, events=[])
+    fake_stub = FakeInitializingStub(session_id=session_id, events=[])
+    fake_factory = FakeSimulatorClientFactory(stub=fake_stub)
 
     # Capture stdout
     captured_output = io.StringIO()
@@ -508,28 +539,18 @@ class TestInitialize:
     # Create plugin
     plugin = SimulatorPlugin(server_url="localhost:50051")
 
-    # Monkeypatch SimulatorClient to return our fake
-    from adk_agent_sim.plugin import client as client_module
+    # Monkeypatch SimulatorClientFactory to return our fake
+    from adk_agent_sim.plugin import client_factory as factory_module
 
     monkeypatch.setattr(
-      client_module.SimulatorClient,
+      factory_module.SimulatorClientFactory,
       "__init__",
       lambda self, config: None,
     )
     monkeypatch.setattr(
-      client_module.SimulatorClient,
-      "connect",
-      fake_client.connect,
-    )
-    monkeypatch.setattr(
-      client_module.SimulatorClient,
-      "create_session",
-      fake_client.create_session,
-    )
-    monkeypatch.setattr(
-      client_module.SimulatorClient,
-      "subscribe",
-      fake_client.subscribe,
+      factory_module.SimulatorClientFactory,
+      "get_simulator_stub",
+      fake_factory.get_simulator_stub,
     )
 
     # Act
@@ -572,45 +593,43 @@ class FakeCallbackContext:
 
 
 @dataclass
-class FakeInterceptingClient:
-  """Fake SimulatorClient for testing before_model_callback.
+class FakeInterceptingStub:
+  """Fake SimulatorServiceStub for testing before_model_callback.
 
   Tracks submitted requests and provides controlled response via event stream.
   Uses an async queue to properly handle concurrent submit/subscribe operations.
   """
 
   session_id: str = "session-123"
-  submitted_requests: list[tuple[str, str, GenerateContentRequest]] = field(
-    default_factory=list
-  )
+  submitted_requests: list[SubmitRequestRequest] = field(default_factory=list)
   response_to_send: GenerateContentResponse | None = None
-  _event_queue: asyncio.Queue[SessionEvent] = field(default_factory=asyncio.Queue)
+  _event_queue: asyncio.Queue[SubscribeResponse] = field(default_factory=asyncio.Queue)
 
   async def submit_request(
-    self, turn_id: str, agent_name: str, request: GenerateContentRequest
-  ) -> str:
+    self, request: SubmitRequestRequest
+  ) -> SubmitRequestResponse:
     """Record the submitted request and return a fake event_id."""
-    self.submitted_requests.append((turn_id, agent_name, request))
+    self.submitted_requests.append(request)
     # Dynamically create response event for this turn_id and put in queue
     if self.response_to_send:
       event = SessionEvent(
-        event_id=f"event-{turn_id}",
+        event_id=f"event-{request.turn_id}",
         session_id=self.session_id,
         timestamp=datetime.now(UTC),
-        turn_id=turn_id,
-        agent_name=agent_name,
+        turn_id=request.turn_id,
+        agent_name=request.agent_name,
         llm_response=self.response_to_send,
       )
-      await self._event_queue.put(event)
-    return f"event-{turn_id}"
+      await self._event_queue.put(SubscribeResponse(event=event))
+    return SubmitRequestResponse(event_id=f"event-{request.turn_id}")
 
   async def subscribe(
-    self, client_id: str | None = None
-  ) -> AsyncIterator[SessionEvent]:
+    self, request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
     """Yield events from the queue as they arrive."""
     while True:
-      event = await self._event_queue.get()
-      yield event
+      response = await self._event_queue.get()
+      yield response
 
 
 class TestBeforeModelCallback:
@@ -663,9 +682,10 @@ class TestBeforeModelCallback:
       ]
     )
 
-    fake_client = FakeInterceptingClient(response_to_send=response)
+    fake_stub = FakeInterceptingStub(response_to_send=response)
     plugin = SimulatorPlugin()  # No target_agents = intercept all
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     callback_context = FakeCallbackContext(agent_name="any_agent")
 
@@ -698,10 +718,10 @@ class TestBeforeModelCallback:
       await plugin._listen_task
 
     # Assert - request was submitted
-    assert_that(len(fake_client.submitted_requests), equal_to(1))
-    _, submitted_agent_name, proto_req = fake_client.submitted_requests[0]
-    assert_that(submitted_agent_name, equal_to("any_agent"))
-    assert_that(proto_req.model, equal_to("models/gemini-2.0-flash"))
+    assert_that(len(fake_stub.submitted_requests), equal_to(1))
+    submitted_req = fake_stub.submitted_requests[0]
+    assert_that(submitted_req.agent_name, equal_to("any_agent"))
+    assert_that(submitted_req.request.model, equal_to("models/gemini-2.0-flash"))
 
     # Assert - response was returned
     assert result is not None
@@ -725,9 +745,10 @@ class TestBeforeModelCallback:
       ]
     )
 
-    fake_client = FakeInterceptingClient(response_to_send=response)
+    fake_stub = FakeInterceptingStub(response_to_send=response)
     plugin = SimulatorPlugin(target_agents={"orchestrator", "router"})
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     callback_context = FakeCallbackContext(agent_name="orchestrator")
 
@@ -760,7 +781,7 @@ class TestBeforeModelCallback:
       await plugin._listen_task
 
     # Assert - request was intercepted
-    assert_that(len(fake_client.submitted_requests), equal_to(1))
+    assert_that(len(fake_stub.submitted_requests), equal_to(1))
 
     # Assert - correct response
     assert result is not None
@@ -770,10 +791,10 @@ class TestBeforeModelCallback:
 
   @pytest.mark.asyncio
   async def test_before_model_callback_raises_without_initialization(self) -> None:
-    """before_model_callback raises RuntimeError when client is not initialized."""
+    """before_model_callback raises RuntimeError when stub is not initialized."""
     # Arrange
     plugin = SimulatorPlugin()
-    plugin._client = None  # Explicitly not initialized
+    plugin._stub = None  # Explicitly not initialized
     callback_context = FakeCallbackContext(agent_name="test_agent")
 
     from google.adk.models import LlmRequest
@@ -812,9 +833,10 @@ class TestBeforeModelCallback:
       ]
     )
 
-    fake_client = FakeInterceptingClient(response_to_send=response)
+    fake_stub = FakeInterceptingStub(response_to_send=response)
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     callback_context = FakeCallbackContext(agent_name="test_agent")
 
@@ -851,9 +873,9 @@ class TestBeforeModelCallback:
       await plugin._listen_task
 
     # Assert - two different turn_ids
-    assert_that(len(fake_client.submitted_requests), equal_to(2))
-    turn_id_1 = fake_client.submitted_requests[0][0]
-    turn_id_2 = fake_client.submitted_requests[1][0]
+    assert_that(len(fake_stub.submitted_requests), equal_to(2))
+    turn_id_1 = fake_stub.submitted_requests[0].turn_id
+    turn_id_2 = fake_stub.submitted_requests[1].turn_id
     assert turn_id_1 != turn_id_2
 
   @pytest.mark.asyncio
@@ -871,9 +893,10 @@ class TestBeforeModelCallback:
       ]
     )
 
-    fake_client = FakeInterceptingClient(response_to_send=response)
+    fake_stub = FakeInterceptingStub(response_to_send=response)
     plugin = SimulatorPlugin()
-    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     callback_context = FakeCallbackContext(agent_name="test_agent")
 
@@ -909,7 +932,8 @@ class TestBeforeModelCallback:
       await plugin._listen_task
 
     # Assert - proto request was correctly converted
-    _, _, proto_req = fake_client.submitted_requests[0]
+    submitted_req = fake_stub.submitted_requests[0]
+    proto_req = submitted_req.request
     assert_that(proto_req.model, equal_to("models/gemini-2.0-flash"))
     assert_that(proto_req.contents[0].parts[0].text, equal_to("What is 2+2?"))
     assert proto_req.system_instruction is not None
