@@ -419,9 +419,9 @@
 **Goal**: Client method for event stream subscription
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T022 [ph3f6] Implement `subscribe() -> AsyncIterator[SessionEvent]` as async generator in `adk_agent_sim/plugin/client.py`
-- [ ] T023 [ph3f6] Yield events from server stream in `adk_agent_sim/plugin/client.py`
-- [ ] T024 [ph3f6] Add `subscribe()` tests in `tests/unit/plugin/test_client.py`
+- [x] T022 [ph3f6] Implement `subscribe() -> AsyncIterator[SessionEvent]` as async generator in `adk_agent_sim/plugin/client.py`
+- [x] T023 [ph3f6] Yield events from server stream in `adk_agent_sim/plugin/client.py`
+- [x] T024 [ph3f6] Add `subscribe()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 

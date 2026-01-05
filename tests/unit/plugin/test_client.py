@@ -1,18 +1,24 @@
 """Tests for SimulatorClient."""
 
+from collections.abc import (
+  AsyncIterator,  # noqa: TC003  # Used at runtime in FakeSimulatorServiceStub
+)
 from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-from hamcrest import assert_that, equal_to, instance_of, is_, none
+from hamcrest import assert_that, contains, equal_to, has_length, instance_of, is_, none
 
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,  # noqa: TC001  # Used at runtime in FakeSimulatorServiceStub
   CreateSessionResponse,
+  SessionEvent,
   SimulatorServiceStub,
   SimulatorSession,
   SubmitRequestRequest,  # noqa: TC001  # Used at runtime in FakeSimulatorServiceStub
   SubmitRequestResponse,
+  SubscribeRequest,  # noqa: TC001  # Used at runtime in FakeSimulatorServiceStub
+  SubscribeResponse,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
   GenerateContentRequest,
@@ -32,8 +38,10 @@ class FakeSimulatorServiceStub:
     """Initialize the fake stub with default behavior."""
     self.create_session_calls: list[CreateSessionRequest] = []
     self.submit_request_calls: list[SubmitRequestRequest] = []
+    self.subscribe_calls: list[SubscribeRequest] = []
     self._next_session_id: str = str(uuid4())
     self._next_event_id: str = str(uuid4())
+    self._subscribe_events: list[SessionEvent] = []
 
   def set_next_session_id(self, session_id: str) -> None:
     """Configure the session ID to return on the next create_session call."""
@@ -42,6 +50,10 @@ class FakeSimulatorServiceStub:
   def set_next_event_id(self, event_id: str) -> None:
     """Configure the event ID to return on the next submit_request call."""
     self._next_event_id = event_id
+
+  def set_subscribe_events(self, events: list[SessionEvent]) -> None:
+    """Configure the events to yield from subscribe()."""
+    self._subscribe_events = events
 
   async def create_session(
     self,
@@ -71,6 +83,19 @@ class FakeSimulatorServiceStub:
     """Fake submit_request RPC returning a configurable event ID."""
     self.submit_request_calls.append(request)
     return SubmitRequestResponse(event_id=self._next_event_id)
+
+  async def subscribe(
+    self,
+    request: SubscribeRequest,
+    *,
+    timeout: float | None = None,  # noqa: ASYNC109
+    deadline: object | None = None,
+    metadata: object | None = None,
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Fake subscribe RPC yielding configured events."""
+    self.subscribe_calls.append(request)
+    for event in self._subscribe_events:
+      yield SubscribeResponse(event=event)
 
 
 class TestSimulatorClientInit:
@@ -537,3 +562,163 @@ class TestSimulatorClientSubmitRequest:
       fake_stub.submit_request_calls[0].request,
       equal_to(llm_request),
     )
+
+
+class TestSimulatorClientSubscribe:
+  """Tests for SimulatorClient.subscribe()."""
+
+  @pytest.mark.asyncio
+  async def test_subscribe_raises_when_not_connected(self) -> None:
+    """subscribe() raises RuntimeError if not connected."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+
+    with pytest.raises(RuntimeError, match="not connected"):
+      async for _ in client.subscribe():
+        pass
+
+  @pytest.mark.asyncio
+  async def test_subscribe_raises_when_no_session(self) -> None:
+    """subscribe() raises RuntimeError if no session created."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub (connected but no session)
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    with pytest.raises(RuntimeError, match="No session created"):
+      async for _ in client.subscribe():
+        pass
+
+  @pytest.mark.asyncio
+  async def test_subscribe_yields_session_events(self) -> None:
+    """subscribe() yields SessionEvent objects from the server stream."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    fake_stub.set_next_session_id("session-123")
+
+    # Configure events to stream
+    event1 = SessionEvent(
+      event_id="event-1", session_id="session-123", turn_id="turn-1"
+    )
+    event2 = SessionEvent(
+      event_id="event-2", session_id="session-123", turn_id="turn-2"
+    )
+    fake_stub.set_subscribe_events([event1, event2])
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    received_events = [event async for event in client.subscribe()]
+
+    assert_that(received_events, has_length(2))
+    assert_that(received_events, contains(event1, event2))
+
+  @pytest.mark.asyncio
+  async def test_subscribe_uses_stored_session_id(self) -> None:
+    """subscribe() uses the session_id from create_session()."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    expected_session_id = "stored-session-789"
+    fake_stub.set_next_session_id(expected_session_id)
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    # Consume the async generator
+    async for _ in client.subscribe():
+      pass
+
+    assert_that(len(fake_stub.subscribe_calls), equal_to(1))
+    assert_that(
+      fake_stub.subscribe_calls[0].session_id,
+      equal_to(expected_session_id),
+    )
+
+  @pytest.mark.asyncio
+  async def test_subscribe_passes_client_id(self) -> None:
+    """subscribe() passes the client_id to the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    # Consume the async generator with explicit client_id
+    async for _ in client.subscribe(client_id="my-client-id"):
+      pass
+
+    assert_that(
+      fake_stub.subscribe_calls[0].client_id,
+      equal_to("my-client-id"),
+    )
+
+  @pytest.mark.asyncio
+  async def test_subscribe_generates_client_id_when_not_provided(self) -> None:
+    """subscribe() generates a UUID client_id when not provided."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    # Consume the async generator without client_id
+    async for _ in client.subscribe():
+      pass
+
+    # Should have a non-empty client_id
+    assert_that(len(fake_stub.subscribe_calls), equal_to(1))
+    assert_that(len(fake_stub.subscribe_calls[0].client_id) > 0, is_(True))
+
+  @pytest.mark.asyncio
+  async def test_subscribe_returns_empty_when_no_events(self) -> None:
+    """subscribe() returns empty iterator when server streams no events."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    fake_stub.set_subscribe_events([])  # No events
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    received_events = [event async for event in client.subscribe()]
+
+    assert_that(received_events, has_length(0))
+
+  @pytest.mark.asyncio
+  async def test_subscribe_yields_events_in_order(self) -> None:
+    """subscribe() yields events in the order received from the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    fake_stub.set_next_session_id("session-order-test")
+
+    # Configure events with specific order
+    events = [
+      SessionEvent(
+        event_id=f"event-{i}",
+        session_id="session-order-test",
+        turn_id=f"turn-{i}",
+      )
+      for i in range(5)
+    ]
+    fake_stub.set_subscribe_events(events)
+
+    # Manually inject the fake stub and create session
+    client._stub = fake_stub  # type: ignore[assignment]
+    await client.create_session()
+
+    received_event_ids = [event.event_id async for event in client.subscribe()]
+
+    expected_ids = [f"event-{i}" for i in range(5)]
+    assert_that(received_event_ids, equal_to(expected_ids))

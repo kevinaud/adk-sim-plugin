@@ -20,6 +20,7 @@ Usage:
 
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from grpclib.client import Channel
 
@@ -27,10 +28,13 @@ from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
   SimulatorServiceStub,
   SubmitRequestRequest,
+  SubscribeRequest,
 )
 
 if TYPE_CHECKING:
-  from adk_agent_sim.generated.adksim.v1 import SimulatorSession
+  from collections.abc import AsyncIterator
+
+  from adk_agent_sim.generated.adksim.v1 import SessionEvent, SimulatorSession
   from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
     GenerateContentRequest,
   )
@@ -204,3 +208,40 @@ class SimulatorClient:
     )
     response = await self._stub.submit_request(submit_request)
     return response.event_id
+
+  async def subscribe(
+    self, client_id: str | None = None
+  ) -> AsyncIterator[SessionEvent]:
+    """Subscribe to the event stream for the current session.
+
+    Opens a server-side streaming RPC to receive session events in real-time.
+    The server will first replay any historical events, then stream live events.
+
+    Args:
+        client_id: Optional client identifier for logging/debugging.
+            If not provided, a UUID will be generated.
+
+    Yields:
+        SessionEvent objects as they are received from the server.
+
+    Raises:
+        RuntimeError: If the client is not connected (call connect() first).
+        RuntimeError: If no session has been created (call create_session() first).
+
+    Example:
+        async for event in client.subscribe():
+            print(f"Received event: {event.event_id}")
+    """
+    if self._stub is None:
+      raise RuntimeError("Client is not connected. Call connect() first.")
+
+    if self._session_id is None:
+      raise RuntimeError("No session created. Call create_session() first.")
+
+    request = SubscribeRequest(
+      session_id=self._session_id,
+      client_id=client_id or str(uuid4()),
+    )
+
+    async for response in self._stub.subscribe(request):
+      yield response.event
