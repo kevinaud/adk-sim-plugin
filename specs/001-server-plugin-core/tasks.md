@@ -362,13 +362,13 @@
 **User Stories**: US1 (Basic Interception)
 **Reference**: See plan.md § ADKProtoConverter Reference Implementation for complete code
 
-- [ ] T005 [ph3f2] Create `ADKProtoConverter` class with docstring in `adk_agent_sim/plugin/converter.py`
-- [ ] T006 [ph3f2] Implement `llm_request_to_proto(adk_request: LlmRequest) -> GenerateContentRequest` with model name mapping in `adk_agent_sim/plugin/converter.py`
-- [ ] T007 [ph3f2] Implement contents serialization (Pydantic → Proto via `json_format.ParseDict`) in `adk_agent_sim/plugin/converter.py`
-- [ ] T008 [ph3f2] Implement config unpacking: system_instruction, tools, safety_settings → separate Proto fields in `adk_agent_sim/plugin/converter.py`
-- [ ] T009 [ph3f2] Implement GenerationConfig mapping (temperature, top_p, max_output_tokens, etc.) in `adk_agent_sim/plugin/converter.py`
-- [ ] T010 [ph3f2] Implement `proto_to_llm_response(proto_response: GenerateContentResponse) -> LlmResponse` using `LlmResponse.create()` factory in `adk_agent_sim/plugin/converter.py`
-- [ ] T011 [ph3f2] Add comprehensive converter tests in `tests/unit/plugin/test_converter.py`
+- [x] T005 [ph3f2] Create `ADKProtoConverter` class with docstring in `adk_agent_sim/plugin/converter.py`
+- [x] T006 [ph3f2] Implement `llm_request_to_proto(adk_request: LlmRequest) -> GenerateContentRequest` with model name mapping in `adk_agent_sim/plugin/converter.py`
+- [x] T007 [ph3f2] Implement contents serialization (Pydantic → Proto via `json_format.ParseDict`) in `adk_agent_sim/plugin/converter.py`
+- [x] T008 [ph3f2] Implement config unpacking: system_instruction, tools, safety_settings → separate Proto fields in `adk_agent_sim/plugin/converter.py`
+- [x] T009 [ph3f2] Implement GenerationConfig mapping (temperature, top_p, max_output_tokens, etc.) in `adk_agent_sim/plugin/converter.py`
+- [x] T010 [ph3f2] Implement `proto_to_llm_response(proto_response: GenerateContentResponse) -> LlmResponse` using `LlmResponse.create()` factory in `adk_agent_sim/plugin/converter.py`
+- [x] T011 [ph3f2] Add comprehensive converter tests in `tests/unit/plugin/test_converter.py`
 
 ---
 

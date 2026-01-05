@@ -117,26 +117,27 @@ def simulator_service() -> SimulatorService:
   return SimulatorService(db=db, broadcaster=broadcaster)
 ```
 
-#### dirty-equals for Declarative Assertions
-Use `dirty-equals` for declarative test assertions instead of multiple single-field assertions.
+#### PyHamcrest for Declarative Assertions
+Use `pyhamcrest` for declarative test assertions. Minimize the number of assertions required to check a given set of assumptions.
 
 **Philosophy**: Construct full expected objects and compare in one assertion rather than many `assert response.x == y` statements.
 
-**Installation**: Already in dev dependencies
+**Installation**: Already in dev dependencies (`pyhamcrest`)
 
-**Common Helpers**:
-| Helper | Purpose | Example |
-|--------|---------|---------|
-| `IsPositiveInt` | Any positive integer | `assert id == IsPositiveInt` |
-| `IsStr()` | Any string, with optional regex | `assert name == IsStr(regex=r'^user_.*')` |
-| `IsUUID` | Valid UUID string | `assert session_id == IsUUID(4)` |
-| `IsNow()` | Datetime close to now | `assert created_at == IsNow(delta=5)` |
-| `IsDatetime()` | Datetime matching constraints | `assert ts == IsDatetime(ge=start_time)` |
-| `IsInstance[T]` | Instance of type T | `assert obj == IsInstance[MyClass]` |
-| `IsPartialDict()` | Dict with at least these keys | `assert d == IsPartialDict(a=1)` |
-| `IsStrictDict()` | Dict with exact keys in order | `assert d == IsStrictDict(a=1, b=2)` |
-| `IsList()` | List with expected elements | `assert items == IsList(x, y, length=2)` |
-| `AnyThing` | Matches any value | `assert d == IsDict(id=AnyThing, name='x')` |
+**Frequently Used Matchers**:
+```python
+from hamcrest import (
+  assert_that,          # The main assertion entry point
+  equal_to,             # Matches if actual == expected
+  has_properties,       # Matches specific object attributes (obj.attr)
+  contains,             # Matches list items strictly in order
+  contains_inanyorder,  # Matches list items regardless of order
+  has_entries,          # Matches dictionary key-value pairs
+  instance_of,          # Matches if object is an instance of a class
+  not_none,             # Matches if value is not None
+  matches_regexp,       # Matches string against a regex pattern
+)
+```
 
 **Example - Before (many assertions)**:
 ```python
@@ -147,21 +148,35 @@ assert response.sessions[0].description == "test"
 assert response.sessions[1].id > 0
 ```
 
-**Example - After (declarative)**:
+**Example - After (declarative with equal_to)**:
 ```python
-# ✅ PREFER: Construct expected object, single assertion
-from dirty_equals import IsPositiveInt, IsStr, IsNow, IsList
+# ✅ PREFER: Construct full expected object, single assertion
+from hamcrest import assert_that, equal_to
 
-assert response == ListSessionsResponse(
-  sessions=[
-    SessionInfo(id=IsPositiveInt, description="test", created_at=IsNow(delta=5)),
-    SessionInfo(id=IsPositiveInt, description="other", created_at=IsNow(delta=5)),
-  ],
-  next_page_token="",
-)
+assert_that(result, equal_to(
+  MyDataclass(
+    field1="expected_value",
+    field2=123,
+    field3=True,
+  )
+))
 ```
 
-**Key Pattern**: When testing RPC responses, construct the full expected proto message type and compare against it. Use dirty-equals helpers for dynamic fields (IDs, timestamps).
+**Example - When non-deterministic values exist (use has_properties)**:
+```python
+# ✅ PREFER: Single assertion with field-level matchers for dynamic values
+from hamcrest import assert_that, has_properties, instance_of, matches_regexp
+
+assert_that(response, has_properties(
+  id=matches_regexp(r'^[0-9a-f-]{36}$'),  # UUID pattern
+  description=equal_to("test"),
+  status=equal_to("active"),
+))
+```
+
+**Key Pattern**: 
+1. When all values are deterministic → use `equal_to()` with fully constructed expected object
+2. When some values are non-deterministic (UUIDs, timestamps) → use `has_properties()` with field-level matchers
 
 ---
 
