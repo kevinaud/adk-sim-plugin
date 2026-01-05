@@ -51,6 +51,14 @@ Parse these from `$ARGUMENTS`.
 - Exception: `TYPE_CHECKING` imports belong in the `if TYPE_CHECKING:` block
 - Runtime imports go at module level; type-only imports go in TYPE_CHECKING
 
+#### Python Environment (uv)
+- **ALWAYS use `uv` for Python commands**: This project uses `uv` for dependency management
+- **Running tests**: `uv run pytest <path>` — NEVER use bare `pytest` or IDE test runners
+- **Running scripts**: `uv run python <script>` — NEVER use bare `python`
+- **Running any Python tool**: `uv run <tool>` — e.g., `uv run ruff`, `uv run pyright`
+- **Why**: `uv` ensures the correct virtual environment and dependencies are used
+- **NEVER** use IDE-provided "Run Tests" buttons or tools — always use terminal with `uv run`
+
 #### Python TYPE_CHECKING Pattern (CRITICAL)
 When a type is only used in type hints (not at runtime), use this pattern:
 
@@ -208,7 +216,8 @@ For each task in the assigned list:
 
 1. **Run relevant tests**:
    - Identify test files related to the changes
-   - Execute tests and verify they pass
+   - Execute tests using `uv run pytest <test_path>` in terminal
+   - **NEVER** use IDE test runners or bare `pytest` — always use `uv run`
    - If tests fail: FIX immediately, do not return control
 
 2. **Run presubmit** (CRITICAL):
