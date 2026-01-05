@@ -501,11 +501,11 @@
 **Goal**: Handle connection loss and reconnect to existing session
 **User Stories**: US3 (Session Persistence)
 
-- [ ] T048 [ph3f11] Detect connection loss in `_listen_loop()` via gRPC exceptions in `adk_agent_sim/plugin/core.py`
-- [ ] T049 [ph3f11] Implement exponential backoff retry logic in `adk_agent_sim/plugin/core.py`
-- [ ] T050 [ph3f11] Reconnect using stored `session_id` instead of creating new session in `adk_agent_sim/plugin/core.py`
-- [ ] T051 [ph3f11] Filter replayed events - ignore already-resolved turn_ids in `adk_agent_sim/plugin/core.py`
-- [ ] T052 [ph3f11] Add reconnection tests simulating server restart in `tests/unit/plugin/test_plugin.py`
+- [x] T048 [ph3f11] Detect connection loss in `_listen_loop()` via gRPC exceptions in `adk_agent_sim/plugin/core.py`
+- [x] T049 [ph3f11] Implement exponential backoff retry logic in `adk_agent_sim/plugin/core.py`
+- [x] T050 [ph3f11] Reconnect using stored `session_id` instead of creating new session in `adk_agent_sim/plugin/core.py`
+- [x] T051 [ph3f11] Filter replayed events - ignore already-resolved turn_ids in `adk_agent_sim/plugin/core.py`
+- [x] T052 [ph3f11] Add reconnection tests simulating server restart in `tests/unit/plugin/test_plugin.py`
 
 ---
 

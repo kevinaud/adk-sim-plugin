@@ -916,3 +916,259 @@ class TestBeforeModelCallback:
     assert_that(
       proto_req.system_instruction.parts[0].text, equal_to("You are a math tutor.")
     )
+
+
+@dataclass
+class FakeReconnectingClient:
+  """Fake SimulatorClient for testing reconnection logic (T052).
+
+  Simulates a connection that fails after N events, then succeeds on reconnect.
+  """
+
+  session_id: str = "reconnect-session-123"
+  events_before_failure: list[SessionEvent] = field(default_factory=list)
+  events_after_reconnect: list[SessionEvent] = field(default_factory=list)
+  connect_count: int = 0
+  close_count: int = 0
+  _failed_once: bool = False
+  _session_id: str | None = None
+
+  async def connect(self) -> None:
+    """Track connect calls."""
+    self.connect_count += 1
+
+  async def close(self) -> None:
+    """Track close calls."""
+    self.close_count += 1
+
+  async def subscribe(
+    self, client_id: str | None = None
+  ) -> AsyncIterator[SessionEvent]:
+    """Yield events then fail, or yield reconnect events."""
+    from grpclib.exceptions import StreamTerminatedError
+
+    if not self._failed_once:
+      for event in self.events_before_failure:
+        yield event
+      self._failed_once = True
+      raise StreamTerminatedError("Connection lost")
+
+    # After reconnect
+    for event in self.events_after_reconnect:
+      yield event
+
+
+class TestPluginReconnection:
+  """Tests for plugin reconnection logic (T052)."""
+
+  @pytest.mark.asyncio
+  async def test_reconnection_on_stream_terminated_error(self) -> None:
+    """_listen_loop reconnects when StreamTerminatedError occurs (T048, T050)."""
+    # Arrange
+    turn_id = "turn-after-reconnect"
+    response_event = _create_llm_response_event(turn_id, "After reconnect")
+
+    fake_client = FakeReconnectingClient(
+      events_before_failure=[],  # Fail immediately
+      events_after_reconnect=[response_event],
+    )
+
+    plugin = SimulatorPlugin()
+    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "reconnect-session-123"
+    # Set fast backoff for testing
+    plugin._initial_backoff = 0.01
+    plugin._max_backoff = 0.05
+
+    # Create pending future
+    future = plugin._pending_futures.create(turn_id)
+
+    # Act
+    listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Wait for future to resolve (through reconnection)
+    result = await asyncio.wait_for(future, timeout=2.0)
+
+    # Stop the loop
+    plugin._shutting_down = True
+    await listen_task
+
+    # Assert - reconnection happened
+    assert_that(fake_client.connect_count, equal_to(1))  # One reconnect
+    assert_that(fake_client.close_count, equal_to(1))  # Closed before reconnect
+    assert_that(result.candidates[0].content.parts[0].text, equal_to("After reconnect"))
+
+  @pytest.mark.asyncio
+  async def test_exponential_backoff_timing(self) -> None:
+    """Exponential backoff increases delay between retries (T049)."""
+    # Arrange
+    plugin = SimulatorPlugin()
+    plugin._initial_backoff = 0.01
+    plugin._max_backoff = 0.08
+    plugin._backoff_multiplier = 2.0
+
+    retry_times: list[float] = []
+
+    @dataclass
+    class AlwaysFailingClient:
+      """Client that always fails on subscribe."""
+
+      connect_count: int = 0
+      _session_id: str | None = "test-session"
+
+      async def connect(self) -> None:
+        self.connect_count += 1
+
+      async def close(self) -> None:
+        pass
+
+      async def subscribe(
+        self, client_id: str | None = None
+      ) -> AsyncIterator[SessionEvent]:
+        from grpclib.const import Status
+        from grpclib.exceptions import GRPCError
+
+        retry_times.append(asyncio.get_event_loop().time())
+        raise GRPCError(Status.UNAVAILABLE, "Server unavailable")
+        yield  # Never reached - makes this a generator
+
+    fake_client = AlwaysFailingClient()
+    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = "test-session"
+
+    # Act - run for a short time
+    listen_task = asyncio.create_task(plugin._listen_loop())
+    await asyncio.sleep(0.25)  # Let it retry a few times
+    plugin._shutting_down = True
+    listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await listen_task
+
+    # Assert - verify backoff pattern (at least 3 retries)
+    assert len(retry_times) >= 3, f"Expected at least 3 retries, got {len(retry_times)}"
+    # Check delays increase (with tolerance for timing)
+    if len(retry_times) >= 3:
+      delay1 = retry_times[1] - retry_times[0]
+      delay2 = retry_times[2] - retry_times[1]
+      # Second delay should be approximately 2x the first
+      assert delay2 >= delay1 * 1.5, (
+        f"Backoff not increasing: {delay1:.3f} -> {delay2:.3f}"
+      )
+
+  @pytest.mark.asyncio
+  async def test_reconnection_uses_existing_session_id(self) -> None:
+    """Reconnection restores session_id to client (T050)."""
+    # Arrange
+    existing_session_id = "existing-session-456"
+
+    @dataclass
+    class TrackingClient:
+      """Client that tracks session_id restoration."""
+
+      connect_count: int = 0
+      _session_id: str | None = None
+      restored_session_ids: list[str | None] = field(default_factory=list)
+      _should_fail: bool = True
+
+      async def connect(self) -> None:
+        self.connect_count += 1
+        self.restored_session_ids.append(self._session_id)
+
+      async def close(self) -> None:
+        pass
+
+      async def subscribe(
+        self, client_id: str | None = None
+      ) -> AsyncIterator[SessionEvent]:
+        from grpclib.exceptions import StreamTerminatedError
+
+        if self._should_fail:
+          self._should_fail = False
+          raise StreamTerminatedError("Connection lost")
+        # Empty stream after reconnect
+        return
+        yield  # Makes this a generator
+
+    fake_client = TrackingClient()
+    plugin = SimulatorPlugin()
+    plugin._client = fake_client  # type: ignore[assignment]
+    plugin.session_id = existing_session_id
+    plugin._initial_backoff = 0.01
+
+    # Act
+    listen_task = asyncio.create_task(plugin._listen_loop())
+    await asyncio.sleep(0.1)
+    plugin._shutting_down = True
+    await listen_task
+
+    # Assert - session_id was restored after reconnect
+    assert_that(fake_client.connect_count, equal_to(1))
+    # After _reconnect(), the client's _session_id should match plugin's
+    assert_that(fake_client._session_id, equal_to(existing_session_id))
+
+  @pytest.mark.asyncio
+  async def test_replayed_events_are_filtered(self) -> None:
+    """Already-resolved turn_ids are ignored on replay (T051)."""
+    # Arrange
+    already_resolved_turn_id = "already-resolved-turn"
+    new_turn_id = "new-turn"
+
+    # First response resolves the turn
+    response1 = _create_llm_response_event(
+      already_resolved_turn_id, "First response", event_id="event-1"
+    )
+    # Replayed event for same turn (should be filtered)
+    replayed = _create_llm_response_event(
+      already_resolved_turn_id, "Replayed response", event_id="event-2"
+    )
+    # New event for different turn
+    response2 = _create_llm_response_event(
+      new_turn_id, "New response", event_id="event-3"
+    )
+
+    fake_client = FakeSimulatorClient(events=[response1, replayed, response2])
+    plugin = SimulatorPlugin()
+    plugin._client = fake_client  # type: ignore[assignment]
+
+    # Create futures
+    future1 = plugin._pending_futures.create(already_resolved_turn_id)
+    future2 = plugin._pending_futures.create(new_turn_id)
+
+    # Act
+    listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Wait for both futures
+    result1 = await asyncio.wait_for(future1, timeout=1.0)
+    result2 = await asyncio.wait_for(future2, timeout=1.0)
+
+    await listen_task
+
+    # Assert - first response used (not the replay)
+    assert_that(result1.candidates[0].content.parts[0].text, equal_to("First response"))
+    assert_that(result2.candidates[0].content.parts[0].text, equal_to("New response"))
+
+  @pytest.mark.asyncio
+  async def test_close_sets_shutdown_flag(self) -> None:
+    """close() sets _shutting_down flag to stop reconnection loop."""
+    # Arrange
+    plugin = SimulatorPlugin()
+
+    @dataclass
+    class FakeClosingClient:
+      """Client with close() method for testing shutdown."""
+
+      closed: bool = False
+
+      async def close(self) -> None:
+        self.closed = True
+
+    fake_client = FakeClosingClient()
+    plugin._client = fake_client  # type: ignore[assignment]
+
+    # Act
+    assert_that(plugin._shutting_down, is_(False))
+    await plugin.close()
+
+    # Assert
+    assert_that(plugin._shutting_down, is_(True))
+    assert_that(fake_client.closed, is_(True))

@@ -26,6 +26,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import betterproto
+from grpclib.exceptions import GRPCError, StreamTerminatedError
 
 from adk_agent_sim.plugin.client import SimulatorClient
 from adk_agent_sim.plugin.config import PluginConfig
@@ -90,6 +91,12 @@ class SimulatorPlugin:
     self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
     self._client: SimulatorClient | None = None
+    self._shutting_down = False
+
+    # Reconnection settings
+    self._initial_backoff = 1.0  # seconds
+    self._max_backoff = 30.0  # seconds
+    self._backoff_multiplier = 2.0
 
   def should_intercept(self, agent_name: str) -> bool:
     """Check if a given agent should be intercepted.
@@ -255,57 +262,116 @@ class SimulatorPlugin:
     - llm_response events: Resolved via PendingFutureRegistry if pending
     - Unknown events: Logged and ignored
 
+    On connection loss (gRPC exceptions), implements exponential backoff
+    reconnection using the stored session_id.
+
     Idempotency is handled by PendingFutureRegistry.resolve() which
-    returns False for already-resolved or unknown turn_ids.
+    returns False for already-resolved or unknown turn_ids (T051).
     """
     if self._client is None:
       logger.error("_listen_loop called without client - exiting")
       return
 
-    try:
-      async for event in self._client.subscribe():
-        # Determine the payload type using betterproto's oneof helper
-        field_name, payload = betterproto.which_one_of(event, "payload")
+    backoff = self._initial_backoff
 
-        if field_name == "llm_response" and payload is not None:
-          # This is a human decision - resolve the pending future
-          resolved = self._pending_futures.resolve(event.turn_id, payload)
-          if resolved:
+    while not self._shutting_down:
+      try:
+        async for event in self._client.subscribe():
+          # Reset backoff on successful message
+          backoff = self._initial_backoff
+
+          # Determine the payload type using betterproto's oneof helper
+          field_name, payload = betterproto.which_one_of(event, "payload")
+
+          if field_name == "llm_response" and payload is not None:
+            # This is a human decision - resolve the pending future
+            # T051: resolve() returns False for already-resolved turn_ids
+            resolved = self._pending_futures.resolve(event.turn_id, payload)
+            if resolved:
+              logger.debug(
+                "Resolved future for turn_id=%s, event_id=%s",
+                event.turn_id,
+                event.event_id,
+              )
+            else:
+              # Already resolved or unknown turn_id - idempotent handling
+              logger.debug(
+                "Ignored llm_response for turn_id=%s (not pending)",
+                event.turn_id,
+              )
+          elif field_name == "llm_request":
+            # Request events are our own submissions - just log and skip
             logger.debug(
-              "Resolved future for turn_id=%s, event_id=%s",
+              "Received llm_request event turn_id=%s (ignoring)",
               event.turn_id,
-              event.event_id,
             )
           else:
-            # Already resolved or unknown turn_id - idempotent handling
-            logger.debug(
-              "Ignored llm_response for turn_id=%s (not pending)",
-              event.turn_id,
+            # Unknown payload type
+            logger.warning(
+              "Unknown event payload type: %s for event_id=%s",
+              field_name,
+              event.event_id,
             )
-        elif field_name == "llm_request":
-          # Request events are our own submissions - just log and skip
-          logger.debug(
-            "Received llm_request event turn_id=%s (ignoring)",
-            event.turn_id,
-          )
-        else:
-          # Unknown payload type
-          logger.warning(
-            "Unknown event payload type: %s for event_id=%s",
-            field_name,
-            event.event_id,
-          )
-    except asyncio.CancelledError:
-      logger.debug("_listen_loop cancelled")
-      raise
-    except Exception:
-      logger.exception("Error in _listen_loop")
-      raise
+        # Stream ended normally - exit loop
+        break
+
+      except asyncio.CancelledError:
+        logger.debug("_listen_loop cancelled")
+        raise
+
+      except (GRPCError, StreamTerminatedError, OSError) as e:
+        # T048: Detect connection loss via gRPC exceptions
+        if self._shutting_down:
+          logger.debug("_listen_loop stopping due to shutdown")
+          break
+
+        logger.warning(
+          "Connection lost: %s. Reconnecting in %.1fs...",
+          type(e).__name__,
+          backoff,
+        )
+
+        # T049: Exponential backoff
+        await asyncio.sleep(backoff)
+        backoff = min(backoff * self._backoff_multiplier, self._max_backoff)
+
+        # T050: Reconnect using stored session_id
+        try:
+          await self._reconnect()
+          logger.info("Reconnected to session %s", self.session_id)
+        except Exception:
+          logger.warning("Reconnection failed, will retry...")
+          continue
+
+  async def _reconnect(self) -> None:
+    """Reconnect to the server using the stored session_id.
+
+    T050: Reconnect using stored session_id instead of creating new session.
+    The server will replay historical events on resubscription.
+
+    Raises:
+        RuntimeError: If session_id is not set.
+        Various: If connection fails.
+    """
+    if self.session_id is None:
+      raise RuntimeError("Cannot reconnect: no session_id stored")
+
+    if self._client is None:
+      raise RuntimeError("Cannot reconnect: client not initialized")
+
+    # Close existing channel if any
+    await self._client.close()
+
+    # Reconnect with existing session_id
+    await self._client.connect()
+    self._client._session_id = self.session_id  # Restore session_id
 
   async def close(self) -> None:
     """Clean up resources and close connections."""
+    self._shutting_down = True
     if self._listen_task:
       self._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await self._listen_task
-    # TODO: Close gRPC channel
+    if self._client:
+      await self._client.close()
