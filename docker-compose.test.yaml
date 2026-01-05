@@ -1,0 +1,19 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      PYTHONPATH: /app
+      LOG_LEVEL: INFO
+      # Use temp file SQLite (in-memory has connection pool issues)
+      ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/test.db"
+    command: uv run python -m adk_agent_sim.server.main
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
