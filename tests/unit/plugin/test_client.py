@@ -1,11 +1,53 @@
 """Tests for SimulatorClient."""
 
+from datetime import UTC, datetime
+from uuid import uuid4
+
 import pytest
 from hamcrest import assert_that, equal_to, instance_of, is_, none
 
-from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
+from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,  # noqa: TC001  # Used at runtime in FakeSimulatorServiceStub
+  CreateSessionResponse,
+  SimulatorServiceStub,
+  SimulatorSession,
+)
 from adk_agent_sim.plugin.client import SimulatorClient
 from adk_agent_sim.plugin.config import PluginConfig
+
+
+class FakeSimulatorServiceStub:
+  """Fake implementation of SimulatorServiceStub for unit testing.
+
+  This fake provides predictable responses without requiring a real server.
+  It tracks calls for verification and returns configurable responses.
+  """
+
+  def __init__(self) -> None:
+    """Initialize the fake stub with default behavior."""
+    self.create_session_calls: list[CreateSessionRequest] = []
+    self._next_session_id: str = str(uuid4())
+
+  def set_next_session_id(self, session_id: str) -> None:
+    """Configure the session ID to return on the next create_session call."""
+    self._next_session_id = session_id
+
+  async def create_session(
+    self,
+    request: CreateSessionRequest,
+    *,
+    timeout: float | None = None,  # noqa: ASYNC109
+    deadline: object | None = None,
+    metadata: object | None = None,
+  ) -> CreateSessionResponse:
+    """Fake create_session RPC returning a configurable session."""
+    self.create_session_calls.append(request)
+    session = SimulatorSession(
+      id=self._next_session_id,
+      created_at=datetime.now(tz=UTC),
+      description=request.description,
+    )
+    return CreateSessionResponse(session=session)
 
 
 class TestSimulatorClientInit:
@@ -42,6 +84,14 @@ class TestSimulatorClientInit:
     client = SimulatorClient(config)
 
     assert_that(client.is_connected, is_(False))
+
+  def test_init_session_id_is_none(self) -> None:
+    """__init__ leaves session_id as None (no session created)."""
+    config = PluginConfig(server_url="http://localhost:9000")
+
+    client = SimulatorClient(config)
+
+    assert_that(client.session_id, is_(none()))
 
 
 class TestSimulatorClientParseServerUrl:
@@ -210,3 +260,109 @@ class TestSimulatorClientClose:
     await client.close()
 
     assert_that(client.channel, is_(none()))
+
+
+class TestSimulatorClientCreateSession:
+  """Tests for SimulatorClient.create_session()."""
+
+  @pytest.mark.asyncio
+  async def test_create_session_raises_when_not_connected(self) -> None:
+    """create_session() raises RuntimeError if not connected."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+
+    with pytest.raises(RuntimeError, match="not connected"):
+      await client.create_session()
+
+  @pytest.mark.asyncio
+  async def test_create_session_returns_simulator_session(self) -> None:
+    """create_session() returns a SimulatorSession from the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    expected_id = "test-session-123"
+    fake_stub.set_next_session_id(expected_id)
+
+    # Manually inject the fake stub (simulating connected state)
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    session = await client.create_session(description="Test session")
+
+    assert_that(session, instance_of(SimulatorSession))
+    assert_that(session.id, equal_to(expected_id))
+
+  @pytest.mark.asyncio
+  async def test_create_session_stores_session_id(self) -> None:
+    """create_session() stores the returned session_id for subsequent calls."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+    expected_id = "stored-session-456"
+    fake_stub.set_next_session_id(expected_id)
+
+    # Manually inject the fake stub
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    await client.create_session(description="Test session")
+
+    assert_that(client.session_id, equal_to(expected_id))
+
+  @pytest.mark.asyncio
+  async def test_create_session_passes_description_to_server(self) -> None:
+    """create_session() passes the description to the server RPC."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    await client.create_session(description="My test description")
+
+    assert_that(len(fake_stub.create_session_calls), equal_to(1))
+    assert_that(
+      fake_stub.create_session_calls[0].description,
+      equal_to("My test description"),
+    )
+
+  @pytest.mark.asyncio
+  async def test_create_session_with_none_description_sends_empty_string(self) -> None:
+    """create_session() sends empty string when description is None."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    await client.create_session(description=None)
+
+    assert_that(fake_stub.create_session_calls[0].description, equal_to(""))
+
+  @pytest.mark.asyncio
+  async def test_create_session_default_description_is_none(self) -> None:
+    """create_session() with no arguments sends empty description."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    await client.create_session()
+
+    assert_that(fake_stub.create_session_calls[0].description, equal_to(""))
+
+  @pytest.mark.asyncio
+  async def test_create_session_returns_description_from_response(self) -> None:
+    """create_session() returns the description set by the server."""
+    config = PluginConfig(server_url="http://localhost:50051")
+    client = SimulatorClient(config)
+    fake_stub = FakeSimulatorServiceStub()
+
+    # Manually inject the fake stub
+    client._stub = fake_stub  # type: ignore[assignment]
+
+    session = await client.create_session(description="Expected description")
+
+    assert_that(session.description, equal_to("Expected description"))

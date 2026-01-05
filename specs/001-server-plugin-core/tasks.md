@@ -393,9 +393,9 @@
 **Goal**: Client method for session creation
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T016 [ph3f4] Implement `create_session(description: str | None) -> SimulatorSession` calling server RPC in `adk_agent_sim/plugin/client.py`
-- [ ] T017 [ph3f4] Store returned `session_id` for subsequent calls in `adk_agent_sim/plugin/client.py`
-- [ ] T018 [ph3f4] Add `create_session()` tests in `tests/unit/plugin/test_client.py`
+- [x] T016 [ph3f4] Implement `create_session(description: str | None) -> SimulatorSession` calling server RPC in `adk_agent_sim/plugin/client.py`
+- [x] T017 [ph3f4] Store returned `session_id` for subsequent calls in `adk_agent_sim/plugin/client.py`
+- [x] T018 [ph3f4] Add `create_session()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 
