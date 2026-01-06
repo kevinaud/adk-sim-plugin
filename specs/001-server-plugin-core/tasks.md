@@ -393,9 +393,9 @@
 **Goal**: Client method for session creation
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T016 [ph3f4] Implement `create_session(description: str | None) -> SimulatorSession` calling server RPC in `adk_agent_sim/plugin/client.py`
-- [ ] T017 [ph3f4] Store returned `session_id` for subsequent calls in `adk_agent_sim/plugin/client.py`
-- [ ] T018 [ph3f4] Add `create_session()` tests in `tests/unit/plugin/test_client.py`
+- [x] T016 [ph3f4] Implement `create_session(description: str | None) -> SimulatorSession` calling server RPC in `adk_agent_sim/plugin/client.py`
+- [x] T017 [ph3f4] Store returned `session_id` for subsequent calls in `adk_agent_sim/plugin/client.py`
+- [x] T018 [ph3f4] Add `create_session()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 
@@ -406,9 +406,9 @@
 **Goal**: Client method to submit intercepted LLM requests
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T019 [ph3f5] Implement `submit_request(turn_id: str, agent_name: str, request: GenerateContentRequest) -> str` in `adk_agent_sim/plugin/client.py`
-- [ ] T020 [ph3f5] Return `event_id` from server response in `adk_agent_sim/plugin/client.py`
-- [ ] T021 [ph3f5] Add `submit_request()` tests in `tests/unit/plugin/test_client.py`
+- [x] T019 [ph3f5] Implement `submit_request(turn_id: str, agent_name: str, request: GenerateContentRequest) -> str` in `adk_agent_sim/plugin/client.py`
+- [x] T020 [ph3f5] Return `event_id` from server response in `adk_agent_sim/plugin/client.py`
+- [x] T021 [ph3f5] Add `submit_request()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 
@@ -419,9 +419,9 @@
 **Goal**: Client method for event stream subscription
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T022 [ph3f6] Implement `subscribe() -> AsyncIterator[SessionEvent]` as async generator in `adk_agent_sim/plugin/client.py`
-- [ ] T023 [ph3f6] Yield events from server stream in `adk_agent_sim/plugin/client.py`
-- [ ] T024 [ph3f6] Add `subscribe()` tests in `tests/unit/plugin/test_client.py`
+- [x] T022 [ph3f6] Implement `subscribe() -> AsyncIterator[SessionEvent]` as async generator in `adk_agent_sim/plugin/client.py`
+- [x] T023 [ph3f6] Yield events from server stream in `adk_agent_sim/plugin/client.py`
+- [x] T024 [ph3f6] Add `subscribe()` tests in `tests/unit/plugin/test_client.py`
 
 ---
 
@@ -432,11 +432,11 @@
 **Goal**: Map turn_id to Future for blocking await
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T025 [ph3f7] Create `PendingFutureRegistry` class with `dict[str, asyncio.Future]` in `adk_agent_sim/plugin/futures.py`
-- [ ] T026 [ph3f7] Implement `create(turn_id: str) -> asyncio.Future` creating and storing future in `adk_agent_sim/plugin/futures.py`
-- [ ] T027 [ph3f7] Implement `resolve(turn_id: str, response: GenerateContentResponse)` setting future result in `adk_agent_sim/plugin/futures.py`
-- [ ] T028 [ph3f7] Implement `cancel_all()` for shutdown cleanup in `adk_agent_sim/plugin/futures.py`
-- [ ] T029 [ph3f7] Add `PendingFutureRegistry` tests in `tests/unit/plugin/test_futures.py`
+- [x] T025 [ph3f7] Create `PendingFutureRegistry` class with `dict[str, asyncio.Future]` in `adk_agent_sim/plugin/futures.py`
+- [x] T026 [ph3f7] Implement `create(turn_id: str) -> asyncio.Future` creating and storing future in `adk_agent_sim/plugin/futures.py`
+- [x] T027 [ph3f7] Implement `resolve(turn_id: str, response: GenerateContentResponse)` setting future result in `adk_agent_sim/plugin/futures.py`
+- [x] T028 [ph3f7] Implement `cancel_all()` for shutdown cleanup in `adk_agent_sim/plugin/futures.py`
+- [x] T029 [ph3f7] Add `PendingFutureRegistry` tests in `tests/unit/plugin/test_futures.py`
 
 ---
 
