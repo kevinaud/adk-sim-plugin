@@ -47,9 +47,11 @@ Parse these from `$ARGUMENTS`.
 ### Project-Specific Conventions
 
 #### Python Imports
-- **All imports at module top**: Never import inside methods or functions
+- **All imports at module top**: NEVER import inside methods, functions, or test bodies
+- **PROHIBITED**: Lazy imports inside function bodies (e.g., `def test_foo(): from x import Y`)
 - Exception: `TYPE_CHECKING` imports belong in the `if TYPE_CHECKING:` block
 - Runtime imports go at module level; type-only imports go in TYPE_CHECKING
+- If an import causes circular import issues, refactor the code structure instead of using lazy imports
 
 #### Python Environment (uv)
 - **ALWAYS use `uv` for Python commands**: This project uses `uv` for dependency management
