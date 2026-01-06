@@ -447,11 +447,11 @@
 **Goal**: Background task processing server events
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T030 [ph3f8] Implement `_listen_loop()` as background asyncio task in `adk_agent_sim/plugin/core.py`
-- [ ] T031 [ph3f8] Subscribe to server stream via `SimulatorClient.subscribe()` in `adk_agent_sim/plugin/core.py`
-- [ ] T032 [ph3f8] On `llm_response` event, resolve corresponding Future via `PendingFutureRegistry` in `adk_agent_sim/plugin/core.py`
-- [ ] T033 [ph3f8] Ignore events for already-resolved turn_ids (idempotency) in `adk_agent_sim/plugin/core.py`
-- [ ] T034 [ph3f8] Add `_listen_loop()` tests in `tests/unit/plugin/test_plugin.py`
+- [x] T030 [ph3f8] Implement `_listen_loop()` as background asyncio task in `adk_agent_sim/plugin/core.py`
+- [x] T031 [ph3f8] Subscribe to server stream via `SimulatorClient.subscribe()` in `adk_agent_sim/plugin/core.py`
+- [x] T032 [ph3f8] On `llm_response` event, resolve corresponding Future via `PendingFutureRegistry` in `adk_agent_sim/plugin/core.py`
+- [x] T033 [ph3f8] Ignore events for already-resolved turn_ids (idempotency) in `adk_agent_sim/plugin/core.py`
+- [x] T034 [ph3f8] Add `_listen_loop()` tests in `tests/unit/plugin/test_plugin.py`
 
 ---
 

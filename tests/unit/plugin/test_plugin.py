@@ -1,8 +1,30 @@
 """Tests for SimulatorPlugin."""
 
-import pytest
+import asyncio
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
+import pytest
+from hamcrest import assert_that, equal_to, is_
+
+from adk_agent_sim.generated.adksim.v1 import (
+  SessionEvent,
+  SubscribeResponse,
+)
+from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
+  Candidate,
+  Content,
+  GenerateContentRequest,
+  GenerateContentResponse,
+  Part,
+)
 from adk_agent_sim.plugin import SimulatorPlugin
+
+if TYPE_CHECKING:
+  from collections.abc import AsyncIterator
+
+  from adk_agent_sim.generated.adksim.v1 import SubscribeRequest
 
 
 class TestSimulatorPlugin:
@@ -51,3 +73,260 @@ class TestSimulatorPlugin:
     plugin = SimulatorPlugin()
     with pytest.raises(NotImplementedError):
       await plugin.before_model_callback({}, "test_agent")
+
+
+@dataclass
+class FakeSimulatorServiceStub:
+  """Fake SimulatorServiceStub for testing _listen_loop without real gRPC.
+
+  This fake allows tests to control the event stream by providing
+  a list of events to yield, and optionally simulating errors.
+  """
+
+  events: list[SessionEvent]
+  error_after: int | None = None
+
+  async def subscribe(
+    self, request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Yield configured events wrapped in SubscribeResponse.
+
+    Optionally raises an error if error_after is set.
+
+    Args:
+        request: The SubscribeRequest (contains session_id).
+
+    Yields:
+        SubscribeResponse objects wrapping events from the configured events list.
+
+    Raises:
+        RuntimeError: If error_after is set and that many events have been yielded.
+    """
+    for i, event in enumerate(self.events):
+      if self.error_after is not None and i >= self.error_after:
+        raise RuntimeError("Simulated connection error")
+      yield SubscribeResponse(event=event)
+
+
+def _create_llm_request_event(
+  turn_id: str,
+  event_id: str = "event-001",
+  session_id: str = "session-001",
+) -> SessionEvent:
+  """Create a SessionEvent with an llm_request payload."""
+  return SessionEvent(
+    event_id=event_id,
+    session_id=session_id,
+    timestamp=datetime.now(UTC),
+    turn_id=turn_id,
+    agent_name="test_agent",
+    llm_request=GenerateContentRequest(
+      model="gemini-pro",
+      contents=[Content(parts=[Part(text="Hello")])],
+    ),
+  )
+
+
+def _create_llm_response_event(
+  turn_id: str,
+  response_text: str = "Human response",
+  event_id: str = "event-002",
+  session_id: str = "session-001",
+) -> SessionEvent:
+  """Create a SessionEvent with an llm_response payload."""
+  return SessionEvent(
+    event_id=event_id,
+    session_id=session_id,
+    timestamp=datetime.now(UTC),
+    turn_id=turn_id,
+    agent_name="test_agent",
+    llm_response=GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text=response_text)],
+            role="model",
+          )
+        )
+      ]
+    ),
+  )
+
+
+class TestListenLoop:
+  """Tests for SimulatorPlugin._listen_loop()."""
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_resolves_pending_future_on_llm_response(self) -> None:
+    """_listen_loop() resolves pending future when llm_response event arrives."""
+    # Arrange
+    turn_id = "turn-123"
+    response_text = "Hello from human!"
+    response_event = _create_llm_response_event(turn_id, response_text)
+
+    fake_stub = FakeSimulatorServiceStub(events=[response_event])
+    plugin = SimulatorPlugin()
+    plugin._stub = fake_stub  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+
+    # Create a pending future for this turn_id
+    future = plugin._pending_futures.create(turn_id)
+
+    # Act - run listen loop in background
+    listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Wait for the future to be resolved
+    result = await asyncio.wait_for(future, timeout=1.0)
+
+    # Wait for task to complete (stream ends after yielding all events)
+    await listen_task
+
+    # Assert
+    assert_that(result.candidates[0].content.parts[0].text, equal_to(response_text))
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_ignores_llm_request_events(self) -> None:
+    """_listen_loop() ignores llm_request events (no error, no resolution)."""
+    # Arrange
+    turn_id = "turn-123"
+    request_event = _create_llm_request_event(turn_id)
+    response_event = _create_llm_response_event(turn_id)
+
+    fake_stub = FakeSimulatorServiceStub(events=[request_event, response_event])
+    plugin = SimulatorPlugin()
+    plugin._stub = fake_stub  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+
+    # Create pending future
+    future = plugin._pending_futures.create(turn_id)
+
+    # Act
+    listen_task = asyncio.create_task(plugin._listen_loop())
+    result = await asyncio.wait_for(future, timeout=1.0)
+
+    # Wait for task to complete
+    await listen_task
+
+    # Assert - future was resolved by the response, not affected by request
+    assert_that(result.candidates[0].content.parts[0].text, equal_to("Human response"))
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_handles_already_resolved_turn_id_idempotently(
+    self,
+  ) -> None:
+    """_listen_loop() ignores llm_response for already-resolved turn_id."""
+    # Arrange
+    turn_id = "turn-123"
+    response_event1 = _create_llm_response_event(
+      turn_id, "First response", event_id="event-001"
+    )
+    response_event2 = _create_llm_response_event(
+      turn_id, "Duplicate response", event_id="event-002"
+    )
+
+    fake_stub = FakeSimulatorServiceStub(events=[response_event1, response_event2])
+    plugin = SimulatorPlugin()
+    plugin._stub = fake_stub  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+
+    # Create pending future
+    future = plugin._pending_futures.create(turn_id)
+
+    # Act
+    listen_task = asyncio.create_task(plugin._listen_loop())
+    result = await asyncio.wait_for(future, timeout=1.0)
+
+    # Wait for task to complete (processes both events, second is ignored)
+    await listen_task
+
+    # Assert - first response was used, duplicate ignored without error
+    assert_that(result.candidates[0].content.parts[0].text, equal_to("First response"))
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_handles_unknown_turn_id_idempotently(self) -> None:
+    """_listen_loop() ignores llm_response for unknown turn_id."""
+    # Arrange
+    response_event = _create_llm_response_event("unknown-turn-id")
+
+    fake_stub = FakeSimulatorServiceStub(events=[response_event])
+    plugin = SimulatorPlugin()
+    plugin._stub = fake_stub  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+
+    # No pending future created - turn_id is unknown
+
+    # Act - should not raise, just log and continue
+    await plugin._listen_loop()
+
+    # Assert - no futures pending (none were ever created)
+    assert_that(len(plugin._pending_futures), equal_to(0))
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_exits_when_stub_is_none(self) -> None:
+    """_listen_loop() exits immediately if stub is None."""
+    # Arrange
+    plugin = SimulatorPlugin()
+    plugin._stub = None
+    plugin.session_id = "session-001"
+
+    # Act
+    await plugin._listen_loop()
+
+    # Assert - no error, just returns
+    assert_that(plugin._stub, is_(None))
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_propagates_cancellation(self) -> None:
+    """_listen_loop() propagates CancelledError when cancelled during iteration."""
+    # Arrange - use an async generator that yields slowly to allow cancellation
+    plugin = SimulatorPlugin()
+    plugin.session_id = "session-001"
+
+    events_yielded: list[str] = []
+
+    async def slow_subscribe(
+      request: SubscribeRequest,
+    ) -> AsyncIterator[SubscribeResponse]:
+      """Slow async generator that can be interrupted."""
+      for i in range(100):
+        events_yielded.append(f"turn-{i}")
+        yield SubscribeResponse(event=_create_llm_request_event(f"turn-{i}"))
+        # Small delay to allow cancellation between events
+        await asyncio.sleep(0.01)
+
+    @dataclass
+    class SlowFakeStub:
+      async def subscribe(
+        self, request: SubscribeRequest
+      ) -> AsyncIterator[SubscribeResponse]:
+        async for response in slow_subscribe(request):
+          yield response
+
+    plugin._stub = SlowFakeStub()  # type: ignore[assignment]
+
+    # Act
+    listen_task = asyncio.create_task(plugin._listen_loop())
+    await asyncio.sleep(0.05)  # Let it process a few events
+    listen_task.cancel()
+
+    # Assert
+    with pytest.raises(asyncio.CancelledError):
+      await listen_task
+
+    # Verify at least some events were processed before cancellation
+    assert_that(len(events_yielded) > 0, is_(True))
+    assert_that(len(events_yielded) < 100, is_(True))  # Not all events processed
+
+  @pytest.mark.asyncio
+  async def test_listen_loop_propagates_errors(self) -> None:
+    """_listen_loop() propagates errors from the event stream."""
+    # Arrange - use error_after=0 to raise immediately on first iteration
+    events = [_create_llm_request_event("turn-1")]
+    fake_stub = FakeSimulatorServiceStub(events=events, error_after=0)
+    plugin = SimulatorPlugin()
+    plugin._stub = fake_stub  # type: ignore[assignment]
+    plugin.session_id = "session-001"
+
+    # Act & Assert
+    with pytest.raises(RuntimeError, match="Simulated connection error"):
+      await plugin._listen_loop()
