@@ -94,6 +94,7 @@ Implement the Simulator Server (gRPC backend with SQLite persistence) and Python
 | ph3f9 | `phase/3/feat/9/plugin-initialize` | Plugin.initialize() with URL output | ~120 | ph3f8 |
 | ph3f10 | `phase/3/feat/10/plugin-intercept` | Plugin.before_model_callback() full flow | ~180 | ph3f2, ph3f9 |
 | ph3f11 | `phase/3/feat/11/plugin-reconnect` | Reconnection logic on connection loss | ~150 | ph3f10 |
+| ph3f12 | `phase/3/feat/12/plugin-e2e-test` | E2E test: ADK Agent → Plugin → Server → SimulatedHuman → Plugin → Agent | ~180 | ph3f11 |
 
 ### Phase 4: Integration & Polish
 

@@ -509,6 +509,23 @@
 
 ---
 
+## ph3f12: Plugin E2E Integration Test (~180 lines)
+
+**Branch**: `git town append phase/3/feat/12/plugin-e2e-test`
+**Depends on**: ph3f11
+**Goal**: Full integration test verifying ADK Agent → Plugin → gRPC Server → SimulatedHuman → Plugin → Agent loop
+**User Stories**: US1 (Basic Interception - end-to-end validation)
+
+- [x] T053 [ph3f12] Create `SimulatedHuman` helper class with `__init__(stub, session_id)` in `tests/e2e/test_plugin_integration.py`
+- [x] T054 [ph3f12] Implement `SimulatedHuman.run_background_loop()` that subscribes, listens for `llm_request` events, and auto-responds with `SubmitDecision` in `tests/e2e/test_plugin_integration.py`
+- [x] T055 [ph3f12] Create `test_agent_interception_flow()` async test function using `grpc_channel` and `simulator_server` fixtures in `tests/e2e/test_plugin_integration.py`
+- [x] T056 [ph3f12] Setup Plugin with `server_url` from fixture and call `initialize()` to get `session_id` in `tests/e2e/test_plugin_integration.py`
+- [x] T057 [ph3f12] Setup `LlmAgent` and `InMemoryRunner` with plugin injection in `tests/e2e/test_plugin_integration.py`
+- [x] T058 [ph3f12] Execute agent concurrently with SimulatedHuman background loop using `asyncio.timeout()` in `tests/e2e/test_plugin_integration.py`
+- [x] T059 [ph3f12] Assert agent's final response contains the SimulatedHuman's auto-response text in `tests/e2e/test_plugin_integration.py`
+
+---
+
 ## Phase 4: Integration & Polish
 
 ---
@@ -619,11 +636,12 @@ ph3f1: Plugin config (independent start)
                                └── ph3f9: Plugin initialize
                                     └── ph3f10: Plugin intercept ←── ph3f2: Proto converter (joins here)
                                          └── ph3f11: Plugin reconnect
-                                              └── ph4f1: Integration basic
-                                                   └── ph4f2: Integration selective
-                                                        └── ph4f3: Integration queue
-                                                             └── ph4f4: Integration persist
-                                                                  └── ph4f5: Docker compose
+                                              └── ph3f12: Plugin E2E test
+                                                   └── ph4f1: Integration basic
+                                                        └── ph4f2: Integration selective
+                                                             └── ph4f3: Integration queue
+                                                                  └── ph4f4: Integration persist
+                                                                       └── ph4f5: Docker compose
 
 ph3f2: Proto converter (independent, merges into ph3f10)
 ```
@@ -725,14 +743,14 @@ If you believe a mock is necessary:
 
 | Metric | Count |
 |--------|-------|
-| Total Tasks | 139 |
-| Total PRs | 34 |
+| Total Tasks | 146 |
+| Total PRs | 35 |
 | Phase 1 (Data Layer) | 8 PRs, 29 tasks |
 | Phase 2 (Server Core) | 10 PRs, 38 tasks |
-| Phase 3 (Plugin Core) | 11 PRs, 52 tasks |
+| Phase 3 (Plugin Core) | 12 PRs, 59 tasks |
 | Phase 4 (Integration) | 5 PRs, 20 tasks |
 | Parallel Opportunities | 4 tasks marked [P] |
-| Estimated Total LOC | ~4,080 lines |
+| Estimated Total LOC | ~4,260 lines |
 
 ---
 
