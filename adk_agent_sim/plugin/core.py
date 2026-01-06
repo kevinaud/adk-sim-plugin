@@ -19,6 +19,7 @@ Usage:
 import asyncio
 import contextlib
 import logging
+import logging
 import os
 import sys
 from typing import TYPE_CHECKING
@@ -95,7 +96,10 @@ class SimulatorPlugin:
 
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
+    self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
+    self._factory: SimulatorClientFactory | None = None
+    self._stub: SimulatorServiceStub | None = None
     self._factory: SimulatorClientFactory | None = None
     self._stub: SimulatorServiceStub | None = None
 
