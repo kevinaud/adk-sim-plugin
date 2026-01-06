@@ -21,6 +21,7 @@ from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionResponse,
   SessionEvent,
   SimulatorSession,
+  SubmitRequestResponse,
   SubscribeResponse,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
@@ -35,7 +36,7 @@ from adk_agent_sim.plugin import SimulatorPlugin
 if TYPE_CHECKING:
   from collections.abc import AsyncIterator
 
-  from adk_agent_sim.generated.adksim.v1 import SubscribeRequest
+  from adk_agent_sim.generated.adksim.v1 import SubmitRequestRequest, SubscribeRequest
 
 
 class TestSimulatorPlugin:
@@ -71,13 +72,6 @@ class TestSimulatorPlugin:
     assert plugin.should_intercept("router") is True
     assert plugin.should_intercept("other_agent") is False
 
-  @pytest.mark.asyncio
-  async def test_before_model_callback_not_implemented(self) -> None:
-    """Test that before_model_callback raises NotImplementedError."""
-    plugin = SimulatorPlugin()
-    with pytest.raises(NotImplementedError):
-      await plugin.before_model_callback({}, "test_agent")
-
 
 @dataclass
 class FakeSimulatorServiceStub:
@@ -91,15 +85,16 @@ class FakeSimulatorServiceStub:
   error_after: int | None = None
 
   async def subscribe(
-    self, subscribe_request: SubscribeRequest
+    self, request: SubscribeRequest
   ) -> AsyncIterator[SubscribeResponse]:
     """Yield configured events wrapped in SubscribeResponse.
 
     Args:
-        subscribe_request: The subscribe request (ignored in fake).
+        request: The SubscribeRequest (ignored in fake implementation).
 
     Yields:
-        SubscribeResponse objects containing events from the configured list.
+        SubscribeResponse objects containing SessionEvent from the configured
+        events list.
 
     Raises:
         RuntimeError: If error_after is set and that many events have been yielded.
@@ -126,7 +121,7 @@ class FakeInitializingStub:
   async def create_session(
     self, request: CreateSessionRequest
   ) -> CreateSessionResponse:
-    """Create a fake session and return the response."""
+    """Create a fake session and return it."""
     self.description = request.description
     self.session_created = True
     return CreateSessionResponse(
@@ -138,7 +133,7 @@ class FakeInitializingStub:
     )
 
   async def subscribe(
-    self, subscribe_request: SubscribeRequest
+    self, request: SubscribeRequest
   ) -> AsyncIterator[SubscribeResponse]:
     """Yield configured events wrapped in SubscribeResponse."""
     for event in self.events:
@@ -150,10 +145,12 @@ class FakeSimulatorClientFactory:
   """Fake SimulatorClientFactory for testing."""
 
   stub: FakeInitializingStub
+  connected: bool = False
   closed: bool = False
 
   async def get_simulator_stub(self) -> FakeInitializingStub:
-    """Return the configured stub."""
+    """Return the fake stub."""
+    self.connected = True
     return self.stub
 
   async def close(self) -> None:
@@ -219,8 +216,8 @@ class TestListenLoop:
 
     fake_stub = FakeSimulatorServiceStub(events=[response_event])
     plugin = SimulatorPlugin()
-    plugin._stub = fake_stub  # type: ignore[assignment]
     plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Create a pending future for this turn_id
     future = plugin._pending_futures.create(turn_id)
@@ -247,8 +244,8 @@ class TestListenLoop:
 
     fake_stub = FakeSimulatorServiceStub(events=[request_event, response_event])
     plugin = SimulatorPlugin()
-    plugin._stub = fake_stub  # type: ignore[assignment]
     plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Create pending future
     future = plugin._pending_futures.create(turn_id)
@@ -279,8 +276,8 @@ class TestListenLoop:
 
     fake_stub = FakeSimulatorServiceStub(events=[response_event1, response_event2])
     plugin = SimulatorPlugin()
-    plugin._stub = fake_stub  # type: ignore[assignment]
     plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Create pending future
     future = plugin._pending_futures.create(turn_id)
@@ -303,8 +300,8 @@ class TestListenLoop:
 
     fake_stub = FakeSimulatorServiceStub(events=[response_event])
     plugin = SimulatorPlugin()
-    plugin._stub = fake_stub  # type: ignore[assignment]
     plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # No pending future created - turn_id is unknown
 
@@ -337,7 +334,7 @@ class TestListenLoop:
     events_yielded: list[str] = []
 
     async def slow_subscribe(
-      subscribe_request: SubscribeRequest,
+      request: SubscribeRequest,
     ) -> AsyncIterator[SubscribeResponse]:
       """Slow async generator that can be interrupted."""
       for i in range(100):
@@ -349,9 +346,9 @@ class TestListenLoop:
     @dataclass
     class SlowFakeStub:
       async def subscribe(
-        self, subscribe_request: SubscribeRequest
+        self, request: SubscribeRequest
       ) -> AsyncIterator[SubscribeResponse]:
-        async for response in slow_subscribe(subscribe_request):
+        async for response in slow_subscribe(request):
           yield response
 
     plugin._stub = SlowFakeStub()  # type: ignore[assignment]
@@ -376,8 +373,8 @@ class TestListenLoop:
     events = [_create_llm_request_event("turn-1")]
     fake_stub = FakeSimulatorServiceStub(events=events, error_after=0)
     plugin = SimulatorPlugin()
-    plugin._stub = fake_stub  # type: ignore[assignment]
     plugin.session_id = "session-001"
+    plugin._stub = fake_stub  # type: ignore[assignment]
 
     # Act & Assert
     with pytest.raises(RuntimeError, match="Simulated connection error"):
@@ -484,8 +481,15 @@ class TestInitialize:
     # Arrange
     session_id = "new-session-id"
     fake_stub = FakeInitializingStub(session_id=session_id)
+    plugin = SimulatorPlugin(server_url="localhost:50051")
 
-    # We test the stub's create_session directly to verify behavior
+    # Inject the fake stub
+    plugin._stub = fake_stub  # type: ignore[assignment]
+
+    # We need to simulate what initialize() does when stub is already set
+    # Instead, let's test the individual components and one integration test
+    # that mocks at a higher level
+
     # Create session directly to verify behavior
     response = await fake_stub.create_session(
       CreateSessionRequest(description="test description")
@@ -532,17 +536,22 @@ class TestInitialize:
     # Capture stdout
     captured_output = io.StringIO()
 
-    # Monkeypatch SimulatorClientFactory on the module where it's used
-    from adk_agent_sim.plugin import core as core_module
+    # Create plugin
+    plugin = SimulatorPlugin(server_url="localhost:50051")
+
+    # Monkeypatch SimulatorClientFactory to return our fake
+    from adk_agent_sim.plugin import client_factory as factory_module
 
     monkeypatch.setattr(
-      core_module,
-      "SimulatorClientFactory",
-      lambda config: fake_factory,
+      factory_module.SimulatorClientFactory,
+      "__init__",
+      lambda self, config: None,
     )
-
-    # Create plugin after patching
-    plugin = SimulatorPlugin(server_url="localhost:50051")
+    monkeypatch.setattr(
+      factory_module.SimulatorClientFactory,
+      "get_simulator_stub",
+      fake_factory.get_simulator_stub,
+    )
 
     # Act
     sys.stdout = captured_output
@@ -571,3 +580,363 @@ class TestInitialize:
       plugin._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await plugin._listen_task
+
+
+@dataclass
+class FakeCallbackContext:
+  """Fake CallbackContext for testing before_model_callback.
+
+  Provides the minimal interface needed for agent name lookup.
+  """
+
+  agent_name: str
+
+
+@dataclass
+class FakeInterceptingStub:
+  """Fake SimulatorServiceStub for testing before_model_callback.
+
+  Tracks submitted requests and provides controlled response via event stream.
+  Uses an async queue to properly handle concurrent submit/subscribe operations.
+  """
+
+  session_id: str = "session-123"
+  submitted_requests: list[SubmitRequestRequest] = field(default_factory=list)
+  response_to_send: GenerateContentResponse | None = None
+  _event_queue: asyncio.Queue[SubscribeResponse] = field(default_factory=asyncio.Queue)
+
+  async def submit_request(
+    self, request: SubmitRequestRequest
+  ) -> SubmitRequestResponse:
+    """Record the submitted request and return a fake event_id."""
+    self.submitted_requests.append(request)
+    # Dynamically create response event for this turn_id and put in queue
+    if self.response_to_send:
+      event = SessionEvent(
+        event_id=f"event-{request.turn_id}",
+        session_id=self.session_id,
+        timestamp=datetime.now(UTC),
+        turn_id=request.turn_id,
+        agent_name=request.agent_name,
+        llm_response=self.response_to_send,
+      )
+      await self._event_queue.put(SubscribeResponse(event=event))
+    return SubmitRequestResponse(event_id=f"event-{request.turn_id}")
+
+  async def subscribe(
+    self, request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Yield events from the queue as they arrive."""
+    while True:
+      response = await self._event_queue.get()
+      yield response
+
+
+class TestBeforeModelCallback:
+  """Tests for SimulatorPlugin.before_model_callback()."""
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_bypasses_non_targeted_agents(self) -> None:
+    """before_model_callback returns None for non-targeted agents."""
+    # Arrange - target only "orchestrator"
+    plugin = SimulatorPlugin(target_agents={"orchestrator"})
+    callback_context = FakeCallbackContext(agent_name="worker_agent")
+
+    # Create a minimal LlmRequest using ADK types
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Hello")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Act
+    result = await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Assert - returns None to let request proceed to real LLM
+    assert_that(result, is_(None))
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_intercepts_all_when_no_targets(self) -> None:
+    """before_model_callback intercepts all agents when target_agents is empty."""
+    # Arrange
+    response_text = "Human provided response"
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text=response_text)],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_stub = FakeInterceptingStub(response_to_send=response)
+    plugin = SimulatorPlugin()  # No target_agents = intercept all
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="any_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Test message")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Start listen loop to resolve futures
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act
+    result = await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - request was submitted
+    assert_that(len(fake_stub.submitted_requests), equal_to(1))
+    submitted_req = fake_stub.submitted_requests[0]
+    assert_that(submitted_req.agent_name, equal_to("any_agent"))
+    assert_that(submitted_req.request.model, equal_to("models/gemini-2.0-flash"))
+
+    # Assert - response was returned
+    assert result is not None
+    assert result.content is not None
+    assert result.content.parts is not None
+    assert_that(result.content.parts[0].text, equal_to(response_text))
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_intercepts_targeted_agent(self) -> None:
+    """before_model_callback intercepts only targeted agents."""
+    # Arrange
+    response_text = "Orchestrator response"
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text=response_text)],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_stub = FakeInterceptingStub(response_to_send=response)
+    plugin = SimulatorPlugin(target_agents={"orchestrator", "router"})
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="orchestrator")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-pro",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Process this")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Start listen loop to resolve futures
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act
+    result = await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - request was intercepted
+    assert_that(len(fake_stub.submitted_requests), equal_to(1))
+
+    # Assert - correct response
+    assert result is not None
+    assert result.content is not None
+    assert result.content.parts is not None
+    assert_that(result.content.parts[0].text, equal_to(response_text))
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_raises_without_initialization(self) -> None:
+    """before_model_callback raises RuntimeError when stub is not initialized."""
+    # Arrange
+    plugin = SimulatorPlugin()
+    plugin._stub = None  # Explicitly not initialized
+    callback_context = FakeCallbackContext(agent_name="test_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Hello")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Act & Assert
+    with pytest.raises(RuntimeError, match="Plugin not initialized"):
+      await plugin.before_model_callback(
+        callback_context,  # type: ignore[arg-type]
+        llm_request,
+      )
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_generates_unique_turn_ids(self) -> None:
+    """before_model_callback generates unique turn_id for each call."""
+    # Arrange
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text="Response")],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_stub = FakeInterceptingStub(response_to_send=response)
+    plugin = SimulatorPlugin()
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="test_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="Hello")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(),
+    )
+
+    # Start listen loop
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act - make two calls
+    await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+    await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - two different turn_ids
+    assert_that(len(fake_stub.submitted_requests), equal_to(2))
+    turn_id_1 = fake_stub.submitted_requests[0].turn_id
+    turn_id_2 = fake_stub.submitted_requests[1].turn_id
+    assert turn_id_1 != turn_id_2
+
+  @pytest.mark.asyncio
+  async def test_before_model_callback_converts_request_to_proto(self) -> None:
+    """before_model_callback correctly converts LlmRequest to GenerateContentRequest."""
+    # Arrange
+    response = GenerateContentResponse(
+      candidates=[
+        Candidate(
+          content=Content(
+            parts=[Part(text="Response")],
+            role="model",
+          )
+        )
+      ]
+    )
+
+    fake_stub = FakeInterceptingStub(response_to_send=response)
+    plugin = SimulatorPlugin()
+    plugin.session_id = "session-123"
+    plugin._stub = fake_stub  # type: ignore[assignment]
+
+    callback_context = FakeCallbackContext(agent_name="test_agent")
+
+    from google.adk.models import LlmRequest
+    from google.genai import types as genai_types
+
+    llm_request = LlmRequest(
+      model="gemini-2.0-flash",
+      contents=[
+        genai_types.Content(
+          role="user",
+          parts=[genai_types.Part(text="What is 2+2?")],
+        )
+      ],
+      config=genai_types.GenerateContentConfig(
+        temperature=0.7,
+        system_instruction="You are a math tutor.",
+      ),
+    )
+
+    # Start listen loop
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Act
+    await plugin.before_model_callback(
+      callback_context,  # type: ignore[arg-type]
+      llm_request,
+    )
+
+    # Cleanup
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+    # Assert - proto request was correctly converted
+    submitted_req = fake_stub.submitted_requests[0]
+    proto_req = submitted_req.request
+    assert_that(proto_req.model, equal_to("models/gemini-2.0-flash"))
+    assert_that(proto_req.contents[0].parts[0].text, equal_to("What is 2+2?"))
+    assert proto_req.system_instruction is not None
+    assert_that(
+      proto_req.system_instruction.parts[0].text, equal_to("You are a math tutor.")
+    )

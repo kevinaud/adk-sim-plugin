@@ -19,23 +19,28 @@ Usage:
 import asyncio
 import contextlib
 import logging
-import logging
 import os
 import sys
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
+from uuid import uuid4
 
 import betterproto
 
 from adk_agent_sim.generated.adksim.v1 import (
   CreateSessionRequest,
+  SubmitRequestRequest,
   SubscribeRequest,
 )
 from adk_agent_sim.plugin.client_factory import SimulatorClientFactory
 from adk_agent_sim.plugin.config import PluginConfig
+from adk_agent_sim.plugin.converter import ADKProtoConverter
 from adk_agent_sim.plugin.futures import PendingFutureRegistry
 
 if TYPE_CHECKING:
+  from google.adk.agents.callback_context import CallbackContext
+  from google.adk.models import LlmRequest, LlmResponse
+
   from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
 
 logger = logging.getLogger(__name__)
@@ -90,10 +95,7 @@ class SimulatorPlugin:
 
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
-    self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
-    self._factory: SimulatorClientFactory | None = None
-    self._stub: SimulatorServiceStub | None = None
     self._factory: SimulatorClientFactory | None = None
     self._stub: SimulatorServiceStub | None = None
 
@@ -133,10 +135,10 @@ class SimulatorPlugin:
     config = PluginConfig(server_url=self.server_url)
     self._factory = SimulatorClientFactory(config)
 
-    # Get the stub (connects automatically)
+    # Get stub (connects if needed)
     self._stub = await self._factory.get_simulator_stub()
 
-    # Create session using stub directly
+    # Create session
     response = await self._stub.create_session(
       CreateSessionRequest(description=description or "")
     )
@@ -196,7 +198,9 @@ class SimulatorPlugin:
     )
     print(banner, file=sys.stdout, flush=True)
 
-  async def before_model_callback(self, request: object, agent_name: str) -> object:
+  async def before_model_callback(
+    self, callback_context: CallbackContext, llm_request: LlmRequest
+  ) -> LlmResponse | None:
     """Intercept an LLM call and route it through the Remote Brain protocol.
 
     This is the main hook point for ADK integration. When an agent makes an
@@ -208,26 +212,53 @@ class SimulatorPlugin:
     5. Returns the response to the agent
 
     Args:
-        request: The LlmRequest from ADK (Pydantic model).
-        agent_name: The name of the agent making the request.
+        callback_context: The ADK CallbackContext containing agent information.
+        llm_request: The LlmRequest from ADK (Pydantic model).
 
     Returns:
-        The LlmResponse from the human decision.
+        The LlmResponse from the human decision, or None if not intercepting.
     """
+    # Get the agent name from the callback context
+    agent_name = callback_context.agent_name
+
+    # T040: Check target_agents filter - return None to proceed to real LLM
+    # if agent is not targeted
     if not self.should_intercept(agent_name):
-      # Let the request proceed to the real LLM
       return None
 
-    # TODO: Implement the Future Map pattern
-    # 1. Convert Pydantic -> Proto
-    # 2. Generate turn_id
-    # 3. Create and register Future
-    # 4. Submit request to server
-    # 5. Await Future
-    # 6. Convert Proto -> Pydantic
-    # 7. Return response
+    if self._stub is None:
+      logger.error("before_model_callback called without initialized stub")
+      raise RuntimeError("Plugin not initialized. Call initialize() first.")
 
-    raise NotImplementedError("before_model_callback not yet implemented")
+    # T041: Generate turn_id UUID and create Future via PendingFutureRegistry
+    turn_id = str(uuid4())
+    future = self._pending_futures.create(turn_id)
+
+    # T042: Use ADKProtoConverter.llm_request_to_proto() to transform
+    # LlmRequest → GenerateContentRequest
+    proto_request = ADKProtoConverter.llm_request_to_proto(llm_request)
+
+    # T043: Submit request via stub.submit_request()
+    await self._stub.submit_request(
+      SubmitRequestRequest(
+        session_id=self.session_id or "",
+        turn_id=turn_id,
+        agent_name=agent_name,
+        request=proto_request,
+      )
+    )
+
+    # T044: Log waiting state
+    logger.info(
+      "[ADK Simulator] Waiting for human input for agent: '%s'...", agent_name
+    )
+
+    # T045: Await Future (blocks indefinitely until response)
+    proto_response = await future
+
+    # T046: Use ADKProtoConverter.proto_to_llm_response() to transform
+    # GenerateContentResponse → LlmResponse
+    return ADKProtoConverter.proto_to_llm_response(proto_response)
 
   async def _listen_loop(self) -> None:
     """Background task that listens for responses from the server.
@@ -244,13 +275,16 @@ class SimulatorPlugin:
     Idempotency is handled by PendingFutureRegistry.resolve() which
     returns False for already-resolved or unknown turn_ids.
     """
-    if self._stub is None or self.session_id is None:
-      logger.error("_listen_loop called without stub or session_id - exiting")
+    if self._stub is None:
+      logger.error("_listen_loop called without stub - exiting")
       return
 
     try:
       async for response in self._stub.subscribe(
-        SubscribeRequest(session_id=self.session_id)
+        SubscribeRequest(
+          session_id=self.session_id or "",
+          client_id=str(uuid4()),
+        )
       ):
         event = response.event
         # Determine the payload type using betterproto's oneof helper

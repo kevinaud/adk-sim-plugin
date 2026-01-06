@@ -13,6 +13,13 @@ if TYPE_CHECKING:
   from pytest_docker.plugin import Services
 
 
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+  """Apply default timeout of 120 seconds to all e2e tests."""
+  for item in items:
+    if not item.get_closest_marker("timeout"):
+      item.add_marker(pytest.mark.timeout(120))
+
+
 @pytest.fixture(scope="session")
 def docker_compose_file() -> Path:
   """Return path to the test docker-compose file."""
