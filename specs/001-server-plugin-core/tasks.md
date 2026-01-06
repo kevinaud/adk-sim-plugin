@@ -462,16 +462,16 @@
 **Goal**: Plugin initialization with session creation and URL output
 **User Stories**: US1 (Basic Interception)
 
-- [ ] T035 [ph3f9] Implement `initialize()` connecting to server and creating session in `adk_agent_sim/plugin/core.py`
-- [ ] T036 [ph3f9] Start `_listen_loop()` background task in `adk_agent_sim/plugin/core.py`
-- [ ] T037 [ph3f9] Print session URL with decorated banner format to stdout in `adk_agent_sim/plugin/core.py`:
+- [x] T035 [ph3f9] Implement `initialize()` connecting to server and creating session in `adk_agent_sim/plugin/core.py`
+- [x] T036 [ph3f9] Start `_listen_loop()` background task in `adk_agent_sim/plugin/core.py`
+- [x] T037 [ph3f9] Print session URL with decorated banner format to stdout in `adk_agent_sim/plugin/core.py`:
   ```
   ================================================================
   [ADK Simulator] Session Started
   View and Control at: http://localhost:4200/session/<uuid>
   ================================================================
   ```
-- [ ] T038 [ph3f9] Add `initialize()` tests verifying banner format and URL output in `tests/unit/plugin/test_plugin.py`
+- [x] T038 [ph3f9] Add `initialize()` tests verifying banner format and URL output in `tests/unit/plugin/test_plugin.py`
 
 ---
 

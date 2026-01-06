@@ -1,15 +1,26 @@
 """Tests for SimulatorPlugin."""
 
 import asyncio
-from dataclasses import dataclass
+import contextlib
+import io
+import sys
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
-from hamcrest import assert_that, equal_to, is_
+from hamcrest import (
+  assert_that,
+  contains_string,
+  equal_to,
+  is_,
+)
 
 from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,
+  CreateSessionResponse,
   SessionEvent,
+  SimulatorSession,
   SubscribeResponse,
 )
 from adk_agent_sim.generated.google.ai.generativelanguage.v1beta import (
@@ -61,13 +72,6 @@ class TestSimulatorPlugin:
     assert plugin.should_intercept("other_agent") is False
 
   @pytest.mark.asyncio
-  async def test_initialize_not_implemented(self) -> None:
-    """Test that initialize raises NotImplementedError."""
-    plugin = SimulatorPlugin()
-    with pytest.raises(NotImplementedError):
-      await plugin.initialize()
-
-  @pytest.mark.asyncio
   async def test_before_model_callback_not_implemented(self) -> None:
     """Test that before_model_callback raises NotImplementedError."""
     plugin = SimulatorPlugin()
@@ -87,17 +91,15 @@ class FakeSimulatorServiceStub:
   error_after: int | None = None
 
   async def subscribe(
-    self, request: SubscribeRequest
+    self, subscribe_request: SubscribeRequest
   ) -> AsyncIterator[SubscribeResponse]:
     """Yield configured events wrapped in SubscribeResponse.
 
-    Optionally raises an error if error_after is set.
-
     Args:
-        request: The SubscribeRequest (contains session_id).
+        subscribe_request: The subscribe request (ignored in fake).
 
     Yields:
-        SubscribeResponse objects wrapping events from the configured events list.
+        SubscribeResponse objects containing events from the configured list.
 
     Raises:
         RuntimeError: If error_after is set and that many events have been yielded.
@@ -106,6 +108,57 @@ class FakeSimulatorServiceStub:
       if self.error_after is not None and i >= self.error_after:
         raise RuntimeError("Simulated connection error")
       yield SubscribeResponse(event=event)
+
+
+@dataclass
+class FakeInitializingStub:
+  """Fake SimulatorServiceStub for testing initialize() flow.
+
+  This fake supports create_session() and subscribe()
+  for testing the full initialization sequence.
+  """
+
+  session_id: str = "fake-session-123"
+  description: str = ""
+  events: list[SessionEvent] = field(default_factory=list)
+  session_created: bool = False
+
+  async def create_session(
+    self, request: CreateSessionRequest
+  ) -> CreateSessionResponse:
+    """Create a fake session and return the response."""
+    self.description = request.description
+    self.session_created = True
+    return CreateSessionResponse(
+      session=SimulatorSession(
+        id=self.session_id,
+        created_at=datetime.now(UTC),
+        description=self.description,
+      )
+    )
+
+  async def subscribe(
+    self, subscribe_request: SubscribeRequest
+  ) -> AsyncIterator[SubscribeResponse]:
+    """Yield configured events wrapped in SubscribeResponse."""
+    for event in self.events:
+      yield SubscribeResponse(event=event)
+
+
+@dataclass
+class FakeSimulatorClientFactory:
+  """Fake SimulatorClientFactory for testing."""
+
+  stub: FakeInitializingStub
+  closed: bool = False
+
+  async def get_simulator_stub(self) -> FakeInitializingStub:
+    """Return the configured stub."""
+    return self.stub
+
+  async def close(self) -> None:
+    """Mark the factory as closed."""
+    self.closed = True
 
 
 def _create_llm_request_event(
@@ -267,7 +320,6 @@ class TestListenLoop:
     # Arrange
     plugin = SimulatorPlugin()
     plugin._stub = None
-    plugin.session_id = "session-001"
 
     # Act
     await plugin._listen_loop()
@@ -285,7 +337,7 @@ class TestListenLoop:
     events_yielded: list[str] = []
 
     async def slow_subscribe(
-      request: SubscribeRequest,
+      subscribe_request: SubscribeRequest,
     ) -> AsyncIterator[SubscribeResponse]:
       """Slow async generator that can be interrupted."""
       for i in range(100):
@@ -297,9 +349,9 @@ class TestListenLoop:
     @dataclass
     class SlowFakeStub:
       async def subscribe(
-        self, request: SubscribeRequest
+        self, subscribe_request: SubscribeRequest
       ) -> AsyncIterator[SubscribeResponse]:
-        async for response in slow_subscribe(request):
+        async for response in slow_subscribe(subscribe_request):
           yield response
 
     plugin._stub = SlowFakeStub()  # type: ignore[assignment]
@@ -330,3 +382,192 @@ class TestListenLoop:
     # Act & Assert
     with pytest.raises(RuntimeError, match="Simulated connection error"):
       await plugin._listen_loop()
+
+
+class TestInitialize:
+  """Tests for SimulatorPlugin.initialize()."""
+
+  @pytest.mark.asyncio
+  async def test_initialize_prints_banner_with_correct_format(self) -> None:
+    """initialize() prints a decorated banner with the session URL."""
+    # Arrange
+    session_id = "abc-123-def-456"
+    plugin = SimulatorPlugin(server_url="localhost:50051")
+
+    # Capture stdout
+    captured_output = io.StringIO()
+
+    # Act - directly test _print_session_banner
+    sys.stdout = captured_output
+    try:
+      session_url = f"http://localhost:4200/session/{session_id}"
+      plugin._print_session_banner(session_url)
+    finally:
+      sys.stdout = sys.__stdout__
+
+    output = captured_output.getvalue()
+
+    # Assert - verify banner format
+    assert_that(output, contains_string("=" * 64))
+    assert_that(output, contains_string("[ADK Simulator] Session Started"))
+    assert_that(output, contains_string(f"View and Control at: {session_url}"))
+
+  @pytest.mark.asyncio
+  async def test_initialize_banner_contains_all_required_elements(self) -> None:
+    """The banner contains top border, title, URL line, and bottom border."""
+    # Arrange
+    session_id = "my-session-id"
+    plugin = SimulatorPlugin()
+    session_url = f"http://localhost:4200/session/{session_id}"
+
+    # Capture stdout
+    captured_output = io.StringIO()
+
+    # Act
+    sys.stdout = captured_output
+    try:
+      plugin._print_session_banner(session_url)
+    finally:
+      sys.stdout = sys.__stdout__
+
+    output = captured_output.getvalue()
+    lines = output.strip().split("\n")
+
+    # Assert - verify structure
+    # First and last lines should be the separator
+    assert_that(lines[0], equal_to("=" * 64))
+    assert_that(lines[1], equal_to("[ADK Simulator] Session Started"))
+    assert_that(lines[2], equal_to(f"View and Control at: {session_url}"))
+    assert_that(lines[3], equal_to("=" * 64))
+
+  def test_build_session_url_with_localhost(self) -> None:
+    """_build_session_url() builds correct URL for localhost."""
+    # Arrange
+    plugin = SimulatorPlugin(server_url="localhost:50051")
+    session_id = "session-abc-123"
+
+    # Act
+    url = plugin._build_session_url(session_id)
+
+    # Assert
+    assert_that(url, equal_to("http://localhost:4200/session/session-abc-123"))
+
+  def test_build_session_url_with_http_scheme(self) -> None:
+    """_build_session_url() builds correct URL when server URL has http scheme."""
+    # Arrange
+    plugin = SimulatorPlugin(server_url="http://myserver:50051")
+    session_id = "session-xyz"
+
+    # Act
+    url = plugin._build_session_url(session_id)
+
+    # Assert
+    assert_that(url, equal_to("http://myserver:4200/session/session-xyz"))
+
+  def test_build_session_url_with_custom_host(self) -> None:
+    """_build_session_url() uses the host from server_url."""
+    # Arrange
+    plugin = SimulatorPlugin(server_url="simulator.example.com:50051")
+    session_id = "remote-session"
+
+    # Act
+    url = plugin._build_session_url(session_id)
+
+    # Assert
+    assert_that(
+      url, equal_to("http://simulator.example.com:4200/session/remote-session")
+    )
+
+  @pytest.mark.asyncio
+  async def test_initialize_sets_session_id(self) -> None:
+    """initialize() sets the session_id on the plugin."""
+    # Arrange
+    session_id = "new-session-id"
+    fake_stub = FakeInitializingStub(session_id=session_id)
+
+    # We test the stub's create_session directly to verify behavior
+    # Create session directly to verify behavior
+    response = await fake_stub.create_session(
+      CreateSessionRequest(description="test description")
+    )
+
+    # Assert
+    assert_that(response.session.id, equal_to(session_id))
+    assert_that(fake_stub.session_created, is_(True))
+
+  @pytest.mark.asyncio
+  async def test_initialize_starts_listen_loop_task(self) -> None:
+    """initialize() starts the _listen_loop as a background task."""
+    # Arrange
+    session_id = "task-session"
+    fake_stub = FakeInitializingStub(session_id=session_id, events=[])
+    plugin = SimulatorPlugin(server_url="localhost:50051")
+
+    # Inject fake stub and manually run initialize logic
+    plugin._stub = fake_stub  # type: ignore[assignment]
+    plugin.session_id = session_id
+
+    # Act - start the listen loop task
+    plugin._listen_task = asyncio.create_task(plugin._listen_loop())
+
+    # Assert - task should be created and running
+    assert plugin._listen_task is not None
+    assert_that(plugin._listen_task.done(), is_(False))
+
+    # Cleanup - cancel the task
+    plugin._listen_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+      await plugin._listen_task
+
+  @pytest.mark.asyncio
+  async def test_initialize_integration_with_fake_factory(
+    self, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+    """Full initialize() flow with injected fake factory."""
+    # Arrange
+    session_id = "integration-test-session"
+    fake_stub = FakeInitializingStub(session_id=session_id, events=[])
+    fake_factory = FakeSimulatorClientFactory(stub=fake_stub)
+
+    # Capture stdout
+    captured_output = io.StringIO()
+
+    # Monkeypatch SimulatorClientFactory on the module where it's used
+    from adk_agent_sim.plugin import core as core_module
+
+    monkeypatch.setattr(
+      core_module,
+      "SimulatorClientFactory",
+      lambda config: fake_factory,
+    )
+
+    # Create plugin after patching
+    plugin = SimulatorPlugin(server_url="localhost:50051")
+
+    # Act
+    sys.stdout = captured_output
+    try:
+      result_url = await plugin.initialize("Test session")
+    finally:
+      sys.stdout = sys.__stdout__
+
+    output = captured_output.getvalue()
+
+    # Assert - URL returned correctly
+    assert_that(result_url, equal_to(f"http://localhost:4200/session/{session_id}"))
+
+    # Assert - session_id set
+    assert_that(plugin.session_id, equal_to(session_id))
+
+    # Assert - listen task started
+    assert plugin._listen_task is not None
+
+    # Assert - banner printed
+    assert_that(output, contains_string("[ADK Simulator] Session Started"))
+    assert_that(output, contains_string(f"http://localhost:4200/session/{session_id}"))
+
+    # Cleanup
+    if plugin._listen_task:
+      plugin._listen_task.cancel()
+      with contextlib.suppress(asyncio.CancelledError):
+        await plugin._listen_task

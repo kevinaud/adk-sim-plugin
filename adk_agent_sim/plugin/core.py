@@ -19,16 +19,24 @@ Usage:
 import asyncio
 import contextlib
 import logging
+import logging
 import os
+import sys
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 import betterproto
 
+from adk_agent_sim.generated.adksim.v1 import (
+  CreateSessionRequest,
+  SubscribeRequest,
+)
+from adk_agent_sim.plugin.client_factory import SimulatorClientFactory
+from adk_agent_sim.plugin.config import PluginConfig
 from adk_agent_sim.plugin.futures import PendingFutureRegistry
 
 if TYPE_CHECKING:
   from adk_agent_sim.generated.adksim.v1 import SimulatorServiceStub
-  from adk_agent_sim.plugin.client_factory import SimulatorClientFactory
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +90,10 @@ class SimulatorPlugin:
 
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
+    self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
+    self._factory: SimulatorClientFactory | None = None
+    self._stub: SimulatorServiceStub | None = None
     self._factory: SimulatorClientFactory | None = None
     self._stub: SimulatorServiceStub | None = None
 
@@ -103,6 +114,12 @@ class SimulatorPlugin:
   async def initialize(self, description: str = "") -> str:
     """Initialize the plugin by creating a session with the server.
 
+    This method:
+    1. Creates a SimulatorClient and connects to the server
+    2. Creates a new session with the server
+    3. Starts the background _listen_loop task
+    4. Prints a decorated banner with the session URL to stdout
+
     Args:
         description: Optional description for the session.
 
@@ -112,11 +129,72 @@ class SimulatorPlugin:
     Raises:
         ConnectionError: If unable to connect to the server.
     """
-    # TODO: Implement gRPC connection and CreateSession call
-    # TODO: Start background _listen_loop task
-    # TODO: Return clickable URL
+    # Create config and factory
+    config = PluginConfig(server_url=self.server_url)
+    self._factory = SimulatorClientFactory(config)
 
-    raise NotImplementedError("initialize not yet implemented")
+    # Get the stub (connects automatically)
+    self._stub = await self._factory.get_simulator_stub()
+
+    # Create session using stub directly
+    response = await self._stub.create_session(
+      CreateSessionRequest(description=description or "")
+    )
+    self.session_id = response.session.id
+
+    # Start background listener task
+    self._listen_task = asyncio.create_task(self._listen_loop())
+
+    # Build the session URL
+    session_url = self._build_session_url(self.session_id)
+
+    # Print the decorated banner
+    self._print_session_banner(session_url)
+
+    return session_url
+
+  def _build_session_url(self, session_id: str) -> str:
+    """Build the frontend URL for the session.
+
+    Derives the frontend URL from the server URL:
+    - If server is localhost:50051 (gRPC), assume frontend at localhost:4200
+    - Otherwise, parse the server URL and adjust port/scheme as needed
+
+    Args:
+        session_id: The session UUID.
+
+    Returns:
+        The full URL to view/control the session.
+    """
+    parsed = urlparse(self.server_url)
+
+    # Determine host
+    if parsed.hostname:
+      host = parsed.hostname
+    elif ":" in self.server_url:
+      host = self.server_url.split(":")[0] or "localhost"
+    else:
+      host = self.server_url or "localhost"
+
+    # Default frontend port is 4200
+    frontend_port = 4200
+
+    return f"http://{host}:{frontend_port}/session/{session_id}"
+
+  def _print_session_banner(self, session_url: str) -> None:
+    """Print a decorated banner with the session URL.
+
+    Args:
+        session_url: The URL to display in the banner.
+    """
+    banner = (
+      "\n"
+      "================================================================\n"
+      "[ADK Simulator] Session Started\n"
+      f"View and Control at: {session_url}\n"
+      "================================================================\n"
+    )
+    print(banner, file=sys.stdout, flush=True)
 
   async def before_model_callback(self, request: object, agent_name: str) -> object:
     """Intercept an LLM call and route it through the Remote Brain protocol.
@@ -166,8 +244,6 @@ class SimulatorPlugin:
     Idempotency is handled by PendingFutureRegistry.resolve() which
     returns False for already-resolved or unknown turn_ids.
     """
-    from adk_agent_sim.generated.adksim.v1 import SubscribeRequest
-
     if self._stub is None or self.session_id is None:
       logger.error("_listen_loop called without stub or session_id - exiting")
       return
@@ -221,4 +297,5 @@ class SimulatorPlugin:
       self._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await self._listen_task
-    # TODO: Close gRPC channel
+    if self._factory:
+      await self._factory.close()
