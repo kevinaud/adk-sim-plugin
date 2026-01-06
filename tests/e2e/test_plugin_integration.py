@@ -101,8 +101,8 @@ async def test_agent_interception_flow(
     app_name="e2e_plugin_test",
     agent=agent,
     session_service=session_service,
+    plugins=[plugin],
   )
-  runner.plugins.append(plugin)
 
   # Step D: Create session and run agent with timeout
   adk_session = await session_service.create_session(
