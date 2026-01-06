@@ -146,11 +146,7 @@ class SimulatorPlugin(BasePlugin):
     config = PluginConfig(server_url=self.server_url)
     self._factory = SimulatorClientFactory(config)
 
-<<<<<<< HEAD
     # Get stub (connects automatically if needed)
-=======
-    # Get stub (connects if needed)
->>>>>>> main
     self._stub = await self._factory.get_simulator_stub()
 
     # Create session
@@ -297,20 +293,7 @@ class SimulatorPlugin(BasePlugin):
       logger.error("_listen_loop called without stub - exiting")
       return
 
-<<<<<<< HEAD
     backoff = self._initial_backoff
-=======
-    try:
-      async for response in self._stub.subscribe(
-        SubscribeRequest(
-          session_id=self.session_id or "",
-          client_id=str(uuid4()),
-        )
-      ):
-        event = response.event
-        # Determine the payload type using betterproto's oneof helper
-        field_name, payload = betterproto.which_one_of(event, "payload")
->>>>>>> main
 
     while not self._shutting_down:
       try:
