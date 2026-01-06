@@ -20,7 +20,9 @@ import asyncio
 import contextlib
 import logging
 import logging
+import logging
 import os
+import sys
 import sys
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
@@ -97,7 +99,10 @@ class SimulatorPlugin:
     self.session_id: str | None = None
     self._pending_futures = PendingFutureRegistry()
     self._pending_futures = PendingFutureRegistry()
+    self._pending_futures = PendingFutureRegistry()
     self._listen_task: asyncio.Task[None] | None = None
+    self._factory: SimulatorClientFactory | None = None
+    self._stub: SimulatorServiceStub | None = None
     self._factory: SimulatorClientFactory | None = None
     self._stub: SimulatorServiceStub | None = None
     self._factory: SimulatorClientFactory | None = None
@@ -119,6 +124,12 @@ class SimulatorPlugin:
 
   async def initialize(self, description: str = "") -> str:
     """Initialize the plugin by creating a session with the server.
+
+    This method:
+    1. Creates a SimulatorClient and connects to the server
+    2. Creates a new session with the server
+    3. Starts the background _listen_loop task
+    4. Prints a decorated banner with the session URL to stdout
 
     This method:
     1. Creates a SimulatorClient and connects to the server
@@ -335,5 +346,7 @@ class SimulatorPlugin:
       self._listen_task.cancel()
       with contextlib.suppress(asyncio.CancelledError):
         await self._listen_task
+    if self._factory:
+      await self._factory.close()
     if self._factory:
       await self._factory.close()
