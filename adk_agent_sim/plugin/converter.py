@@ -98,7 +98,7 @@ class ADKProtoConverter:
     """Convert a GenerateContentResponse (betterproto) to an ADK LlmResponse (Pydantic).
 
     This method uses betterproto's to_dict() to get a dictionary representation,
-    then validates it through google.genai.types to create a Pydantic model,
+    then uses the SDK's _from_response() factory to create a GenerateContentResponse,
     and finally uses ADK's LlmResponse.create() factory.
 
     Args:
@@ -111,9 +111,12 @@ class ADKProtoConverter:
     # betterproto's to_dict() produces camelCase keys matching the API schema
     response_dict = proto_response.to_dict()
 
-    # 2. Create google.genai.types.GenerateContentResponse via Pydantic validation
-    # The SDK's Pydantic model accepts the API-style camelCase dictionary
-    genai_response = genai_types.GenerateContentResponse.model_validate(response_dict)
+    # 2. Create google.genai.types.GenerateContentResponse via _from_response factory
+    # The SDK's factory method handles API response parsing
+    genai_response = genai_types.GenerateContentResponse._from_response(
+      response=response_dict,
+      kwargs={},
+    )
 
     # 3. Use ADK's factory to create LlmResponse
     # This handles mapping candidates, usage metadata, etc.

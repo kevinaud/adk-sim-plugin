@@ -182,6 +182,26 @@ assert_that(response, has_properties(
 
 ---
 
+## ADK Source Code Reference
+
+The full source code for ADK is available on this machine for research and reference:
+
+| Repository | Path | Purpose |
+|------------|------|---------|
+| adk-python | `/workspaces/adk-repos/adk-python` | ADK Python SDK source code |
+| adk-java | `/workspaces/adk-repos/adk-java` | ADK Java SDK source code |
+| adk-docs | `/workspaces/adk-repos/adk-docs` | ADK documentation source |
+
+**When to use these repositories:**
+- When you need to understand how ADK handles specific behaviors internally
+- When constructing fake/test objects that must match ADK's expected structure
+- When debugging integration issues between this plugin and ADK
+- When understanding the exact types and conversions ADK performs
+
+**Best Practice**: Before implementing any code that interacts with ADK types (like `LlmRequest`, `LlmResponse`, `GenerateContentResponse`), research the actual implementation in `/workspaces/adk-repos/adk-python` to ensure your code matches ADK's expectations.
+
+---
+
 ## Execution Workflow
 
 ### Phase 1: Context Loading
