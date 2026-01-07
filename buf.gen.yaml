@@ -8,7 +8,7 @@ inputs:
 plugins:
   # --- Python (betterproto) ---
   - local: protoc-gen-python_betterproto
-    out: adk_agent_sim/generated
+    out: packages/adk-sim-protos/src/adk_sim_protos
     opt:
       - include_google_protobuf_copy=true
 
@@ -16,7 +16,7 @@ plugins:
   # Single plugin generates messages AND service descriptors
   # include_imports generates code for dependencies (googleapis protos)
   - local: ./frontend/node_modules/.bin/protoc-gen-es
-    out: frontend/src/app/generated
+    out: packages/adk-sim-protos-ts/src
     include_imports: true
     opt:
       - target=ts

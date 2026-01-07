@@ -53,14 +53,17 @@ echo "----------------------------------------"
 echo "  Python Backend"
 echo "----------------------------------------"
 
+cd "$PROJECT_ROOT"
+
 echo "Running Pyright (type check)..."
-uv run pyright
+( cd server && uv run pyright . )
+( cd plugins/python && uv run pyright . )
 
 echo "Running Ruff (lint)..."
-uv run ruff check .
+uv tool run ruff check .
 
 echo "Running Ruff (format check)..."
-uv run ruff format --check .
+uv tool run ruff format --check .
 
 echo "✅ Python checks passed!"
 

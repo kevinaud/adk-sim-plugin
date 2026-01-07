@@ -1,0 +1,11 @@
+{
+  "name": "@adk-sim/protos",
+  "version": "0.1.0",
+  "description": "Shared TypeScript Protocol Buffer definitions for ADK Agent Simulator",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.10.2",
+    "@connectrpc/connect": "^2.1.1"
+  }
+}

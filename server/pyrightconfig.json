@@ -1,0 +1,19 @@
+{
+  "include": ["src", "tests"],
+  "pythonVersion": "3.14",
+  "typeCheckingMode": "strict",
+  "useLibraryCodeForTypes": true,
+  "reportPrivateImportUsage": false,
+  "reportMissingTypeStubs": false,
+  "reportUnknownParameterType": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownLambdaType": false,
+  "reportUnknownMemberType": false,
+  "reportMissingTypeArgument": false,
+  "reportAttributeAccessIssue": false,
+  "reportArgumentType": false,
+  "reportPrivateUsage": false,
+  "reportRedeclaration": false,
+  "reportUnusedClass": false
+}

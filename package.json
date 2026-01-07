@@ -1,0 +1,10 @@
+{
+  "name": "adk-sim-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "packages/adk-sim-protos-ts",
+    "plugins/typescript"
+  ]
+}

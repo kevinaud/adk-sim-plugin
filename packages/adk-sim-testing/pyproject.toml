@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "adk-sim-testing"
+version = "0.1.0"
+description = "Testing utilities and fixtures for ADK Agent Simulator"
+requires-python = ">=3.14"
+dependencies = [
+  "adk-sim-protos",
+  "google-adk>=1.21.0",
+  "pytest>=9.0.1",
+  "sqlalchemy>=2.0.0",
+  "pyhamcrest>=2.1.0",
+]
+
+[tool.uv.sources]
+adk-sim-protos = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/adk_sim_testing"]
