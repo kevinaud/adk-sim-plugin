@@ -47,9 +47,11 @@ Parse these from `$ARGUMENTS`.
 ### Project-Specific Conventions
 
 #### Python Imports
-- **All imports at module top**: Never import inside methods or functions
+- **All imports at module top**: NEVER import inside methods, functions, or test bodies
+- **PROHIBITED**: Lazy imports inside function bodies (e.g., `def test_foo(): from x import Y`)
 - Exception: `TYPE_CHECKING` imports belong in the `if TYPE_CHECKING:` block
 - Runtime imports go at module level; type-only imports go in TYPE_CHECKING
+- If an import causes circular import issues, refactor the code structure instead of using lazy imports
 
 #### Python Environment (uv)
 - **ALWAYS use `uv` for Python commands**: This project uses `uv` for dependency management
@@ -177,6 +179,26 @@ assert_that(response, has_properties(
 **Key Pattern**: 
 1. When all values are deterministic → use `equal_to()` with fully constructed expected object
 2. When some values are non-deterministic (UUIDs, timestamps) → use `has_properties()` with field-level matchers
+
+---
+
+## ADK Source Code Reference
+
+The full source code for ADK is available on this machine for research and reference:
+
+| Repository | Path | Purpose |
+|------------|------|---------|
+| adk-python | `/workspaces/adk-repos/adk-python` | ADK Python SDK source code |
+| adk-java | `/workspaces/adk-repos/adk-java` | ADK Java SDK source code |
+| adk-docs | `/workspaces/adk-repos/adk-docs` | ADK documentation source |
+
+**When to use these repositories:**
+- When you need to understand how ADK handles specific behaviors internally
+- When constructing fake/test objects that must match ADK's expected structure
+- When debugging integration issues between this plugin and ADK
+- When understanding the exact types and conversions ADK performs
+
+**Best Practice**: Before implementing any code that interacts with ADK types (like `LlmRequest`, `LlmResponse`, `GenerateContentResponse`), research the actual implementation in `/workspaces/adk-repos/adk-python` to ensure your code matches ADK's expectations.
 
 ---
 

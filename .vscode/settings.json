@@ -27,8 +27,22 @@
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true
     },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        }
+    },
+    "ruff.configurationPreference": "filesystemFirst",
     "protobuf.externalLinter.enabled": true,
     "protobuf.externalLinter.linter": "buf",
     "protobuf.externalLinter.bufPath": "/usr/local/bin/buf",
-    "protobuf.buf.path": "/usr/local/bin/buf"
+    "protobuf.buf.path": "/usr/local/bin/buf",
+    // 1. Tell the Python extension to stop using Pylance
+    // "python.languageServer": "None",
+    
+    // 2. Optional: Ensure Pyright is the one providing analysis
+    // "python.analysis.typeCheckingMode": "off"
 }

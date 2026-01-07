@@ -28,6 +28,7 @@
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
+        // "ms-pyright.pyright",
         "charliermarsh.ruff",
         "ms-toolsai.jupyter",
         "tamasfe.even-better-toml",

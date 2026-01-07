@@ -681,8 +681,8 @@ class TestBeforeModelCallback:
 
     # Act
     result = await plugin.before_model_callback(
-      callback_context,  # type: ignore[arg-type]
-      llm_request,
+      callback_context=callback_context,  # type: ignore[arg-type]
+      llm_request=llm_request,
     )
 
     # Assert - returns None to let request proceed to real LLM
@@ -730,8 +730,8 @@ class TestBeforeModelCallback:
 
     # Act
     result = await plugin.before_model_callback(
-      callback_context,  # type: ignore[arg-type]
-      llm_request,
+      callback_context=callback_context,  # type: ignore[arg-type]
+      llm_request=llm_request,
     )
 
     # Cleanup
@@ -793,8 +793,8 @@ class TestBeforeModelCallback:
 
     # Act
     result = await plugin.before_model_callback(
-      callback_context,  # type: ignore[arg-type]
-      llm_request,
+      callback_context=callback_context,  # type: ignore[arg-type]
+      llm_request=llm_request,
     )
 
     # Cleanup
@@ -836,8 +836,8 @@ class TestBeforeModelCallback:
     # Act & Assert
     with pytest.raises(RuntimeError, match="Plugin not initialized"):
       await plugin.before_model_callback(
-        callback_context,  # type: ignore[arg-type]
-        llm_request,
+        callback_context=callback_context,  # type: ignore[arg-type]
+        llm_request=llm_request,
       )
 
   @pytest.mark.asyncio
@@ -881,12 +881,12 @@ class TestBeforeModelCallback:
 
     # Act - make two calls
     await plugin.before_model_callback(
-      callback_context,  # type: ignore[arg-type]
-      llm_request,
+      callback_context=callback_context,  # type: ignore[arg-type]
+      llm_request=llm_request,
     )
     await plugin.before_model_callback(
-      callback_context,  # type: ignore[arg-type]
-      llm_request,
+      callback_context=callback_context,  # type: ignore[arg-type]
+      llm_request=llm_request,
     )
 
     # Cleanup
@@ -944,8 +944,8 @@ class TestBeforeModelCallback:
 
     # Act
     await plugin.before_model_callback(
-      callback_context,  # type: ignore[arg-type]
-      llm_request,
+      callback_context=callback_context,  # type: ignore[arg-type]
+      llm_request=llm_request,
     )
 
     # Cleanup

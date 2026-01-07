@@ -26,6 +26,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import betterproto
+from google.adk.plugins.base_plugin import BasePlugin
 from grpclib.exceptions import GRPCError, StreamTerminatedError
 
 from adk_agent_sim.generated.adksim.v1 import (
@@ -47,7 +48,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class SimulatorPlugin:
+class SimulatorPlugin(BasePlugin):
   """ADK Plugin that implements the Remote Brain protocol.
 
   This plugin intercepts LLM calls from ADK agents and routes them through
@@ -70,6 +71,7 @@ class SimulatorPlugin:
     self,
     server_url: str | None = None,
     target_agents: set[str] | None = None,
+    name: str = "adk_simulator",
   ) -> None:
     """Initialize the SimulatorPlugin.
 
@@ -79,7 +81,9 @@ class SimulatorPlugin:
         target_agents: Optional set of agent names to intercept. If None or empty,
                       all agents are intercepted. Can also be set via ADK_SIM_TARGETS
                       environment variable (comma-separated).
+        name: The unique name for this plugin instance. Defaults to "adk_simulator".
     """
+    super().__init__(name=name)
     self.server_url = server_url or os.environ.get("ADK_SIM_SERVER", "localhost:50051")
 
     # Parse target agents from env var if not provided
@@ -142,11 +146,7 @@ class SimulatorPlugin:
     config = PluginConfig(server_url=self.server_url)
     self._factory = SimulatorClientFactory(config)
 
-<<<<<<< HEAD
     # Get stub (connects automatically if needed)
-=======
-    # Get stub (connects if needed)
->>>>>>> main
     self._stub = await self._factory.get_simulator_stub()
 
     # Create session
@@ -210,7 +210,7 @@ class SimulatorPlugin:
     print(banner, file=sys.stdout, flush=True)
 
   async def before_model_callback(
-    self, callback_context: CallbackContext, llm_request: LlmRequest
+    self, *, callback_context: CallbackContext, llm_request: LlmRequest
   ) -> LlmResponse | None:
     """Intercept an LLM call and route it through the Remote Brain protocol.
 
@@ -293,20 +293,7 @@ class SimulatorPlugin:
       logger.error("_listen_loop called without stub - exiting")
       return
 
-<<<<<<< HEAD
     backoff = self._initial_backoff
-=======
-    try:
-      async for response in self._stub.subscribe(
-        SubscribeRequest(
-          session_id=self.session_id or "",
-          client_id=str(uuid4()),
-        )
-      ):
-        event = response.event
-        # Determine the payload type using betterproto's oneof helper
-        field_name, payload = betterproto.which_one_of(event, "payload")
->>>>>>> main
 
     while not self._shutting_down:
       try:
