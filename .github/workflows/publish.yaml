@@ -106,8 +106,7 @@ jobs:
           npm ci
           npm run build
           npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No NODE_AUTH_TOKEN needed - npm uses OIDC trusted publisher
 
   # Job 3: Publish dependent packages (after protos are available)
   publish-dependents:
