@@ -11,7 +11,7 @@ tool execution and sees the results:
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from adk_agent_sim.plugin import SimulatorPlugin
@@ -110,7 +110,7 @@ async def test_human_directed_tool_execution(
     user_id="test_user",
   )
 
-  responses: list = []
+  responses: list[Any] = []
   try:
     async with asyncio.timeout(30):
       async for event in runner.run_async(

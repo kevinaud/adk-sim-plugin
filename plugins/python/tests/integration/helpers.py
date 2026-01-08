@@ -97,7 +97,7 @@ class IntegrationRunner:
 
     if plugins:
       for plugin in plugins:
-        self.runner.plugins.append(plugin)  # pyright: ignore[reportUnknownMemberType]
+        self.runner.plugins.append(plugin)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
 
     self._session: Session | None = None
 

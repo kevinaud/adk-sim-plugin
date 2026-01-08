@@ -9,7 +9,7 @@ T053-T059 [ph3f12]
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from adk_agent_sim.plugin import SimulatorPlugin
@@ -109,7 +109,7 @@ async def test_agent_interception_flow(
     user_id="test_user",
   )
 
-  responses: list = []
+  responses: list[Any] = []
   try:
     async with asyncio.timeout(30):
       async for event in runner.run_async(

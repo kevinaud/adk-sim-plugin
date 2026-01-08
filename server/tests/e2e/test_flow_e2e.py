@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 from adk_sim_protos.adksim.v1 import (
   CreateSessionRequest,
+  SessionEvent,
   SimulatorServiceStub,
   SubmitDecisionRequest,
   SubmitRequestRequest,
@@ -116,7 +117,7 @@ async def test_subscribe_receives_events_e2e(grpc_channel: Channel) -> None:
   session_id = session_response.session.id
 
   # Collect events from subscribe stream
-  received_events: list = []
+  received_events: list[SessionEvent] = []
   turn_id = "e2e_turn_subscribe_001"
 
   async def subscribe_collector() -> None:
@@ -171,7 +172,7 @@ async def test_full_round_trip_e2e(grpc_channel: Channel) -> None:
   session_id = session_response.session.id
 
   turn_id = "e2e_turn_roundtrip_001"
-  received_events: list = []
+  received_events: list[SessionEvent] = []
 
   async def subscribe_collector() -> None:
     """Collect events from the subscribe stream."""
@@ -264,7 +265,7 @@ async def test_fifo_ordering_e2e(grpc_channel: Channel) -> None:
     request_event_ids.append(response.event_id)
 
   # Collect events via subscribe to verify ordering
-  received_events: list = []
+  received_events: list[SessionEvent] = []
 
   async def subscribe_collector() -> None:
     """Collect events from the subscribe stream."""

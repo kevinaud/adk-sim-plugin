@@ -8,6 +8,7 @@ import pytest
 from adk_sim_protos.adksim.v1 import (
   CreateSessionRequest,
   ListSessionsRequest,
+  SessionEvent,
   SubmitDecisionRequest,
   SubmitDecisionResponse,
   SubmitRequestRequest,
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
   from adk_sim_server.session_manager import SessionManager
 
 
-async def _empty_history() -> list:
+async def _empty_history() -> list[SessionEvent]:
   """Return an empty history list for testing."""
   return []
 
@@ -222,7 +223,7 @@ class TestSimulatorService:
     assert simulator_service.request_queue.get_current(session.id) is not None
 
     # Subscribe to events to verify broadcast
-    events: list = []
+    events: list[SessionEvent] = []
 
     async def subscriber() -> None:
       async for event in simulator_service.event_broadcaster.subscribe(
@@ -329,7 +330,7 @@ class TestSimulatorService:
     )
 
     # Subscribe and collect events
-    events: list = []
+    events: list[SessionEvent] = []
     subscribe_request = SubscribeRequest(session_id=session.id)
 
     async def collect_events() -> None:
@@ -365,7 +366,7 @@ class TestSimulatorService:
       )
     )
 
-    events: list = []
+    events: list[SessionEvent] = []
     subscribe_request = SubscribeRequest(session_id=session.id)
 
     async def collect_events() -> None:
@@ -412,7 +413,7 @@ class TestSimulatorService:
       )
     )
 
-    events: list = []
+    events: list[SessionEvent] = []
     subscribe_request = SubscribeRequest(session_id=session.id)
 
     async def collect_events() -> None:

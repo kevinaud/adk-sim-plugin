@@ -35,6 +35,7 @@ if TYPE_CHECKING:
   from collections.abc import AsyncIterator
 
   from adk_sim_protos.adksim.v1 import (
+    CreateSessionRequest,
     SubmitRequestRequest,
     SubscribeRequest,
   )
@@ -120,12 +121,11 @@ class FakeInitializingStub:
 
   async def create_session(
     self,
-    request: object,  # CreateSessionRequest
+    request: CreateSessionRequest,
   ) -> CreateSessionResponse:
     """Create a fake session and return it."""
     # Access description from request if available
-    if hasattr(request, "description"):
-      self.description = request.description
+    self.description = request.description
     self.session_created = True
     return CreateSessionResponse(
       session=SimulatorSession(
@@ -664,7 +664,7 @@ class TestBeforeModelCallback:
     callback_context = FakeCallbackContext(agent_name="worker_agent")
 
     # Create a minimal LlmRequest using ADK types
-    from google.adk.models import LlmRequest
+    from google.adk.models.llm_request import LlmRequest
     from google.genai import types as genai_types
 
     llm_request = LlmRequest(
@@ -710,7 +710,7 @@ class TestBeforeModelCallback:
 
     callback_context = FakeCallbackContext(agent_name="any_agent")
 
-    from google.adk.models import LlmRequest
+    from google.adk.models.llm_request import LlmRequest
     from google.genai import types as genai_types
 
     llm_request = LlmRequest(
@@ -773,7 +773,7 @@ class TestBeforeModelCallback:
 
     callback_context = FakeCallbackContext(agent_name="orchestrator")
 
-    from google.adk.models import LlmRequest
+    from google.adk.models.llm_request import LlmRequest
     from google.genai import types as genai_types
 
     llm_request = LlmRequest(
@@ -818,7 +818,7 @@ class TestBeforeModelCallback:
     plugin._stub = None  # Explicitly not initialized
     callback_context = FakeCallbackContext(agent_name="test_agent")
 
-    from google.adk.models import LlmRequest
+    from google.adk.models.llm_request import LlmRequest
     from google.genai import types as genai_types
 
     llm_request = LlmRequest(
@@ -861,7 +861,7 @@ class TestBeforeModelCallback:
 
     callback_context = FakeCallbackContext(agent_name="test_agent")
 
-    from google.adk.models import LlmRequest
+    from google.adk.models.llm_request import LlmRequest
     from google.genai import types as genai_types
 
     llm_request = LlmRequest(
@@ -921,7 +921,7 @@ class TestBeforeModelCallback:
 
     callback_context = FakeCallbackContext(agent_name="test_agent")
 
-    from google.adk.models import LlmRequest
+    from google.adk.models.llm_request import LlmRequest
     from google.genai import types as genai_types
 
     llm_request = LlmRequest(

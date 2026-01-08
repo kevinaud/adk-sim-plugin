@@ -9,7 +9,8 @@ Tests cover:
 import adk_sim_protos.google.ai.generativelanguage.v1beta as glm
 import pytest
 from adk_agent_sim.plugin.converter import ADKProtoConverter
-from google.adk.models import LlmRequest, LlmResponse
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
 from google.genai import types as genai_types
 from hamcrest import (
   assert_that,

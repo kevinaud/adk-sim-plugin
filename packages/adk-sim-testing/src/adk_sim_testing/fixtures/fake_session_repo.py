@@ -5,21 +5,13 @@ for use in unit tests. This fake stores sessions in a dictionary and
 implements the same async interface as the real repository.
 """
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from adk_sim_protos.adksim.v1 import SessionStatus
+from adk_sim_server.persistence.core import PaginatedSessions
 
 if TYPE_CHECKING:
   from adk_sim_protos.adksim.v1 import SimulatorSession
-
-
-@dataclass
-class PaginatedSessions:
-  """Result type for paginated session queries."""
-
-  sessions: list[Any]  # list[SimulatorSession]
-  next_page_token: str | None
 
 
 class FakeSessionRepository:
