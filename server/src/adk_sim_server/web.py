@@ -24,9 +24,8 @@ from adk_sim_protos.adksim.v1 import (
   SubmitRequestResponse,
 )
 from starlette.applications import Starlette
-from starlette.responses import Response
-from starlette.routing import Mount, Route
-from starlette.staticfiles import StaticFiles
+from starlette.responses import FileResponse, Response
+from starlette.routing import Route
 
 from adk_sim_server.logging import get_logger
 
@@ -215,18 +214,26 @@ async def grpc_web_options(request: Request) -> Response:
   )
 
 
-async def spa_fallback(request: Request) -> Response:
-  """Serve index.html for SPA routing fallback.
+async def spa_handler(request: Request) -> Response:
+  """Serve static files or fall back to index.html for SPA routing.
 
-  Any request that doesn't match a static file or API endpoint
-  should return index.html to allow client-side routing.
+  This handler checks if the requested path matches an actual file.
+  If so, it serves that file. Otherwise, it serves index.html to
+  allow Angular's client-side routing to handle the path.
   """
+  path = request.path_params.get("path", "")
+
+  # 1. Try to find the actual file (e.g., styles.css, main.js)
+  if path:
+    file_path = STATIC_DIR / path
+    if file_path.exists() and file_path.is_file():
+      return FileResponse(file_path)
+
+  # 2. Fallback to index.html for everything else (e.g., /session/123)
   index_path = STATIC_DIR / "index.html"
   if index_path.exists():
-    return Response(
-      content=index_path.read_text(),
-      media_type="text/html",
-    )
+    return FileResponse(index_path)
+
   return Response(status_code=404, content="Frontend not bundled")
 
 
@@ -239,7 +246,7 @@ def create_app(simulator_service: SimulatorService) -> Starlette:
   Returns:
       Configured Starlette application.
   """
-  routes: list[Route | Mount] = [
+  routes: list[Route] = [
     # gRPC-Web endpoints - handle OPTIONS for CORS preflight
     Route(
       "/adksim.v1.SimulatorService/{method}",
@@ -253,15 +260,12 @@ def create_app(simulator_service: SimulatorService) -> Starlette:
     ),
   ]
 
-  # Add static files mount if the directory exists and has content
-  if STATIC_DIR.exists() and any(STATIC_DIR.iterdir()):
-    routes.append(
-      Mount("/", app=StaticFiles(directory=STATIC_DIR, html=True), name="static")
-    )
+  # SPA catch-all: serves static files or falls back to index.html
+  # This handles both asset requests (main.js) and client-side routes (/session/123)
+  if STATIC_DIR.exists():
+    routes.append(Route("/{path:path}", spa_handler))
   else:
-    # If no static files, serve a simple message or fallback
-    routes.append(Route("/{path:path}", spa_fallback))
-    routes.append(Route("/", spa_fallback))
+    routes.append(Route("/{path:path}", spa_handler))
 
   app = Starlette(routes=routes)
 

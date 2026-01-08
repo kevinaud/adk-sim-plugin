@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define your prefilled strings
-exclude_list=(
+include_list=(
   "lock"
   "logs"
   "docs"
@@ -11,9 +11,9 @@ exclude_list=(
 )
 
 # Join the array elements into a comma-separated string
-exclude_param=$(IFS=,; echo "${exclude_list[*]}")
+include_param=$(IFS=,; echo "${include_list[*]}")
 
 # Execute command:
-# --exclude is handled by the script
+# --include is handled by the script
 # "$@" appends any and all arguments passed when the script is run
-allpaste --exclude="$exclude_param" "$@"
+allpaste --include="$include_param" "$@"
