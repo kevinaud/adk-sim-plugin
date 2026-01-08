@@ -29,11 +29,10 @@ jobs:
           git push origin "$VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  # Job 2: Build and publish (uses pypi environment)
+  # Job 2: Build and publish (no environment - OIDC works without it)
   publish:
     needs: create-tag
     runs-on: ubuntu-latest
-    environment: pypi
     permissions:
       contents: read
       id-token: write
