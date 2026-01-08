@@ -18,6 +18,13 @@ cd "$PROJECT_ROOT"
 
 echo "🚀 Starting Presubmit Checks..."
 
+# Ensure frontend npm dependencies are installed (needed for proto generation)
+echo ""
+echo "📦 Ensuring frontend dependencies are installed..."
+cd "$PROJECT_ROOT/frontend"
+npm install --silent
+cd "$PROJECT_ROOT"
+
 # Clean and regenerate protos (ensures buf config matches generated code)
 echo ""
 echo "🔧 Cleaning and Regenerating Proto Code..."
