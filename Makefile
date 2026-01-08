@@ -204,7 +204,7 @@ format:
 # Internal helper - calculates next version and creates release PR
 _create_release_pr:
 	@if [ -z "$(BUMP)" ]; then echo "Error: BUMP not set"; exit 1; fi
-	@if ! command -v gh &> /dev/null; then echo "Error: gh CLI required"; exit 1; fi
+	@if ! command -v gh > /dev/null 2>&1; then echo "Error: gh CLI required"; exit 1; fi
 	@if [ -n "$$(git status --porcelain)" ]; then echo "Error: uncommitted changes"; exit 1; fi
 	@echo "Creating release PR ($(BUMP) bump)..."
 	git fetch origin main
