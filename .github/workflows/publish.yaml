@@ -48,8 +48,16 @@ jobs:
           # Install leaf package - use local wheels for internal deps, allow external deps from PyPI
           # Note: --prerelease=allow is needed for betterproto>=2.0.0b7
           uv pip install --python .verify-venv adk-sim-server --find-links dist/ --prerelease=allow
-          # Smoke test
-          .verify-venv/bin/python -c "from adk_sim_server import __version__; print(f'Server version: {__version__}')"
+          # Smoke test - verify we can import the packages
+          .verify-venv/bin/python -c "
+          from importlib.metadata import version
+          print(f'adk-sim-server: {version(\"adk-sim-server\")}')
+          print(f'adk-sim-protos: {version(\"adk-sim-protos\")}')
+          # Verify imports work
+          import adk_sim_server
+          import adk_sim_protos
+          print('All imports successful!')
+          "
 
       - name: Upload Python artifacts
         uses: actions/upload-artifact@v4
