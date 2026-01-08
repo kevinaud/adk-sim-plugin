@@ -1,10 +1,10 @@
 [project]
 name = "adk-agent-sim"
-version = "0.1.0"
+version = "0.1.1"
 description = "ADK Agent Simulator - Python Plugin"
 requires-python = ">=3.14"
 dependencies = [
-    "adk-sim-protos",
+    "adk-sim-protos==0.1.1",
     "google-adk>=1.21.0",
     "grpclib>=0.4.7",
 ]
@@ -23,7 +23,7 @@ include = [
 
 [dependency-groups]
 dev = [
-    "adk-sim-testing",
+    "adk-sim-testing==0.1.1",
     "pytest>=9.0.1",
     "pytest-asyncio>=1.3.0",
     "pytest-timeout>=2.4.0",
