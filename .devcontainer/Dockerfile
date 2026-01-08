@@ -63,4 +63,9 @@ RUN mkdir -p packages/adk-sim-protos-ts/src && \
     echo "export {};" > packages/adk-sim-protos-ts/src/index.ts
 
 # Install all npm workspace dependencies and backup frontend node_modules
-RUN npm install && cp -r frontend/node_modules /opt/backup/frontend_node_modules
+# With workspaces, node_modules may be in frontend/ or hoisted to root
+RUN npm install && \
+    mkdir -p /opt/backup/frontend_node_modules && \
+    if [ -d frontend/node_modules ]; then \
+      cp -r frontend/node_modules/* /opt/backup/frontend_node_modules/; \
+    fi
