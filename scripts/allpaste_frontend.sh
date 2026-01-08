@@ -9,6 +9,7 @@ include_list=(
   "frontend/"
   "packages/adk-sim-protos-ts/"
   "docker/frontend.Dockerfile"
+  "docs/adk-sim-v2-prd.md"
 )
 
 # 2. EXCLUDES
