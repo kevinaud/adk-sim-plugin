@@ -17,13 +17,12 @@ import pytest
 from adk_agent_sim.plugin import SimulatorPlugin
 from adk_sim_protos.adksim.v1 import SimulatorServiceStub
 from adk_sim_testing.proto_helpers import make_text_response, make_tool_call_response
+from adk_sim_testing.simulated_human import SimulatedHuman
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from hamcrest import assert_that, contains_string
-
-from .simulated_human import SimulatedHuman
 
 if TYPE_CHECKING:
   from grpclib.client import Channel
