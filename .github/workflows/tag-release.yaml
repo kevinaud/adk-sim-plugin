@@ -11,11 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - name: Extract version and create tag
+        id: tag
         run: |
           VERSION="${GITHUB_HEAD_REF#release/}"
           echo "Creating tag: $VERSION"
           git tag "$VERSION"
           git push origin "$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Trigger publish workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run publish.yaml --ref ${{ steps.tag.outputs.version }}

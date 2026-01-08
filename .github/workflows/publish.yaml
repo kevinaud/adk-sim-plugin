@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    # Allows manual trigger or trigger from tag-release workflow
 
 permissions:
   contents: read
