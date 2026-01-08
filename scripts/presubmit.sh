@@ -18,10 +18,18 @@ cd "$PROJECT_ROOT"
 
 echo "🚀 Starting Presubmit Checks..."
 
-# Generate protos first (required for type checking and tests)
+# Ensure frontend npm dependencies are installed (needed for proto generation)
 echo ""
-echo "🔧 Generating Proto Code..."
-make regenerate
+echo "📦 Ensuring frontend dependencies are installed..."
+cd "$PROJECT_ROOT/frontend"
+npm install --silent
+cd "$PROJECT_ROOT"
+
+# Clean and regenerate protos (ensures buf config matches generated code)
+echo ""
+echo "🔧 Cleaning and Regenerating Proto Code..."
+make clean
+make generate
 
 # Run Quality Checks
 echo ""
@@ -32,7 +40,7 @@ echo "📋 Running Quality Checks..."
 echo ""
 echo "🧪 Running Backend Tests..."
 # (sequential - async tests need single event loop)
-uv run pytest tests/unit tests/integration -v
+uv run pytest server/tests/unit plugins/python/tests -v
 
 # Run Frontend Tests
 echo ""

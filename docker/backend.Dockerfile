@@ -7,12 +7,16 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
+COPY packages/ ./packages/
+COPY server/pyproject.toml ./server/
+COPY plugins/python/pyproject.toml ./plugins/python/
 
 # Install dependencies (without project itself - installed later with source)
 RUN uv sync --frozen --no-install-project
 
 # Copy source (for initial build; volume mount overrides in dev)
-COPY adk_agent_sim/ ./adk_agent_sim/
+COPY server/src/ ./server/src/
+COPY plugins/python/src/ ./plugins/python/src/
 
 # Install the project itself now that source is available
 RUN uv sync --frozen

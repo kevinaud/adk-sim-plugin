@@ -1,29 +1,18 @@
 [project]
-name = "adk-agent-sim"
+name = "adk-sim-workspace"
 version = "0.1.0"
-description = "ADK Agent Simulator - Remote Brain Protocol"
-authors = [
-    { name = "Kevin Aud" }
-]
+description = "ADK Agent Simulator - Workspace Root"
+readme = "README.md"
 requires-python = ">=3.14"
-dependencies = [
-  "python-dotenv>=1.0.1",
-  "typer>=0.12.5",
-  "rich>=13.8.0",
-  "pydantic>=2.10.0",
-  "pydantic-settings>=2.12.0",
-  "structlog>=25.5.0",
-  "tenacity>=9.1.2",
-  "httpx>=0.28.1",
-  "broadcaster>=0.3.1",
-  "google-adk>=1.21.0",
-  "sqlalchemy>=2.0.0",
-  "databases[aiosqlite]>=0.9.0",
-  "google-ai-generativelanguage>=0.9.0",
-]
 
 [dependency-groups]
 dev = [
+    "adk-sim-protos",
+    "adk-sim-testing",
+    "adk-sim-server",
+    "adk-agent-sim",
+    "betterproto[compiler]>=2.0.0b7",
+    "grpcio-tools>=1.60.0",
     "ipykernel>=7.1.0",
     "pyright>=1.1.407",
     "ruff>=0.14.7",
@@ -33,20 +22,20 @@ dev = [
     "pytest-timeout>=2.4.0",
     "pyhamcrest>=2.1.0",
     "specify-cli>=1.0.0",
-    "betterproto[compiler]>=2.0.0b7",
-    "grpclib>=0.4.7",
-    "grpcio-tools>=1.60.0",
     "watchfiles>=1.0.0",
 ]
 
-[project.scripts]
-adk-sim-server = "adk_agent_sim.server.main:main"
-
-[tool.setuptools]
-packages = ["adk_agent_sim"]
-
 [tool.uv]
-package = true
+package = false
+
+[tool.uv.workspace]
+members = ["server", "plugins/python", "packages/adk-sim-protos", "packages/adk-sim-testing"]
+
+[tool.uv.sources]
+adk-sim-protos = { workspace = true }
+adk-sim-testing = { workspace = true }
+adk-sim-server = { workspace = true }
+adk-agent-sim = { workspace = true }
 
 [tool.ruff]
 target-version = "py314"
@@ -86,7 +75,7 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 # IGNORE generated files for all these new strict rules
-"adk_agent_sim/generated/**" = [
+"packages/adk-sim-protos/src/adk_sim_protos/adksim/**" = [
     "E501",
     "UP",
     "TC",
@@ -98,9 +87,11 @@ select = [
     "ASYNC",
     "PT",
     "RET",
+    "PERF",
+    "C4",
     "DTZ",
 ]
-"adk_agent_sim/generated_check_tmp/**" = [
+"packages/adk-sim-protos/src/adk_sim_protos/google/**" = [
     "E501",
     "UP",
     "TC",
@@ -112,6 +103,8 @@ select = [
     "ASYNC",
     "PT",
     "RET",
+    "PERF",
+    "C4",
     "DTZ",
 ]
 
@@ -137,27 +130,38 @@ mark-parentheses = false
 [tool.pyright]
 pythonVersion = "3.14"
 typeCheckingMode = "strict"
-useLibraryCodeForTypes = true
-exclude = ["**/generated/**", "**/generated_check_tmp/**", "**/node_modules/**", "frontend/**", "**/.venv/**"]
-reportPrivateImportUsage = false
+venvPath = "."
+venv = ".venv"
+include = ["server/src", "server/tests", "plugins/python/src", "plugins/python/tests", "packages/*/src"]
+exclude = [
+    "packages/adk-sim-protos/src/adk_sim_protos/adksim",
+    "packages/adk-sim-protos/src/adk_sim_protos/google",
+    "**/node_modules",
+    "**/__pycache__",
+]
 reportMissingTypeStubs = false
-reportUnknownParameterType = false
+reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
-reportUnknownLambdaType = false
-reportUnknownMemberType = false
-reportMissingTypeArgument = false
-reportAttributeAccessIssue = false
+reportUnusedImport = false
+
+# Allow tests to access private members for verification
+[[tool.pyright.executionEnvironments]]
+root = "server/tests"
 reportPrivateUsage = false
-reportRedeclaration = false
-reportUnusedClass = false
+
+[[tool.pyright.executionEnvironments]]
+root = "plugins/python/tests"
+reportPrivateUsage = false
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["server/tests", "plugins/python/tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 markers = [
+    "e2e: End-to-end tests that require Docker Compose services",
     "integration: marks tests as integration tests (require API keys, slower)",
 ]
 filterwarnings = [
-    "ignore::DeprecationWarning",
+    "ignore::DeprecationWarning:google.protobuf.*",
 ]

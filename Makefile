@@ -19,8 +19,8 @@
 .DEFAULT_GOAL := help
 
 # Directories
-PYTHON_GEN_DIR := adk_agent_sim/generated
-TS_GEN_DIR := frontend/src/app/generated
+PYTHON_GEN_DIR := packages/adk-sim-protos/src/adk_sim_protos
+TS_GEN_DIR := packages/adk-sim-protos-ts/src
 
 # Marker file to track when protos were last generated
 # This avoids regenerating if proto files haven't changed
@@ -68,14 +68,14 @@ help:
 # Generate protos only if source files changed
 $(PROTO_MARKER): $(PROTO_FILES) buf.yaml buf.gen.yaml
 	@echo "🔧 Generating code from proto files..."
-	@rm -rf "$(PYTHON_GEN_DIR)" "$(TS_GEN_DIR)"
+	@rm -rf "$(PYTHON_GEN_DIR)/adksim" "$(PYTHON_GEN_DIR)/google"
+	@rm -rf "$(TS_GEN_DIR)/adksim" "$(TS_GEN_DIR)/google"
 	@PATH="$(PWD)/.venv/bin:$$PATH" buf generate
-	@touch "$(PYTHON_GEN_DIR)/__init__.py"
 	@echo "🎨 Formatting Python generated code..."
 	@uv run ruff check --fix "$(PYTHON_GEN_DIR)" 2>/dev/null || true
 	@uv run ruff format "$(PYTHON_GEN_DIR)"
 	@echo "🎨 Formatting TypeScript generated code..."
-	@cd frontend && npx prettier --write "src/app/generated/**/*.ts" 2>/dev/null || true
+	@cd frontend && npx prettier --write "../$(TS_GEN_DIR)/**/*.ts" 2>/dev/null || true
 	@touch $(PROTO_MARKER)
 	@echo "✅ Proto generation complete!"
 
@@ -88,7 +88,9 @@ regenerate:
 
 clean:
 	@echo "🧹 Cleaning generated code..."
-	@rm -rf "$(PYTHON_GEN_DIR)" "$(TS_GEN_DIR)" $(PROTO_MARKER)
+	@rm -rf "$(PYTHON_GEN_DIR)/adksim" "$(PYTHON_GEN_DIR)/google"
+	@rm -rf "$(TS_GEN_DIR)/adksim" "$(TS_GEN_DIR)/google"
+	@rm -f $(PROTO_MARKER)
 	@echo "✅ Clean complete!"
 
 # ============================================================
@@ -97,7 +99,7 @@ clean:
 
 server: generate
 	@echo "🚀 Starting ADK Agent Simulator server..."
-	uv run python -m adk_agent_sim.server.main
+	uv run python -m adk_sim_server.main
 
 frontend: generate
 	@echo "🚀 Starting frontend Angular dev server..."
@@ -141,19 +143,19 @@ docker-rebuild:
 
 test: generate
 	@echo "🧪 Running all tests..."
-	uv run pytest
+	uv run pytest server/tests plugins/python/tests
 
 test-unit: generate
 	@echo "🧪 Running unit tests..."
-	uv run pytest tests/unit -v
+	uv run pytest server/tests/unit plugins/python/tests/unit -v
 
 test-int: generate
 	@echo "🧪 Running integration tests..."
-	uv run pytest tests/integration -v
+	uv run pytest plugins/python/tests/integration -v
 
 test-e2e:
 	@echo "🧪 Running E2E tests (requires Docker)..."
-	uv run pytest tests/e2e --run-e2e -v
+	uv run pytest server/tests/e2e --run-e2e -v
 
 # ============================================================
 # Quality Checks
@@ -168,7 +170,7 @@ lint: generate
 	@echo "--- Proto ---"
 	buf lint
 	@echo "--- Python ---"
-	uv run ruff check .
+	uv run ruff check server/src plugins/python/src packages/
 	uv run pyright
 	@echo "--- TypeScript ---"
 	cd frontend && npm run lint
@@ -178,8 +180,8 @@ format:
 	@echo "--- Proto ---"
 	buf format -w
 	@echo "--- Python ---"
-	uv run ruff check --fix . || true
-	uv run ruff format .
+	uv run ruff check --fix server/src plugins/python/src packages/ || true
+	uv run ruff format server/src plugins/python/src packages/
 	@echo "--- TypeScript ---"
 	cd frontend && npm run format
 	@echo "✅ Formatting complete!"

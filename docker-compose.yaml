@@ -6,7 +6,8 @@ services:
     ports:
       - "50051:50051"
     volumes:
-      - ./adk_agent_sim:/app/adk_agent_sim:cached
+      - ./server/src/adk_sim_server:/app/server/src/adk_sim_server:cached
+      - ./packages:/app/packages:cached
       - ./logs:/app/logs
       - backend-data:/app/data
     environment:
@@ -18,8 +19,8 @@ services:
     command: >
       uv run watchfiles
       --filter python
-      "python -m adk_agent_sim.server.main"
-      /app/adk_agent_sim
+      "python -m adk_sim_server.main"
+      /app/server/src/adk_sim_server
 
   frontend:
     build:

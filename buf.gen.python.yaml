@@ -7,6 +7,6 @@ inputs:
 plugins:
   # --- Python (betterproto) ---
   - local: protoc-gen-python_betterproto
-    out: adk_agent_sim/generated
+    out: packages/adk-sim-protos/src/adk_sim_protos
     opt:
       - include_google_protobuf_copy=true

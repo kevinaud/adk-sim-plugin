@@ -34,18 +34,38 @@ RUN mkdir -p /opt/backup
 # Set working directory for dependency installation
 WORKDIR /workspace
 
-# Copy Python lockfiles first for dependency layer caching
+# Copy Python project files for UV workspace dependency resolution
+# Root project files
 COPY pyproject.toml uv.loc* ./
 
-# Install Python dependencies (frozen if lock exists)
+# Workspace member project files (required for UV to resolve dependencies)
+COPY server/pyproject.toml ./server/
+COPY plugins/python/pyproject.toml ./plugins/python/
+COPY packages/adk-sim-protos/pyproject.toml ./packages/adk-sim-protos/
+COPY packages/adk-sim-testing/pyproject.toml ./packages/adk-sim-testing/
+
+# Install Python dependencies (frozen if lock exists, skip local packages)
 RUN if [ -s uv.lock ]; then \
-      uv sync --frozen --no-install-project; \
+      uv sync --frozen --no-install-project --no-install-workspace; \
     else \
-      uv sync --no-install-project; \
+      uv sync --no-install-project --no-install-workspace; \
     fi
 
-# Copy frontend lockfiles for npm dependency layer caching
-COPY frontend/package.json frontend/package-lock.jso* ./frontend/
+# Copy npm workspace files for dependency layer caching
+# Root workspace config
+COPY package.json package-lock.jso* ./
 
-# Install frontend Node dependencies and backup for restore after mount
-RUN cd frontend && npm install && cp -r node_modules /opt/backup/frontend_node_modules
+# Workspace member package files (required for npm workspace resolution)
+COPY frontend/package.json frontend/package-lock.jso* ./frontend/
+COPY packages/adk-sim-protos-ts/package.json ./packages/adk-sim-protos-ts/
+# Create minimal source for local workspace package to satisfy npm install
+RUN mkdir -p packages/adk-sim-protos-ts/src && \
+    echo "export {};" > packages/adk-sim-protos-ts/src/index.ts
+
+# Install all npm workspace dependencies and backup frontend node_modules
+# With workspaces, node_modules may be in frontend/ or hoisted to root
+RUN npm install && \
+    mkdir -p /opt/backup/frontend_node_modules && \
+    if [ -d frontend/node_modules ]; then \
+      cp -r frontend/node_modules/* /opt/backup/frontend_node_modules/; \
+    fi

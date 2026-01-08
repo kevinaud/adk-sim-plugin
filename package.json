@@ -1,0 +1,17 @@
+{
+  "name": "adk-sim-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ADK Agent Simulator - Polyglot Monorepo",
+  "workspaces": [
+    "frontend",
+    "packages/adk-sim-protos-ts"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "build:frontend": "npm run build --workspace=frontend",
+    "lint:frontend": "npm run lint --workspace=frontend",
+    "format:frontend": "npm run format --workspace=frontend",
+    "start:frontend": "npm run start --workspace=frontend"
+  }
+}
