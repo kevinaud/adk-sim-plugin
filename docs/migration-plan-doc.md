@@ -96,32 +96,44 @@ This refactor will be executed in **two distinct stages**.
     *   *Note:* Avoid a loopback network call if possible; call the service class methods directly.
 
 #### Phase H: The CLI Entrypoint
-1.  **CLI Module (`server/src/adk_sim_server/cli.py`):**
-    *   Use `typer` (already a dependency) to define the `run` command.
+1.  **New Dependency:** Add `typer` to `server/pyproject.toml` dependencies.
+2.  **CLI Module (`server/src/adk_sim_server/cli.py`):**
+    *   Use `typer` to define a single `run` command (with single-command apps, typer auto-promotes so users run `adk-sim-server` directly without specifying the command name).
     *   **Arguments:** `--port` (default 50051), `--web-port` (default 8080), `--db-url`.
     *   **Concurrency:** Use `asyncio.gather()` to start:
         1.  The `grpclib` Server (serving `SimulatorService`).
         2.  The `uvicorn` Server (serving the Starlette app).
-2.  **Static Files:**
-    *   Configure Starlette to serve `StaticFiles` from a bundled directory (e.g., `adk_sim_server/static`) on the root route `/`.
+    *   **Integration:** Import and adapt the existing `serve()` function from `main.py` to accept configurable options.
+3.  **Update Entry Point:** Change `[project.scripts]` in `server/pyproject.toml` from:
+    ```toml
+    adk-sim-server = "adk_sim_server.main:main"
+    ```
+    to:
+    ```toml
+    adk-sim-server = "adk_sim_server.cli:app"
+    ```
+4.  **Static Files:**
+    *   Configure Starlette to serve `StaticFiles` from a bundled directory (`server/src/adk_sim_server/static/`) on the root route `/`.
     *   Ensure `index.html` is served for SPA routing (fallback).
 
 #### Phase I: Frontend Bundling
-1.  **Build Config:** Update `server/pyproject.toml` (hatch config) to include a build hook.
+1.  **Build Config:** Update `server/pyproject.toml` to include a hatch build hook under `[tool.hatch.build.hooks.custom]`.
     *   **Hook:** Runs `npm run build` in `frontend/`.
     *   **Copy:** Copies `frontend/dist/frontend/browser/*` to `server/src/adk_sim_server/static/`.
+    *   **Include:** Ensure `[tool.hatch.build.targets.wheel]` includes the `static/` directory.
 2.  **Config Update:** In `frontend/src/environments/environment.prod.ts`, set `grpcWebUrl: ''` (relative path) so requests go to the origin (the Python server).
 
 #### Phase J: Infrastructure Cleanup
 1.  **Remove Envoy:** Delete `envoy/` directory. Remove `envoy` service from `docker-compose.yaml`.
 2.  **Update Compose:**
     *   Expose ports `50051` AND `8080` on the `backend` service.
-    *   Update `backend` command to `uv run adk-sim run` (or `python -m adk_sim_server.cli`).
+    *   Update `backend` command to `uv run adk-sim-server` (typer single-command auto-promotion means no subcommand needed).
+    *   Update volume mounts to include the `plugins/python` directory (required by workspace dependencies).
 3.  **Update Makefile:** `make server` should now run the CLI entrypoint.
 
 ## 4. Final Verification
 1.  **Install:** `uv tool install --editable server/` (simulating user install).
-2.  **Run:** `adk-sim run`.
+2.  **Run:** `adk-sim-server`.
 3.  **Verify:**
     *   Browser loads at `http://localhost:8080`.
     *   Plugin connects at `localhost:50051`.
