@@ -5,7 +5,7 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    # Allows manual trigger
+    # Allows manual trigger or trigger from tag-release.yaml
 
 permissions:
   contents: read
@@ -66,7 +66,6 @@ jobs:
           path: dist/
 
   # Job 2: Publish Python packages to PyPI
-  # Note: NPM publishing happens in tag-release.yaml to match OIDC trusted publisher config
   publish-pypi:
     needs: verify-build
     runs-on: ubuntu-latest
@@ -86,3 +85,30 @@ jobs:
         with:
           packages-dir: dist/
           skip-existing: true
+
+  # Job 3: Publish TypeScript package to npm
+  publish-npm:
+    needs: verify-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install and build
+        working-directory: packages/adk-sim-protos-ts
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish to npm
+        working-directory: packages/adk-sim-protos-ts
+        run: npm publish --provenance --access public
+        # Uses OIDC trusted publisher - configured for publish.yaml workflow
