@@ -98,7 +98,7 @@ This refactor will be executed in **two distinct stages**.
 #### Phase H: The CLI Entrypoint
 1.  **New Dependency:** Add `typer` to `server/pyproject.toml` dependencies.
 2.  **CLI Module (`server/src/adk_sim_server/cli.py`):**
-    *   Use `typer` to define a single `run` command (with single-command apps, typer auto-promotes so users run `adk-sim-server` directly without specifying the command name).
+    *   Use `typer` to define a single `run` command (with single-command apps, typer auto-promotes so users run `adk-sim` directly without specifying the command name).
     *   **Arguments:** `--port` (default 50051), `--web-port` (default 8080), `--db-url`.
     *   **Concurrency:** Use `asyncio.gather()` to start:
         1.  The `grpclib` Server (serving `SimulatorService`).
@@ -110,7 +110,7 @@ This refactor will be executed in **two distinct stages**.
     ```
     to:
     ```toml
-    adk-sim-server = "adk_sim_server.cli:app"
+    adk-sim = "adk_sim_server.cli:app"
     ```
 4.  **Static Files:**
     *   Configure Starlette to serve `StaticFiles` from a bundled directory (`server/src/adk_sim_server/static/`) on the root route `/`.
@@ -127,7 +127,7 @@ This refactor will be executed in **two distinct stages**.
 1.  **Remove Envoy:** Delete `envoy/` directory. Remove `envoy` service from `docker-compose.yaml`.
 2.  **Update Compose:**
     *   Expose ports `50051` AND `8080` on the `backend` service.
-    *   Update `backend` command to `uv run adk-sim-server` (typer single-command auto-promotion means no subcommand needed).
+    *   Update `backend` command to `uv run adk-sim` (typer single-command auto-promotion means no subcommand needed).
     *   Update volume mounts to include the `plugins/python` directory (required by workspace dependencies).
 3.  **Update Makefile:** `make server` should now run the CLI entrypoint.
 

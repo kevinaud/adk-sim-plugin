@@ -1,0 +1,12 @@
+# Static files directory
+
+This directory is used to serve bundled frontend assets when
+running the ADK Agent Simulator in production mode.
+
+During development, the frontend is served separately by Angular's dev server.
+
+To bundle the frontend for production:
+1. Build the frontend: `cd frontend && npm run build`
+2. Copy the built files to this directory
+
+The `adk-sim` CLI will serve these files from the root URL.

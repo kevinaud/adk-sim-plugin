@@ -13,7 +13,7 @@
 #   make quality     - Run all quality checks
 # ============================================================
 
-.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild
+.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild bundle-frontend
 
 # Default target
 .DEFAULT_GOAL := help
@@ -99,7 +99,7 @@ clean:
 
 server: generate
 	@echo "🚀 Starting ADK Agent Simulator server..."
-	uv run python -m adk_sim_server.main
+	uv run adk-sim
 
 frontend: generate
 	@echo "🚀 Starting frontend Angular dev server..."
@@ -156,6 +156,17 @@ test-int: generate
 test-e2e:
 	@echo "🧪 Running E2E tests (requires Docker)..."
 	uv run pytest server/tests/e2e --run-e2e -v
+
+# ============================================================
+# Frontend Bundling
+# ============================================================
+
+bundle-frontend:
+	@echo "📦 Building and bundling frontend..."
+	cd frontend && CI=TRUE npm run build
+	rm -rf server/src/adk_sim_server/static/*
+	cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/
+	@echo "✅ Frontend bundled into server/src/adk_sim_server/static/"
 
 # ============================================================
 # Quality Checks
