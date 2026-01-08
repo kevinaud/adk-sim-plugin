@@ -23,19 +23,21 @@ VERSION_SOURCE = Path("packages/adk-sim-protos-ts/package.json")
 
 # Python packages to update (relative to repo root)
 PYTHON_PACKAGES = [
-    Path("packages/adk-sim-protos/pyproject.toml"),
-    Path("packages/adk-sim-testing/pyproject.toml"),
-    Path("server/pyproject.toml"),
-    Path("plugins/python/pyproject.toml"),
+  Path("packages/adk-sim-protos/pyproject.toml"),
+  Path("packages/adk-sim-testing/pyproject.toml"),
+  Path("server/pyproject.toml"),
+  Path("plugins/python/pyproject.toml"),
 ]
 
 # Internal package names that should use exact version pinning
-INTERNAL_PACKAGES = frozenset({
+INTERNAL_PACKAGES = frozenset(
+  {
     "adk-sim-protos",
     "adk-sim-testing",
     "adk-sim-server",
     "adk-agent-sim",
-})
+  }
+)
 
 
 def get_source_version() -> str:
