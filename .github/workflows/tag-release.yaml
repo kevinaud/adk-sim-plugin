@@ -6,14 +6,16 @@ on:
     branches: [main]
 
 jobs:
-  tag:
+  tag-and-publish:
     if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/v')
     runs-on: ubuntu-latest
+    environment: pypi
     permissions:
       contents: write
-      actions: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
+
       - name: Extract version and create tag
         id: tag
         run: |
@@ -22,8 +24,54 @@ jobs:
           git tag "$VERSION"
           git push origin "$VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Trigger publish workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
         run: |
-          gh workflow run publish.yaml --ref ${{ steps.tag.outputs.version }}
+          uv sync
+          npm ci
+
+      - name: Build Python packages
+        run: |
+          uv build --package adk-sim-protos --out-dir dist/
+          uv build --package adk-sim-testing --out-dir dist/
+          uv build --package adk-sim-server --out-dir dist/
+          uv build --package adk-agent-sim --out-dir dist/
+
+      - name: Build TypeScript package
+        run: npm run build --workspace=packages/adk-sim-protos-ts
+
+      - name: Verify Python installation
+        run: |
+          uv venv .verify-venv
+          uv pip install --python .verify-venv adk-sim-server --find-links dist/ --prerelease=allow
+          .verify-venv/bin/python -c "
+          from importlib.metadata import version
+          print(f'adk-sim-server: {version(\"adk-sim-server\")}')
+          print(f'adk-sim-protos: {version(\"adk-sim-protos\")}')
+          import adk_sim_server
+          import adk_sim_protos
+          print('All imports successful!')
+          "
+
+      - name: Publish Python packages to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          skip-existing: true
+
+      - name: Build and Publish NPM Protos
+        working-directory: packages/adk-sim-protos-ts
+        run: |
+          npm ci
+          npm run build
+          npm publish --provenance --access public
+        # OIDC trusted publisher configured for tag-release.yaml workflow

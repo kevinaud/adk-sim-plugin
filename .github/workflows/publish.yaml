@@ -5,7 +5,7 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    # Allows manual trigger or trigger from tag-release workflow
+    # Allows manual trigger
 
 permissions:
   contents: read
@@ -65,14 +65,9 @@ jobs:
           name: python-dist
           path: dist/
 
-      - name: Upload NPM artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-dist
-          path: packages/adk-sim-protos-ts/dist/
-
-  # Job 2: Publish foundation packages (protos - both Python and TS)
-  publish-foundation:
+  # Job 2: Publish Python packages to PyPI
+  # Note: NPM publishing happens in tag-release.yaml to match OIDC trusted publisher config
+  publish-pypi:
     needs: verify-build
     runs-on: ubuntu-latest
     environment: pypi
@@ -80,71 +75,13 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download Python artifacts
         uses: actions/download-artifact@v4
         with:
           name: python-dist
           path: dist/
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Publish Python Protos to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          skip-existing: true
-
-      - name: Build and Publish NPM Protos
-        working-directory: packages/adk-sim-protos-ts
-        run: |
-          npm ci
-          npm run build
-          npm publish --provenance --access public
-        # No NODE_AUTH_TOKEN needed - npm uses OIDC trusted publisher
-
-  # Job 3: Publish dependent packages (after protos are available)
-  publish-dependents:
-    needs: publish-foundation
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Download Python artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: python-dist
-          path: dist/
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
-
-      - name: Wait for PyPI availability
-        run: |
-          echo "Waiting for adk-sim-protos==${{ steps.version.outputs.VERSION }} on PyPI..."
-          for i in {1..30}; do
-            if uv pip install --dry-run "adk-sim-protos==${{ steps.version.outputs.VERSION }}" 2>/dev/null; then
-              echo "Package available!"
-              break
-            fi
-            echo "Attempt $i: Not yet available, waiting 10s..."
-            sleep 10
-          done
-
-      - name: Publish remaining packages to PyPI
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
