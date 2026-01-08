@@ -210,10 +210,10 @@ _create_release_pr:
 	git fetch origin main
 	git checkout main
 	git pull origin main
-	npx changeset version
-	$(eval VERSION := $(shell node -p "require('./packages/adk-sim-protos-ts/package.json').version"))
+	$(eval VERSION := $(shell uv run python scripts/get_next_version.py $(BUMP)))
+	@echo "Bumping to version $(VERSION)..."
 	git checkout -b release/v$(VERSION)
-	uv run python scripts/sync_versions.py
+	uv run python scripts/sync_versions.py $(VERSION)
 	uv lock
 	npm install
 	git add -A

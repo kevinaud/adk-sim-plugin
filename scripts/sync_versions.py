@@ -111,10 +111,52 @@ def update_pyproject(path: Path, version: str) -> bool:
   return changed
 
 
+def update_ts_package_version(version: str) -> bool:
+  """Update the TypeScript package.json with the new version.
+
+  Args:
+      version: The new version to set
+
+  Returns:
+      True if changes were made, False otherwise
+  """
+  with VERSION_SOURCE.open() as f:
+    data = json.load(f)
+
+  if data.get("version") == version:
+    return False
+
+  data["version"] = version
+  with VERSION_SOURCE.open("w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")  # Trailing newline for POSIX compliance
+
+  return True
+
+
 def main() -> None:
-  """Main entry point."""
-  version = get_source_version()
-  print(f"📦 Source version: {version}")
+  """Main entry point.
+
+  Usage:
+      python sync_versions.py           # Sync from TS package.json (source of truth)
+      python sync_versions.py 1.2.3     # Set all packages to specific version
+  """
+  import sys
+
+  if len(sys.argv) > 1:
+    # Version provided as argument - set all packages to this version
+    version = sys.argv[1]
+    print(f"📦 Setting version to: {version}")
+
+    # Update the TypeScript package.json first (source of truth)
+    if update_ts_package_version(version):
+      print(f"✅ Updated {VERSION_SOURCE}")
+    else:
+      print(f"⏭️  No changes needed for {VERSION_SOURCE}")
+  else:
+    # No argument - read version from source of truth
+    version = get_source_version()
+    print(f"📦 Source version: {version}")
 
   for path in PYTHON_PACKAGES:
     if not path.exists():
@@ -126,7 +168,7 @@ def main() -> None:
     else:
       print(f"⏭️  No changes needed for {path}")
 
-  print(f"\n🎉 All Python packages synced to version {version}")
+  print(f"\n🎉 All packages synced to version {version}")
 
 
 if __name__ == "__main__":
