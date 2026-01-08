@@ -13,7 +13,7 @@
 #   make quality     - Run all quality checks
 # ============================================================
 
-.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild bundle-frontend
+.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild bundle-frontend release-pr-major release-pr-minor release-pr-patch
 
 # Default target
 .DEFAULT_GOAL := help
@@ -196,3 +196,31 @@ format:
 	@echo "--- TypeScript ---"
 	cd frontend && npm run format
 	@echo "✅ Formatting complete!"
+
+# ============================================================
+# Release Management
+# ============================================================
+
+# Internal target - expects variable `v` to be set
+_release_pr_flow:
+	@if [ -z "$(v)" ]; then echo "Error: version not set"; exit 1; fi
+	@if ! command -v gh &> /dev/null; then echo "Error: gh CLI not installed"; exit 1; fi
+	@if [ -n "$$(git status --porcelain)" ]; then echo "Error: uncommitted changes"; exit 1; fi
+	git fetch origin main
+	git checkout -b release/v$(v)
+	uv run python scripts/bump_version.py $(v)
+	uv lock
+	npm install
+	git add -A
+	git commit -m "chore: release v$(v)"
+	git push -u origin HEAD
+	gh pr create --title "chore: release v$(v)" --body "Automated release PR for version $(v)"
+
+release-pr-major:
+	@$(MAKE) _release_pr_flow v=$$(uv run python scripts/get_next_version.py major)
+
+release-pr-minor:
+	@$(MAKE) _release_pr_flow v=$$(uv run python scripts/get_next_version.py minor)
+
+release-pr-patch:
+	@$(MAKE) _release_pr_flow v=$$(uv run python scripts/get_next_version.py patch)
