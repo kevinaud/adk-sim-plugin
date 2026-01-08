@@ -18,10 +18,11 @@ cd "$PROJECT_ROOT"
 
 echo "🚀 Starting Presubmit Checks..."
 
-# Generate protos first (required for type checking and tests)
+# Clean and regenerate protos (ensures buf config matches generated code)
 echo ""
-echo "🔧 Generating Proto Code..."
-make regenerate
+echo "🔧 Cleaning and Regenerating Proto Code..."
+make clean
+make generate
 
 # Run Quality Checks
 echo ""
