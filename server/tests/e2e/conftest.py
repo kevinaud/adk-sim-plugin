@@ -23,7 +23,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 @pytest.fixture(scope="session")
 def docker_compose_file() -> Path:
   """Return path to the test docker-compose file."""
-  return Path(__file__).parents[2] / "docker-compose.test.yaml"
+  return Path(__file__).parents[3] / "docker-compose.test.yaml"
 
 
 def _is_server_responsive(host: str, port: int) -> bool:
