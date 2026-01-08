@@ -45,8 +45,8 @@ jobs:
       - name: Verify Python installation (local wheels)
         run: |
           uv venv .verify-venv
-          # Install leaf package using local wheels for internal deps
-          uv pip install --python .verify-venv adk-sim-server --no-index --find-links dist/
+          # Install leaf package - use local wheels for internal deps, allow external deps from PyPI
+          uv pip install --python .verify-venv adk-sim-server --find-links dist/
           # Smoke test
           .verify-venv/bin/python -c "from adk_sim_server import __version__; print(f'Server version: {__version__}')"
 
