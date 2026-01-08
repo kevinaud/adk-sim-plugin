@@ -51,9 +51,16 @@ RUN if [ -s uv.lock ]; then \
       uv sync --no-install-project --no-install-workspace; \
     fi
 
-# Copy frontend package files for dependency layer caching
-COPY frontend/package.json frontend/package-lock.jso* ./frontend/
+# Copy npm workspace files for dependency layer caching
+# Root workspace config
+COPY package.json package-lock.jso* ./
 
-# Install frontend Node dependencies and backup for restore after mount
-# Note: npm workspaces are set up at runtime, build-time just needs frontend deps
-RUN cd frontend && npm install && cp -r node_modules /opt/backup/frontend_node_modules
+# Workspace member package files (required for npm workspace resolution)
+COPY frontend/package.json frontend/package-lock.jso* ./frontend/
+COPY packages/adk-sim-protos-ts/package.json ./packages/adk-sim-protos-ts/
+# Create minimal source for local workspace package to satisfy npm install
+RUN mkdir -p packages/adk-sim-protos-ts/src && \
+    echo "export {};" > packages/adk-sim-protos-ts/src/index.ts
+
+# Install all npm workspace dependencies and backup frontend node_modules
+RUN npm install && cp -r frontend/node_modules /opt/backup/frontend_node_modules
