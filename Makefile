@@ -163,9 +163,9 @@ test-e2e:
 
 bundle-frontend:
 	@echo "📦 Building and bundling frontend..."
-	cd frontend && npm run build
+	cd frontend && CI=TRUE npm run build
 	rm -rf server/src/adk_sim_server/static/*
-	cp -r frontend/dist/adk-agent-sim-ui/browser/* server/src/adk_sim_server/static/
+	cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/
 	@echo "✅ Frontend bundled into server/src/adk_sim_server/static/"
 
 # ============================================================
