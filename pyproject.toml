@@ -132,7 +132,7 @@ pythonVersion = "3.14"
 typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
-include = ["server/src", "plugins/python/src", "packages/*/src"]
+include = ["server/src", "server/tests", "plugins/python/src", "plugins/python/tests", "packages/*/src"]
 exclude = [
     "packages/adk-sim-protos/src/adk_sim_protos/adksim",
     "packages/adk-sim-protos/src/adk_sim_protos/google",
@@ -144,6 +144,25 @@ reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
 reportUnusedImport = false
+
+# Relaxed rules for test files
+[[tool.pyright.executionEnvironments]]
+root = "server/tests"
+reportPrivateUsage = false
+reportMissingTypeArgument = false
+reportUnknownParameterType = false
+reportPrivateImportUsage = false
+reportArgumentType = false
+reportAttributeAccessIssue = false
+
+[[tool.pyright.executionEnvironments]]
+root = "plugins/python/tests"
+reportPrivateUsage = false
+reportMissingTypeArgument = false
+reportUnknownParameterType = false
+reportPrivateImportUsage = false
+reportArgumentType = false
+reportAttributeAccessIssue = false
 
 [tool.pytest.ini_options]
 testpaths = ["server/tests", "plugins/python/tests"]
