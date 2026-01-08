@@ -13,5 +13,8 @@
     "lint:frontend": "npm run lint --workspace=frontend",
     "format:frontend": "npm run format --workspace=frontend",
     "start:frontend": "npm run start --workspace=frontend"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0"
   }
 }

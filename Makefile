@@ -13,7 +13,7 @@
 #   make quality     - Run all quality checks
 # ============================================================
 
-.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild bundle-frontend
+.PHONY: help generate clean server frontend test test-unit test-integration test-e2e quality lint format all dev docker-up docker-up-d docker-down docker-rebuild bundle-frontend release-pr-patch release-pr-minor release-pr-major
 
 # Default target
 .DEFAULT_GOAL := help
@@ -196,3 +196,36 @@ format:
 	@echo "--- TypeScript ---"
 	cd frontend && npm run format
 	@echo "✅ Formatting complete!"
+
+# ============================================================
+# Release Management
+# ============================================================
+
+# Internal helper - calculates next version and creates release PR
+_create_release_pr:
+	@if [ -z "$(BUMP)" ]; then echo "Error: BUMP not set"; exit 1; fi
+	@if ! command -v gh &> /dev/null; then echo "Error: gh CLI required"; exit 1; fi
+	@if [ -n "$$(git status --porcelain)" ]; then echo "Error: uncommitted changes"; exit 1; fi
+	@echo "Creating release PR ($(BUMP) bump)..."
+	git fetch origin main
+	git checkout main
+	git pull origin main
+	npx changeset version
+	$(eval VERSION := $(shell node -p "require('./packages/adk-sim-protos-ts/package.json').version"))
+	git checkout -b release/v$(VERSION)
+	uv run python scripts/sync_versions.py
+	uv lock
+	npm install
+	git add -A
+	git commit -m "chore: release v$(VERSION)"
+	git push -u origin HEAD
+	gh pr create --title "chore: release v$(VERSION)" --body "Automated release PR for version $(VERSION)"
+
+release-pr-patch:
+	@$(MAKE) _create_release_pr BUMP=patch
+
+release-pr-minor:
+	@$(MAKE) _create_release_pr BUMP=minor
+
+release-pr-major:
+	@$(MAKE) _create_release_pr BUMP=major
