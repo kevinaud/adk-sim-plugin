@@ -46,7 +46,7 @@ else
 fi
 
 # ============================================================
-# Python Backend Checks
+# Python Backend Checks (Workspace)
 # ============================================================
 echo ""
 echo "----------------------------------------"
@@ -57,10 +57,10 @@ echo "Running Pyright (type check)..."
 uv run pyright
 
 echo "Running Ruff (lint)..."
-uv run ruff check .
+uv run ruff check server/src plugins/python/src packages/
 
 echo "Running Ruff (format check)..."
-uv run ruff format --check .
+uv run ruff format --check server/src plugins/python/src packages/
 
 echo "✅ Python checks passed!"
 

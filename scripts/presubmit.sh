@@ -32,7 +32,7 @@ echo "📋 Running Quality Checks..."
 echo ""
 echo "🧪 Running Backend Tests..."
 # (sequential - async tests need single event loop)
-uv run pytest tests/unit tests/integration -v
+uv run pytest server/tests/unit plugins/python/tests -v
 
 # Run Frontend Tests
 echo ""
