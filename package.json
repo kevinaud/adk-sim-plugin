@@ -5,8 +5,7 @@
   "description": "ADK Agent Simulator - Polyglot Monorepo",
   "workspaces": [
     "frontend",
-    "packages/adk-sim-protos-ts",
-    "plugins/typescript"
+    "packages/adk-sim-protos-ts"
   ],
   "scripts": {
     "install:all": "npm install",
