@@ -22,6 +22,7 @@ dev = [
     "pytest-timeout>=2.4.0",
     "pyhamcrest>=2.1.0",
     "specify-cli>=1.0.0",
+    "tomlkit>=0.13.0",
     "watchfiles>=1.0.0",
 ]
 

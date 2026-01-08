@@ -5,7 +5,6 @@
 # ==============================================================================
 
 # 1. INCLUDES
-# Broadly target the frontend, the typescript protos it consumes, and docker infra.
 include_list=(
   "frontend/"
   "packages/adk-sim-protos-ts/"
@@ -13,7 +12,6 @@ include_list=(
 )
 
 # 2. EXCLUDES
-# Aggressively filter out high-token/low-value files like locks, caches, and binaries.
 exclude_list=(
   "package-lock.json"
   "yarn.lock"
@@ -31,18 +29,24 @@ exclude_list=(
   ".DS_Store"
 )
 
+# 3. TRUNCATES
+# Only truncate files that contain "google/" in their path.
+# This keeps your 'adksim/' protos full-length while shrinking the huge vendored deps.
+truncate_list=(
+  "packages/adk-sim-protos-ts/src/google/"
+)
+
 # ==============================================================================
 # EXECUTION
 # ==============================================================================
 
-# Join the array elements into comma-separated strings
 include_param=$(IFS=,; echo "${include_list[*]}")
 exclude_param=$(IFS=,; echo "${exclude_list[*]}")
+truncate_param=$(IFS=,; echo "${truncate_list[*]}")
 
-# Run allpaste
-# - We pass the calculated includes/excludes
-# - "$@" passes through any extra arguments you provide at runtime (e.g., --output=file.md)
 allpaste \
   --include="$include_param" \
   --exclude="$exclude_param" \
+  --truncate-pattern="$truncate_param" \
+  --truncate-limit=1000 \
   "$@"

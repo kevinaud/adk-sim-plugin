@@ -1,0 +1,141 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Job 1: Build all packages and verify they're installable
+  verify-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: |
+          uv sync
+          npm ci
+
+      - name: Build Python packages
+        run: |
+          uv build --package adk-sim-protos --out-dir dist/
+          uv build --package adk-sim-testing --out-dir dist/
+          uv build --package adk-sim-server --out-dir dist/
+          uv build --package adk-agent-sim --out-dir dist/
+
+      - name: Build TypeScript package
+        run: npm run build --workspace=packages/adk-sim-protos-ts
+
+      - name: Verify Python installation (local wheels)
+        run: |
+          uv venv .verify-venv
+          # Install leaf package using local wheels for internal deps
+          uv pip install --python .verify-venv adk-sim-server --no-index --find-links dist/
+          # Smoke test
+          .verify-venv/bin/python -c "from adk_sim_server import __version__; print(f'Server version: {__version__}')"
+
+      - name: Upload Python artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Upload NPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-dist
+          path: packages/adk-sim-protos-ts/dist/
+
+  # Job 2: Publish foundation packages (protos - both Python and TS)
+  publish-foundation:
+    needs: verify-build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Python artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish Python Protos to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          skip-existing: true
+
+      - name: Build and Publish NPM Protos
+        working-directory: packages/adk-sim-protos-ts
+        run: |
+          npm ci
+          npm run build
+          npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Job 3: Publish dependent packages (after protos are available)
+  publish-dependents:
+    needs: publish-foundation
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Download Python artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Wait for PyPI availability
+        run: |
+          echo "Waiting for adk-sim-protos==${{ steps.version.outputs.VERSION }} on PyPI..."
+          for i in {1..30}; do
+            if uv pip install --dry-run "adk-sim-protos==${{ steps.version.outputs.VERSION }}" 2>/dev/null; then
+              echo "Package available!"
+              break
+            fi
+            echo "Attempt $i: Not yet available, waiting 10s..."
+            sleep 10
+          done
+
+      - name: Publish remaining packages to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          skip-existing: true
