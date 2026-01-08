@@ -99,7 +99,7 @@ clean:
 
 server: generate
 	@echo "🚀 Starting ADK Agent Simulator server..."
-	uv run python -m adk_sim_server.main
+	uv run adk-sim
 
 frontend: generate
 	@echo "🚀 Starting frontend Angular dev server..."

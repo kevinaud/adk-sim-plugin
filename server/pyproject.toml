@@ -14,6 +14,9 @@ dependencies = [
     "structlog>=25.5.0",
     "tenacity>=9.1.2",
     "broadcaster>=0.3.1",
+    "starlette>=0.45.0",
+    "uvicorn>=0.34.0",
+    "typer>=0.15.0",
 ]
 
 [build-system]
@@ -29,7 +32,7 @@ include = [
 ]
 
 [project.scripts]
-adk-sim-server = "adk_sim_server.main:main"
+adk-sim = "adk_sim_server.cli:app"
 
 [dependency-groups]
 dev = [

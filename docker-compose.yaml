@@ -5,8 +5,10 @@ services:
       dockerfile: docker/backend.Dockerfile
     ports:
       - "50051:50051"
+      - "8080:8080"
     volumes:
       - ./server/src/adk_sim_server:/app/server/src/adk_sim_server:cached
+      - ./plugins/python:/app/plugins/python:cached
       - ./packages:/app/packages:cached
       - ./logs:/app/logs
       - backend-data:/app/data
@@ -16,11 +18,7 @@ services:
       - LOG_FILE=/app/logs/coordination-service.log
       # Override default to use the mounted volume path
       - ADK_AGENT_SIM_DATABASE_URL=sqlite+aiosqlite:////app/data/simulator.db
-    command: >
-      uv run watchfiles
-      --filter python
-      "python -m adk_sim_server.main"
-      /app/server/src/adk_sim_server
+    command: uv run adk-sim
 
   frontend:
     build:
@@ -33,14 +31,6 @@ services:
       - /app/node_modules
     command: npx ng serve --host 0.0.0.0 --poll 2000
 
-  envoy:
-    image: envoyproxy/envoy:v1.26-latest
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
-    depends_on:
-      - backend
-
 volumes:
   backend-data:
+
