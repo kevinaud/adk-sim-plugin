@@ -46,7 +46,8 @@ jobs:
         run: |
           uv venv .verify-venv
           # Install leaf package - use local wheels for internal deps, allow external deps from PyPI
-          uv pip install --python .verify-venv adk-sim-server --find-links dist/
+          # Note: --prerelease=allow is needed for betterproto>=2.0.0b7
+          uv pip install --python .verify-venv adk-sim-server --find-links dist/ --prerelease=allow
           # Smoke test
           .verify-venv/bin/python -c "from adk_sim_server import __version__; print(f'Server version: {__version__}')"
 
