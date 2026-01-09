@@ -38,7 +38,8 @@ if TYPE_CHECKING:
 logger = get_logger("web")
 
 # Static files directory (bundled frontend)
-STATIC_DIR = Path(__file__).parent / "static"
+# Angular builds to static/browser/ within the package
+STATIC_DIR = Path(__file__).parent / "static" / "browser"
 
 
 def _decode_grpc_web_payload(body: bytes, is_text: bool) -> bytes:

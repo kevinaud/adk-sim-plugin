@@ -1,12 +1,25 @@
 # Static files directory
 
-This directory is used to serve bundled frontend assets when
-running the ADK Agent Simulator in production mode.
+This directory contains bundled frontend assets when running the ADK Agent
+Simulator. The server expects the Angular app to be in `browser/index.html`.
 
 During development, the frontend is served separately by Angular's dev server.
 
 To bundle the frontend for production:
 1. Build the frontend: `cd frontend && npm run build`
-2. Copy the built files to this directory
+2. Copy the built files: `cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/`
 
-The `adk-sim` CLI will serve these files from the root URL.
+Or simply run: `make bundle-frontend`
+
+The CI publish workflow automatically bundles the frontend before building
+the Python wheel, ensuring published packages always include the frontend.
+
+Directory structure after bundling:
+  static/
+    browser/
+      index.html      <- Angular SPA entry point
+      main-*.js       <- Bundled JavaScript
+      styles-*.css    <- Bundled CSS
+      media/          <- Fonts, icons, etc.
+    3rdpartylicenses.txt
+    prerendered-routes.json

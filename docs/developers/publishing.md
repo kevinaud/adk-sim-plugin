@@ -66,10 +66,12 @@ Triggered by: `push` to tags matching `v*`
 **Jobs:**
 
 1. **`verify-build`** — Builds all packages and verifies they're installable
+   - Bundles the Angular frontend into the server package
    - Builds Python wheels with `uv build`
    - Builds TypeScript with `npm run build`
    - Installs the leaf package (`adk-sim-server`) from local wheels
    - Runs smoke tests to verify imports work
+   - **Verifies the frontend is servable** — starts the server and confirms it serves the Angular app (not "Frontend not bundled")
    - Uploads artifacts for the publish jobs
 
 2. **`publish-pypi`** — Publishes Python packages to PyPI

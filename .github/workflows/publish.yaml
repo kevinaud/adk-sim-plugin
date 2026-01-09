@@ -30,6 +30,14 @@ jobs:
           uv sync
           npm ci
 
+      - name: Bundle frontend into server
+        run: |
+          cd frontend && CI=TRUE npm run build
+          rm -rf server/src/adk_sim_server/static/*
+          cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/
+          echo "Frontend bundled:"
+          ls -la server/src/adk_sim_server/static/browser/
+
       - name: Build Python packages
         run: |
           uv build --package adk-sim-protos --out-dir dist/
@@ -56,6 +64,36 @@ jobs:
           import adk_sim_protos
           print('All imports successful!')
           "
+
+      - name: Verify frontend is bundled and servable
+        run: |
+          # Start the server in background
+          .verify-venv/bin/adk-sim &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 3
+          
+          # Test that the frontend is served (not "Frontend not bundled")
+          RESPONSE=$(curl -s http://localhost:8080/)
+          
+          # Kill the server
+          kill $SERVER_PID 2>/dev/null || true
+          
+          # Check response contains expected Angular app markers
+          if echo "$RESPONSE" | grep -q "Frontend not bundled"; then
+            echo "❌ FATAL: Frontend is not bundled in the package!"
+            echo "Response was: $RESPONSE"
+            exit 1
+          fi
+          
+          if echo "$RESPONSE" | grep -q "<app-root>"; then
+            echo "✅ Frontend is properly bundled and served"
+          else
+            echo "❌ FATAL: Frontend response does not contain expected Angular markers"
+            echo "Response was: $RESPONSE"
+            exit 1
+          fi
 
       - name: Upload Python artifacts
         uses: actions/upload-artifact@v4
