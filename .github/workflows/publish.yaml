@@ -32,7 +32,7 @@ jobs:
 
       - name: Bundle frontend into server
         run: |
-          cd frontend && CI=TRUE npm run build
+          cd frontend && CI=TRUE npm run build && cd ..
           rm -rf server/src/adk_sim_server/static/*
           cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/
           echo "Frontend bundled:"
