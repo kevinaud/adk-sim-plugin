@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
@@ -107,7 +107,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install and build
@@ -119,19 +119,7 @@ jobs:
       - name: Publish to npm
         working-directory: packages/adk-sim-protos-ts
         run: |
-          # Debug: show all npmrc files and their contents
-          echo "=== NPM Config Files ==="
-          echo "NPM_CONFIG_USERCONFIG: $NPM_CONFIG_USERCONFIG"
-          echo "--- ~/.npmrc ---"
-          cat ~/.npmrc 2>/dev/null || echo "(not found)"
-          echo "--- $NPM_CONFIG_USERCONFIG ---"
-          cat "$NPM_CONFIG_USERCONFIG" 2>/dev/null || echo "(not found)"
-          echo "--- .npmrc in cwd ---"
-          cat .npmrc 2>/dev/null || echo "(not found)"
-          echo "========================"
-          
-          # Remove auth tokens from all possible locations
-          sed -i '/_authToken/d' ~/.npmrc 2>/dev/null || true
-          sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG" 2>/dev/null || true
-          
+          # Unset NODE_AUTH_TOKEN to force npm to use OIDC instead of token auth
+          # See: https://github.com/npm/cli/issues/1440
+          unset NODE_AUTH_TOKEN
           npm publish --provenance --access public
