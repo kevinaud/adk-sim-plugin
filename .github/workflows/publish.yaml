@@ -88,6 +88,7 @@ jobs:
   publish-npm:
     needs: verify-build
     runs-on: ubuntu-latest
+    environment: pypi  # Must match npm trusted publisher environment setting
     permissions:
       contents: read
       id-token: write

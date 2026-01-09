@@ -77,7 +77,8 @@ info "Monitoring CI checks for PR #${PR_NUMBER}..."
 
 check_ci_status() {
     # Get the status of all checks
-    gh pr checks "$PR_NUMBER" --json name,state,conclusion 2>/dev/null || echo "[]"
+    # Note: gh pr checks uses 'state' field with values: PENDING, SUCCESS, FAILURE, etc.
+    gh pr checks "$PR_NUMBER" --json name,state 2>/dev/null || echo "[]"
 }
 
 wait_for_checks() {
@@ -89,12 +90,12 @@ wait_for_checks() {
         local checks_json
         checks_json=$(check_ci_status)
         
-        # Count check states
+        # Count check states (state field has: PENDING, SUCCESS, FAILURE, CANCELLED, etc.)
         local total pending passed failed
         total=$(echo "$checks_json" | jq 'length')
-        pending=$(echo "$checks_json" | jq '[.[] | select(.state == "PENDING" or .state == "IN_PROGRESS")] | length')
-        passed=$(echo "$checks_json" | jq '[.[] | select(.conclusion == "SUCCESS")] | length')
-        failed=$(echo "$checks_json" | jq '[.[] | select(.conclusion == "FAILURE" or .conclusion == "CANCELLED")] | length')
+        pending=$(echo "$checks_json" | jq '[.[] | select(.state == "PENDING" or .state == "IN_PROGRESS" or .state == "QUEUED")] | length')
+        passed=$(echo "$checks_json" | jq '[.[] | select(.state == "SUCCESS" or .state == "SKIPPED")] | length')
+        failed=$(echo "$checks_json" | jq '[.[] | select(.state == "FAILURE" or .state == "CANCELLED" or .state == "ERROR")] | length')
         
         if [[ "$total" -eq 0 ]]; then
             echo -ne "\r⏳ Waiting for checks to start...                    "
@@ -104,7 +105,7 @@ wait_for_checks() {
             echo ""
             echo ""
             warn "Some checks failed:"
-            echo "$checks_json" | jq -r '.[] | select(.conclusion == "FAILURE") | "  - \(.name)"'
+            echo "$checks_json" | jq -r '.[] | select(.state == "FAILURE" or .state == "ERROR") | "  - \(.name)"'
             echo ""
             return 1
         else
