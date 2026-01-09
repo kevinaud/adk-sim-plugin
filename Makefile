@@ -229,3 +229,11 @@ release-pr-minor:
 
 release-pr-major:
 	@$(MAKE) _create_release_pr BUMP=major
+
+# Create and push a tag for the current version (triggers publish workflow)
+release-tag:
+	@VERSION=$$(grep -m1 'version' packages/adk-sim-protos/pyproject.toml | cut -d'"' -f2) && \
+	echo "Creating tag v$$VERSION..." && \
+	git tag "v$$VERSION" && \
+	git push origin "v$$VERSION" && \
+	echo "✅ Tag v$$VERSION pushed - publish workflow will run"

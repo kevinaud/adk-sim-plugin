@@ -33,7 +33,9 @@
         "ms-toolsai.jupyter",
         "tamasfe.even-better-toml",
         "angular.ng-template",
-        "DrBlury.protobuf-vsc"
+        "DrBlury.protobuf-vsc",
+        "GitHub.copilot-chat",
+        "GitHub.vscode-pull-request-github"
       ]
     }
   },
