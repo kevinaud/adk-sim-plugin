@@ -13,7 +13,7 @@ members = [
 
 [[package]]
 name = "adk-agent-sim"
-version = "0.1.18"
+version = "0.1.19"
 source = { editable = "plugins/python" }
 dependencies = [
     { name = "adk-sim-protos" },
@@ -48,7 +48,7 @@ dev = [
 
 [[package]]
 name = "adk-sim-protos"
-version = "0.1.18"
+version = "0.1.19"
 source = { editable = "packages/adk-sim-protos" }
 dependencies = [
     { name = "betterproto" },
@@ -75,7 +75,7 @@ dev = [
 
 [[package]]
 name = "adk-sim-server"
-version = "0.1.18"
+version = "0.1.19"
 source = { editable = "server" }
 dependencies = [
     { name = "adk-sim-protos" },
@@ -134,7 +134,7 @@ dev = [
 
 [[package]]
 name = "adk-sim-testing"
-version = "0.1.18"
+version = "0.1.19"
 source = { editable = "packages/adk-sim-testing" }
 dependencies = [
     { name = "adk-sim-protos" },
