@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,6 +29,14 @@ jobs:
         run: |
           uv sync
           npm ci
+
+      - name: Bundle frontend into server
+        run: |
+          cd frontend && CI=TRUE npm run build
+          rm -rf server/src/adk_sim_server/static/*
+          cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/
+          echo "Frontend bundled:"
+          ls -la server/src/adk_sim_server/static/browser/
 
       - name: Build Python packages
         run: |
@@ -56,6 +64,36 @@ jobs:
           import adk_sim_protos
           print('All imports successful!')
           "
+
+      - name: Verify frontend is bundled and servable
+        run: |
+          # Start the server in background
+          .verify-venv/bin/adk-sim &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 3
+          
+          # Test that the frontend is served (not "Frontend not bundled")
+          RESPONSE=$(curl -s http://localhost:8080/)
+          
+          # Kill the server
+          kill $SERVER_PID 2>/dev/null || true
+          
+          # Check response contains expected Angular app markers
+          if echo "$RESPONSE" | grep -q "Frontend not bundled"; then
+            echo "❌ FATAL: Frontend is not bundled in the package!"
+            echo "Response was: $RESPONSE"
+            exit 1
+          fi
+          
+          if echo "$RESPONSE" | grep -q "<app-root>"; then
+            echo "✅ Frontend is properly bundled and served"
+          else
+            echo "❌ FATAL: Frontend response does not contain expected Angular markers"
+            echo "Response was: $RESPONSE"
+            exit 1
+          fi
 
       - name: Upload Python artifacts
         uses: actions/upload-artifact@v4
@@ -94,15 +132,6 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Debug OIDC Token Claims
-        run: |
-          # Request OIDC token and decode claims for debugging
-          OIDC_TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
-          echo "=== OIDC Token Claims ==="
-          echo "$OIDC_TOKEN" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq .
-          echo "========================="
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
