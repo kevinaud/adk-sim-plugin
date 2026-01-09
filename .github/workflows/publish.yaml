@@ -118,4 +118,7 @@ jobs:
 
       - name: Publish to npm
         working-directory: packages/adk-sim-protos-ts
-        run: NODE_AUTH_TOKEN="" npm publish --provenance --access public
+        run: |
+          # Remove the _authToken line from .npmrc to force OIDC
+          sed -i '/_authToken/d' ~/.npmrc || true
+          npm publish --provenance --access public
