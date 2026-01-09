@@ -1,10 +1,10 @@
 [project]
 name = "adk-sim-server"
-version = "0.1.13"
+version = "0.1.14"
 description = "ADK Agent Simulator - gRPC Server"
 requires-python = ">=3.14"
 dependencies = [
-    "adk-sim-protos==0.1.13",
+    "adk-sim-protos==0.1.14",
     "grpclib>=0.4.7",
     "sqlalchemy>=2.0.0",
     "databases[aiosqlite]>=0.9.0",
@@ -36,7 +36,7 @@ adk-sim = "adk_sim_server.cli:app"
 
 [dependency-groups]
 dev = [
-    "adk-sim-testing==0.1.13",
+    "adk-sim-testing==0.1.14",
     "pytest>=9.0.1",
     "pytest-asyncio>=1.3.0",
     "pytest-docker>=3.0.0",
