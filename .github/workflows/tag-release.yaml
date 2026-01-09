@@ -1,0 +1,41 @@
+name: Tag Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  # This job creates a tag and triggers publish.yaml with the tag ref.
+  # We can't publish directly here because:
+  # 1. PR context doesn't satisfy environment branch policies
+  # 2. PyPI trusted publisher is configured for publish.yaml workflow
+  # By triggering publish.yaml with --ref <tag>, it runs in tag context.
+  create-tag-and-trigger-publish:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write  # Needed to trigger workflows
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # Checkout the merged main branch
+          fetch-depth: 0
+
+      - name: Extract version and create tag
+        id: tag
+        run: |
+          VERSION="${GITHUB_HEAD_REF#release/}"
+          echo "Creating tag: $VERSION"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Trigger publish workflow with tag ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Triggering publish.yaml with ref: ${{ steps.tag.outputs.version }}"
+          gh workflow run publish.yaml --ref "${{ steps.tag.outputs.version }}"
+

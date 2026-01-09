@@ -118,6 +118,4 @@ jobs:
 
       - name: Publish to npm
         working-directory: packages/adk-sim-protos-ts
-        env:
-          NODE_AUTH_TOKEN: ''  # Clear the default token set by setup-node to force OIDC
-        run: npm publish --provenance --access public
+        run: NODE_AUTH_TOKEN="" npm publish --provenance --access public
