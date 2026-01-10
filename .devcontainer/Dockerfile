@@ -28,8 +28,16 @@ RUN npm install -g @angular/cli
 # Install Buf globally
 RUN npm install -g @bufbuild/buf
 
+# Install Claude Code CLI globally
+RUN npm install -g @anthropic-ai/claude-code
+
 # Create backup directory for node_modules
 RUN mkdir -p /opt/backup
+
+# Pre-create the config directory with correct permissions
+# This prevents the Docker Volume from being created as 'root'
+RUN mkdir -p /home/vscode/.claude && \
+  chown -R vscode:vscode /home/vscode/.claude
 
 # Set working directory for dependency installation
 WORKDIR /workspace
