@@ -62,3 +62,5 @@ if [ "$CI" != "true" ]; then
 else
     echo "⏭️  Skipping ADK repo cloning (CI detected)"
 fi
+
+# curl -fsSL https://claude.ai/install.sh | bash
