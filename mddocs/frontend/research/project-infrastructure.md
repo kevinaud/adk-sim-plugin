@@ -22,6 +22,40 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Current Frontend State](#current-frontend-state)
+  - [Folder Structure](#folder-structure)
+  - [Current Dependencies](#current-dependencies)
+  - [Generated Protobuf Types](#generated-protobuf-types)
+  - [What Needs to Be Built](#what-needs-to-be-built)
+- [Server Communication Architecture](#server-communication-architecture)
+  - [Two-Server Model](#two-server-model)
+  - [gRPC-Web Gateway (No Envoy!)](#grpc-web-gateway-no-envoy)
+  - [Supported Methods in Web Gateway](#supported-methods-in-web-gateway)
+  - [Frontend Serving (SPA)](#frontend-serving-spa)
+- [Environment Configuration](#environment-configuration)
+  - [Development Mode](#development-mode)
+  - [Production Mode](#production-mode)
+- [Publishing and Bundling](#publishing-and-bundling)
+  - [Build Pipeline (publish.yaml)](#build-pipeline-publishyaml)
+  - [Package Structure](#package-structure)
+- [LlmRequest Data Model](#llmrequest-data-model)
+  - [GenerateContentRequest Structure](#generatecontentrequest-structure)
+  - [Content Structure (Conversation History)](#content-structure-conversation-history)
+  - [Tool Structure](#tool-structure)
+- [Implications for Frontend Design](#implications-for-frontend-design)
+  - [1. gRPC-Web Client Configuration](#1-grpc-web-client-configuration)
+  - [2. Streaming Implementation Gap](#2-streaming-implementation-gap)
+  - [3. Data Model Alignment](#3-data-model-alignment)
+  - [4. No Envoy in Dev or Prod](#4-no-envoy-in-dev-or-prod)
+  - [5. Type Safety via Generated Protos](#5-type-safety-via-generated-protos)
+- [Recommendations Summary](#recommendations-summary)
+- [Open Questions for Technical Design](#open-questions-for-technical-design)
+
+
 ## Overview
 
 The ADK Simulator frontend exists but is largely a skeleton. The server infrastructure is mature, with gRPC and gRPC-Web already working. Understanding this existing setup is critical for designing the frontend architecture.

@@ -12,6 +12,9 @@ related:
   - ./research/converter-research.md
   - ./research/project-infrastructure.md
   - ./research/jsonforms-research.md
+  - ./research/playwright-testing-research.md
+  - ./research/sheriff-research.md
+  - ./research/frontend-configuration-research.md
 ---
 
 # Web UI Technical Design Document
@@ -32,8 +35,63 @@ related:
 - [Converter Research](./research/converter-research.md) - Proto conversion design
 - [Project Infrastructure](./research/project-infrastructure.md) - Existing codebase
 - [JSONForms Research](./research/jsonforms-research.md) - Dynamic form generation
+- [Playwright Testing Research](./research/playwright-testing-research.md) - Visual regression & E2E
+- [Sheriff Research](./research/sheriff-research.md) - Dependency enforcement
+- [Frontend Configuration Research](./research/frontend-configuration-research.md) - URL/port configuration
 
 ---
+
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Executive Summary](#executive-summary)
+  - [Key Design Decisions](#key-design-decisions)
+- [System Architecture](#system-architecture)
+  - [High-Level Component Diagram](#high-level-component-diagram)
+  - [Library Dependency Graph](#library-dependency-graph)
+- [Module Structure](#module-structure)
+  - [Folder Layout](#folder-layout)
+- [Data Model Integration](#data-model-integration)
+  - [The Conversion Layer](#the-conversion-layer)
+  - [Package Dependency](#package-dependency)
+  - [Type Usage in Components](#type-usage-in-components)
+- [State Management](#state-management)
+  - [State Architecture](#state-architecture)
+  - [SessionStateService (Global)](#sessionstateservice-global)
+  - [SimulationStore (Feature-Scoped)](#simulationstore-feature-scoped)
+  - [SessionFacade (Orchestration)](#sessionfacade-orchestration)
+- [Communication Layer](#communication-layer)
+  - [Gateway Port (Abstract)](#gateway-port-abstract)
+  - [gRPC Gateway Adapter](#grpc-gateway-adapter)
+  - [Mock Gateway (Testing)](#mock-gateway-testing)
+  - [Auto-Reconnect Logic](#auto-reconnect-logic)
+- [UI Components](#ui-components)
+  - [Event Stream Components](#event-stream-components)
+    - [EventBlockComponent](#eventblockcomponent)
+    - [DataTreeComponent](#datatreecomponent)
+    - [SmartBlobComponent](#smartblobcomponent)
+  - [Control Panel Components](#control-panel-components)
+    - [ToolCatalogComponent](#toolcatalogcomponent)
+    - [ToolFormComponent (JSONForms)](#toolformcomponent-jsonforms)
+    - [ToolFormService (Schema Conversion)](#toolformservice-schema-conversion)
+- [Routing Configuration](#routing-configuration)
+- [Testing Strategy](#testing-strategy)
+  - [Test Distribution](#test-distribution)
+  - [Playwright Testing Strategy](#playwright-testing-strategy)
+    - [Component Tests with Visual Regression](#component-tests-with-visual-regression)
+    - [E2E Tests with Real Backend](#e2e-tests-with-real-backend)
+  - [Component Harness Example](#component-harness-example)
+  - [Sociable Test Example](#sociable-test-example)
+- [Server-Side Prerequisites](#server-side-prerequisites)
+  - [Streaming Gap Resolution](#streaming-gap-resolution)
+- [Implementation Phases](#implementation-phases)
+  - [Phase 1: Foundation (Week 1)](#phase-1-foundation-week-1)
+  - [Phase 2: Communication (Week 2)](#phase-2-communication-week-2)
+  - [Phase 3: Event Stream (Week 3)](#phase-3-event-stream-week-3)
+  - [Phase 4: Control Panel (Week 4)](#phase-4-control-panel-week-4)
+  - [Phase 5: Polish (Week 5)](#phase-5-polish-week-5)
+- [Risk Mitigation](#risk-mitigation)
+- [Open Decisions](#open-decisions)
 
 ## Executive Summary
 
@@ -48,6 +106,8 @@ This document defines the technical implementation plan for the ADK Simulator We
 | Communication | Connect-ES v2 gRPC-Web | [Proven in prototype](./research/prototype-findings.md#grpc-web-streaming-with-connect-es) |
 | Data Model | ADK types via converter package | [Type alignment strategy](./research/adk-typescript-research.md#implications-for-adk-converters-ts) |
 | Dynamic Forms | JSONForms + Angular Material | [JSONForms research](./research/jsonforms-research.md#executive-summary) |
+| Visual Testing | Playwright CT + VRT | [Playwright research](./research/playwright-testing-research.md#executive-summary) |
+| E2E Testing | Playwright + Docker backend | [E2E with real backend](./research/playwright-testing-research.md#part-3-e2e-testing-with-real-backend) |
 | Testing | Zoneless sociable tests + harnesses | [Testing strategy](./research/angular-testing-analysis.md#sociable-testing-philosophy) |
 
 ---
@@ -1129,7 +1189,7 @@ export const sessionExistsGuard: CanActivateFn = async (route) => {
 
 ## Testing Strategy
 
-Per [Testing Analysis](./research/angular-testing-analysis.md#test-layer-mapping):
+Per [Testing Analysis](./research/angular-testing-analysis.md#test-layer-mapping) and [Playwright Testing Research](./research/playwright-testing-research.md):
 
 ### Test Distribution
 
@@ -1139,7 +1199,62 @@ Per [Testing Analysis](./research/angular-testing-analysis.md#test-layer-mapping
 | `data-access/*` | Unit + Integration | Vitest + MockGateway | `SessionFacade` |
 | `ui/*` | Component | Testing Library + Harnesses | `DataTreeComponent` |
 | `features/*` | Integration | Testing Library + MockGateway | `SessionComponent` |
-| Visual | VRT | Playwright + Storybook | `DataTree.stories.ts` |
+| Visual | Component VRT | Playwright CT | `data-tree.spec.ts` |
+| User Flows | E2E | Playwright E2E | `session-flow.spec.ts` |
+
+### Playwright Testing Strategy
+
+Per [Playwright Testing Research](./research/playwright-testing-research.md), we adopt a two-tier Playwright strategy:
+
+#### Component Tests with Visual Regression
+
+Using `@sand4rt/experimental-ct-angular`:
+
+```typescript
+// tests/component/data-tree.spec.ts
+import { test, expect } from '@sand4rt/experimental-ct-angular';
+import { DataTreeComponent } from '@app/ui/event-stream/data-tree/data-tree.component';
+
+test('renders nested object with thread lines', async ({ mount }) => {
+  const component = await mount(DataTreeComponent, {
+    props: {
+      data: { user: { name: 'Bob', address: { city: 'NYC' } } },
+      showThreadLines: true,
+    },
+  });
+  
+  // Visual regression test - screenshots stored in repo
+  await expect(component).toHaveScreenshot('data-tree-nested.png');
+});
+```
+
+**Screenshot Management**:
+- Screenshots stored in `tests/component/__snapshots__/`
+- Version controlled with code changes
+- CI fails if screenshots change without commit
+- Update with: `pnpm test:ct:update`
+
+#### E2E Tests with Real Backend
+
+Using dockerized backend (matches Python E2E pattern):
+
+```typescript
+// tests/e2e/session-flow.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('user can create and join a session', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'New Session' }).click();
+  
+  await expect(page).toHaveURL(/\/session\/[\w-]+/);
+  await expect(page.getByTestId('connection-status')).toHaveText('Connected');
+});
+```
+
+**E2E Infrastructure**:
+- `docker-compose.e2e.yaml` starts backend + frontend
+- Tests run against real gRPC backend
+- No mocking required for integration tests
 
 ### Component Harness Example
 

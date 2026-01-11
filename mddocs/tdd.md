@@ -11,6 +11,33 @@ parent: prd.md
 - [Product Requirements](prd.md) - Goals, user stories, and success metrics
 - [Plugin Specification](../docs/adk-sim-python-plugin-spec.md) - Python plugin details
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Design Goals](#design-goals)
+- [Architecture](#architecture)
+- [Components](#components)
+  - [Simulator Server](#simulator-server)
+    - [Responsibilities](#adk-simulator-technical-design-document/components/simulator-server/responsibilities)
+  - [Plugin Layer](#plugin-layer)
+    - [Responsibilities](#adk-simulator-technical-design-document/components/plugin-layer/responsibilities)
+  - [Frontend](#frontend)
+    - [Responsibilities](#adk-simulator-technical-design-document/components/frontend/responsibilities)
+- [Session Management](#session-management)
+  - [Data Model](#data-model)
+  - [API Design](#api-design)
+- [Conversation Simulation](#conversation-simulation)
+  - [Request Flow](#request-flow)
+  - [Streaming Support](#streaming-support)
+- [Plugin Integration](#plugin-integration)
+  - [Python Plugin](#python-plugin)
+- [Alternatives Considered](#alternatives-considered)
+  - [HTTP Instead of gRPC](#http-instead-of-grpc)
+  - [In-Process Simulation](#in-process-simulation)
+- [Open Questions](#open-questions)
+
+
 ## Overview
 
 This document describes the technical architecture for the ADK Simulator, addressing the requirements defined in the [PRD](prd.md#overview).

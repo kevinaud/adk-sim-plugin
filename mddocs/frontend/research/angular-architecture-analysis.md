@@ -20,6 +20,36 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Architectural Topology Decision](#architectural-topology-decision)
+  - [Recommendation: Modular Monolith](#recommendation-modular-monolith)
+- [Library Type Taxonomy](#library-type-taxonomy)
+  - [Proposed Library Structure for ADK Simulator](#proposed-library-structure-for-adk-simulator)
+  - [Dependency Rules](#dependency-rules)
+- [Prototype Compliance Assessment](#prototype-compliance-assessment)
+  - [What the Prototype Did Well](#what-the-prototype-did-well)
+  - [Areas for Improvement](#areas-for-improvement)
+  - [Critical Improvement: The Facade Pattern](#critical-improvement-the-facade-pattern)
+- [State Management Strategy](#state-management-strategy)
+  - [The State/Event Duality](#the-stateevent-duality)
+  - [Global vs. Feature State](#global-vs-feature-state)
+- [Component Architecture](#component-architecture)
+  - [Smart vs. Dumb Boundary](#smart-vs-dumb-boundary)
+  - [Signal Inputs for Dumb Components](#signal-inputs-for-dumb-components)
+- [Testability Design](#testability-design)
+  - [The Humble Component Rule](#the-humble-component-rule)
+  - [Abstract Ports for Infrastructure Testing](#abstract-ports-for-infrastructure-testing)
+- [Zoneless Readiness](#zoneless-readiness)
+- [Boundary Enforcement Strategy](#boundary-enforcement-strategy)
+  - [Option 1: Nx Constraints (If Using Nx)](#option-1-nx-constraints-if-using-nx)
+  - [Option 2: Sheriff (Standalone Enforcement)](#option-2-sheriff-standalone-enforcement)
+- [Recommendations Summary](#recommendations-summary)
+- [Open Questions for Technical Design](#open-questions-for-technical-design)
+
+
 ## Overview
 
 This document analyzes how the Angular Architecture Best Practices guide applies to our frontend design. The guide emphasizes **boundary enforcement**, **loose coupling**, **testability**, and **Signal-based reactivity**—all critical for a maintainable application.

@@ -19,6 +19,31 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Architecture Summary](#architecture-summary)
+  - [Technology Stack](#technology-stack)
+- [Key Patterns](#key-patterns)
+  - [Signal-Based State Management](#signal-based-state-management)
+  - [gRPC-Web Streaming with Connect-ES](#grpc-web-streaming-with-connect-es)
+  - [Connection Lifecycle with Auto-Reconnect](#connection-lifecycle-with-auto-reconnect)
+  - [Discriminated Union Event Processing](#discriminated-union-event-processing)
+  - [Upsert Pattern for Idempotent Updates](#upsert-pattern-for-idempotent-updates)
+  - [Component Composition](#component-composition)
+  - [Session Validation on Navigation](#session-validation-on-navigation)
+- [Mapping Prototype → Real Application](#mapping-prototype-real-application)
+- [Gaps to Address](#gaps-to-address)
+  - [Data Visualization (FR-008 through FR-014)](#data-visualization-fr-008-through-fr-014)
+  - [Dynamic Form Generation (FR-017, FR-018)](#dynamic-form-generation-fr-017-fr-018)
+  - [Tool Catalog (FR-016)](#tool-catalog-fr-016)
+  - [Session List (FR-002, FR-003)](#session-list-fr-002-fr-003)
+  - [Request Queue (FR-024)](#request-queue-fr-024)
+- [Recommendations Summary](#recommendations-summary)
+- [Next Research Topics](#next-research-topics)
+
+
 ## Overview
 
 The prototype is a simplified approval workflow application demonstrating bidirectional gRPC-Web streaming between a browser client and Python backend. A "Proposer" submits proposals; an "Approver" (web UI user) views and approves/rejects them in real-time.

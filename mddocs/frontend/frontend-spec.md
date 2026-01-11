@@ -22,6 +22,38 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Clarifications](#clarifications)
+  - [Session 2026-01-10](#session-2026-01-10)
+- [User Stories](#user-stories)
+  - [US-1 Session Access and Navigation](#us-1-session-access-and-navigation)
+    - [US-1 Acceptance Scenarios](#us-1-acceptance-scenarios)
+  - [US-2 Context Inspection via Event Stream](#us-2-context-inspection-via-event-stream)
+    - [US-2 Acceptance Scenarios](#us-2-acceptance-scenarios)
+  - [US-3 Tool Selection and Response Construction](#us-3-tool-selection-and-response-construction)
+    - [US-3 Acceptance Scenarios](#us-3-acceptance-scenarios)
+  - [US-4 Split-Pane Interface Layout](#us-4-split-pane-interface-layout)
+    - [US-4 Acceptance Scenarios](#us-4-acceptance-scenarios)
+- [Edge Cases](#edge-cases)
+- [Functional Requirements](#functional-requirements)
+  - [FR Session Management](#fr-session-management)
+  - [FR Layout and Navigation](#fr-layout-and-navigation)
+  - [FR Context Inspection](#fr-context-inspection)
+  - [FR Response Construction](#fr-response-construction)
+  - [FR Communication](#fr-communication)
+- [Key Entities](#key-entities)
+  - [Session Entity](#session-entity)
+  - [LlmRequest Entity](#llmrequest-entity)
+  - [EventBlock Entity](#eventblock-entity)
+  - [Tool Entity](#tool-entity)
+  - [SmartBlob Entity](#smartblob-entity)
+- [Success Criteria](#success-criteria)
+- [Assumptions](#assumptions)
+- [Constraints](#constraints)
+
+
 ## Clarifications
 
 ### Session 2026-01-10

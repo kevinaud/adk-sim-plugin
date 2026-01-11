@@ -20,6 +20,48 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Python Converter Analysis](#python-converter-analysis)
+  - [File Locations](#file-locations)
+  - [Class Structure](#class-structure)
+- [Conversion Logic: `llm_request_to_proto()`](#conversion-logic-llmrequesttoproto)
+  - [High-Level Flow](#high-level-flow)
+  - [Model Name Conversion](#model-name-conversion)
+  - [Contents Conversion](#contents-conversion)
+  - [System Instruction Conversion](#system-instruction-conversion)
+  - [Tools Conversion](#tools-conversion)
+  - [Safety Settings Conversion](#safety-settings-conversion)
+  - [Generation Config Conversion](#generation-config-conversion)
+- [Conversion Logic: `proto_to_llm_response()`](#conversion-logic-prototollmresponse)
+  - [Flow](#flow)
+- [Test Coverage Analysis](#test-coverage-analysis)
+  - [Test Categories](#test-categories)
+  - [Key Test Patterns](#key-test-patterns)
+- [Frontend Converter: Inverse Operations](#frontend-converter-inverse-operations)
+  - [`protoToLlmRequest()` (New)](#prototollmrequest-new)
+  - [`llmResponseToProto()` (New)](#llmresponsetoproto-new)
+- [Package Publishing Infrastructure](#package-publishing-infrastructure)
+  - [Current Packages](#current-packages)
+  - [Adding `adk-converters-ts`](#adding-adk-converters-ts)
+  - [Publishing Workflow Changes](#publishing-workflow-changes)
+  - [Trusted Publisher Configuration](#trusted-publisher-configuration)
+- [TypeScript-Specific Considerations](#typescript-specific-considerations)
+  - [Structural Typing Advantage](#structural-typing-advantage)
+  - [JSON Conversion Path](#json-conversion-path)
+  - [Enum Handling](#enum-handling)
+- [Test Strategy for `adk-converters-ts`](#test-strategy-for-adk-converters-ts)
+  - [Test Categories (Mirroring Python)](#test-categories-mirroring-python)
+  - [Test Fixtures](#test-fixtures)
+- [Implementation Phases](#implementation-phases)
+  - [Phase 1: Core Types (Week 1)](#phase-1-core-types-week-1)
+  - [Phase 2: Full Conversion (Week 1-2)](#phase-2-full-conversion-week-1-2)
+  - [Phase 3: Integration (Week 2)](#phase-3-integration-week-2)
+- [Open Questions](#open-questions)
+
+
 ## Overview
 
 This document analyzes our existing Python converter (`ADKProtoConverter`) to establish patterns for the TypeScript equivalent. It also covers the package publishing infrastructure to understand how to add a new shared package.

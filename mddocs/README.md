@@ -5,7 +5,12 @@ type: index
 
 # ADK Simulator Documentation
 
-This directory contains the interconnected documentation corpus for the ADK Simulator project.
+
+## Table of Contents
+
+- [Document Types](#document-types)
+- [Structure](#structure)
+- [Conventions](#conventions)
 
 ## Document Types
 

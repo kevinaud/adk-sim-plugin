@@ -10,8 +10,48 @@ related:
 
 # JSONForms Library Research
 
-**Date**: January 11, 2026  
-**Purpose**: Evaluate JSONForms for dynamic form generation to implement [FR-017](../frontend-spec.md#fr-response-construction) (tool invocation forms) and [FR-018/FR-019](../frontend-spec.md#fr-response-construction) (final response forms).
+
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [Library Overview](#library-overview)
+  - [Package Structure](#package-structure)
+  - [Version & Compatibility](#version-compatibility)
+- [Core Concepts](#core-concepts)
+  - [1. Data Schema (JSON Schema)](#1-data-schema-json-schema)
+  - [2. UI Schema](#2-ui-schema)
+  - [3. Renderers](#3-renderers)
+- [Angular Integration](#angular-integration)
+  - [Basic Usage](#basic-usage)
+  - [Module Setup](#module-setup)
+- [Schema Conversion Challenge](#schema-conversion-challenge)
+  - [The Problem](#the-problem)
+  - [Proto Type Enum → JSON Schema Type](#proto-type-enum-json-schema-type)
+  - [Conversion Function](#conversion-function)
+- [Use Case: Tool Invocation Forms](#use-case-tool-invocation-forms)
+  - [Flow](#flow)
+  - [Implementation](#implementation)
+  - [Component](#component)
+- [Use Case: Final Response Forms](#use-case-final-response-forms)
+  - [Default Case (No output_schema)](#default-case-no-outputschema)
+  - [Structured Response (With output_schema)](#structured-response-with-outputschema)
+- [Custom Renderers](#custom-renderers)
+  - [Example: Markdown Editor Renderer](#example-markdown-editor-renderer)
+- [UI Schema Generation Strategy](#ui-schema-generation-strategy)
+  - [Auto-Generation Benefits](#auto-generation-benefits)
+  - [When to Customize](#when-to-customize)
+  - [Hybrid Approach](#hybrid-approach)
+- [Validation](#validation)
+  - [Validation Modes](#validation-modes)
+- [Integration with adk-converters-ts](#integration-with-adk-converters-ts)
+  - [Package Dependencies](#package-dependencies)
+- [Implementation Recommendations](#implementation-recommendations)
+  - [1. Package Installation](#1-package-installation)
+  - [2. Module Setup](#2-module-setup)
+  - [3. Create Schema Converter](#3-create-schema-converter)
+  - [4. Wrapper Components](#4-wrapper-components)
+- [Open Questions](#open-questions)
+- [References](#references)
 
 ## Executive Summary
 

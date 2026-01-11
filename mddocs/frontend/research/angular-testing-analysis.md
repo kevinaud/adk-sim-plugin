@@ -22,6 +22,41 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Zoneless Testing Implications](#zoneless-testing-implications)
+  - [The Paradigm Shift](#the-paradigm-shift)
+  - [Synchronization Primitives](#synchronization-primitives)
+  - [Effect Synchronization](#effect-synchronization)
+- [Sociable Testing Philosophy](#sociable-testing-philosophy)
+  - [The "No-Mock" Imperative](#the-no-mock-imperative)
+  - [Impact on Architecture Design](#impact-on-architecture-design)
+  - [The "Humble Component" Test Pattern](#the-humble-component-test-pattern)
+- [MSW Network Mocking Strategy](#msw-network-mocking-strategy)
+  - [High-Fidelity Fakes at the Network Boundary](#high-fidelity-fakes-at-the-network-boundary)
+  - [gRPC-Web with MSW](#grpc-web-with-msw)
+  - [Zero-Drift with Protobuf](#zero-drift-with-protobuf)
+- [Component Harness Strategy](#component-harness-strategy)
+  - [Why Harnesses Matter](#why-harnesses-matter)
+  - [Harnesses for Spec Components](#harnesses-for-spec-components)
+  - [Testing with Harnesses](#testing-with-harnesses)
+- [Signal Forms Testing](#signal-forms-testing)
+  - [New Form Primitive](#new-form-primitive)
+  - [Testing Signal Forms](#testing-signal-forms)
+  - [Schema-to-Form Validation](#schema-to-form-validation)
+- [Visual Regression Testing Strategy](#visual-regression-testing-strategy)
+  - [Deterministic VRT via Docker](#deterministic-vrt-via-docker)
+  - [Storybook for VRT](#storybook-for-vrt)
+  - [Docker VRT Configuration](#docker-vrt-configuration)
+- [Test Layer Mapping](#test-layer-mapping)
+  - [Aligning Tests with Architecture Layers](#aligning-tests-with-architecture-layers)
+  - [Example Test Distribution for `SmartBlob`](#example-test-distribution-for-smartblob)
+- [Recommendations Summary](#recommendations-summary)
+- [Open Questions for Technical Design](#open-questions-for-technical-design)
+
+
 ## Overview
 
 The testing research document establishes a modern Angular v21 testing strategy centered on:

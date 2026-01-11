@@ -20,6 +20,40 @@ related:
 
 ---
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Package Structure](#package-structure)
+  - [`@google/adk` (v0.2.2)](#googleadk-v022)
+  - [Dependencies](#adk-typescript-llmrequestllmresponse-research/package-structure/dependencies)
+- [LlmRequest Interface](#llmrequest-interface)
+  - [Helper Functions](#helper-functions)
+- [LlmResponse Interface](#llmresponse-interface)
+  - [Factory Function](#factory-function)
+- [`@google/genai` Core Types](#googlegenai-core-types)
+  - [Content](#content)
+  - [Part](#part)
+  - [GenerateContentConfig](#generatecontentconfig)
+- [How adk-js Calls the API](#how-adk-js-calls-the-api)
+- [Comparison: TypeScript vs Python ADK](#comparison-typescript-vs-python-adk)
+  - [Structural Alignment](#structural-alignment)
+- [Implications for `adk-converters-ts`](#implications-for-adk-converters-ts)
+  - [What We Actually Need](#what-we-actually-need)
+  - [Type Mismatch Challenge](#type-mismatch-challenge)
+  - [Conversion Strategy](#conversion-strategy)
+  - [What the Frontend Actually Displays](#what-the-frontend-actually-displays)
+- [Proto Structure Comparison](#proto-structure-comparison)
+  - [Our Proto (`GenerateContentRequest`)](#our-proto-generatecontentrequest)
+  - [`@google/genai` SDK Types](#googlegenai-sdk-types)
+- [Testing Patterns](#testing-patterns)
+- [Package Design Recommendations](#package-design-recommendations)
+  - [Export Structure](#export-structure)
+  - [Dependencies](#adk-typescript-llmrequestllmresponse-research/package-design-recommendations/dependencies)
+  - [Testing Approach](#testing-approach)
+- [Open Questions](#open-questions)
+
+
 ## Overview
 
 The ADK TypeScript implementation (`@google/adk` v0.2.2) uses the `@google/genai` package (v1.32.0) for its core types. Unlike Python's Pydantic models, TypeScript uses interfaces and re-exports types directly from `@google/genai`.
