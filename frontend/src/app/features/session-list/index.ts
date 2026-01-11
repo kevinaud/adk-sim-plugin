@@ -8,5 +8,5 @@
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
  */
 
-// Placeholder - session list components will be exported here
-export type SessionListModule = 'session-list';
+export { SessionListComponent } from './session-list.component';
+export { sessionListRoutes } from './session-list.routes';
