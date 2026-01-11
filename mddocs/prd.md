@@ -9,6 +9,25 @@ type: prd
 
 - [Technical Design](tdd.md) - System architecture and implementation approach
 
+## Table of Contents
+
+- [Related Documents](#related-documents)
+- [Overview](#overview)
+- [Goals](#goals)
+- [Non-Goals](#non-goals)
+- [User Stories](#user-stories)
+  - [Agent Developer](#agent-developer)
+  - [QA Engineer](#qa-engineer)
+- [Features](#features)
+  - [Session Management](#session-management)
+    - [Requirements](#adk-simulator-product-requirements-document/features/session-management/requirements)
+  - [Conversation Simulation](#conversation-simulation)
+    - [Requirements](#adk-simulator-product-requirements-document/features/conversation-simulation/requirements)
+  - [Plugin Integration](#plugin-integration)
+    - [Requirements](#adk-simulator-product-requirements-document/features/plugin-integration/requirements)
+- [Success Metrics](#success-metrics)
+
+
 ## Overview
 
 The ADK Simulator enables developers to test their ADK (Agent Development Kit) agents in a controlled environment without requiring access to production LLM APIs.
