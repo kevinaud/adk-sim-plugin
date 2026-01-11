@@ -102,7 +102,7 @@ For each PR in scope (in dependency order):
 2. **Create branch**:
    - If first PR in sprint or no dependencies: branch from `main` (or current feature branch)
    - If depends on previous PR: branch from that PR's branch
-   
+
    ```bash
    # From main/feature branch
    git checkout main && git pull
@@ -256,22 +256,42 @@ After ALL requested PRs are complete:
 
 ---
 
-### Phase 8: Merge PRs
+### Phase 8: Merge PRs (Git Town Flow)
+
+Git Town manages the stacked branch complexity automatically. This is more reliable than manual `git checkout main && git pull` for stacked PRs.
 
 For each approved PR (in dependency order):
 
-1. **Squash merge**:
+1. **Squash merge via GitHub CLI**:
    ```bash
    gh pr merge <pr-number> --squash --delete-branch
    ```
 
-2. **Update local state**:
+2. **Sync all branches with Git Town**:
    ```bash
-   git checkout main
-   git pull
+   git town sync --all
+   ```
+   This updates all local branches, rebases stacked branches onto their new bases (now `main` after parent merged), and handles upstream changes.
+
+3. **Handle any merge conflicts** flagged by Git Town:
+   - Review the conflict (conflicts are expected when stacked branches touch similar files)
+   - Resolve the conflict manually
+   - Stage resolved files:
+     ```bash
+     git add <resolved-files>
+     ```
+
+4. **Continue Git Town sync**:
+   ```bash
+   git town continue
    ```
 
-3. **If stacked PRs remain**: Update their base branches before merging parent
+5. **Proceed to next PR** in the stack
+
+**Key Points:**
+- `sync --all` rebases all remaining stack branches onto their updated bases
+- Conflicts are normal for stacked branches touching similar files — resolve and continue
+- Do NOT use manual `git checkout main && git pull` — let Git Town handle branch relationships
 
 ---
 

@@ -210,6 +210,31 @@ frontend/src/app/
 
 ---
 
+## Terminal Command Safety
+
+**CRITICAL**: Always wrap commands that could hang indefinitely in a timeout:
+
+```bash
+timeout 120 npm test  # 2 minute timeout
+timeout 60 npm run build  # 1 minute timeout
+timeout 30 npx playwright test  # 30 second timeout for quick checks
+```
+
+If a command times out:
+1. Report the timeout to the orchestrator
+2. Do NOT retry indefinitely
+3. Suggest potential causes (missing dependencies, infinite loops, etc.)
+
+Commands that MUST use timeout:
+- `npm test`, `npm run test`, `npx jest`, `npx vitest`
+- `npx playwright test`
+- `npm run build`, `ng build`
+- Any watch mode commands (though these should use isBackground=true instead)
+
+This prevents the agent from getting stuck on hanging processes.
+
+---
+
 ## Rules & Constraints
 
 ### PROHIBITED Actions
