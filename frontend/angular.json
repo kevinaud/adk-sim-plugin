@@ -68,6 +68,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
+            "proxyConfig": "proxy.conf.json",
             "poll": 2000,
             "host": "0.0.0.0"
           },
@@ -82,7 +83,10 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "watch": false
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
