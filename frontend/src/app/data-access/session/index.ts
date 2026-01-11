@@ -8,5 +8,7 @@
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
  */
 
-// Placeholder - session data access exports will be added as services are implemented
-export type SessionService = 'facade' | 'state' | 'gateway';
+// Gateway port and implementations
+export { MockSessionGateway } from './mock-session.gateway';
+export type { Session } from './session.gateway';
+export { SessionGateway } from './session.gateway';
