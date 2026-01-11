@@ -76,6 +76,10 @@ $(PROTO_MARKER): $(PROTO_FILES) buf.yaml buf.gen.yaml
 	@uv run ruff format "$(PYTHON_GEN_DIR)"
 	@echo "🎨 Formatting TypeScript generated code..."
 	@cd frontend && npx prettier --write "../$(TS_GEN_DIR)/**/*.ts" 2>/dev/null || true
+	@echo "📝 Creating TypeScript barrel file..."
+	@echo "// ADK Simulator Protocol Buffers - TypeScript (auto-generated)" > "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './adksim/v1/simulator_service_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './adksim/v1/simulator_session_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
 	@touch $(PROTO_MARKER)
 	@echo "✅ Proto generation complete!"
 
