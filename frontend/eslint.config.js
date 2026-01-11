@@ -5,6 +5,7 @@ const angular = require('angular-eslint');
 const unicorn = require('eslint-plugin-unicorn');
 const simpleImportSort = require('eslint-plugin-simple-import-sort');
 const eslintConfigPrettier = require('eslint-config-prettier');
+const sheriff = require('@softarc/eslint-plugin-sheriff');
 
 module.exports = tseslint.config(
   {
@@ -15,6 +16,7 @@ module.exports = tseslint.config(
       'coverage',
       'src/app/generated/**',
       '**/*.spec.ts',
+      'sheriff.config.ts',
     ],
   },
   {
@@ -25,6 +27,7 @@ module.exports = tseslint.config(
       ...tseslint.configs.stylisticTypeChecked,
       ...angular.configs.tsRecommended,
       unicorn.default.configs['flat/recommended'],
+      sheriff.configs.all,
     ],
     languageOptions: {
       parserOptions: {
