@@ -23,6 +23,9 @@ export const config: SheriffConfig = {
 
   // Module tagging - maps folder structure to tags
   modules: {
+    // Environment configuration - accessible by all
+    'src/environments': 'type:config',
+
     'src/app': {
       // Feature modules - one per feature
       'features/<feature>': 'type:feature',
@@ -45,22 +48,25 @@ export const config: SheriffConfig = {
   // Dependency rules - enforce layered architecture
   depRules: {
     // Root (main.ts, app.ts, app.routes.ts) can access features and shared
-    root: ['type:feature', 'type:shared', 'noTag'],
+    root: ['type:feature', 'type:shared', 'type:config', 'noTag'],
 
     // Features can access UI, data-access, util, and shared
-    'type:feature': ['type:ui', 'type:data-access', 'type:util', 'type:shared', 'noTag'],
+    'type:feature': ['type:ui', 'type:data-access', 'type:util', 'type:shared', 'type:config', 'noTag'],
 
     // UI can only access util and shared (no data-access!)
-    'type:ui': ['type:util', 'type:shared', 'noTag', sameTag],
+    'type:ui': ['type:util', 'type:shared', 'type:config', 'noTag', sameTag],
 
-    // Data-access can only access util and shared
-    'type:data-access': ['type:util', 'type:shared', 'noTag'],
+    // Data-access can only access util, shared, and config (environment)
+    'type:data-access': ['type:util', 'type:shared', 'type:config', 'noTag'],
 
     // Util has no dependencies (leaf layer)
     'type:util': [noDependencies, 'noTag'],
 
     // Shared can access util only
     'type:shared': ['type:util', 'noTag'],
+
+    // Config (environments) is a leaf, no dependencies
+    'type:config': [noDependencies],
 
     // Allow noTag modules during migration
     noTag: ['noTag', 'root'],
