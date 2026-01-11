@@ -9,6 +9,7 @@
  */
 
 // Gateway port and implementations
+export { GrpcSessionGateway } from './grpc-session.gateway';
 export { MockSessionGateway } from './mock-session.gateway';
 export type { Session } from './session.gateway';
 export { SessionGateway } from './session.gateway';
