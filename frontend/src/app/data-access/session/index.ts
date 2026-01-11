@@ -13,3 +13,7 @@ export { GrpcSessionGateway } from './grpc-session.gateway';
 export { MockSessionGateway } from './mock-session.gateway';
 export type { Session } from './session.gateway';
 export { SessionGateway } from './session.gateway';
+
+// State management
+export type { ConnectionStatus } from './session-state.service';
+export { SessionStateService } from './session-state.service';
