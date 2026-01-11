@@ -35,6 +35,7 @@ if [ "$CI" != "true" ]; then
     REPOS=(
         "https://github.com/google/adk-python"
         "https://github.com/google/adk-java"
+        "https://github.com/google/adk-js"
         "https://github.com/google/adk-docs"
     )
 
