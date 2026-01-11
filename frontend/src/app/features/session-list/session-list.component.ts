@@ -27,6 +27,7 @@ import { Router } from '@angular/router';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
 
 import { type Session, SessionFacade } from '../../data-access/session';
+import { ConnectionStatusComponent } from '../../ui/shared';
 
 /**
  * Session list component that displays all available simulation sessions.
@@ -46,6 +47,7 @@ import { type Session, SessionFacade } from '../../data-access/session';
   selector: 'app-session-list',
   standalone: true,
   imports: [
+    ConnectionStatusComponent,
     DatePipe,
     MatButtonModule,
     MatCardModule,
