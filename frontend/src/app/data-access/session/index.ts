@@ -8,6 +8,9 @@
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
  */
 
+// Facade (primary entry point for components)
+export { SessionFacade } from './session.facade';
+
 // Gateway port and implementations
 export { GrpcSessionGateway } from './grpc-session.gateway';
 export { MockSessionGateway } from './mock-session.gateway';
