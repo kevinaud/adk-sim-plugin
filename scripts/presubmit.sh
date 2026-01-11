@@ -31,6 +31,13 @@ echo "🔧 Cleaning and Regenerating Proto Code..."
 make clean
 make generate
 
+# Build TypeScript protos package (required for frontend to resolve @adk-sim/protos)
+echo ""
+echo "📦 Building TypeScript protos package..."
+cd "$PROJECT_ROOT/packages/adk-sim-protos-ts"
+npm run build
+cd "$PROJECT_ROOT"
+
 # Run Quality Checks
 echo ""
 echo "📋 Running Quality Checks..."
