@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/ct",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "types": []
+  },
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts",
+    "playwright/**/*.ts",
+    "playwright-ct.config.ts",
+    "tests/component/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts"
+  ]
+}

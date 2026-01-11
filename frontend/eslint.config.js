@@ -17,6 +17,8 @@ module.exports = tseslint.config(
       'src/app/generated/**',
       '**/*.spec.ts',
       'sheriff.config.ts',
+      'test-results',
+      'playwright-report',
     ],
   },
   {
@@ -31,7 +33,12 @@ module.exports = tseslint.config(
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.app.json', './tsconfig.spec.json'],
+        project: [
+          './tsconfig.json',
+          './tsconfig.app.json',
+          './tsconfig.spec.json',
+          './tsconfig.ct.json',
+        ],
         tsconfigRootDir: __dirname,
       },
     },
