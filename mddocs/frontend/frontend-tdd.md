@@ -1358,66 +1358,66 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 
 **Goal**: Basic session management and routing
 
-| Task | FR | Deliverable |
-|------|-----|-------------|
-| Project structure setup | - | Library folders, linting rules |
-| `SessionStateService` | FR-023 | Global state signals |
-| `SessionFacade` skeleton | FR-020 | Facade with mock gateway |
-| `SessionGateway` port + mock | FR-020 | Abstract + test impl |
-| Session list route | FR-002, FR-003 | List view with mock data |
-| Session route + guard | FR-001, FR-004 | Navigation + validation |
+| Done | Task | FR | Deliverable |
+|:----:|------|-----|-------------|
+| [ ] | Project structure setup | - | Library folders, linting rules |
+| [ ] | `SessionStateService` | FR-023 | Global state signals |
+| [ ] | `SessionFacade` skeleton | FR-020 | Facade with mock gateway |
+| [ ] | `SessionGateway` port + mock | FR-020 | Abstract + test impl |
+| [ ] | Session list route | FR-002, FR-003 | List view with mock data |
+| [ ] | Session route + guard | FR-001, FR-004 | Navigation + validation |
 
 ### Phase 2: Communication (Week 2)
 
 **Goal**: Real gRPC-Web integration
 
-| Task | FR | Deliverable |
-|------|-----|-------------|
-| `GrpcSessionGateway` | FR-020 | Connect-ES adapter |
-| `@adk-sim/converters` package | - | Proto ↔ ADK conversion |
-| `LlmRequestConverter` | - | Frontend-specific wrappers |
-| Auto-reconnect logic | FR-022, FR-023 | `ReconnectStrategy` |
-| Connection status UI | FR-023 | `ConnectionStatusComponent` |
+| Done | Task | FR | Deliverable |
+|:----:|------|-----|-------------|
+| [ ] | `GrpcSessionGateway` | FR-020 | Connect-ES adapter |
+| [ ] | `@adk-sim/converters` package | - | Proto ↔ ADK conversion |
+| [ ] | `LlmRequestConverter` | - | Frontend-specific wrappers |
+| [ ] | Auto-reconnect logic | FR-022, FR-023 | `ReconnectStrategy` |
+| [ ] | Connection status UI | FR-023 | `ConnectionStatusComponent` |
 
 ### Phase 3: Event Stream (Week 3)
 
 **Goal**: LlmRequest visualization
 
-| Task | FR | Deliverable |
-|------|-----|-------------|
-| `EventStreamComponent` | FR-007 | Container for blocks |
-| `EventBlockComponent` | FR-007 | User/Agent/Tool blocks |
-| `DataTreeComponent` | FR-008-011 | JSON tree with thread lines |
-| `SmartBlobComponent` | FR-012-014 | JSON/MD/RAW toggle |
-| System instruction accordion | FR-015 | Collapsible header |
-| Harnesses + Stories | - | Test infrastructure |
+| Done | Task | FR | Deliverable |
+|:----:|------|-----|-------------|
+| [ ] | `EventStreamComponent` | FR-007 | Container for blocks |
+| [ ] | `EventBlockComponent` | FR-007 | User/Agent/Tool blocks |
+| [ ] | `DataTreeComponent` | FR-008-011 | JSON tree with thread lines |
+| [ ] | `SmartBlobComponent` | FR-012-014 | JSON/MD/RAW toggle |
+| [ ] | System instruction accordion | FR-015 | Collapsible header |
+| [ ] | Harnesses + Stories | - | Test infrastructure |
 
 ### Phase 4: Control Panel (Week 4)
 
 **Goal**: Response construction
 
-| Task | FR | Deliverable |
-|------|-----|-------------|
-| `ControlPanelComponent` | FR-005 | Right sidebar container |
-| `ToolCatalogComponent` | FR-016 | Tool listing |
-| `ToolFormComponent` + JSONForms | FR-017 | Schema-driven tool forms |
-| `ToolFormService` | FR-017 | Schema conversion (proto → JSON Schema) |
-| `FinalResponseComponent` | FR-018-019 | Text area or schema form |
-| `SimulationStore` | FR-024 | Request queue management |
-| Split-pane layout | FR-005 | Layout primitive |
+| Done | Task | FR | Deliverable |
+|:----:|------|-----|-------------|
+| [ ] | `ControlPanelComponent` | FR-005 | Right sidebar container |
+| [ ] | `ToolCatalogComponent` | FR-016 | Tool listing |
+| [ ] | `ToolFormComponent` + JSONForms | FR-017 | Schema-driven tool forms |
+| [ ] | `ToolFormService` | FR-017 | Schema conversion (proto → JSON Schema) |
+| [ ] | `FinalResponseComponent` | FR-018-019 | Text area or schema form |
+| [ ] | `SimulationStore` | FR-024 | Request queue management |
+| [ ] | Split-pane layout | FR-005 | Layout primitive |
 
 ### Phase 5: Polish (Week 5)
 
 **Goal**: Production readiness
 
-| Task | FR | Deliverable |
-|------|-----|-------------|
-| VRT baseline | - | Playwright screenshots |
-| E2E tests | - | Critical user flows |
-| Error handling | FR-004 | Invalid session UX |
-| Loading states | - | Skeleton loaders |
-| Accessibility audit | - | ARIA, keyboard nav |
-| Documentation | - | Component README files |
+| Done | Task | FR | Deliverable |
+|:----:|------|-----|-------------|
+| [ ] | VRT baseline | - | Playwright screenshots |
+| [ ] | E2E tests | - | Critical user flows |
+| [ ] | Error handling | FR-004 | Invalid session UX |
+| [ ] | Loading states | - | Skeleton loaders |
+| [ ] | Accessibility audit | - | ARIA, keyboard nav |
+| [ ] | Documentation | - | Component README files |
 
 ---
 
