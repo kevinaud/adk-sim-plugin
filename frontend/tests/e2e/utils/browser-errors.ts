@@ -89,10 +89,10 @@ export function assertNoBrowserErrors(logs: BrowserLogs): void {
     // Format error message with clear indication of what went wrong
     const errorDetails = allErrors
       .slice(0, 5) // Limit to first 5 errors to keep output readable
-      .map((err, i) => `  ${i + 1}. ${err}`)
+      .map((err, i) => `  ${String(i + 1)}. ${err}`)
       .join('\n');
 
-    const moreErrors = allErrors.length > 5 ? `\n  ... and ${allErrors.length - 5} more errors` : '';
+    const moreErrors = allErrors.length > 5 ? `\n  ... and ${String(allErrors.length - 5)} more errors` : '';
 
     throw new Error(
       `JavaScript runtime errors detected in browser:\n${errorDetails}${moreErrors}\n\n` +
