@@ -4,11 +4,11 @@
  * This file is loaded before each component test and configures
  * the Angular TestBed with necessary providers.
  *
+ * Uses zoneless Angular (default in Angular 21+) - no zone.js required.
+ *
  * @see mddocs/frontend/research/playwright-testing-research.md
  */
 
-// Zone.js is required for Angular's change detection - must be imported first
-import 'zone.js';
 // Import testing modules to ensure they're bundled
 import '@angular/core/testing';
 import '@angular/platform-browser-dynamic/testing';

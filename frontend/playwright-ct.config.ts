@@ -47,7 +47,7 @@ export default defineConfig({
           '@app': resolve('./src/app'),
         },
       },
-      // Optimize Angular dependencies for Vite
+      // Optimize Angular dependencies for Vite (zoneless Angular 21+)
       optimizeDeps: {
         include: [
           '@angular/core',
@@ -62,7 +62,6 @@ export default defineConfig({
           '@angular/platform-browser/animations/async',
           '@angular/material/icon',
           '@angular/material/tooltip',
-          'zone.js',
         ],
       },
     },
