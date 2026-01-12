@@ -46,10 +46,12 @@ If not found, STOP: "Sprint plan not found. Run `/frontend-sprint-plan` first."
 
 ```bash
 git --version
+git town version
 gh auth status
 ```
 
-If GitHub CLI not authenticated, provide setup instructions.
+- If Git Town not installed, STOP: "Git Town is required but not installed."
+- If GitHub CLI not authenticated, provide setup instructions.
 
 ### 3. Parse Sprint Plan
 
@@ -57,6 +59,111 @@ Read the sprint plan and extract:
 - Sprint goal and scope
 - List of PRs with their details
 - Which PRs are already complete (check "Definition of Done" section)
+
+---
+
+## Git Town Reference
+
+Git Town automates branch management for stacked changes. Master these commands and patterns.
+
+### Core Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `git town hack <name>` | Create branch off `main` | First PR in sprint, independent work |
+| `git town append <name>` | Create branch off current | Subsequent PRs that depend on current branch |
+| `git town sync --all` | Sync all branches with remote | Before starting work, after merges |
+| `git town sync --stack` | Sync only current stack | When you only need your stack updated |
+| `git town propose --title "<title>" --body "<body>"` | Create PR for current branch (non-interactive) | After pushing, to create GitHub PR |
+| `git town branch` | Show branch hierarchy | Understand current stack structure |
+| `git town switch` | Interactive branch switcher | Navigate between branches |
+
+### Error Recovery Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `git town continue` | Resume after conflict resolution | After resolving merge conflicts |
+| `git town skip` | Skip current branch, continue sync | When conflicts can't be resolved now |
+| `git town undo` | Undo last Git Town command | When something goes wrong |
+
+### Stacked Changes Workflow
+
+**Creating a Stack:**
+```bash
+# Start on main
+git town hack sprint-1/pr1/first-change    # Creates: main → pr1
+
+# Build on top
+git town append sprint-1/pr2/second-change  # Creates: main → pr1 → pr2
+git town append sprint-1/pr3/third-change   # Creates: main → pr1 → pr2 → pr3
+```
+
+**Visualize Stack:**
+```bash
+git town branch
+# Output:
+#   main
+#    \
+#     sprint-1/pr1/first-change
+#      \
+#       sprint-1/pr2/second-change
+#        \
+#   *     sprint-1/pr3/third-change
+```
+
+### Best Practices
+
+1. **Sync frequently**: Run `git town sync --all` often to avoid phantom conflicts
+2. **Ship oldest first**: Always merge PRs from oldest to newest in a stack
+3. **One responsibility per branch**: Keep each branch focused on a single change
+4. **Handle conflicts immediately**: When sync fails, resolve and run `git town continue`
+
+### Merge Conflict Resolution
+
+When `git town sync` or `git town continue` hits a conflict:
+
+1. **Resolve the conflict** in your editor
+2. **Stage resolved files**: `git add <files>`
+3. **Continue Git Town**: `git town continue`
+
+If you can't resolve:
+- **Skip this branch**: `git town skip` (continues with other branches)
+- **Abort everything**: `git town undo` (reverts to pre-command state)
+
+### After Merging a PR
+
+When a PR is merged via GitHub CLI:
+
+1. **Squash/merge and delete remote branch**:
+   ```bash
+   gh pr merge <pr-number> --squash --delete-branch
+   ```
+
+2. **Sync to update local state**:
+   ```bash
+   git town sync --all
+   ```
+   - Updates local state after remote merge
+   - Deletes local branch (tracking branch is gone)
+   - Propagates merged changes to child branches
+   - **Re-parents child branches appropriately**
+   - Updates stack hierarchy automatically
+
+3. **Resolve any merge conflicts** that may arise during sync
+
+4. **Continue if conflicts were resolved**:
+   ```bash
+   git town continue
+   ```
+
+### Common Issues & Solutions
+
+| Issue | Solution |
+|-------|----------|
+| "Branch has diverged" | Run `git town sync` to reconcile |
+| Phantom merge conflicts | Conflicts from squash-merge; use `git town sync` frequently |
+| Child PR shows wrong diff | Update PR base: `gh pr edit <n> --base <parent>` |
+| Stale local branches | `git town sync --all` removes shipped branches |
 
 ---
 
@@ -93,29 +200,32 @@ For each PR in scope (in dependency order):
 
 ### Phase 2: Branch Setup
 
-1. **Ensure clean state**:
+1. **Sync all branches first**:
    ```bash
-   git status
-   git fetch origin
+   git town sync --all
+   ```
+   - This pulls updates, deletes shipped branches, and propagates changes through stacks
+   - If conflicts occur: resolve them, then `git town continue`
+
+2. **Determine parent branch**:
+   - If first PR in sprint or no dependencies: parent is `main` → use `git town hack`
+   - If depends on previous PR: parent is that PR's branch → use `git town append`
+   - Check dependencies in sprint plan for exact parent
+
+3. **Create the branch**:
+   ```bash
+   # For first PR (off main):
+   git town hack sprint-<N>/<pr-id>/<description>
+   
+   # For subsequent PRs (stacked on current):
+   git town append sprint-<N>/<pr-id>/<description>
    ```
 
-2. **Create branch**:
-   - If first PR in sprint or no dependencies: branch from `main` (or current feature branch)
-   - If depends on previous PR: branch from that PR's branch
-   
+4. **Verify branch state**:
    ```bash
-   # From main/feature branch
-   git checkout main && git pull
-   git checkout -b sprint-<N>/<pr-id>/<description>
-   
-   # Or stacked on previous PR
-   git checkout sprint-<N>/<prev-pr>/<description>
-   git checkout -b sprint-<N>/<pr-id>/<description>
-   ```
-
-3. **Verify branch**:
-   ```bash
+   git town branch          # Shows stack hierarchy
    git branch --show-current
+   git status
    ```
 
 ---
@@ -258,20 +368,54 @@ After ALL requested PRs are complete:
 
 ### Phase 8: Merge PRs
 
-For each approved PR (in dependency order):
+For each approved PR (in dependency order — oldest/parent first):
 
-1. **Squash merge**:
+1. **CRITICAL: Update child PR base branches BEFORE merging**:
+   - GitHub auto-closes child PRs when their base branch is deleted
+   - Git Town tracks branches locally but cannot prevent GitHub from closing PRs
+   - **MUST** update child PRs to target the parent's base before merging:
+   ```bash
+   # Find child PRs that target the branch being merged
+   gh pr list --base <branch-being-merged> --json number,headRefName
+   
+   # Update each child PR to target the parent's base (e.g., main)
+   gh pr edit <child-pr-number> --base <parent-base-branch>
+   ```
+   - Example: Before merging S1PR1, update S1PR2's base from `sprint-1/pr1/...` to `main`
+
+2. **Squash merge and delete remote branch via GitHub CLI**:
    ```bash
    gh pr merge <pr-number> --squash --delete-branch
    ```
+   - Uses GitHub's merge functionality (not local merge)
+   - Automatically deletes the remote branch after merge
+   - GitHub handles the squash commit
 
-2. **Update local state**:
+3. **Run `git town sync --all` to update local state and reparent branches**:
    ```bash
-   git checkout main
-   git pull
+   git town sync --all
    ```
+   - Updates local state after remote merge
+   - Deletes local branch (remote tracking is gone)
+   - Propagates merged changes to child branches
+   - **Re-parents child branches appropriately**
+   - Updates stack hierarchy automatically
 
-3. **If stacked PRs remain**: Update their base branches before merging parent
+4. **Resolve any encountered merge conflicts**:
+   - If `git town sync` reports conflicts:
+     - Open conflicting files and resolve
+     - Stage resolved files: `git add <files>`
+
+5. **Run `git town continue` (if merge conflicts were encountered)**:
+   ```bash
+   git town continue
+   ```
+   - Resumes the sync operation after conflict resolution
+   - Continues propagating changes through remaining branches
+
+6. **Log completion**:
+   - Record: "S<N>PR<M> merged successfully"
+   - Continue to next approved PR (no pause)
 
 ---
 
@@ -314,16 +458,21 @@ Work autonomously through ALL requested PRs. Only pause for:
 - ❌ Write or modify source code (delegate to implementer)
 - ❌ Run tests directly (implementer's job)
 - ❌ Use `gh run watch` (interactive, blocks agent)
+- ❌ Use raw `git checkout -b` or `git branch` for branch creation (use Git Town)
 - ❌ Pause between PRs unnecessarily
 
 ### REQUIRED Behaviors
+- ✅ Always use `git town` commands for branch management
 - ✅ Pass background reading links to implementer
 - ✅ Create Draft PRs first, mark ready after CI passes
 - ✅ Wait for user approval before merging
-- ✅ Process PRs in dependency order
+- ✅ Process PRs in dependency order (oldest/parent first)
+- ✅ Sync with `git town sync --all` after merging to propagate to stacked branches
+- ✅ Sync after pushing code review fixes to propagate to child branches
 - ✅ Provide clear context when delegating
 
 ### Error Escalation
 - 3 CI failures on same issue: STOP, ask for guidance
 - Dependency not met: Skip PR, continue with others
-- Merge conflict: Report and ask for resolution approach
+- Git Town command fails: Report error and suggest manual resolution
+- Merge conflict during sync: Resolve and run `git town continue`
