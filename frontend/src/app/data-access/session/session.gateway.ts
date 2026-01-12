@@ -8,6 +8,13 @@
  *
  * Using an abstract class (not interface) for Angular DI compatibility.
  *
+ * IMPORTANT: To use SessionGateway, you must provide it in the app config:
+ * ```typescript
+ * providers: [
+ *   { provide: SessionGateway, useClass: GrpcSessionGateway }
+ * ]
+ * ```
+ *
  * @see mddocs/frontend/frontend-tdd.md#gateway-port-abstract
  * @see mddocs/frontend/research/angular-architecture-analysis.md#abstract-ports-for-infrastructure-testing
  */

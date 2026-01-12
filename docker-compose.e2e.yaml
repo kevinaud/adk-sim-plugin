@@ -1,0 +1,23 @@
+# E2E Testing Docker Compose Stack
+# Used by Playwright E2E tests to run against a real backend
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "50051:50051"
+      - "8080:8080"
+    environment:
+      PYTHONPATH: /app
+      LOG_LEVEL: INFO
+      # Use temp file SQLite for E2E tests (fresh DB each run)
+      ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/e2e-test.db"
+    command: uv run adk-sim
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 10s

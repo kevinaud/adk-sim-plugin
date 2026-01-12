@@ -22,14 +22,16 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ../docker/frontend.Dockerfile
+      context: .
+      dockerfile: docker/frontend.Dockerfile
     ports:
       - "4200:4200"
     volumes:
-      - ./frontend:/app:cached
-      - /app/node_modules
-    command: npx ng serve --host 0.0.0.0 --poll 2000
+      - ./frontend:/app/frontend:cached
+      - /app/frontend/node_modules
+      - ./packages/adk-sim-protos-ts:/app/packages/adk-sim-protos-ts:cached
+    working_dir: /app/frontend
+    command: npx ng serve --host 0.0.0.0 --poll 2000 --proxy-config proxy.conf.docker.json
 
 volumes:
   backend-data:
