@@ -47,8 +47,9 @@ export const config: SheriffConfig = {
 
   // Dependency rules - enforce layered architecture
   depRules: {
-    // Root (main.ts, app.ts, app.routes.ts) can access features and shared
-    root: ['type:feature', 'type:shared', 'type:config', 'noTag'],
+    // Root (main.ts, app.config.ts, app.routes.ts) can access features, shared, and data-access
+    // Note: root needs data-access to configure DI providers (composition root pattern)
+    root: ['type:feature', 'type:shared', 'type:data-access', 'type:config', 'noTag'],
 
     // Features can access UI, data-access, util, and shared
     'type:feature': ['type:ui', 'type:data-access', 'type:util', 'type:shared', 'type:config', 'noTag'],
