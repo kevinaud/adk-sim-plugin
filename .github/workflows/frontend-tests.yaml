@@ -37,9 +37,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build protos package
+        working-directory: packages/adk-sim-protos-ts
+        run: npm run build
+
       - name: Run component tests
         working-directory: frontend
-        run: npm exec playwright test -c playwright-ct.config.ts
+        run: npx playwright test -c playwright-ct.config.ts
 
       - name: Upload test results
         if: always()
@@ -79,6 +83,10 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Build protos package
+        working-directory: packages/adk-sim-protos-ts
+        run: npm run build
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
@@ -90,11 +98,11 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: frontend
-        run: npm exec playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
         working-directory: frontend
-        run: npm exec playwright test -c playwright.config.ts
+        run: npx playwright test -c playwright.config.ts
         env:
           CI: true
           BASE_URL: http://localhost:4200
