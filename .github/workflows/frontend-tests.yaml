@@ -1,0 +1,116 @@
+# ============================================================
+# Frontend Tests: Playwright Component and E2E Tests
+# ============================================================
+# Runs both component tests (visual regression) and E2E tests
+# against real backend on frontend-related changes.
+# ============================================================
+
+name: Frontend Tests
+
+on:
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'docker/frontend.Dockerfile'
+      - 'docker-compose.e2e.yaml'
+      - '.github/workflows/frontend-tests.yaml'
+
+jobs:
+  # Job 1: Component Tests with Visual Regression
+  component-tests:
+    name: Component Tests
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.52.0-noble
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run component tests
+        working-directory: frontend
+        run: npm exec playwright test -c playwright-ct.config.ts
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-test-results
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 7
+
+      - name: Fail if snapshots changed
+        working-directory: frontend
+        run: |
+          if [[ -n $(git status --porcelain tests/component/__snapshots__ tests/e2e/__snapshots__) ]]; then
+            echo "::error::Uncommitted screenshot changes detected"
+            git status --porcelain tests/component/__snapshots__ tests/e2e/__snapshots__
+            exit 1
+          fi
+
+  # Job 2: E2E Tests with Real Backend
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Start Docker Compose stack
+        run: |
+          docker compose -f docker-compose.e2e.yaml up -d --wait
+          docker compose -f docker-compose.e2e.yaml logs
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npm exec playwright test -c playwright.config.ts
+        env:
+          CI: true
+          BASE_URL: http://localhost:4200
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose -f docker-compose.e2e.yaml down
+
+      - name: Upload E2E results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 7
