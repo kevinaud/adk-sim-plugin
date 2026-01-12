@@ -12,25 +12,30 @@ import { expect, test } from '@playwright/test';
  */
 
 /**
- * Helper to wait for Angular app to bootstrap
+ * Helper to wait for Angular app to bootstrap.
+ * Waits for app-root to have meaningful content (Angular has rendered).
  */
 async function waitForAngularApp(page: import('@playwright/test').Page) {
-  // Wait for app-root to have content
+  // Wait for app-root to have content and be visible
   await page.waitForFunction(
     () => {
       const appRoot = document.querySelector('app-root');
-      return appRoot && appRoot.innerHTML.trim().length > 10;
+      if (!appRoot) return false;
+      // Check that app-root has rendered content (not just loading text)
+      const hasContent = appRoot.innerHTML.trim().length > 10;
+      // Check that app-root is visible (not hidden by CSS)
+      const style = window.getComputedStyle(appRoot);
+      const isVisible = style.display !== 'none' && style.visibility !== 'hidden';
+      return hasContent && isVisible;
     },
     { timeout: 45000 }
   );
-  // Give Angular a moment to stabilize
-  await page.waitForTimeout(500);
 }
 
 test.describe('Session List', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the home page before each test
-    await page.goto('/');
+    // Navigate to the home page with full page load (domcontentloaded ensures fresh state)
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForAngularApp(page);
   });
 

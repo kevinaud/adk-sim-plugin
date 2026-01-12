@@ -12,10 +12,10 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: 'tests/e2e',
-  fullyParallel: false, // Run tests serially to avoid race conditions with shared backend
+  fullyParallel: true, // Parallel tests get separate browser contexts (avoids HMR state issues)
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
-  workers: 1, // Single worker for E2E tests (they share backend state)
+  workers: 4, // Parallel workers for faster E2E tests
   reporter: process.env['CI'] ? [['html'], ['github']] : 'line',
 
   // Timeouts
@@ -49,8 +49,9 @@ export default defineConfig({
   // 3. --allowed-hosts=all allows container networking (Angular 21 Vite-based)
   // 4. NG_CLI_ANALYTICS=false prevents stdin blocking prompt
   // 5. stdout/stderr: 'pipe' makes errors visible
+  // 6. --live-reload=false disables HMR WebSocket (prevents sequential test failures)
   webServer: {
-    command: 'NG_CLI_ANALYTICS=false npx ng serve --host 127.0.0.1 --port 4200 --allowed-hosts=all',
+    command: 'NG_CLI_ANALYTICS=false npx ng serve --host 127.0.0.1 --port 4200 --allowed-hosts=all --live-reload=false',
     url: 'http://127.0.0.1:4200',
     reuseExistingServer: !process.env['CI'],
     timeout: 120000,
