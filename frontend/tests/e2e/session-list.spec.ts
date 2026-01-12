@@ -19,8 +19,9 @@ test.describe('Session List', () => {
   });
 
   test('loads the application without JavaScript errors', async ({ page }) => {
-    // The page should have loaded successfully
-    expect(page.url()).toContain('127.0.0.1');
+    // The page should have loaded successfully (accept either localhost or 127.0.0.1)
+    const url = page.url();
+    expect(url.includes('127.0.0.1') || url.includes('localhost')).toBe(true);
 
     // Verify app-root is present
     await expect(page.locator('app-root')).toBeVisible();
