@@ -29,6 +29,12 @@ PYTHON_PACKAGES = [
   Path("plugins/python/pyproject.toml"),
 ]
 
+# TypeScript packages to update (relative to repo root)
+# Note: VERSION_SOURCE is also a TS package but is handled separately as the source of truth
+TS_PACKAGES = [
+  Path("packages/adk-converters-ts/package.json"),
+]
+
 # Internal package names that should use exact version pinning
 INTERNAL_PACKAGES = frozenset(
   {
@@ -134,6 +140,30 @@ def update_ts_package_version(version: str) -> bool:
   return True
 
 
+def update_ts_package(path: Path, version: str) -> bool:
+  """Update a TypeScript package.json with the new version.
+
+  Args:
+      path: Path to the package.json file
+      version: The new version to set
+
+  Returns:
+      True if changes were made, False otherwise
+  """
+  with path.open() as f:
+    data = json.load(f)
+
+  if data.get("version") == version:
+    return False
+
+  data["version"] = version
+  with path.open("w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")  # Trailing newline for POSIX compliance
+
+  return True
+
+
 def main() -> None:
   """Main entry point.
 
@@ -164,6 +194,16 @@ def main() -> None:
       continue
 
     if update_pyproject(path, version):
+      print(f"✅ Updated {path}")
+    else:
+      print(f"⏭️  No changes needed for {path}")
+
+  for path in TS_PACKAGES:
+    if not path.exists():
+      print(f"⚠️  Skipping {path} (not found)")
+      continue
+
+    if update_ts_package(path, version):
       print(f"✅ Updated {path}")
     else:
       print(f"⏭️  No changes needed for {path}")

@@ -1,6 +1,6 @@
 {
   "name": "@adk-sim/converters",
-  "version": "0.1.0",
+  "version": "0.1.19",
   "description": "Conversion utilities between ADK types and Simulator proto types",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,7 +26,12 @@
     "typescript": "~5.8.0",
     "vitest": "^3.0.0"
   },
-  "keywords": ["adk", "simulator", "converters", "protobuf"],
+  "keywords": [
+    "adk",
+    "simulator",
+    "converters",
+    "protobuf"
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

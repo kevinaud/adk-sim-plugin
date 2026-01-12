@@ -45,8 +45,10 @@ jobs:
           uv build --package adk-sim-server --out-dir dist/
           uv build --package adk-agent-sim --out-dir dist/
 
-      - name: Build TypeScript package
-        run: npm run build --workspace=packages/adk-sim-protos-ts
+      - name: Build TypeScript packages
+        run: |
+          npm run build --workspace=packages/adk-sim-protos-ts
+          npm run build --workspace=packages/adk-converters-ts
 
       - name: Verify Python installation (local wheels)
         run: |
@@ -140,15 +142,21 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install and build
-        working-directory: packages/adk-sim-protos-ts
         run: |
           npm ci
-          npm run build
+          npm run build --workspace=packages/adk-sim-protos-ts
+          npm run build --workspace=packages/adk-converters-ts
 
-      - name: Publish to npm
+      - name: Publish @adk-sim/protos to npm
         working-directory: packages/adk-sim-protos-ts
         run: |
           # Unset NODE_AUTH_TOKEN to force npm to use OIDC instead of token auth
           # See: https://github.com/npm/cli/issues/1440
+          unset NODE_AUTH_TOKEN
+          npm publish --provenance --access public
+
+      - name: Publish @adk-sim/converters to npm
+        working-directory: packages/adk-converters-ts
+        run: |
           unset NODE_AUTH_TOKEN
           npm publish --provenance --access public
