@@ -1,0 +1,40 @@
+{
+  "name": "@adk-sim/converters",
+  "version": "0.1.0",
+  "description": "Conversion utilities between ADK types and Simulator proto types",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@adk-sim/protos": "*"
+  },
+  "peerDependencies": {
+    "@bufbuild/protobuf": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": ["adk", "simulator", "converters", "protobuf"],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinaud/adk-sim-plugin.git",
+    "directory": "packages/adk-converters-ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
