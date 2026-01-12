@@ -36,15 +36,16 @@ function resolveBaseUrl(): string {
  * This adapter provides the real backend communication for production use.
  * It connects to the SimulatorService via gRPC-Web protocol.
  *
+ * The `providedIn: 'root'` with `useExisting: GrpcSessionGateway` makes this
+ * the default implementation for SessionGateway across the application.
+ *
  * @example
  * ```typescript
- * // Provide in app config for production
- * providers: [
- *   { provide: SessionGateway, useClass: GrpcSessionGateway }
- * ]
+ * // Automatic registration via providedIn
+ * // No manual provider configuration needed
  * ```
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class GrpcSessionGateway extends SessionGateway {
   private readonly transport: Transport;
   private readonly client: Client<typeof SimulatorService>;

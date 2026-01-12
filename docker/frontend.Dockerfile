@@ -2,13 +2,19 @@ FROM node:22-slim
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy root package.json for npm workspaces configuration
+COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci
+# Copy workspace packages
+COPY packages/adk-sim-protos-ts ./packages/adk-sim-protos-ts
+COPY frontend/package.json ./frontend/
 
-# Copy source (for initial build; volume mount overrides in dev)
-COPY . .
+# Install all workspace dependencies
+RUN npm ci --workspace=frontend --workspace=@adk-sim/protos
+
+# Copy frontend source
+COPY frontend ./frontend
+
+WORKDIR /app/frontend
 
 EXPOSE 4200
