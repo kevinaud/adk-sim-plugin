@@ -1,1 +1,7 @@
+# Playwright ephemeral test artifacts (traces, logs, debug screenshots)
 test-results/
+playwright-report/
+
+# Visual regression baselines are version-controlled (NOT ignored)
+# tests/e2e/__snapshots__/
+# tests/component/__snapshots__/

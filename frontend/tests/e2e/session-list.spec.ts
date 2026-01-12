@@ -69,4 +69,18 @@ test.describe('Session List', () => {
     const sessionListFeature = page.locator('app-session-list, [class*="session-list"]');
     await expect(sessionListFeature.first()).toBeVisible({ timeout: 30000 });
   });
+
+  test('visual regression - session list view', async ({ page }) => {
+    // Wait for the session list to fully render
+    const cardTitle = page.getByText(/available sessions/i);
+    await expect(cardTitle).toBeVisible({ timeout: 30000 });
+
+    // Give Angular Material animations time to complete
+    await page.waitForTimeout(500);
+
+    // Capture visual regression screenshot (stored in __snapshots__/)
+    await expect(page).toHaveScreenshot('session-list-view.png', {
+      fullPage: true,
+    });
+  });
 });

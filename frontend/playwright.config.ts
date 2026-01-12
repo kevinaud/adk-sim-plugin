@@ -12,6 +12,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: 'tests/e2e',
+  snapshotDir: 'tests/e2e/__snapshots__', // Version-controlled visual regression baselines
   fullyParallel: true, // Parallel tests get separate browser contexts (avoids HMR state issues)
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
@@ -22,6 +23,9 @@ export default defineConfig({
   timeout: 60000,
   expect: {
     timeout: 10000,
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01, // 1% pixel diff threshold for visual regression
+    },
   },
 
   use: {
