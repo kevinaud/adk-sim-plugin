@@ -28,7 +28,7 @@ export default defineConfig({
     // Base URL for tests - Use explicit IPv4 to avoid Node 20 IPv6 resolution issues
     baseURL: process.env['BASE_URL'] ?? 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'on', // Capture screenshots for all tests to visualize UI state
   },
 
   projects: [

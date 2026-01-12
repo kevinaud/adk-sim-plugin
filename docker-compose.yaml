@@ -31,7 +31,7 @@ services:
       - /app/frontend/node_modules
       - ./packages/adk-sim-protos-ts:/app/packages/adk-sim-protos-ts:cached
     working_dir: /app/frontend
-    command: npx ng serve --host 0.0.0.0 --poll 2000
+    command: npx ng serve --host 0.0.0.0 --poll 2000 --proxy-config proxy.conf.docker.json
 
 volumes:
   backend-data:
