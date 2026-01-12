@@ -15,12 +15,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 ENV UV_LINK_MODE=copy
 ENV UV_CACHE_DIR=/opt/uv-cache
 
-# Install Node.js and npm via apt-get (features install after Dockerfile)
-RUN apt-get update && apt-get install -y \
-    nodejs \
-    npm \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install Node.js 22 from NodeSource (required for Angular 21+)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Angular CLI globally
 RUN npm install -g @angular/cli

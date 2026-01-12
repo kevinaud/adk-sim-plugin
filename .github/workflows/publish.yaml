@@ -30,6 +30,11 @@ jobs:
           uv sync
           npm ci
 
+      - name: Build TypeScript packages (required by frontend)
+        run: |
+          npm run build --workspace=packages/adk-sim-protos-ts
+          npm run build --workspace=packages/adk-converters-ts
+
       - name: Bundle frontend into server
         run: |
           cd frontend && CI=TRUE npm run build && cd ..
@@ -44,11 +49,6 @@ jobs:
           uv build --package adk-sim-testing --out-dir dist/
           uv build --package adk-sim-server --out-dir dist/
           uv build --package adk-agent-sim --out-dir dist/
-
-      - name: Build TypeScript packages
-        run: |
-          npm run build --workspace=packages/adk-sim-protos-ts
-          npm run build --workspace=packages/adk-converters-ts
 
       - name: Verify Python installation (local wheels)
         run: |
