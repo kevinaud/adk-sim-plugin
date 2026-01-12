@@ -70,7 +70,10 @@
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
 
     // 3. Config for the bash history mount above
-    "HISTFILE": "/commandhistory/.bash_history"
+    "HISTFILE": "/commandhistory/.bash_history",
+
+    // 4. Disable Angular CLI analytics prompt (blocks stdin in containerized environments)
+    "NG_CLI_ANALYTICS": "false"
      // This pulls the value from your host's environment
     // "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}",
     // "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",

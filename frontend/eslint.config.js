@@ -21,8 +21,29 @@ module.exports = tseslint.config(
       'playwright-report',
     ],
   },
+  // Playwright E2E tests - separate config without Angular-specific rules
   {
-    files: ['**/*.ts'],
+    files: ['playwright.config.ts', 'tests/e2e/**/*.ts'],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.e2e.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      // Playwright tests use console.log for debugging
+      'no-console': 'off',
+      // Allow non-null assertions in tests
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
