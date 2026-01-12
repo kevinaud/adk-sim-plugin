@@ -41,6 +41,10 @@ jobs:
         working-directory: packages/adk-sim-protos-ts
         run: npm run build
 
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
       - name: Run component tests
         working-directory: frontend
         run: npx playwright test -c playwright-ct.config.ts
