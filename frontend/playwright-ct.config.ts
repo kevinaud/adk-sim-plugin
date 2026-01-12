@@ -41,6 +41,10 @@ export default defineConfig({
           tsconfig: resolve('./tsconfig.spec.json'),
         }),
       ],
+      // Disable sourcemaps to suppress analogjs plugin warnings
+      build: {
+        sourcemap: false,
+      },
       resolve: {
         alias: {
           '@': resolve('./src'),
