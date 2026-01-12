@@ -1,6 +1,7 @@
 # Playwright ephemeral test artifacts (traces, logs, debug screenshots)
 test-results/
 playwright-report/
+playwright/.cache/
 
 # Visual regression baselines are version-controlled (NOT ignored)
 # tests/e2e/__snapshots__/
