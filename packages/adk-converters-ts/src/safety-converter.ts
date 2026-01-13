@@ -53,7 +53,8 @@ const GENAI_TO_PROTO_HARM_CATEGORY: Record<GenaiHarmCategory, ProtoHarmCategory>
 };
 
 const PROTO_TO_GENAI_THRESHOLD: Record<ProtoHarmBlockThreshold, GenaiHarmBlockThreshold> = {
-  [ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED]: GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED,
+  [ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED]:
+    GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED,
   [ProtoHarmBlockThreshold.BLOCK_LOW_AND_ABOVE]: GenaiHarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
   [ProtoHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE]: GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
   [ProtoHarmBlockThreshold.BLOCK_ONLY_HIGH]: GenaiHarmBlockThreshold.BLOCK_ONLY_HIGH,
@@ -62,7 +63,8 @@ const PROTO_TO_GENAI_THRESHOLD: Record<ProtoHarmBlockThreshold, GenaiHarmBlockTh
 };
 
 const GENAI_TO_PROTO_THRESHOLD: Record<GenaiHarmBlockThreshold, ProtoHarmBlockThreshold> = {
-  [GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED]: ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED,
+  [GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED]:
+    ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED,
   [GenaiHarmBlockThreshold.BLOCK_LOW_AND_ABOVE]: ProtoHarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
   [GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE]: ProtoHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
   [GenaiHarmBlockThreshold.BLOCK_ONLY_HIGH]: ProtoHarmBlockThreshold.BLOCK_ONLY_HIGH,
@@ -98,11 +100,19 @@ export function genaiHarmCategoryToProto(genai: GenaiHarmCategory | undefined): 
   return GENAI_TO_PROTO_HARM_CATEGORY[genai] ?? ProtoHarmCategory.UNSPECIFIED;
 }
 
-export function protoHarmBlockThresholdToGenai(proto: ProtoHarmBlockThreshold): GenaiHarmBlockThreshold {
-  return PROTO_TO_GENAI_THRESHOLD[proto] ?? GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED;
+export function protoHarmBlockThresholdToGenai(
+  proto: ProtoHarmBlockThreshold,
+): GenaiHarmBlockThreshold {
+  return (
+    PROTO_TO_GENAI_THRESHOLD[proto] ?? GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED
+  );
 }
 
-export function genaiHarmBlockThresholdToProto(genai: GenaiHarmBlockThreshold | undefined): ProtoHarmBlockThreshold {
+export function genaiHarmBlockThresholdToProto(
+  genai: GenaiHarmBlockThreshold | undefined,
+): ProtoHarmBlockThreshold {
   if (!genai) return ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED;
-  return GENAI_TO_PROTO_THRESHOLD[genai] ?? ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED;
+  return (
+    GENAI_TO_PROTO_THRESHOLD[genai] ?? ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED
+  );
 }

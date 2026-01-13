@@ -23,7 +23,7 @@ description: Generate an actionable, dependency-ordered tasks.md for the feature
 Define clear transitions to other agents. This enables multi-agent orchestration.
 
 ```yaml
-handoffs: 
+handoffs:
   - label: Build Technical Plan
     agent: speckit.plan
     prompt: Create a plan for the spec. I am building with...

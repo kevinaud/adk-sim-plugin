@@ -10,8 +10,8 @@ related:
 
 # Angular Testing Strategy Analysis
 
-**Source**: `docs/developers/angular/angular-testing-research.md`  
-**Date**: January 11, 2026  
+**Source**: `docs/developers/angular/angular-testing-research.md`
+**Date**: January 11, 2026
 **Purpose**: Define testing strategy for the ADK Simulator Web UI based on Angular v21 best practices.
 
 ## Related Documents
@@ -100,7 +100,7 @@ it('should update connection status', async () => {
   await component.connect();
   await fixture.whenStable();
   fixture.detectChanges();
-  
+
   expect(screen.getByText('Connected')).toBeVisible();
 });
 ```
@@ -165,13 +165,13 @@ it('should disable submit when form is invalid', async () => {
   await render(ToolInvocationFormComponent, {
     providers: [provideHttpClient()] // Real services!
   });
-  
+
   // Don't spy on form.valid() - assert DOM state
   expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled();
-  
+
   await userEvent.type(screen.getByLabelText(/tool name/i), 'read_file');
   await fixture.whenStable();
-  
+
   expect(screen.getByRole('button', { name: /submit/i })).toBeEnabled();
 });
 ```
@@ -228,14 +228,14 @@ The testing guide promotes Orval + OpenAPI for "Zero Drift" between API contract
 @Injectable()
 export class MockSessionGateway extends SessionGateway {
   private readonly events = signal<LlmRequest[]>([]);
-  
+
   async *subscribe(sessionId: string): AsyncIterable<SessionEvent> {
     // Emit mock events for testing
     for (const request of this.events()) {
       yield { event: { case: 'llmRequest', value: request } };
     }
   }
-  
+
   // Test helper to inject events
   pushEvent(request: LlmRequest): void {
     this.events.update(e => [...e, request]);
@@ -304,18 +304,18 @@ it('should toggle between JSON and RAW views (FR-012, FR-014)', async () => {
   const { fixture } = await render(SmartBlobComponent, {
     inputs: { content: '{"key": "value"}' }
   });
-  
+
   const harness = await TestbedHarnessEnvironment
     .loader(fixture)
     .getHarness(SmartBlobHarness);
 
   // JSON should be detected and toggle available
   expect(await harness.isJsonAvailable()).toBe(true);
-  
+
   // Toggle to JSON view
   await harness.toggleJson();
   expect(await harness.getCurrentContent()).toContain('key');
-  
+
   // Toggle back to RAW
   await harness.toggleRaw();
   expect(await harness.getCurrentContent()).toBe('{"key": "value"}');
@@ -368,7 +368,7 @@ The testing guide promotes using Zod schemas derived from OpenAPI for form valid
 // util/schema-utils/json-schema-validator.ts
 export function jsonSchemaValidators(schema: JsonSchema): ValidatorFn[] {
   const validators: ValidatorFn[] = [];
-  
+
   if (schema.required) {
     validators.push(Validators.required);
   }
@@ -376,7 +376,7 @@ export function jsonSchemaValidators(schema: JsonSchema): ValidatorFn[] {
     validators.push(Validators.minLength(schema.minLength));
   }
   // ... more schema-to-validator mappings
-  
+
   return validators;
 }
 ```
@@ -498,7 +498,7 @@ it('should detect JSON and show toggle', async () => {
   const { fixture } = await render(SmartBlobComponent, {
     inputs: { content: '{"valid": "json"}' }
   });
-  
+
   const harness = await loader.getHarness(SmartBlobHarness);
   expect(await harness.isJsonAvailable()).toBe(true);
 });
@@ -509,11 +509,11 @@ it('should detect JSON and show toggle', async () => {
 // No TestBed, no Angular
 describe('JsonDetectionService', () => {
   const service = new JsonDetectionService();
-  
+
   it('detects valid JSON', () => {
     expect(service.isJson('{"key": "value"}')).toBe(true);
   });
-  
+
   it('rejects invalid JSON', () => {
     expect(service.isJson('{key: value}')).toBe(false);
   });

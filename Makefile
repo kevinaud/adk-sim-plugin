@@ -183,17 +183,11 @@ bundle-frontend:
 
 quality: generate
 	@echo "🔍 Running quality checks..."
-	./scripts/check_quality.sh
+	uv run pre-commit run --all-files
 
 lint: generate
-	@echo "🔍 Running linters..."
-	@echo "--- Proto ---"
-	buf lint
-	@echo "--- Python ---"
-	uv run ruff check server/src plugins/python/src packages/
-	uv run pyright
-	@echo "--- TypeScript ---"
-	cd frontend && npm run lint
+	@echo "🔍 Running linters (via pre-commit)..."
+	uv run pre-commit run --all-files
 
 format:
 	@echo "🎨 Formatting all code..."

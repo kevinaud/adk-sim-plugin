@@ -140,7 +140,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR1: Sheriff Installation & Configuration
 
-**Estimated Lines**: ~80 lines  
+**Estimated Lines**: ~80 lines
 **Depends On**: -
 
 **Goal**: Install Sheriff and configure module boundary rules matching the TDD's layered architecture.
@@ -165,7 +165,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR2: Environment Configuration (Dev Proxy + Prod Same-Origin)
 
-**Estimated Lines**: ~60 lines  
+**Estimated Lines**: ~60 lines
 **Depends On**: -
 
 **Goal**: Configure Angular proxy for development and update environment files for same-origin gRPC-Web requests.
@@ -191,7 +191,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR3: Folder Structure Scaffold (Features, UI, Data-Access, Util)
 
-**Estimated Lines**: ~40 lines (mostly empty index files)  
+**Estimated Lines**: ~40 lines (mostly empty index files)
 **Depends On**: S1PR1
 
 **Goal**: Create the folder structure matching the TDD's module layout with placeholder index.ts files.
@@ -220,7 +220,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR4: SessionGateway Port + Mock Implementation
 
-**Estimated Lines**: ~120 lines  
+**Estimated Lines**: ~120 lines
 **Depends On**: S1PR3
 
 **Goal**: Create the abstract `SessionGateway` port and a `MockSessionGateway` for testing, supporting `listSessions()` for this sprint.
@@ -246,7 +246,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR5: GrpcSessionGateway Implementation (listSessions only)
 
-**Estimated Lines**: ~100 lines  
+**Estimated Lines**: ~100 lines
 **Depends On**: S1PR2, S1PR4
 
 **Goal**: Implement the real gRPC-Web gateway adapter for listing sessions.
@@ -271,7 +271,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR6: SessionStateService (Global Signals)
 
-**Estimated Lines**: ~80 lines  
+**Estimated Lines**: ~80 lines
 **Depends On**: S1PR3
 
 **Goal**: Create the global session state service with signals for session ID, connection status, and errors.
@@ -296,7 +296,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR7: SessionFacade (Minimal for List)
 
-**Estimated Lines**: ~60 lines  
+**Estimated Lines**: ~60 lines
 **Depends On**: S1PR4, S1PR5, S1PR6
 
 **Goal**: Create a minimal facade that orchestrates gateway + state for listing sessions.
@@ -320,7 +320,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR8: Session List Component (Barebones)
 
-**Estimated Lines**: ~150 lines  
+**Estimated Lines**: ~150 lines
 **Depends On**: S1PR7
 
 **Goal**: Create a minimal session list component that displays real sessions from the backend.
@@ -351,7 +351,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR9: Connection Status Component
 
-**Estimated Lines**: ~60 lines  
+**Estimated Lines**: ~60 lines
 **Depends On**: S1PR6
 
 **Goal**: Create a simple connection status indicator component (FR-023).
@@ -376,7 +376,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR10: Playwright Component Testing Setup
 
-**Estimated Lines**: ~150 lines  
+**Estimated Lines**: ~150 lines
 **Depends On**: S1PR8, S1PR9
 
 **Goal**: Set up Playwright component testing infrastructure with a sample test.
@@ -404,7 +404,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR11: Playwright E2E Testing Setup
 
-**Estimated Lines**: ~180 lines  
+**Estimated Lines**: ~180 lines
 **Depends On**: S1PR8
 
 **Goal**: Set up Playwright E2E testing with Docker backend integration.
@@ -434,7 +434,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR12: CI Workflow for Frontend Tests
 
-**Estimated Lines**: ~120 lines  
+**Estimated Lines**: ~120 lines
 **Depends On**: S1PR10, S1PR11
 
 **Goal**: Add GitHub Actions workflow for component tests and E2E tests.
@@ -457,7 +457,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR13: @adk-sim/converters Package Scaffold
 
-**Estimated Lines**: ~100 lines  
+**Estimated Lines**: ~100 lines
 **Depends On**: -
 
 **Goal**: Create the converter package scaffold (no conversion logic yet—just structure for publishing).
@@ -483,7 +483,7 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### S1PR14: npm Publishing CI for @adk-sim/converters
 
-**Estimated Lines**: ~50 lines  
+**Estimated Lines**: ~50 lines
 **Depends On**: S1PR13
 
 **Goal**: Update publish.yaml to build and publish the converters package.

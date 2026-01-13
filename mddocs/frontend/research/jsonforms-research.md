@@ -211,13 +211,13 @@ export class ToolFormComponent {
   readonly renderers = angularMaterialRenderers;
   readonly schema = { /* JSON Schema */ };
   readonly uischema = { /* UI Schema */ };
-  
+
   readonly formData = signal<unknown>({});
-  
+
   onDataChange(data: unknown): void {
     this.formData.set(data);
   }
-  
+
   onErrors(errors: ErrorObject[]): void {
     console.log('Validation errors:', errors);
   }
@@ -406,7 +406,7 @@ export class ToolFormService {
   createFormConfig(tool: FunctionDeclaration): ToolFormConfig {
     // Handle both parametersJsonSchema and parameters fields
     let jsonSchema: JsonSchema7;
-    
+
     if (tool.parametersJsonSchema) {
       // Tool already provides JSON Schema directly
       jsonSchema = tool.parametersJsonSchema as JsonSchema7;
@@ -442,7 +442,7 @@ export class ToolFormService {
       @if (config().toolDescription) {
         <p class="description">{{ config().toolDescription }}</p>
       }
-      
+
       <jsonforms
         [schema]="config().schema"
         [uischema]="config().uischema"
@@ -451,7 +451,7 @@ export class ToolFormService {
         (dataChange)="formData.set($event)"
         (errors)="errors.set($event)"
       />
-      
+
       <button
         mat-raised-button
         color="primary"
@@ -465,13 +465,13 @@ export class ToolFormService {
 })
 export class ToolFormComponent {
   readonly renderers = angularMaterialRenderers;
-  
+
   readonly config = input.required<ToolFormConfig>();
   readonly formData = signal<unknown>({});
   readonly errors = signal<ErrorObject[]>([]);
-  
+
   readonly invokeOutput = output<{ toolName: string; args: unknown }>();
-  
+
   submit(): void {
     this.invokeOutput.emit({
       toolName: this.config().toolName,
@@ -516,17 +516,17 @@ When no `output_schema` is defined, provide a simple textarea:
 })
 export class FinalResponseComponent {
   readonly outputSchema = input<JsonSchema7 | null>(null);
-  
+
   readonly hasOutputSchema = computed(() => this.outputSchema() !== null);
   readonly textResponse = signal('');
-  
+
   readonly submitText = output<string>();
   readonly submitStructured = output<unknown>();
-  
+
   onTextSubmit(): void {
     this.submitText.emit(this.textResponse());
   }
-  
+
   onStructuredSubmit(data: unknown): void {
     this.submitStructured.emit(data);
   }
@@ -542,7 +542,7 @@ When `config.responseSchema` is defined in the `LlmRequest`:
 readonly outputSchema = computed(() => {
   const request = this.store.currentRequest();
   if (!request?.config?.responseSchema) return null;
-  
+
   // responseSchema might be @google/genai Schema type or already JSON Schema
   // Need to handle both cases
   return this.schemaService.ensureJsonSchema(request.config.responseSchema);
@@ -586,7 +586,7 @@ export class MarkdownRendererComponent extends JsonFormsControl {
   constructor(service: JsonFormsAngularService) {
     super(service);
   }
-  
+
   onChange(value: string): void {
     this.jsonFormsService.updateCore(
       Actions.update(this.propsPath, () => value)
@@ -633,7 +633,7 @@ export const customRenderers = [
 export function createToolUiSchema(schema: JsonSchema7, toolName: string): UISchemaElement {
   // Start with auto-generated
   const autoSchema = generateDefaultUISchema(schema);
-  
+
   // Wrap in a Group with tool name as label
   return {
     type: 'Group',

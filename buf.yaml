@@ -12,11 +12,11 @@ modules:
         - RPC_REQUEST_STANDARD_NAME        # Request message must match RPC name
         - RPC_RESPONSE_STANDARD_NAME       # Response message must match RPC name
         - RPC_REQUEST_RESPONSE_UNIQUE      # Every RPC must have unique request/response types
-      
+
       # Exclude vendored Google AI protos from linting (they don't follow buf standards)
       ignore:
         - protos/google/ai/generativelanguage
-      
+
       disallow_comment_ignores: true
 
     breaking:

@@ -4,8 +4,11 @@ This is a monorepo for a gRPC-based agent simulator with Python backend, Angular
 
 ## Quality Gates
 
+Quality rules are defined in `.pre-commit-config.yaml` (single source of truth).
+
 - Run `./scripts/presubmit.sh` before any `git push` - pushing failing code is prohibited
-- Run `./scripts/check_quality.sh` before considering code complete
+- Run `uv run pre-commit run --all-files` for quick quality checks
+- Pre-commit hooks run automatically on `git commit` (staged files) and `git push` (all files)
 
 ## Git Workflow
 
@@ -40,18 +43,21 @@ Use state-based verification, not interaction-based verification.
 - Python: managed by `uv` (NOT pip)
 - Frontend: managed by `npm`
 - Protos: managed by `buf`
+- Quality checks: managed by `pre-commit`
 
 ## Key Commands
 
 ```bash
 # Quality checks
-./scripts/presubmit.sh      # MUST pass before push
-./scripts/check_quality.sh  # Run before code complete
+./scripts/presubmit.sh               # MUST pass before push
+uv run pre-commit run --all-files    # Quick quality check
+make quality                         # Same as pre-commit
 
 # Development
-make protos                  # Generate proto code
-make server                  # Run Python server
-make frontend                # Run Angular dev server
+make generate                        # Generate proto code
+make server                          # Run Python server
+make frontend                        # Run Angular dev server
+make format                          # Auto-format all code
 ```
 
 ## Project Structure

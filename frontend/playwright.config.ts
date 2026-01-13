@@ -55,7 +55,8 @@ export default defineConfig({
   // 5. stdout/stderr: 'pipe' makes errors visible
   // 6. --live-reload=false disables HMR WebSocket (prevents sequential test failures)
   webServer: {
-    command: 'NG_CLI_ANALYTICS=false npx ng serve --host 127.0.0.1 --port 4200 --allowed-hosts=all --live-reload=false',
+    command:
+      'NG_CLI_ANALYTICS=false npx ng serve --host 127.0.0.1 --port 4200 --allowed-hosts=all --live-reload=false',
     url: 'http://127.0.0.1:4200',
     reuseExistingServer: !process.env['CI'],
     timeout: 120000,

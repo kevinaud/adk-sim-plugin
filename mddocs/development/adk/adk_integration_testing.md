@@ -185,15 +185,15 @@ import pytest
 async def test_multi_turn_conversation():
     """Test agent handles multi-turn conversation."""
     runner = await IntegrationRunner.create("my_project.agents.my_agent")
-    
+
     # First turn
     events = await runner.run("Hello, I need help booking a flight")
     assert_agent_says_contains("flight", events=events)
-    
+
     # Second turn (same session)
     events = await runner.run("I want to go to Seattle")
     assert_agent_says_contains("Seattle", events=events)
-    
+
     # Verify state persisted
     assert runner.session.state.get("destination") == "Seattle"
 
@@ -203,12 +203,12 @@ async def test_multi_turn_conversation():
 async def test_fresh_session():
     """Test with a fresh session."""
     runner = await IntegrationRunner.create("my_project.agents.my_agent")
-    
+
     await runner.run("Set my name to Alice")
-    
+
     # Start fresh session
     runner.new_session()
-    
+
     events = await runner.run("What's my name?")
     # Agent shouldn't know the name in a new session
     assert_agent_says_not_contains("Alice", events=events)
@@ -292,15 +292,15 @@ from tests.integration.helpers import (
 @pytest.mark.asyncio
 async def test_with_assertions(runner):
     events = await runner.run("Book a flight to Seattle")
-    
+
     # Check agent response contains expected text
     assert_agent_says_contains("Seattle", events=events)
     assert_agent_says_contains("flight", events=events)
-    
+
     # Check tool usage
     assert_tool_was_called("search_flights", events=events)
     assert_tool_was_not_called("book_hotel", events=events)
-    
+
     # Get tool calls for detailed assertions
     tool_calls = get_tool_calls(events)
     assert tool_calls[0].name == "search_flights"
@@ -421,21 +421,21 @@ def log_token_usage(request):
 async def test_complete_booking_flow():
     """Test end-to-end flight booking flow."""
     runner = await IntegrationRunner.create("my_project.agents.travel_agent")
-    
+
     # Step 1: Initiate booking
     events = await runner.run("I want to book a flight to Seattle next Monday")
     assert_agent_says_contains("Seattle", events=events)
     assert_tool_was_called("search_flights", events=events)
-    
+
     # Step 2: Select flight
     events = await runner.run("I'll take the morning flight")
     assert_tool_was_called("select_flight", events=events)
-    
+
     # Step 3: Confirm booking
     events = await runner.run("Yes, confirm the booking")
     assert_tool_was_called("confirm_booking", events=events)
     assert_agent_says_contains("confirmed", events=events)
-    
+
     # Verify final state
     assert runner.session.state.get("booking_confirmed") is True
 ```
@@ -452,9 +452,9 @@ async def test_handles_api_error_gracefully():
         # Inject a tool that fails
         tool_overrides={"search_flights": mock_failing_tool},
     )
-    
+
     events = await runner.run("Search for flights to Seattle")
-    
+
     # Agent should communicate the error gracefully
     assert_agent_says_contains("sorry", events=events, case_insensitive=True)
     assert_agent_says_not_contains("exception", events=events, case_insensitive=True)
@@ -474,9 +474,9 @@ async def test_with_preexisting_context():
             "frequent_flyer_id": "FF123456",
         },
     )
-    
+
     events = await runner.run("Book my usual seat on the next flight to Seattle")
-    
+
     # Agent should use preferences from state
     tool_calls = get_tool_calls(events)
     booking_call = next(tc for tc in tool_calls if tc.name == "book_flight")
@@ -498,9 +498,9 @@ async def test_budget_plugin_stops_expensive_queries():
         },
         plugins=[BudgetPlugin()],
     )
-    
+
     events = await runner.run("Search for flights")
-    
+
     # Plugin should have blocked the request
     assert_agent_says_contains("budget", events=events, case_insensitive=True)
 ```
@@ -586,7 +586,7 @@ events = await asyncio.wait_for(
 @pytest.mark.asyncio
 async def test_with_debugging(runner):
     events = await runner.run("Hello")
-    
+
     # Print all events for debugging
     for event in events:
         print(f"Author: {event.author}")

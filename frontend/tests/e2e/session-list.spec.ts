@@ -51,9 +51,9 @@ test.describe('Session List', () => {
     const errorState = page.getByText(/error/i);
 
     // At least one of these should be visible - use .first() to handle multiple matches
-    await expect(
-      spinner.or(card).or(emptyState).or(errorState).first()
-    ).toBeVisible({ timeout: 30000 });
+    await expect(spinner.or(card).or(emptyState).or(errorState).first()).toBeVisible({
+      timeout: 30000,
+    });
   });
 
   test('displays session list card with header', async ({ page }) => {

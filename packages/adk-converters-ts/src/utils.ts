@@ -15,7 +15,7 @@
 export function copyDefinedFields<S extends object, T extends object>(
   source: S,
   target: T,
-  fields: (keyof S & keyof T)[]
+  fields: (keyof S & keyof T)[],
 ): void {
   for (const field of fields) {
     const value = source[field];
@@ -35,7 +35,7 @@ export function copyDefinedFields<S extends object, T extends object>(
 export function copyMappedFields<S extends object, T extends object>(
   source: S,
   target: T,
-  mapping: [keyof S, keyof T][]
+  mapping: [keyof S, keyof T][],
 ): void {
   for (const [srcKey, tgtKey] of mapping) {
     const value = source[srcKey];
@@ -73,7 +73,7 @@ export function pickDefined<T extends object>(obj: T): Partial<T> {
 export function createProto<T extends { $typeName: string }>(
   typeName: string,
   defaults: Omit<T, '$typeName'>,
-  fields: Partial<Omit<T, '$typeName'>> = {}
+  fields: Partial<Omit<T, '$typeName'>> = {},
 ): T {
   return {
     $typeName: typeName,

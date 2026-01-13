@@ -66,7 +66,7 @@ Object.defineProperty(window, 'matchMedia', {
 3.3. Vitest Browser Mode for Visual FidelityWhile JSDOM is sufficient for logical unit tests, it is strictly a simulation of a DOM. It does not perform layout, paint, or actual style computation. For tests that require these—specifically Visual Regression Tests (VRT)—we utilize Vitest's Browser Mode or, more robustly, Playwright (discussed in Section 8).4. Signal Forms: A New Primitive for Data EntryAngular v21 introduces Signal Forms (@angular/forms/signals) as a modern alternative to Reactive Forms and Template-Driven Forms. This is not just a syntax update; it is a shift from an RxJS-stream-based model to a Signal-graph-based model.134.1. The Signal Form Model StructureIn legacy Reactive Forms, the FormGroup was the source of truth. In Signal Forms, the Form Model—a signal containing the raw data—is the source of truth. The form() function creates a FieldTree, a reactive proxy structure that mirrors the data model but augments it with state metadata (valid, touched, dirty).14Code Example: The Form ModelTypeScript// user-profile.component.ts
 import { Component, signal, computed } from '@angular/core';
 import { form, Field } from '@angular/forms/signals';
-import { required, email } from './validators'; 
+import { required, email } from './validators';
 
 @Component({
   selector: 'user-profile',
@@ -81,7 +81,7 @@ import { required, email } from './validators';
           <span class="error">{{ form.email.errors() }}</span>
         }
       </div>
-      
+
       <button type="submit" [disabled]="form.invalid()">Save</button>
     </form>
   `
@@ -136,7 +136,7 @@ it('should validate email and manage button state', async () => {
   // 5. Correct the input
   await user.clear(input);
   await user.type(input, 'valid@company.com');
-  
+
   await fixture.whenStable();
   fixture.detectChanges();
 
@@ -182,7 +182,7 @@ import { provideHttpClient } from '@angular/common/http';
 // Setup MSW Server
 const server = setupServer(
   // Default: Returns random data matching schema
-  getUserMockHandler() 
+  getUserMockHandler()
 );
 
 beforeAll(() => server.listen());
@@ -247,7 +247,7 @@ export class UserProfileHarness extends ComponentHarness {
     const button = await this.getSubmitButton();
     return button.isDisabled();
   }
-  
+
   async getErrors() {
     const errors = await this.getErrorMessages();
     return Promise.all(errors.map(e => e.text()));
@@ -288,7 +288,7 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './vrt',
   // Fail if the snapshot doesn't match
-  updateSnapshots: process.env.CI? 'none' : 'missing', 
+  updateSnapshots: process.env.CI? 'none' : 'missing',
   use: {
     trace: 'on-first-retry',
     viewport: { width: 1280, height: 720 },
@@ -332,10 +332,10 @@ describe('DashboardComponent (Sociable)', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
-    
+
     // 4. Zoneless Stability: Wait for init
-    await fixture.whenStable(); 
-    
+    await fixture.whenStable();
+
     // 5. Initialize Harness
     const loader = TestbedHarnessEnvironment.loader(fixture);
     harness = await loader.getHarness(DashboardHarness);
@@ -344,7 +344,7 @@ describe('DashboardComponent (Sociable)', () => {
   it('should render stats from API', async () => {
     // 6. Interaction via Harness (Abstracts DOM)
     const stats = await harness.getStats();
-    
+
     // 7. Assertions on visible state
     expect(stats.users).toBeGreaterThan(0); // Data from Faker
     expect(stats.revenue).toContain('$');
@@ -361,7 +361,7 @@ describe('DashboardComponent (Sociable)', () => {
 
     // Reload component to trigger error
     await harness.refresh();
-    
+
     expect(await harness.getErrorMessage()).toBe('Failed to load dashboard data');
   });
 });

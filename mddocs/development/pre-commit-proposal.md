@@ -2,9 +2,16 @@
 title: Pre-commit Quality Gates Proposal
 type: proposal
 parent: infrastructure-analysis.md
+status: implemented
+implemented_date: 2026-01-13
 ---
 
 # Pre-commit Quality Gates Proposal
+
+> **Status: IMPLEMENTED** (2026-01-13)
+>
+> This proposal has been fully implemented. The pre-commit configuration is now
+> the single source of truth for all quality checks. See `.pre-commit-config.yaml`.
 
 ## Table of Contents
 

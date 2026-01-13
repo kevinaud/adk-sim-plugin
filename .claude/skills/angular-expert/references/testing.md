@@ -225,7 +225,7 @@ afterAll(() => server.close());
 it('should display user data', async () => {
   // Override for specific test
   server.use(
-    getUserMockHandler((req, res, ctx) => 
+    getUserMockHandler((req, res, ctx) =>
       res(ctx.json({ id: '123', name: 'Test User' }))
     )
   );
@@ -300,7 +300,7 @@ export class UserProfileHarness extends ComponentHarness {
     const button = await this.getSubmitButton();
     return button.isDisabled();
   }
-  
+
   async getErrors(): Promise<string[]> {
     const errors = await this.getErrorMessages();
     return Promise.all(errors.map(e => e.text()));
@@ -319,7 +319,7 @@ let harness: UserProfileHarness;
 beforeEach(async () => {
   fixture = TestBed.createComponent(UserProfileComponent);
   await fixture.whenStable();
-  
+
   const loader = TestbedHarnessEnvironment.loader(fixture);
   harness = await loader.getHarness(UserProfileHarness);
 });

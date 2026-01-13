@@ -103,7 +103,7 @@ For each file in the PR:
    ```bash
    # For Angular/frontend
    cd frontend && npm test -- --include=<test-file-pattern>
-   
+
    # Or run all tests
    cd frontend && npm test
    ```
@@ -145,7 +145,7 @@ Before returning control, verify each acceptance criterion AND update the sprint
    - Locate this PR's Acceptance Criteria section
    - Change `- [ ]` to `- [x]` for each verified criterion
    - For blocked criteria, add a note: `- [ ] <criterion> ⚠️ BLOCKED: <reason>`
-   
+
    **Example transformation**:
    ```markdown
    # Before:
@@ -153,7 +153,7 @@ Before returning control, verify each acceptance criterion AND update the sprint
    - [ ] Package builds with `npm run build`
    - [ ] Exports placeholder functions
    - [ ] Presubmit passes
-   
+
    # After:
    **Acceptance Criteria**:
    - [x] Package builds with `npm run build`
@@ -166,28 +166,28 @@ Before returning control, verify each acceptance criterion AND update the sprint
    - Or mark as blocked with reason (do NOT check it off)
 
 6. **Check for TDD Task Completion** (only if present in PR plan):
-   
+
    Some PRs include a `Completes TDD Task` field. **Not all PRs have this** — many are intermediate steps. Only check this if the field exists.
-   
+
    If `Completes TDD Task: <task name> (Phase <N>)` is present:
    - Open `mddocs/frontend/frontend-tdd.md`
    - Find the Implementation Phases section for Phase N
    - Locate the row with the matching task name
    - Change `| [ ] |` to `| [x] |` in the "Done" column
-   
+
    **Example transformation**:
    ```markdown
    # Before (in frontend-tdd.md):
    | Done | Task | FR | Deliverable |
    |:----:|------|-----|-------------|
    | [ ] | `SessionStateService` | FR-023 | Global state signals |
-   
+
    # After:
    | Done | Task | FR | Deliverable |
    |:----:|------|-----|-------------|
    | [x] | `SessionStateService` | FR-023 | Global state signals |
    ```
-   
+
    **Important**: Only update the TDD if ALL acceptance criteria for this PR passed. If any criteria are blocked, do NOT check off the TDD task.
 
 ---

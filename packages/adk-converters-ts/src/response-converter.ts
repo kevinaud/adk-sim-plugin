@@ -72,9 +72,13 @@ export function llmResponseToProto(response: LlmResponse): LlmResponseConversion
   // Convert finish reason
   if (response.finishReason) {
     const normalized = response.finishReason.toUpperCase();
-    candidate.finishReason = FINISH_REASON_MAP[normalized] ?? Candidate_FinishReason.FINISH_REASON_UNSPECIFIED;
-    if (candidate.finishReason === Candidate_FinishReason.FINISH_REASON_UNSPECIFIED &&
-        normalized !== 'FINISH_REASON_UNSPECIFIED' && normalized !== 'UNSPECIFIED') {
+    candidate.finishReason =
+      FINISH_REASON_MAP[normalized] ?? Candidate_FinishReason.FINISH_REASON_UNSPECIFIED;
+    if (
+      candidate.finishReason === Candidate_FinishReason.FINISH_REASON_UNSPECIFIED &&
+      normalized !== 'FINISH_REASON_UNSPECIFIED' &&
+      normalized !== 'UNSPECIFIED'
+    ) {
       warnings.push(`Unknown finishReason: ${response.finishReason}`);
     }
   }

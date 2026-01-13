@@ -39,8 +39,16 @@ export {
 } from './safety-converter.js';
 
 // High-level converters
-export { protoToLlmRequest, type LlmRequest, type LlmRequestConversionResult } from './request-converter.js';
-export { llmResponseToProto, type LlmResponse, type LlmResponseConversionResult } from './response-converter.js';
+export {
+  protoToLlmRequest,
+  type LlmRequest,
+  type LlmRequestConversionResult,
+} from './request-converter.js';
+export {
+  llmResponseToProto,
+  type LlmResponse,
+  type LlmResponseConversionResult,
+} from './response-converter.js';
 
 // Re-export @google/genai types for convenience
 export type {

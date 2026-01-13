@@ -10,7 +10,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { GenerationConfig as ProtoGenerationConfig, Schema as ProtoSchema } from '@adk-sim/protos';
+import type {
+  GenerationConfig as ProtoGenerationConfig,
+  Schema as ProtoSchema,
+} from '@adk-sim/protos';
 import { Type as ProtoType } from '@adk-sim/protos';
 import type { GenerateContentConfig, Schema } from '@google/genai';
 import {
@@ -27,7 +30,7 @@ import {
  * Create a proto GenerationConfig for testing with common defaults.
  */
 function createProtoGenerationConfig(
-  overrides: Partial<ProtoGenerationConfig> = {}
+  overrides: Partial<ProtoGenerationConfig> = {},
 ): ProtoGenerationConfig {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.GenerationConfig',
@@ -41,10 +44,7 @@ function createProtoGenerationConfig(
 /**
  * Create a proto Schema for testing.
  */
-function createProtoSchema(
-  type: ProtoType,
-  options: Partial<ProtoSchema> = {}
-): ProtoSchema {
+function createProtoSchema(type: ProtoType, options: Partial<ProtoSchema> = {}): ProtoSchema {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Schema',
     type,

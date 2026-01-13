@@ -9,8 +9,8 @@ related:
 
 # ADK TypeScript LlmRequest/LlmResponse Research
 
-**Source**: `adk-js` repository (`/workspaces/adk-repos/adk-js`)  
-**Date**: January 11, 2026  
+**Source**: `adk-js` repository (`/workspaces/adk-repos/adk-js`)
+**Date**: January 11, 2026
 **Purpose**: Understand the TypeScript ADK data model for `LlmRequest`/`LlmResponse` to inform the `adk-converters-ts` package design.
 
 ## Related Documents

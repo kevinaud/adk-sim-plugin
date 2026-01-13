@@ -9,8 +9,8 @@ related:
 
 # Angular Architecture Best Practices Analysis
 
-**Source**: `docs/developers/angular/angular-architecture-practices.md`  
-**Date**: January 11, 2026  
+**Source**: `docs/developers/angular/angular-architecture-practices.md`
+**Date**: January 11, 2026
 **Purpose**: Apply enterprise Angular architectural heuristics to the ADK Simulator Web UI design.
 
 ## Related Documents
@@ -161,7 +161,7 @@ The prototype's `DecisionPanelComponent` injects both services:
 export class DecisionPanelComponent {
   private readonly approvalService = inject(ApprovalService);
   readonly sessionState = inject(SessionStateService);
-  
+
   async submitDecision(approved: boolean): Promise<void> {
     // Component orchestrates state + RPC
     const response = await this.approvalService.submitDecision(...);
@@ -178,16 +178,16 @@ export class DecisionPanelComponent {
 export class SessionFacade {
   private readonly state = inject(SessionStateService);
   private readonly gateway = inject(SessionGateway); // Abstract port
-  
+
   // Expose signals for reading
   readonly pendingProposal = this.state.pendingProposal;
   readonly connectionStatus = this.state.connectionStatus;
-  
+
   // Encapsulate write operations
   async submitDecision(approved: boolean): Promise<void> {
     const pending = this.state.pendingProposal();
     if (!pending) return;
-    
+
     const response = await this.gateway.submitDecision(
       this.state.sessionId()!,
       pending.proposalId,
@@ -200,7 +200,7 @@ export class SessionFacade {
 // Component becomes "humble"
 export class DecisionPanelComponent {
   readonly facade = inject(SessionFacade);
-  
+
   onApprove(): void {
     this.facade.submitDecision(true);
   }
@@ -263,8 +263,8 @@ export const SimulationStore = signalStore(
       if (store.currentRequest() === null) {
         patchState(store, { currentRequest: request });
       } else {
-        patchState(store, { 
-          requestQueue: [...store.requestQueue(), request] 
+        patchState(store, {
+          requestQueue: [...store.requestQueue(), request]
         });
       }
     },
@@ -274,9 +274,9 @@ export const SimulationStore = signalStore(
     },
     advanceQueue(): void {
       const [next, ...rest] = store.requestQueue();
-      patchState(store, { 
-        currentRequest: next ?? null, 
-        requestQueue: rest 
+      patchState(store, {
+        currentRequest: next ?? null,
+        requestQueue: rest
       });
     },
   }))
@@ -324,7 +324,7 @@ export class DataTreeComponent {
   readonly data = input.required<unknown>();
   readonly expanded = input(true); // FR-009: expanded by default
   readonly showThreadLines = input(true); // FR-010
-  
+
   // Computed for rendering
   readonly entries = computed(() => this.flattenForRender(this.data()));
 }
@@ -358,15 +358,15 @@ Per architecture guide:
 // util/json-detection/json-detection.service.spec.ts
 describe('JsonDetectionService', () => {
   const service = new JsonDetectionService();
-  
+
   it('detects valid JSON strings', () => {
     expect(service.isJson('{"key": "value"}')).toBe(true);
   });
-  
+
   it('returns false for invalid JSON', () => {
     expect(service.isJson('not json')).toBe(false);
   });
-  
+
   it('returns false for JSON-like but invalid strings', () => {
     expect(service.isJson('{key: value}')).toBe(false); // Per clarification
   });

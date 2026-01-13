@@ -134,7 +134,7 @@ Create the sprint plan document at `mddocs/frontend/sprints/sprint[N].md` using 
 **Key sections to fill**:
 1. **Sprint Goal**: Clear statement of outcomes
 2. **Selected Scope**: Tasks from TDD with FR numbers
-3. **Research Summary**: 
+3. **Research Summary**:
    - Relevant findings with source links
    - Key decisions already made
    - Open questions needing resolution
@@ -180,7 +180,7 @@ Output a summary:
 ```markdown
 ### S1PR2: Create SessionStateService with connection status signals
 
-**Estimated Lines**: ~80 lines  
+**Estimated Lines**: ~80 lines
 **Depends On**: S1PR1
 
 **Goal**: Implement the global state service that tracks session and connection state using signals.
@@ -209,7 +209,7 @@ Output a summary:
 ```markdown
 ### S1PR1: Define session types and interfaces
 
-**Estimated Lines**: ~50 lines  
+**Estimated Lines**: ~50 lines
 **Depends On**: -
 
 **Goal**: Create TypeScript interfaces for session state used throughout the app.

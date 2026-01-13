@@ -12,9 +12,16 @@ import { copyDefinedFields, createProto } from './utils.js';
 
 /** Numeric generation fields that map directly between proto and genai. */
 const NUMERIC_FIELDS = [
-  'temperature', 'topP', 'topK', 'maxOutputTokens', 'seed',
-  'presencePenalty', 'frequencyPenalty', 'candidateCount',
-  'responseLogprobs', 'logprobs',
+  'temperature',
+  'topP',
+  'topK',
+  'maxOutputTokens',
+  'seed',
+  'presencePenalty',
+  'frequencyPenalty',
+  'candidateCount',
+  'responseLogprobs',
+  'logprobs',
 ] as const;
 
 /**
@@ -22,7 +29,7 @@ const NUMERIC_FIELDS = [
  */
 export function protoGenerationConfigToGenaiConfig(
   protoConfig: ProtoGenerationConfig | undefined,
-  target: GenerateContentConfig = {}
+  target: GenerateContentConfig = {},
 ): GenerateContentConfig {
   if (!protoConfig) return target;
 
@@ -51,11 +58,11 @@ export function protoGenerationConfigToGenaiConfig(
  * Convert SDK GenerateContentConfig fields to proto GenerationConfig.
  */
 export function genaiConfigToProtoGenerationConfig(
-  genaiConfig: GenerateContentConfig | undefined
+  genaiConfig: GenerateContentConfig | undefined,
 ): ProtoGenerationConfig {
   const result = createProto<ProtoGenerationConfig>(
     'google.ai.generativelanguage.v1beta.GenerationConfig',
-    { stopSequences: [], responseMimeType: '', responseModalities: [] }
+    { stopSequences: [], responseMimeType: '', responseModalities: [] },
   );
 
   if (!genaiConfig) return result;

@@ -37,4 +37,3 @@ def manager(
   event_repo: FakeEventRepository,
 ) -> SessionManager:
   return SessionManager(session_repo, event_repo)
-

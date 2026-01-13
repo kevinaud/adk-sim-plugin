@@ -40,7 +40,7 @@ import {
  */
 function createProtoSafetySetting(
   category: ProtoHarmCategory,
-  threshold: ProtoHarmBlockThreshold
+  threshold: ProtoHarmBlockThreshold,
 ): ProtoSafetySetting {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.SafetySetting',
@@ -54,7 +54,7 @@ function createProtoSafetySetting(
  */
 function createGenaiSafetySetting(
   category: GenaiHarmCategory,
-  threshold: GenaiHarmBlockThreshold
+  threshold: GenaiHarmBlockThreshold,
 ): SafetySetting {
   return {
     category,
@@ -122,7 +122,7 @@ describe('Safety Conversion', () => {
   describe('protoHarmBlockThresholdToGenai', () => {
     it('should convert HARM_BLOCK_THRESHOLD_UNSPECIFIED', () => {
       const result = protoHarmBlockThresholdToGenai(
-        ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED
+        ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED,
       );
       expect(result).toBe(GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED);
     });
@@ -207,7 +207,7 @@ describe('Safety Conversion', () => {
   describe('genaiHarmBlockThresholdToProto', () => {
     it('should convert HARM_BLOCK_THRESHOLD_UNSPECIFIED', () => {
       const result = genaiHarmBlockThresholdToProto(
-        GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED
+        GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED,
       );
       expect(result).toBe(ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED);
     });
@@ -251,7 +251,7 @@ describe('Safety Conversion', () => {
     it('should convert full SafetySetting with HARASSMENT and BLOCK_MEDIUM_AND_ABOVE', () => {
       const protoSafety = createProtoSafetySetting(
         ProtoHarmCategory.HARASSMENT,
-        ProtoHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        ProtoHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
       );
 
       const result = protoSafetyToGenaiSafety(protoSafety);
@@ -263,7 +263,7 @@ describe('Safety Conversion', () => {
     it('should convert SafetySetting with DANGEROUS_CONTENT and BLOCK_NONE', () => {
       const protoSafety = createProtoSafetySetting(
         ProtoHarmCategory.DANGEROUS_CONTENT,
-        ProtoHarmBlockThreshold.BLOCK_NONE
+        ProtoHarmBlockThreshold.BLOCK_NONE,
       );
 
       const result = protoSafetyToGenaiSafety(protoSafety);
@@ -275,7 +275,7 @@ describe('Safety Conversion', () => {
     it('should convert SafetySetting with SEXUALLY_EXPLICIT and OFF', () => {
       const protoSafety = createProtoSafetySetting(
         ProtoHarmCategory.SEXUALLY_EXPLICIT,
-        ProtoHarmBlockThreshold.OFF
+        ProtoHarmBlockThreshold.OFF,
       );
 
       const result = protoSafetyToGenaiSafety(protoSafety);
@@ -289,7 +289,7 @@ describe('Safety Conversion', () => {
     it('should convert full SafetySetting with HARASSMENT and BLOCK_MEDIUM_AND_ABOVE', () => {
       const genaiSafety = createGenaiSafetySetting(
         GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
-        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
       );
 
       const result = genaiSafetyToProtoSafety(genaiSafety);
@@ -301,7 +301,7 @@ describe('Safety Conversion', () => {
     it('should convert SafetySetting with HATE_SPEECH and BLOCK_LOW_AND_ABOVE', () => {
       const genaiSafety = createGenaiSafetySetting(
         GenaiHarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        GenaiHarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+        GenaiHarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
       );
 
       const result = genaiSafetyToProtoSafety(genaiSafety);
@@ -313,7 +313,7 @@ describe('Safety Conversion', () => {
     it('should include $typeName in result', () => {
       const genaiSafety = createGenaiSafetySetting(
         GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
-        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
       );
 
       const result = genaiSafetyToProtoSafety(genaiSafety);
@@ -330,7 +330,7 @@ describe('Safety Conversion', () => {
     it('should preserve HARASSMENT category through round-trip', () => {
       const original = createGenaiSafetySetting(
         GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
-        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
       );
 
       const toProto = genaiSafetyToProtoSafety(original);
@@ -352,7 +352,7 @@ describe('Safety Conversion', () => {
       for (const category of categories) {
         const original = createGenaiSafetySetting(
           category,
-          GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+          GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         );
 
         const toProto = genaiSafetyToProtoSafety(original);
@@ -375,7 +375,7 @@ describe('Safety Conversion', () => {
       for (const threshold of thresholds) {
         const original = createGenaiSafetySetting(
           GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold
+          threshold,
         );
 
         const toProto = genaiSafetyToProtoSafety(original);

@@ -68,8 +68,8 @@ Angular 21 represents a significant departure from earlier versions of the frame
 
 This transition impacts three critical areas relevant to the reported issue:
 
-1. **Output Streaming:** Vite and Esbuild have different stdout buffering and formatting characteristics compared to Webpack. They are optimized for speed and may batch output differently, interacting poorly with log-scraping regexes or pipe configurations designed for Webpack.10  
-2. **Port Binding:** The underlying Vite server has stricter default binding behaviors. While Webpack Development Server was often permissive, binding to all interfaces or handling dual-stack binding automatically, Vite servers often bind strictly to the resolved localhost address. If the container resolves localhost to 127.0.0.1 internally but Node resolves it to ::1, the server binds to one while the client polls the other.11  
+1. **Output Streaming:** Vite and Esbuild have different stdout buffering and formatting characteristics compared to Webpack. They are optimized for speed and may batch output differently, interacting poorly with log-scraping regexes or pipe configurations designed for Webpack.10
+2. **Port Binding:** The underlying Vite server has stricter default binding behaviors. While Webpack Development Server was often permissive, binding to all interfaces or handling dual-stack binding automatically, Vite servers often bind strictly to the resolved localhost address. If the container resolves localhost to 127.0.0.1 internally but Node resolves it to ::1, the server binds to one while the client polls the other.11
 3. **Initialization Sequence:** The startup sequence of the application builder is faster, changing the race condition window between process creation and port availability. This can expose race conditions in test runners that were previously masked by the slow startup of Webpack.12
 
 ### **2.4 Playwright 1.52.0 Orchestration**
@@ -103,16 +103,16 @@ This points to a block at the npm or CLI bootstrap level. If the npm run start c
 
 The user reports that command 2 (CI mode) hangs "indefinitely," while command 3 (with timeout) exits with code 124\. This distinction is vital.
 
-* **Indefinite Hang:** Indicates the process is in an interruptible sleep state (waiting for an event, such as I/O). It is not consuming CPU cycles (which would indicate an infinite loop) nor is it crashed (which would exit). It is waiting.  
+* **Indefinite Hang:** Indicates the process is in an interruptible sleep state (waiting for an event, such as I/O). It is not consuming CPU cycles (which would indicate an infinite loop) nor is it crashed (which would exit). It is waiting.
 * **Timeout Effectiveness:** The fact that the timeout utility can kill the process confirms that the parent process is responsive to signals. The deadlock is internal to the logic flow, not a kernel-level freeze.
 
 This behavior perfectly aligns with a process waiting on a file descriptor—specifically stdin (File Descriptor 0).8
 
 ### **3.3 The Failure of Timeouts: Signal Propagation in NPM Scripts**
 
-The user noted that timeout kills the process, but Playwright's internal timeout: 60000 configuration seems ineffective or silent. This is likely due to the signal propagation behavior of npm.  
-When Playwright attempts to time out the webServer, it sends a SIGTERM signal to the process it spawned. In this case, it spawned npm.  
-npm scripts on Linux often forward signals to their child processes, but this behavior can be inconsistent depending on the shell implementation (sh vs bash) and the version of npm. If npm receives the SIGTERM but fails to forward it to the ng serve grandchild process, or if ng serve traps the signal to perform cleanup but gets stuck in that cleanup (e.g., waiting for a build to finish cancelling), the process tree remains alive.14  
+The user noted that timeout kills the process, but Playwright's internal timeout: 60000 configuration seems ineffective or silent. This is likely due to the signal propagation behavior of npm.
+When Playwright attempts to time out the webServer, it sends a SIGTERM signal to the process it spawned. In this case, it spawned npm.
+npm scripts on Linux often forward signals to their child processes, but this behavior can be inconsistent depending on the shell implementation (sh vs bash) and the version of npm. If npm receives the SIGTERM but fails to forward it to the ng serve grandchild process, or if ng serve traps the signal to perform cleanup but gets stuck in that cleanup (e.g., waiting for a build to finish cancelling), the process tree remains alive.14
 Furthermore, if the Playwright runner itself is blocked waiting for the webServer promise to resolve, and that promise logic does not have a secondary internal timer that effectively force-kills the process, the runner will appear to hang indefinitely.
 
 ---
@@ -125,9 +125,9 @@ Based on the synthesis of "First Run in Container" and "Indefinite Hang," the pr
 
 The Angular CLI includes a telemetry feature that collects anonymous usage data. To comply with privacy regulations (like GDPR), this feature requires explicit user consent. When the CLI runs, it checks for a global configuration file (usually located at \~/.angular-config.json).
 
-* **The Check:** If the configuration file is present and contains an analytics key, the CLI respects that setting (true or false).  
-* **The Trigger:** If the file is missing (as is the case in a fresh Docker container or a volatile CI runner), the CLI initiates a "First Run" sequence.  
-* **The Prompt:** The CLI prints the following message to stdout:*Would you like to share anonymous usage data with the Angular Team at Google under Google’s Privacy Policy? (y/N)*  
+* **The Check:** If the configuration file is present and contains an analytics key, the CLI respects that setting (true or false).
+* **The Trigger:** If the file is missing (as is the case in a fresh Docker container or a volatile CI runner), the CLI initiates a "First Run" sequence.
+* **The Prompt:** The CLI prints the following message to stdout:*Would you like to share anonymous usage data with the Angular Team at Google under Google’s Privacy Policy? (y/N)*
 * **The Block:** After printing, the CLI creates a synchronous read operation on stdin. It halts all further execution—compilation does not start, the server does not bind ports—until it receives a character followed by a newline.16
 
 ### **4.2 TTY Detection in Virtualized Environments**
@@ -136,14 +136,14 @@ One might argue, "But CI=true is set, so Angular should skip the prompt." While 
 
 Angular (and many CLI tools) uses heuristics to detect if it is running in an interactive terminal (TTY) or a background script. Common checks include examining the CI environment variable or checking if stdout is a TTY via process.stdout.isTTY.
 
-* **Dev Container Specifics:** VS Code Dev Containers are designed to be interactive environments. They often inject a pty (pseudo-terminal) to allow the user to run commands like git or ssh interactively.  
+* **Dev Container Specifics:** VS Code Dev Containers are designed to be interactive environments. They often inject a pty (pseudo-terminal) to allow the user to run commands like git or ssh interactively.
 * **The Failure:** Because of this pty injection, process.stdout.isTTY often returns true inside the container, even when the command is run via an automated script like npx playwright test. If the Angular CLI prioritizes TTY detection over the CI environment variable (a known regression pattern in various versions), or if the CI variable is not propagated correctly through the npm workspace chain, the CLI assumes a human is present.5
 
 ### **4.3 The "CI" Environment Variable Paradox**
 
-The user sets CI=true in the command: CI=true npx playwright test.  
-Playwright sees this and adjusts its config (retries, workers). It then spawns npm run start.  
-Does npm pass CI=true to ng serve? Generally, yes. However, if ng serve is running in a workspace context, or if there is any dotenv logic in the build chain that overwrites environment variables, the CI flag might be lost or obscured.  
+The user sets CI=true in the command: CI=true npx playwright test.
+Playwright sees this and adjusts its config (retries, workers). It then spawns npm run start.
+Does npm pass CI=true to ng serve? Generally, yes. However, if ng serve is running in a workspace context, or if there is any dotenv logic in the build chain that overwrites environment variables, the CI flag might be lost or obscured.
 More critically, snippet 6 highlights that in certain Angular CLI versions, the analytics prompt logic had bugs where it would hang infinitely in CI environments if not explicitly disabled via the global configuration or the specific NG\_CLI\_ANALYTICS environment variable.
 
 The convergence of "Fresh Container" (missing config) \+ "Dev Container" (TTY present) \+ "Silent Output" creates the perfect conditions for this hang. The prompt is waiting in the dark.
@@ -158,16 +158,16 @@ If the analytics prompt is not the culprit (e.g., if the user previously accepte
 
 As detailed in Section 2.2, Node.js 20 uses verbatim: true for DNS lookups. When Playwright’s webServer logic attempts to verify that the server is ready, it likely performs an HTTP request or a socket connection to http://localhost:4200.
 
-1. **Resolution:** localhost is passed to the system resolver (getaddrinfo).  
-2. **Order:** Debian 13 returns ::1 (IPv6) first, followed by 127.0.0.1 (IPv4).  
+1. **Resolution:** localhost is passed to the system resolver (getaddrinfo).
+2. **Order:** Debian 13 returns ::1 (IPv6) first, followed by 127.0.0.1 (IPv4).
 3. **Attempt:** Node.js attempts to connect to \[::1\]:4200.
 
 ### **5.2 Angular/Vite Port Binding Behaviors**
 
 The Angular development server, powered by Vite, binds to a TCP port to listen for incoming requests. The default binding behavior is critical.
 
-* **Default:** localhost.  
-* **Vite Implementation:** Vite often resolves localhost at startup and binds to the returned address. However, in some container configurations (especially Docker-in-Docker), localhost might resolve differently inside the ng serve process (which might use a different libc or resolution strategy) compared to the Node process running Playwright.  
+* **Default:** localhost.
+* **Vite Implementation:** Vite often resolves localhost at startup and binds to the returned address. However, in some container configurations (especially Docker-in-Docker), localhost might resolve differently inside the ng serve process (which might use a different libc or resolution strategy) compared to the Node process running Playwright.
 * **IPv4-Only Binding:** It is common for dev servers to bind explicitly to 127.0.0.1 for security or legacy reasons, or if the container's IPv6 networking is not fully active. If the server is listening *only* on 127.0.0.1:4200, but Playwright is knocking on \[::1\]:4200, the kernel returns RST (Connection Refused).7
 
 ### **5.3 The localhost Ambiguity in Playwright**
@@ -176,9 +176,9 @@ Playwright's webServer configuration relies on the url property to determine rea
 
 TypeScript
 
-webServer: {  
-  url: 'http://localhost:4200',  
-  //...  
+webServer: {
+  url: 'http://localhost:4200',
+  //...
 }
 
 Playwright interprets a "Connection Refused" error not as a hard failure, but as a "Server is starting" state. It catches the error and schedules a retry. This loop continues until the timeout expires.
@@ -195,28 +195,28 @@ The third contributing factor involves the complexity of process lifecycle manag
 
 ### **6.1 Signal Trapping in Nested Shells**
 
-The command chain is: Playwright (Parent) \-\> sh \-c npm run start \-\> node npm \-\> sh \-c ng serve \-\> node ng.  
+The command chain is: Playwright (Parent) \-\> sh \-c npm run start \-\> node npm \-\> sh \-c ng serve \-\> node ng.
 When Playwright decides to stop the server (e.g., after a test run or upon timeout), it sends SIGTERM to the process group leader (npm).
 
-* **The Failure:** npm may terminate, but if it fails to propagate the signal to ng serve, the Angular server continues running in the background as an orphaned "zombie" process.  
+* **The Failure:** npm may terminate, but if it fails to propagate the signal to ng serve, the Angular server continues running in the background as an orphaned "zombie" process.
 * **The Consequence:** The Docker container keeps running. The zombie process holds TCP Port 4200 open.18
 
 ### **6.2 Port Conflict Resolution and Silent Failures**
 
 On the *subsequent* test run:
 
-1. Playwright starts npm run start.  
-2. New ng serve process starts.  
-3. It attempts to bind Port 4200\.  
-4. **Error:** The port is held by the zombie from the previous run.  
-5. ng serve prints "Port 4200 is already in use" and exits (or prompts "Use a different port?").  
-6. **The Deadlock:**  
-   * If it prompts: We are back to **Hypothesis Alpha** (blocking on stdin).  
+1. Playwright starts npm run start.
+2. New ng serve process starts.
+3. It attempts to bind Port 4200\.
+4. **Error:** The port is held by the zombie from the previous run.
+5. ng serve prints "Port 4200 is already in use" and exits (or prompts "Use a different port?").
+6. **The Deadlock:**
+   * If it prompts: We are back to **Hypothesis Alpha** (blocking on stdin).
    * If it exits: Playwright sees the process exit. Depending on its retry logic, it might error out immediately. However, if the zombie process is technically answering HTTP requests (serving the old version of the app), Playwright's *readiness check* might actually succeed, but the tests might hang later due to state mismatches. Or, more likely, Playwright waits for the *new* PID to become ready, which never happens because it exited.
 
 ### **6.3 Docker Lifecycle Management in Monorepos**
 
-The user's setup involves global-setup.ts launching Docker Compose. While CI=true skips this, the local development flow relies on it. If docker-compose.e2e.yaml is missing (as noted in the problem description), local runs fail. But in CI, where CI=true, this file is skipped.  
+The user's setup involves global-setup.ts launching Docker Compose. While CI=true skips this, the local development flow relies on it. If docker-compose.e2e.yaml is missing (as noted in the problem description), local runs fail. But in CI, where CI=true, this file is skipped.
 The risk is that the "Dev Container" environment itself might have pre-existing services running on port 4200 if the user is reusing the same container instance for multiple runs.
 
 ---
@@ -229,11 +229,11 @@ The inability to see *why* the process is hanging is a distinct failure of the c
 
 In Linux, standard I/O streams (stdout, stderr) have three buffering modes:
 
-1. **Unbuffered:** Data appears immediately (typical for stderr).  
-2. **Line Buffered:** Data appears when a newline \\n is written (typical for stdout to a terminal).  
+1. **Unbuffered:** Data appears immediately (typical for stderr).
+2. **Line Buffered:** Data appears when a newline \\n is written (typical for stdout to a terminal).
 3. **Block Buffered:** Data appears only when the buffer (e.g., 4KB) is full (typical for stdout to a pipe/file).
 
-When Playwright runs the webServer, it connects via a pipe. This forces stdout into Block Buffered mode. If ng serve writes "Compiling..." (12 bytes), it sits in the buffer. The user sees nothing.  
+When Playwright runs the webServer, it connects via a pipe. This forces stdout into Block Buffered mode. If ng serve writes "Compiling..." (12 bytes), it sits in the buffer. The user sees nothing.
 Playwright's stdout: 'pipe' option connects the child's pipe to the parent's stdout, effectively passing the data through. However, if ignore is used (default), the pipe is drained into /dev/null.3
 
 ### **7.2 Playwright's Stream Handling**
@@ -242,12 +242,12 @@ The user's playwright.config.ts does *not* explicitly define stdout or stderr be
 
 TypeScript
 
-webServer: {  
-  command: 'npm run start',  
-  //... stdout/stderr defaults apply  
+webServer: {
+  command: 'npm run start',
+  //... stdout/stderr defaults apply
 }
 
-The default behavior in Playwright has varied across versions, but in many contexts, it defaults to ignore or only shows output on failure after the timeout. Since the process hangs before the timeout logic triggers cleanly (or is killed by external timeout), the output is lost.  
+The default behavior in Playwright has varied across versions, but in many contexts, it defaults to ignore or only shows output on failure after the timeout. Since the process hangs before the timeout logic triggers cleanly (or is killed by external timeout), the output is lost.
 By explicitly setting stdout: 'pipe' and stderr: 'pipe', we force the output to be relayed to the parent process immediately (or at least visibly), bypassing the "silent" aspect of the failure.
 
 ---
@@ -264,13 +264,13 @@ The immediate priority is to illuminate the dark process. We must modify playwri
 
 TypeScript
 
-webServer: {  
-  command: 'npm run start',  
-  url: 'http://localhost:4200', // Will be refined in Step 3  
-  reuseExistingServer:\!process.env\['CI'\],  
-  stdout: 'pipe', // \<-- CRITICAL: Pipe output to console  
-  stderr: 'pipe', // \<-- CRITICAL: Pipe errors to console  
-  timeout: 120000,  
+webServer: {
+  command: 'npm run start',
+  url: 'http://localhost:4200', // Will be refined in Step 3
+  reuseExistingServer:\!process.env\['CI'\],
+  stdout: 'pipe', // \<-- CRITICAL: Pipe output to console
+  stderr: 'pipe', // \<-- CRITICAL: Pipe errors to console
+  timeout: 120000,
 },
 
 ### **8.2 Step 2: Disable Angular Analytics (The Silent Killer)**
@@ -279,19 +279,19 @@ We must deterministically disable the interactive analytics prompt. While CI=tru
 
 **Action:** Apply the NG\_CLI\_ANALYTICS environment variable.
 
-* Option A: Global Export (Recommended for Dev Container)  
-  Add to .devcontainer/devcontainer.json:  
-  JSON  
-  "containerEnv": {  
-    "NG\_CLI\_ANALYTICS": "false"  
+* Option A: Global Export (Recommended for Dev Container)
+  Add to .devcontainer/devcontainer.json:
+  JSON
+  "containerEnv": {
+    "NG\_CLI\_ANALYTICS": "false"
   }
 
-* Option B: Command Injection  
-  Update package.json scripts:  
-  JSON  
-  "scripts": {  
-    "start": "NG\_CLI\_ANALYTICS=false ng serve",  
-    //...  
+* Option B: Command Injection
+  Update package.json scripts:
+  JSON
+  "scripts": {
+    "start": "NG\_CLI\_ANALYTICS=false ng serve",
+    //...
   }
 
 ### **8.3 Step 3: Enforce IPv4 Binding (The Network Fix)**
@@ -302,24 +302,24 @@ To resolve the Node 20 IPv6 vs. Angular IPv4 conflict, we must force both sides 
 
 JSON
 
-"scripts": {  
-  "start": "ng serve \--host 127.0.0.1 \--port 4200 \--disable-host-check"  
+"scripts": {
+  "start": "ng serve \--host 127.0.0.1 \--port 4200 \--disable-host-check"
 }
 
 **Action:** Update playwright.config.ts to poll the specific IPv4 address.
 
 TypeScript
 
-webServer: {  
-  command: 'npm run start',  
-  url: 'http://127.0.0.1:4200', // Explicit IPv4 matching server bind  
-  reuseExistingServer:\!process.env\['CI'\],  
-  stdout: 'pipe',  
-  stderr: 'pipe',  
-  timeout: 120000,  
-},  
-use: {  
-  baseURL: 'http://127.0.0.1:4200', // Match base URL  
+webServer: {
+  command: 'npm run start',
+  url: 'http://127.0.0.1:4200', // Explicit IPv4 matching server bind
+  reuseExistingServer:\!process.env\['CI'\],
+  stdout: 'pipe',
+  stderr: 'pipe',
+  timeout: 120000,
+},
+use: {
+  baseURL: 'http://127.0.0.1:4200', // Match base URL
 },
 
 ### **8.4 Step 4: Direct Binary Execution (Process Management)**
@@ -330,13 +330,13 @@ To mitigate "Zombie Processes" caused by npm swallowing signals, we should bypas
 
 TypeScript
 
-webServer: {  
-  // Use npx to locate the local binary directly, bypassing npm's shell  
-  command: 'npx ng serve \--host 127.0.0.1 \--port 4200 \--disable-host-check',  
-  url: 'http://127.0.0.1:4200',  
-  reuseExistingServer:\!process.env\['CI'\],  
-  stdout: 'pipe',  
-  stderr: 'pipe',  
+webServer: {
+  // Use npx to locate the local binary directly, bypassing npm's shell
+  command: 'npx ng serve \--host 127.0.0.1 \--port 4200 \--disable-host-check',
+  url: 'http://127.0.0.1:4200',
+  reuseExistingServer:\!process.env\['CI'\],
+  stdout: 'pipe',
+  stderr: 'pipe',
 },
 
 ### **8.5 Step 5: Port-Based Readiness Check (Reliability Fallback)**
@@ -347,11 +347,11 @@ If the HTTP readiness check (url) continues to be flaky due to server redirects 
 
 TypeScript
 
-webServer: {  
-  //...  
-  url: undefined, // Remove url  
-  port: 4200,     // Wait for TCP port 4200  
-  //...  
+webServer: {
+  //...
+  url: undefined, // Remove url
+  port: 4200,     // Wait for TCP port 4200
+  //...
 }
 
 ---
@@ -376,21 +376,21 @@ The following table contrasts the problematic configuration with the remediated 
 
 #### **Works cited**
 
-1. Angular CLI Analytics ID causes Docker build to hang · Issue \#25008 \- GitHub, accessed January 11, 2026, [https://github.com/angular/angular-cli/issues/25008](https://github.com/angular/angular-cli/issues/25008)  
-2. \[BUG\] ECONNREFUSED on GitHub Actions with Node 18 · Issue \#20784 · microsoft/playwright, accessed January 11, 2026, [https://github.com/microsoft/playwright/issues/20784](https://github.com/microsoft/playwright/issues/20784)  
-3. Web server \- Playwright, accessed January 11, 2026, [https://playwright.dev/docs/test-webserver](https://playwright.dev/docs/test-webserver)  
-4. Playwright won't run in VSCode Dev Container on mac \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/70500141/playwright-wont-run-in-vscode-dev-container-on-mac](https://stackoverflow.com/questions/70500141/playwright-wont-run-in-vscode-dev-container-on-mac)  
-5. Allowing different HOST headers to be used in ng serve · Issue \#6349 · angular/angular-cli, accessed January 11, 2026, [https://github.com/angular/angular-cli/issues/6349](https://github.com/angular/angular-cli/issues/6349)  
-6. The analytics prompt shouldn't run in CI environments · Issue \#14563 · angular/angular-cli, accessed January 11, 2026, [https://github.com/angular/angular-cli/issues/14563](https://github.com/angular/angular-cli/issues/14563)  
-7. IPv6 used for cypress backendUrl connection check · Issue \#27962 \- GitHub, accessed January 11, 2026, [https://github.com/cypress-io/cypress/issues/27962](https://github.com/cypress-io/cypress/issues/27962)  
-8. Playwright error connection refused in docker \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/69542361/playwright-error-connection-refused-in-docker](https://stackoverflow.com/questions/69542361/playwright-error-connection-refused-in-docker)  
-9. Migrating to new build system \- Angular, accessed January 11, 2026, [https://angular.dev/tools/cli/build-system-migration](https://angular.dev/tools/cli/build-system-migration)  
-10. 20 Ways to Make Your Angular Apps Run Faster | Part 4: Build and Diagnostics \- Medium, accessed January 11, 2026, [https://medium.com/ngconf/20-ways-to-make-your-angular-apps-run-faster-part-4-build-and-diagnostics-58bab2712202](https://medium.com/ngconf/20-ways-to-make-your-angular-apps-run-faster-part-4-build-and-diagnostics-58bab2712202)  
-11. Same working Playwright tests fail when placed in a project in playwright.config.js \[closed\], accessed January 11, 2026, [https://stackoverflow.com/questions/79710990/same-working-playwright-tests-fail-when-placed-in-a-project-in-playwright-config](https://stackoverflow.com/questions/79710990/same-working-playwright-tests-fail-when-placed-in-a-project-in-playwright-config)  
-12. Angular 21 — What's New, What's Changed \- DEV Community, accessed January 11, 2026, [https://dev.to/mridudixit15/angular-21-whats-new-whats-changed-3fl3](https://dev.to/mridudixit15/angular-21-whats-new-whats-changed-3fl3)  
-13. Playwright Debug: A Complete Guide \- Autify, accessed January 11, 2026, [https://autify.com/blog/playwright-debug](https://autify.com/blog/playwright-debug)  
-14. Angular Masterclass Building Production-Ready \- Souvik Basu | PDF \- Scribd, accessed January 11, 2026, [https://www.scribd.com/document/895436263/OceanofPDF-com-Angular-Masterclass-Building-Production-ready-Souvik-Basu](https://www.scribd.com/document/895436263/OceanofPDF-com-Angular-Masterclass-Building-Production-ready-Souvik-Basu)  
-15. Stop angular cli asking for collecting analytics when I use ng build \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/56355499/stop-angular-cli-asking-for-collecting-analytics-when-i-use-ng-build](https://stackoverflow.com/questions/56355499/stop-angular-cli-asking-for-collecting-analytics-when-i-use-ng-build)  
-16. ng analytics \- Angular, accessed January 11, 2026, [https://v17.angular.io/cli/analytics](https://v17.angular.io/cli/analytics)  
-17. Playwright does not see the running webserver \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/78114461/playwright-does-not-see-the-running-webserver](https://stackoverflow.com/questions/78114461/playwright-does-not-see-the-running-webserver)  
+1. Angular CLI Analytics ID causes Docker build to hang · Issue \#25008 \- GitHub, accessed January 11, 2026, [https://github.com/angular/angular-cli/issues/25008](https://github.com/angular/angular-cli/issues/25008)
+2. \[BUG\] ECONNREFUSED on GitHub Actions with Node 18 · Issue \#20784 · microsoft/playwright, accessed January 11, 2026, [https://github.com/microsoft/playwright/issues/20784](https://github.com/microsoft/playwright/issues/20784)
+3. Web server \- Playwright, accessed January 11, 2026, [https://playwright.dev/docs/test-webserver](https://playwright.dev/docs/test-webserver)
+4. Playwright won't run in VSCode Dev Container on mac \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/70500141/playwright-wont-run-in-vscode-dev-container-on-mac](https://stackoverflow.com/questions/70500141/playwright-wont-run-in-vscode-dev-container-on-mac)
+5. Allowing different HOST headers to be used in ng serve · Issue \#6349 · angular/angular-cli, accessed January 11, 2026, [https://github.com/angular/angular-cli/issues/6349](https://github.com/angular/angular-cli/issues/6349)
+6. The analytics prompt shouldn't run in CI environments · Issue \#14563 · angular/angular-cli, accessed January 11, 2026, [https://github.com/angular/angular-cli/issues/14563](https://github.com/angular/angular-cli/issues/14563)
+7. IPv6 used for cypress backendUrl connection check · Issue \#27962 \- GitHub, accessed January 11, 2026, [https://github.com/cypress-io/cypress/issues/27962](https://github.com/cypress-io/cypress/issues/27962)
+8. Playwright error connection refused in docker \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/69542361/playwright-error-connection-refused-in-docker](https://stackoverflow.com/questions/69542361/playwright-error-connection-refused-in-docker)
+9. Migrating to new build system \- Angular, accessed January 11, 2026, [https://angular.dev/tools/cli/build-system-migration](https://angular.dev/tools/cli/build-system-migration)
+10. 20 Ways to Make Your Angular Apps Run Faster | Part 4: Build and Diagnostics \- Medium, accessed January 11, 2026, [https://medium.com/ngconf/20-ways-to-make-your-angular-apps-run-faster-part-4-build-and-diagnostics-58bab2712202](https://medium.com/ngconf/20-ways-to-make-your-angular-apps-run-faster-part-4-build-and-diagnostics-58bab2712202)
+11. Same working Playwright tests fail when placed in a project in playwright.config.js \[closed\], accessed January 11, 2026, [https://stackoverflow.com/questions/79710990/same-working-playwright-tests-fail-when-placed-in-a-project-in-playwright-config](https://stackoverflow.com/questions/79710990/same-working-playwright-tests-fail-when-placed-in-a-project-in-playwright-config)
+12. Angular 21 — What's New, What's Changed \- DEV Community, accessed January 11, 2026, [https://dev.to/mridudixit15/angular-21-whats-new-whats-changed-3fl3](https://dev.to/mridudixit15/angular-21-whats-new-whats-changed-3fl3)
+13. Playwright Debug: A Complete Guide \- Autify, accessed January 11, 2026, [https://autify.com/blog/playwright-debug](https://autify.com/blog/playwright-debug)
+14. Angular Masterclass Building Production-Ready \- Souvik Basu | PDF \- Scribd, accessed January 11, 2026, [https://www.scribd.com/document/895436263/OceanofPDF-com-Angular-Masterclass-Building-Production-ready-Souvik-Basu](https://www.scribd.com/document/895436263/OceanofPDF-com-Angular-Masterclass-Building-Production-ready-Souvik-Basu)
+15. Stop angular cli asking for collecting analytics when I use ng build \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/56355499/stop-angular-cli-asking-for-collecting-analytics-when-i-use-ng-build](https://stackoverflow.com/questions/56355499/stop-angular-cli-asking-for-collecting-analytics-when-i-use-ng-build)
+16. ng analytics \- Angular, accessed January 11, 2026, [https://v17.angular.io/cli/analytics](https://v17.angular.io/cli/analytics)
+17. Playwright does not see the running webserver \- Stack Overflow, accessed January 11, 2026, [https://stackoverflow.com/questions/78114461/playwright-does-not-see-the-running-webserver](https://stackoverflow.com/questions/78114461/playwright-does-not-see-the-running-webserver)
 18. Hunting Zombie Processes in Go and Docker \- Stormkit, accessed January 11, 2026, [https://www.stormkit.io/blog/hunting-zombie-processes-in-go-and-docker](https://www.stormkit.io/blog/hunting-zombie-processes-in-go-and-docker)

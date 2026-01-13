@@ -10,8 +10,8 @@ related:
 
 # Current Project Infrastructure Analysis
 
-**Source**: Project codebase exploration  
-**Date**: January 11, 2026  
+**Source**: Project codebase exploration
+**Date**: January 11, 2026
 **Purpose**: Document existing frontend infrastructure, server communication patterns, and deployment model.
 
 ## Related Documents
@@ -157,15 +157,15 @@ Both servers share the **same `SimulatorService` instance** in-memory, ensuring 
 async def grpc_web_handler(request: Request) -> Response:
     """Handle gRPC-Web requests by routing to SimulatorService methods."""
     method_name = path_parts[-1]  # e.g., "CreateSession"
-    
+
     # Decode gRPC-Web payload (base64 or binary)
     message_bytes = _decode_grpc_web_payload(body, is_text)
-    
+
     # Parse protobuf and call service method DIRECTLY (no loopback)
     request_message = request_class().parse(message_bytes)
     handler = getattr(service, handler_name)
     response_message = await handler(request_message)
-    
+
     # Encode response as gRPC-Web
     return Response(content=_encode_grpc_web_response(response_message, is_text))
 ```
@@ -200,13 +200,13 @@ STATIC_DIR = Path(__file__).parent / "static" / "browser"
 async def spa_handler(request: Request) -> Response:
     """Serve static files or fall back to index.html for SPA routing."""
     path = request.path_params.get("path", "")
-    
+
     # Try actual file (main.js, styles.css)
     if path:
         file_path = STATIC_DIR / path
         if file_path.exists():
             return FileResponse(file_path)
-    
+
     # Fallback to index.html (Angular routing)
     return FileResponse(STATIC_DIR / "index.html")
 ```
@@ -416,10 +416,10 @@ Unlike the prototype (which used Envoy), this project has a custom gateway. This
 The `@adk-sim/protos` package provides TypeScript types. Use them directly:
 
 ```typescript
-import { 
+import {
   SimulatorService,
   SubscribeRequestSchema,
-  SessionEvent 
+  SessionEvent
 } from '../generated/adksim/v1/simulator_service_pb';
 import { GenerateContentRequest } from '../generated/google/ai/.../generative_service_pb';
 ```

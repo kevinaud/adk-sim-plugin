@@ -64,7 +64,7 @@ Utility Libraries (Self-contained)
 
 **Trade-off**: More fine-grained libraries. Developers cannot "conveniently" import a service into a shared UI component.
 
-**Maintenance Nightmare Prevented**: 
+**Maintenance Nightmare Prevented**:
 - **Circular Dependencies** - structural cancer that causes bootstrap paradoxes
 - **Spaghetti Code** - where a generic `UserCard` accidentally triggers `AuthService.logout()`, making it impossible to reuse or test in isolation
 
@@ -145,9 +145,9 @@ export class UserListComponent {
     private http: HttpClient,
     private store: Store<AppState>
   ) {}
-  
+
   loadUsers() {
-    this.http.get('/api/users').subscribe(users => 
+    this.http.get('/api/users').subscribe(users =>
       this.store.dispatch(setUsers({ users }))
     );
   }
@@ -157,9 +157,9 @@ export class UserListComponent {
 @Component({...})
 export class UserListComponent {
   users = this.userFacade.users; // Signal
-  
+
   constructor(private userFacade: UserFacade) {}
-  
+
   loadUsers() {
     this.userFacade.loadUsers();
   }
@@ -191,11 +191,11 @@ export abstract class UserGateway {
 @Injectable()
 export class HttpUserGateway implements UserGateway {
   constructor(private http: HttpClient) {}
-  
+
   getAll(): Observable<User[]> {
     return this.http.get<User[]>('/api/users');
   }
-  
+
   getById(id: string): Observable<User> {
     return this.http.get<User>(`/api/users/${id}`);
   }
@@ -211,7 +211,7 @@ export const appConfig: ApplicationConfig = {
 
 **Trade-off**: High cognitive load for setup. Requires understanding DI tokens and abstract classes.
 
-**Maintenance Nightmare Prevented**: 
+**Maintenance Nightmare Prevented**:
 - **Vendor Lock-in**: Enables full domain testing without browser/network by swapping `HttpUserGateway` with `InMemoryUserGateway`
 - **Platform Migration**: Core logic remains invariant when moving to Electron, Capacitor, or other platforms
 
@@ -233,7 +233,7 @@ ServiceA → ServiceC ← ServiceB
 
 **Trade-off**: Requires vigilance and frequent refactoring. Forces redesign over "quick fix" imports.
 
-**Maintenance Nightmare Prevented**: 
+**Maintenance Nightmare Prevented**:
 - **Bootstrap Paradox**: Application fails at startup unpredictably based on module load order
 - **Bundle Bloat**: Circular deps prevent tree-shaking and code splitting, creating massive initial bundles
 

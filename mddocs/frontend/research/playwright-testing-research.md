@@ -134,12 +134,12 @@ import { resolve } from 'path';
 export default defineConfig({
   testDir: 'tests/component',
   snapshotDir: 'tests/component/__snapshots__',
-  
+
   // CI-specific settings
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
   reporter: process.env['CI'] ? [['html'], ['github']] : 'line',
-  
+
   // Screenshot settings
   expect: {
     toHaveScreenshot: {
@@ -149,7 +149,7 @@ export default defineConfig({
       animations: 'disabled',
     },
   },
-  
+
   use: {
     trace: 'on-first-retry',
     ctViteConfig: {
@@ -164,7 +164,7 @@ export default defineConfig({
       }
     }
   },
-  
+
   projects: [
     {
       name: 'chromium',
@@ -195,15 +195,15 @@ export type HooksConfig = {
 
 beforeMount<HooksConfig>(async ({ hooksConfig, TestBed }) => {
   const providers = [];
-  
+
   if (hooksConfig?.withHttp) {
     providers.push(provideHttpClient());
   }
-  
+
   if (hooksConfig?.withAnimations) {
     providers.push(provideAnimationsAsync());
   }
-  
+
   if (providers.length > 0) {
     TestBed.configureTestingModule({ providers });
   }
@@ -227,7 +227,7 @@ test.describe('DataTreeComponent', () => {
         expanded: true,
       },
     });
-    
+
     await expect(component).toContainText('name');
     await expect(component).toContainText('Alice');
   });
@@ -241,7 +241,7 @@ test.describe('DataTreeComponent', () => {
         showThreadLines: true,
       },
     });
-    
+
     // Visual regression test
     await expect(component).toHaveScreenshot('data-tree-nested.png');
   });
@@ -257,7 +257,7 @@ import { ToolCatalogComponent } from '@app/ui/control-panel/tool-catalog/tool-ca
 
 test('emits selectTool when tool is clicked', async ({ mount }) => {
   const selectedTools: string[] = [];
-  
+
   const component = await mount(ToolCatalogComponent, {
     props: {
       tools: [
@@ -269,7 +269,7 @@ test('emits selectTool when tool is clicked', async ({ mount }) => {
       selectTool: (tool) => selectedTools.push(tool.name),
     },
   });
-  
+
   await component.getByText('search').click();
   expect(selectedTools).toEqual(['search']);
 });
@@ -284,22 +284,22 @@ import { SmartBlobComponent } from '@app/ui/event-stream/smart-blob/smart-blob.c
 
 test.describe('SmartBlobComponent visual states', () => {
   const jsonContent = '{"key": "value", "nested": {"a": 1}}';
-  
+
   test('JSON mode', async ({ mount }) => {
     const component = await mount(SmartBlobComponent, {
       props: { content: jsonContent },
     });
-    
+
     // Click JSON toggle
     await component.getByRole('button', { name: '[JSON]' }).click();
     await expect(component).toHaveScreenshot('smart-blob-json-mode.png');
   });
-  
+
   test('RAW mode', async ({ mount }) => {
     const component = await mount(SmartBlobComponent, {
       props: { content: jsonContent },
     });
-    
+
     await component.getByRole('button', { name: '[RAW]' }).click();
     await expect(component).toHaveScreenshot('smart-blob-raw-mode.png');
   });
@@ -410,20 +410,20 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.52.0-noble
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install dependencies
         working-directory: frontend
         run: |
           npm ci
           npx playwright install --with-deps chromium
-      
+
       - name: Run component tests
         working-directory: frontend
         run: npx playwright test -c playwright-ct.config.ts
-      
+
       - name: Upload diff artifacts
         if: failure()
         uses: actions/upload-artifact@v4
@@ -433,7 +433,7 @@ jobs:
             frontend/test-results/
             frontend/playwright-report/
           retention-days: 7
-      
+
       - name: Check for uncommitted snapshot changes
         run: |
           if [[ -n $(git status --porcelain tests/component/__snapshots__ tests/e2e/__snapshots__) ]]; then
@@ -455,13 +455,13 @@ jobs:
             const fs = require('fs');
             const diffFiles = fs.readdirSync('frontend/test-results')
               .filter(f => f.endsWith('-diff.png'));
-            
+
             if (diffFiles.length > 0) {
               const body = `## 🎭 Visual Regression Detected
-              
+
               The following components have visual changes:
               ${diffFiles.map(f => `- \`${f}\``).join('\n')}
-              
+
               **To update screenshots:**
               \`\`\`bash
               cd frontend
@@ -469,9 +469,9 @@ jobs:
               git add tests/component/__snapshots__
               git commit -m "chore: update component screenshots"
               \`\`\`
-              
+
               See artifacts for diff images.`;
-              
+
               github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -583,7 +583,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [['html'], ['github']] : 'line',
-  
+
   // E2E screenshot settings
   expect: {
     toHaveScreenshot: {
@@ -591,7 +591,7 @@ export default defineConfig({
       animations: 'disabled',
     },
   },
-  
+
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:4200',
     trace: 'on-first-retry',
@@ -648,10 +648,10 @@ import { test, expect } from '@playwright/test';
 test.describe('Session Flow', () => {
   test('session list view', async ({ page }) => {
     await page.goto('/');
-    
+
     // Wait for sessions to load
     await expect(page.getByTestId('session-list')).toBeVisible();
-    
+
     // Capture full application screenshot
     await expect(page).toHaveScreenshot('session-list.png', {
       fullPage: true,
@@ -661,11 +661,11 @@ test.describe('Session Flow', () => {
   test('user can create and join a session', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'New Session' }).click();
-    
+
     // Should navigate to session page
     await expect(page).toHaveURL(/\/session\/[\w-]+/);
     await expect(page.getByTestId('connection-status')).toHaveText('Connected');
-    
+
     // Screenshot of active session view
     await expect(page).toHaveScreenshot('session-active.png', {
       fullPage: true,
@@ -678,10 +678,10 @@ test.describe('Session Flow', () => {
       data: { description: 'E2E Test Session' }
     });
     const { session } = await response.json();
-    
+
     await page.goto(`/session/${session.id}`);
     await expect(page.getByTestId('event-stream')).toBeVisible();
-    
+
     // Screenshot showing event stream with data
     await expect(page).toHaveScreenshot('session-with-events.png', {
       fullPage: true,
@@ -691,20 +691,20 @@ test.describe('Session Flow', () => {
   test('user can submit tool invocation', async ({ page }) => {
     // ... setup session with pending tool call
     await page.goto(`/session/test-session`);
-    
+
     // Select tool and fill form
     await page.getByText('search').click();
     await page.getByLabel('query').fill('test search');
-    
+
     // Screenshot before submission (shows form state)
     await expect(page).toHaveScreenshot('tool-form-filled.png', {
       fullPage: true,
     });
-    
+
     // Submit
     await page.getByRole('button', { name: 'Invoke Tool' }).click();
     await expect(page.getByText('Tool invoked')).toBeVisible();
-    
+
     // Screenshot after submission
     await expect(page).toHaveScreenshot('tool-form-submitted.png', {
       fullPage: true,
@@ -751,30 +751,30 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.52.0-noble
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
-      
+
       - name: Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile
-      
+
       - name: Run component tests
         working-directory: frontend
         run: pnpm exec playwright test -c playwright-ct.config.ts
-      
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -784,7 +784,7 @@ jobs:
             frontend/test-results/
             frontend/playwright-report/
           retention-days: 7
-      
+
       - name: Fail if snapshots changed
         working-directory: frontend
         run: |
@@ -797,49 +797,49 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
-      
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile
-      
+
       - name: Build frontend
         working-directory: frontend
         run: pnpm build
-      
+
       - name: Start Docker Compose stack
         run: |
           docker compose -f docker-compose.e2e.yaml up -d --wait
           docker compose -f docker-compose.e2e.yaml logs
-      
+
       - name: Install Playwright
         working-directory: frontend
         run: pnpm exec playwright install --with-deps chromium
-      
+
       - name: Run E2E tests
         working-directory: frontend
         run: pnpm exec playwright test -c playwright.config.ts
         env:
           BASE_URL: http://localhost:4200
-      
+
       - name: Stop Docker Compose
         if: always()
         run: docker compose -f docker-compose.e2e.yaml down
-      
+
       - name: Upload E2E results
         if: always()
         uses: actions/upload-artifact@v4

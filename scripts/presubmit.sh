@@ -4,7 +4,7 @@
 # ============================================================
 # Runs the full suite of CI checks:
 # 1. Proto generation (Python + TypeScript)
-# 2. Quality checks (linting, formatting)
+# 2. Quality checks (via pre-commit)
 # 3. Backend tests (unit and integration)
 # 4. Frontend tests
 # ============================================================
@@ -47,10 +47,10 @@ npm run build
 npm run test
 cd "$PROJECT_ROOT"
 
-# Run Quality Checks
+# Run Quality Checks (via pre-commit)
 echo ""
 echo "📋 Running Quality Checks..."
-./scripts/check_quality.sh
+uv run pre-commit run --all-files
 
 # Run Unit and Integration Tests
 echo ""

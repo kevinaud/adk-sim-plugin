@@ -9,9 +9,9 @@ related:
 
 # Web UI Feature Specification
 
-**Feature Branch**: `002-web-ui`  
-**Created**: January 10, 2026  
-**Status**: Draft  
+**Feature Branch**: `002-web-ui`
+**Created**: January 10, 2026
+**Status**: Draft
 **Input**: User description: "Web UI for ADK Agent Simulator - Extract UX requirements from PRD for the frontend application"
 
 ## Related Documents
