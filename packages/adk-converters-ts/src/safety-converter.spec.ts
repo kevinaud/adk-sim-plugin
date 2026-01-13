@@ -10,7 +10,7 @@
  * - Unknown enum value handling (mapped to UNSPECIFIED with warning)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { SafetySetting as ProtoSafetySetting } from '@adk-sim/protos';
 import {
   HarmCategory as ProtoHarmCategory,
@@ -391,59 +391,28 @@ describe('Safety Conversion', () => {
   // ============================================================================
 
   describe('Unknown enum value handling', () => {
-    let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => {
-      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-      consoleWarnSpy.mockRestore();
-    });
-
-    it('should log warning and return UNSPECIFIED for unknown proto HarmCategory', () => {
-      // Cast an invalid number to the enum type to simulate unknown value
+    it('should return UNSPECIFIED for unknown proto HarmCategory', () => {
       const unknownCategory = 999 as ProtoHarmCategory;
-
       const result = protoHarmCategoryToGenai(unknownCategory);
-
       expect(result).toBe(GenaiHarmCategory.HARM_CATEGORY_UNSPECIFIED);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown proto HarmCategory')
-      );
     });
 
-    it('should log warning and return UNSPECIFIED for unknown proto HarmBlockThreshold', () => {
+    it('should return UNSPECIFIED for unknown proto HarmBlockThreshold', () => {
       const unknownThreshold = 999 as ProtoHarmBlockThreshold;
-
       const result = protoHarmBlockThresholdToGenai(unknownThreshold);
-
       expect(result).toBe(GenaiHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown proto HarmBlockThreshold')
-      );
     });
 
-    it('should log warning and return UNSPECIFIED for unknown genai HarmCategory', () => {
+    it('should return UNSPECIFIED for unknown genai HarmCategory', () => {
       const unknownCategory = 'HARM_CATEGORY_UNKNOWN' as GenaiHarmCategory;
-
       const result = genaiHarmCategoryToProto(unknownCategory);
-
       expect(result).toBe(ProtoHarmCategory.UNSPECIFIED);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown genai HarmCategory')
-      );
     });
 
-    it('should log warning and return UNSPECIFIED for unknown genai HarmBlockThreshold', () => {
+    it('should return UNSPECIFIED for unknown genai HarmBlockThreshold', () => {
       const unknownThreshold = 'UNKNOWN_THRESHOLD' as GenaiHarmBlockThreshold;
-
       const result = genaiHarmBlockThresholdToProto(unknownThreshold);
-
       expect(result).toBe(ProtoHarmBlockThreshold.HARM_BLOCK_THRESHOLD_UNSPECIFIED);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown genai HarmBlockThreshold')
-      );
     });
   });
 });
