@@ -254,13 +254,13 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [Enum Handling](../research/converter-research.md#enum-handling) - Proto numeric vs SDK string
 
 **Acceptance Criteria**:
-- [ ] `protoSafetyToGenaiSafety()` converts proto SafetySetting to SDK SafetySetting
-- [ ] `genaiSafetyToProtoSafety()` converts SDK SafetySetting back to proto
-- [ ] `HarmCategory` enum mapping handles all values (with prefix normalization)
-- [ ] `HarmBlockThreshold` enum mapping handles all values
-- [ ] Unknown enum values logged as warning, mapped to UNSPECIFIED
-- [ ] Tests cover all standard harm categories
-- [ ] Presubmit passes
+- [x] `protoSafetyToGenaiSafety()` converts proto SafetySetting to SDK SafetySetting
+- [x] `genaiSafetyToProtoSafety()` converts SDK SafetySetting back to proto
+- [x] `HarmCategory` enum mapping handles all values (with prefix normalization)
+- [x] `HarmBlockThreshold` enum mapping handles all values
+- [x] Unknown enum values logged as warning, mapped to UNSPECIFIED
+- [x] Tests cover all standard harm categories
+- [x] Presubmit passes
 
 ---
 

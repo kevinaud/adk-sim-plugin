@@ -34,6 +34,16 @@ export {
   type GenerationConfigFields,
 } from './config-converter.js';
 
+// Safety settings conversion utilities
+export {
+  protoSafetyToGenaiSafety,
+  genaiSafetyToProtoSafety,
+  protoHarmCategoryToGenai,
+  genaiHarmCategoryToProto,
+  protoHarmBlockThresholdToGenai,
+  genaiHarmBlockThresholdToProto,
+} from './safety-converter.js';
+
 // Re-export @google/genai types for convenience
 export type {
   Content,
@@ -44,6 +54,7 @@ export type {
   Tool,
   FunctionDeclaration,
   Schema,
+  SafetySetting,
 } from '@google/genai';
 
 // High-level request/response converters (stubs for now)
