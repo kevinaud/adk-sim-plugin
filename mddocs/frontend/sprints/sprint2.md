@@ -201,12 +201,13 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [JSONForms Schema Conversion](../frontend-tdd.md#toolformservice-schema-conversion) - Schema handling
 
 **Acceptance Criteria**:
-- [ ] `protoToolToGenaiTool()` converts proto Tool to SDK Tool
-- [ ] `genaiToolToProtoTool()` converts SDK Tool back to proto
-- [ ] FunctionDeclaration with name, description, parameters preserved
-- [ ] Nested Schema objects (type, properties, required) converted correctly
-- [ ] Tests cover tools with and without parameters
-- [ ] Presubmit passes
+- [x] `protoToolToGenaiTool()` converts proto Tool to SDK Tool
+- [x] `genaiToolToProtoTool()` converts SDK Tool back to proto
+- [x] FunctionDeclaration with name, description, parameters preserved
+- [x] Nested Schema objects (type, properties, required) converted correctly
+- [x] Tests cover tools with and without parameters
+- [x] All tests pass (30 tests in tool-converter.spec.ts)
+- [x] Build succeeds
 
 ---
 
