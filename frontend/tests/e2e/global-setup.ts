@@ -11,12 +11,12 @@ export default function globalSetup() {
   // Get the repo root (parent of frontend/)
   const repoRoot = resolve(__dirname, '../../..');
 
-  console.log('🐳 Starting Docker Compose E2E stack...');
+  console.log('🐳 Starting Docker Compose test stack...');
   console.log(`   Working directory: ${repoRoot}`);
 
   try {
     // Start Docker Compose with --wait to ensure services are healthy
-    execSync('docker compose -f docker-compose.e2e.yaml up -d --wait', {
+    execSync('docker compose -f docker-compose.test.yaml up -d --wait', {
       stdio: 'inherit',
       cwd: repoRoot,
     });

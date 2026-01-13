@@ -1,3 +1,6 @@
+# Testing Docker Compose Stack
+# Used by pytest-docker and Playwright E2E tests
+
 services:
   backend:
     build:
@@ -5,15 +8,15 @@ services:
       dockerfile: docker/backend.Dockerfile
     ports:
       - "50051:50051"
+      - "8080:8080"
     environment:
       PYTHONPATH: /app
       LOG_LEVEL: INFO
-      # Use temp file SQLite (in-memory has connection pool issues)
       ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/test.db"
-    command: uv run python -m adk_sim_server.main
+    command: uv run adk-sim
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
       interval: 2s
       timeout: 5s
-      retries: 10
-      start_period: 5s
+      retries: 15
+      start_period: 10s
