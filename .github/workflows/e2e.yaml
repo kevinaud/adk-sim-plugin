@@ -40,10 +40,13 @@ jobs:
           # Install buf CLI
           curl -sSL https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64 -o /usr/local/bin/buf
           chmod +x /usr/local/bin/buf
+
           # Generate Python proto code only (skip TypeScript)
           rm -rf packages/adk-sim-protos/src/adk_sim_protos/adksim packages/adk-sim-protos/src/adk_sim_protos/google
+
           # Add .venv/bin to PATH so buf can find protoc-gen-python_betterproto
           PATH="$PWD/.venv/bin:$PATH" buf generate --template buf.gen.python.yaml
+
           # Format generated code (ignore errors on generated code)
           uv run ruff check --fix packages/adk-sim-protos/src/adk_sim_protos 2>/dev/null || true
           uv run ruff format packages/adk-sim-protos/src/adk_sim_protos

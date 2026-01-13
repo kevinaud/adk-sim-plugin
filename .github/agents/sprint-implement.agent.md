@@ -112,15 +112,68 @@ For each file in the PR:
 
 ---
 
-### Phase 4: Verify Acceptance Criteria
+### Phase 4: Verify and Update Acceptance Criteria (MANDATORY)
 
-Before returning control, verify each acceptance criterion:
+Before returning control, verify each acceptance criterion AND update the sprint plan:
 
-1. Go through each criterion from the PR plan
-2. Confirm the implementation satisfies it
-3. If any criterion is NOT met:
-   - Either fix the implementation
-   - Or note why it couldn't be met (blocker)
+1. **Go through each criterion** from the PR plan
+2. **Verify the implementation** satisfies it:
+   - Run any specific commands mentioned (e.g., "Package builds with `npm run build`")
+   - Check file contents match requirements
+   - Confirm expected behavior works
+3. **Track verification results**:
+   - Note which criteria pass
+   - Note which criteria fail or are blocked
+
+4. **Update the sprint plan file** to check off completed criteria:
+   - Open `mddocs/frontend/sprints/sprint<N>.md`
+   - Locate this PR's Acceptance Criteria section
+   - Change `- [ ]` to `- [x]` for each verified criterion
+   - For blocked criteria, add a note: `- [ ] <criterion> ⚠️ BLOCKED: <reason>`
+   
+   **Example transformation**:
+   ```markdown
+   # Before:
+   **Acceptance Criteria**:
+   - [ ] Package builds with `npm run build`
+   - [ ] Exports placeholder functions
+   - [ ] Presubmit passes
+   
+   # After:
+   **Acceptance Criteria**:
+   - [x] Package builds with `npm run build`
+   - [x] Exports placeholder functions
+   - [x] Presubmit passes
+   ```
+
+5. **If any criterion is NOT met**:
+   - Either fix the implementation and re-verify
+   - Or mark as blocked with reason (do NOT check it off)
+
+6. **Check for TDD Task Completion** (only if present in PR plan):
+   
+   Some PRs include a `Completes TDD Task` field. **Not all PRs have this** — many are intermediate steps. Only check this if the field exists.
+   
+   If `Completes TDD Task: <task name> (Phase <N>)` is present:
+   - Open `mddocs/frontend/frontend-tdd.md`
+   - Find the Implementation Phases section for Phase N
+   - Locate the row with the matching task name
+   - Change `| [ ] |` to `| [x] |` in the "Done" column
+   
+   **Example transformation**:
+   ```markdown
+   # Before (in frontend-tdd.md):
+   | Done | Task | FR | Deliverable |
+   |:----:|------|-----|-------------|
+   | [ ] | `SessionStateService` | FR-023 | Global state signals |
+   
+   # After:
+   | Done | Task | FR | Deliverable |
+   |:----:|------|-----|-------------|
+   | [x] | `SessionStateService` | FR-023 | Global state signals |
+   ```
+   
+   **Important**: Only update the TDD if ALL acceptance criteria for this PR passed. If any criteria are blocked, do NOT check off the TDD task.
 
 ---
 
@@ -141,6 +194,12 @@ Return to Orchestrator:
 ### Acceptance Criteria
 - [x] <criterion 1> - ✓ Implemented
 - [x] <criterion 2> - ✓ Implemented
+
+### TDD Task Completed
+<!-- Include this section ONLY if PR had "Completes TDD Task" field -->
+- ✓ Checked off `<task name>` in frontend-tdd.md (Phase <N>)
+<!-- Or if no TDD task: -->
+- N/A (intermediate PR)
 
 ### Verification
 - Tests: ✓ PASS
@@ -226,6 +285,8 @@ frontend/src/app/
 - ✅ Write tests alongside implementation
 - ✅ Run local verification before finishing
 - ✅ Fix ALL failures before returning control
+- ✅ **Update sprint plan** to check off completed acceptance criteria
+- ✅ **Update frontend-tdd.md** if PR has `Completes TDD Task` field (not all PRs have this)
 - ✅ Report what was implemented clearly
 
 ### Error Handling
@@ -266,4 +327,36 @@ Acceptance Criteria:
 4. Create `session-state.service.spec.ts` with tests
 5. Run `npm test` - verify pass
 6. Run `npm run lint` - verify pass
-7. Return completion report with all criteria checked
+7. **Update sprint plan** - check off acceptance criteria in `sprint1.md`
+8. **Update frontend-tdd.md** - check off `SessionStateService` row (because `Completes TDD Task` was present)
+9. Return completion report with all criteria checked
+
+---
+
+**Example 2: Intermediate PR (no TDD task)**
+
+**Input from Orchestrator:**
+```
+Implement S1PR1 from Sprint 1
+
+PR ID: S1PR1
+Goal: Define session types and interfaces
+
+Files:
+- frontend/src/app/data-access/session/session.types.ts
+
+Background Reading:
+- mddocs/frontend/frontend-tdd.md#session-model
+
+Acceptance Criteria:
+- Session interface defined
+- ConnectionStatus enum defined
+```
+
+**Expected Behavior:**
+1. Read background docs
+2. Create `session.types.ts`
+3. Run verification
+4. **Update sprint plan** - check off acceptance criteria
+5. **Skip TDD update** - no `Completes TDD Task` field present
+6. Return completion report noting "TDD Task: N/A (intermediate PR)"

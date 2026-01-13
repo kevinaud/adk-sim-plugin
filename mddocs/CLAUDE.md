@@ -1,5 +1,10 @@
 # Markdown Documentation (mddocs/)
 
+
+## Table of Contents
+
+- [Before Starting Work](#before-starting-work)
+
 Interconnected markdown documentation for the project.
 
 ## Before Starting Work

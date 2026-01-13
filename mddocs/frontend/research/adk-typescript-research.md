@@ -26,7 +26,7 @@ related:
 - [Overview](#overview)
 - [Package Structure](#package-structure)
   - [`@google/adk` (v0.2.2)](#googleadk-v022)
-  - [Dependencies](#adk-typescript-llmrequestllmresponse-research/package-structure/dependencies)
+  - [ADK TypeScript Dependencies](#adk-typescript-dependencies)
 - [LlmRequest Interface](#llmrequest-interface)
   - [Helper Functions](#helper-functions)
 - [LlmResponse Interface](#llmresponse-interface)
@@ -49,10 +49,9 @@ related:
 - [Testing Patterns](#testing-patterns)
 - [Package Design Recommendations](#package-design-recommendations)
   - [Export Structure](#export-structure)
-  - [Dependencies](#adk-typescript-llmrequestllmresponse-research/package-design-recommendations/dependencies)
+  - [Converter Package Dependencies](#converter-package-dependencies)
   - [Testing Approach](#testing-approach)
 - [Open Questions](#open-questions)
-
 
 ## Overview
 
@@ -79,7 +78,7 @@ core/
 └── package.json
 ```
 
-### Dependencies
+### ADK TypeScript Dependencies
 
 ```json
 {
@@ -572,7 +571,7 @@ export { protoContentToGenaiContent } from './content-converter.js';
 export type { LlmRequest, LlmResponse } from '@google/adk';
 ```
 
-### Dependencies
+### Converter Package Dependencies
 
 ```json
 {

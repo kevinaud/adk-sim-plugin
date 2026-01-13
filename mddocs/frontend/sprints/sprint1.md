@@ -32,18 +32,11 @@
   - [S1PR12: CI Workflow for Frontend Tests](#s1pr12-ci-workflow-for-frontend-tests)
   - [S1PR13: @adk-sim/converters Package Scaffold](#s1pr13-adk-simconverters-package-scaffold)
   - [S1PR14: npm Publishing CI for @adk-sim/converters](#s1pr14-npm-publishing-ci-for-adk-simconverters)
-  - [S1PR15: Verify Full Stack Integration](#s1pr15-verify-full-stack-integration)
 - [Implementation Notes](#implementation-notes)
   - [PR Ordering Flexibility](#pr-ordering-flexibility)
   - [Testing Philosophy](#testing-philosophy)
   - [Sheriff Verification](#sheriff-verification)
   - [Manual Bootstrapping Required](#manual-bootstrapping-required)
-
-**Created**: January 11, 2026  
-**Status**: Planning  
-**TDD Phase(s)**: Pre-Phase 1 (Infrastructure), Phase 1 Foundation (partial)
-
----
 
 ## Sprint Goal
 
@@ -65,23 +58,23 @@ By the end of this sprint:
 
 | Task | FR | Phase | Notes |
 |------|----|-------|-------|
-| Project structure setup | - | Phase 1 | Sheriff, folder structure, linting rules |
-| `SessionGateway` port + mock | FR-020 | Phase 1 | Abstract port + mock implementation (minimal for list) |
-| `SessionFacade` skeleton | FR-020 | Phase 1 | Minimal facade for listing sessions |
-| Session list route | FR-002, FR-003 | Phase 1 | List view with real data (not mock) |
-| `@adk-sim/converters` package | - | Phase 2 | Package scaffold + publishing (no conversion logic yet) |
-| Connection status UI | FR-023 | Phase 2 | Simple indicator component |
+| [x] Project structure setup | - | Phase 1 | Sheriff, folder structure, linting rules |
+| [x] `SessionGateway` port + mock | FR-020 | Phase 1 | Abstract port + mock implementation (minimal for list) |
+| [x] `SessionFacade` skeleton | FR-020 | Phase 1 | Minimal facade for listing sessions |
+| [x] Session list route | FR-002, FR-003 | Phase 1 | List view with real data (not mock) |
+| [x] `@adk-sim/converters` package | - | Phase 2 | Package scaffold + publishing (no conversion logic yet) |
+| [x] Connection status UI | FR-023 | Phase 2 | Simple indicator component |
 
 ### Additional Infrastructure Tasks (Not in TDD Phases)
 
 | Task | Source | Notes |
 |------|--------|-------|
-| Environment configuration | [Frontend Config Research](../research/frontend-configuration-research.md) | Dev proxy + prod same-origin |
-| Sheriff setup | [Sheriff Research](../research/sheriff-research.md) | Module boundary enforcement |
-| Playwright CT setup | [Playwright Research](../research/playwright-testing-research.md#part-1) | Component testing with VRT |
-| Playwright E2E setup | [Playwright Research](../research/playwright-testing-research.md#part-3) | Real backend testing |
-| CI workflow for tests | [Playwright Research](../research/playwright-testing-research.md#part-4) | GitHub Actions jobs |
-| npm publishing CI | [Converter Research](../research/converter-research.md#publishing-workflow-changes) | Add converters to publish.yaml |
+| [x] Environment configuration | [Frontend Config Research](../research/frontend-configuration-research.md) | Dev proxy + prod same-origin |
+| [x] Sheriff setup | [Sheriff Research](../research/sheriff-research.md) | Module boundary enforcement |
+| [x] Playwright CT setup | [Playwright Research](../research/playwright-testing-research.md#part-1-component-testing-with-visual-regression) | Component testing with VRT |
+| [x] Playwright E2E setup | [Playwright Research](../research/playwright-testing-research.md#part-3-e2e-testing-with-real-backend) | Real backend testing |
+| [x] CI workflow for tests | [Playwright Research](../research/playwright-testing-research.md#part-4-ci-workflow-integration) | GitHub Actions jobs |
+| [x] npm publishing CI | [Converter Research](../research/converter-research.md#publishing-workflow-changes) | Add converters to publish.yaml |
 
 ---
 
@@ -137,9 +130,9 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 
 ### Open Questions for This Sprint
 
-- [ ] **npm trusted publisher bootstrapping**: Who performs the one-time `@adk-sim/converters` package creation on npmjs.com? (Must be done before CI publish works)
-- [ ] **Playwright browser matrix**: Start with Chromium only for speed, or include Firefox/WebKit from day one?
-- [ ] **E2E test scope**: How many E2E tests for the barebones Session List? Just "list loads" or also "create session"?
+- [x] **npm trusted publisher bootstrapping**: Who performs the one-time `@adk-sim/converters` package creation on npmjs.com? (Must be done before CI publish works)
+- [x] **Playwright browser matrix**: Start with Chromium only for speed, or include Firefox/WebKit from day one?
+- [x] **E2E test scope**: How many E2E tests for the barebones Session List? Just "list loads" or also "create session"?
 
 ---
 
@@ -163,10 +156,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Migration Checklist](../research/sheriff-research.md#part-8-migration-checklist) - Verification steps
 
 **Acceptance Criteria**:
-- [ ] `npm install` adds `@softarc/sheriff-core` and `@softarc/eslint-plugin-sheriff`
-- [ ] `npx sheriff list` shows detected modules
-- [ ] `npm run lint` passes (no violations in empty project)
-- [ ] Presubmit passes
+- [x] `npm install` adds `@softarc/sheriff-core` and `@softarc/eslint-plugin-sheriff`
+- [x] `npx sheriff list` shows detected modules
+- [x] `npm run lint` passes (no violations in empty project)
+- [x] Presubmit passes
 
 ---
 
@@ -189,10 +182,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Connect-ES Client Configuration](../research/frontend-configuration-research.md#4-connect-es-client-configuration) - How client uses baseUrl
 
 **Acceptance Criteria**:
-- [ ] `ng serve` starts with proxy enabled (debug logs show proxy route)
-- [ ] Environment files both have `grpcWebUrl: ''`
-- [ ] Requests to `/adksim.v1.SimulatorService/*` proxy to `localhost:8080` in dev
-- [ ] Presubmit passes
+- [x] `ng serve` starts with proxy enabled (debug logs show proxy route)
+- [x] Environment files both have `grpcWebUrl: ''`
+- [x] Requests to `/adksim.v1.SimulatorService/*` proxy to `localhost:8080` in dev
+- [x] Presubmit passes
 
 ---
 
@@ -218,10 +211,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Sheriff Proposed Folder Structure](../research/sheriff-research.md#proposed-folder-structure) - How folders map to Sheriff tags
 
 **Acceptance Criteria**:
-- [ ] All folders exist with `.gitkeep` or minimal `index.ts`
-- [ ] `npx sheriff list` shows modules detected in new folders
-- [ ] `npm run lint` passes
-- [ ] Presubmit passes
+- [x] All folders exist with `.gitkeep` or minimal `index.ts`
+- [x] `npx sheriff list` shows modules detected in new folders
+- [x] `npm run lint` passes
+- [x] Presubmit passes
 
 ---
 
@@ -244,10 +237,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Hexagonal Architecture](../research/angular-architecture-analysis.md#abstract-ports-for-infrastructure-testing) - Why abstract ports
 
 **Acceptance Criteria**:
-- [ ] `SessionGateway` abstract class with `listSessions(): Promise<Session[]>`
-- [ ] `MockSessionGateway` extends port with controllable test data
-- [ ] Unit tests verify mock behavior
-- [ ] Presubmit passes
+- [x] `SessionGateway` abstract class with `listSessions(): Promise<Session[]>`
+- [x] `MockSessionGateway` extends port with controllable test data
+- [x] Unit tests verify mock behavior
+- [x] Presubmit passes
 
 ---
 
@@ -269,10 +262,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Project Infrastructure - Server Communication](../research/project-infrastructure.md#server-communication-architecture) - Backend endpoints
 
 **Acceptance Criteria**:
-- [ ] `GrpcSessionGateway.listSessions()` calls backend via Connect-ES
-- [ ] Uses `ENVIRONMENT.grpcWebUrl || window.location.origin` for base URL
-- [ ] Tests pass (mock transport or actual backend)
-- [ ] Presubmit passes
+- [x] `GrpcSessionGateway.listSessions()` calls backend via Connect-ES
+- [x] Uses `ENVIRONMENT.grpcWebUrl || window.location.origin` for base URL
+- [x] Tests pass (mock transport or actual backend)
+- [x] Presubmit passes
 
 ---
 
@@ -293,11 +286,11 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Signal-based State Management](../research/prototype-findings.md#signal-based-state-management) - Pattern from prototype
 
 **Acceptance Criteria**:
-- [ ] `sessionId`, `connectionStatus`, `error` signals exposed as readonly
-- [ ] `isConnected`, `hasError` computed signals work
-- [ ] Mutation methods (`setSessionId`, etc.) update state
-- [ ] Unit tests cover state transitions
-- [ ] Presubmit passes
+- [x] `sessionId`, `connectionStatus`, `error` signals exposed as readonly
+- [x] `isConnected`, `hasError` computed signals work
+- [x] Mutation methods (`setSessionId`, etc.) update state
+- [x] Unit tests cover state transitions
+- [x] Presubmit passes
 
 ---
 
@@ -318,10 +311,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Facade Pattern](../research/angular-architecture-analysis.md#critical-improvement-the-facade-pattern) - Why facades
 
 **Acceptance Criteria**:
-- [ ] `SessionFacade.listSessions()` method works
-- [ ] Exposes state signals from `SessionStateService`
-- [ ] Tests use `MockSessionGateway`
-- [ ] Presubmit passes
+- [x] `SessionFacade.listSessions()` method works
+- [x] Exposes state signals from `SessionStateService`
+- [x] Tests use `MockSessionGateway`
+- [x] Presubmit passes
 
 ---
 
@@ -346,13 +339,13 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [TDD Routing Configuration](../frontend-tdd.md#routing-configuration) - Route structure
 
 **Acceptance Criteria**:
-- [ ] Component fetches sessions via `SessionFacade.listSessions()` on init
-- [ ] Displays session ID, creation time, status for each session (FR-003)
-- [ ] Loading state while fetching
-- [ ] Error state if fetch fails
-- [ ] Route `/` loads the component
-- [ ] Tests pass with MockSessionGateway
-- [ ] Presubmit passes
+- [x] Component fetches sessions via `SessionFacade.listSessions()` on init
+- [x] Displays session ID, creation time, status for each session (FR-003)
+- [x] Loading state while fetching
+- [x] Error state if fetch fails
+- [x] Route `/` loads the component
+- [x] Tests pass with MockSessionGateway
+- [x] Presubmit passes
 
 ---
 
@@ -374,10 +367,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [TDD Folder Layout](../frontend-tdd.md#folder-layout) - ui/shared location
 
 **Acceptance Criteria**:
-- [ ] Shows "Connected", "Connecting", or "Disconnected" based on `SessionStateService.connectionStatus`
-- [ ] Visual indicator (icon or color)
-- [ ] Unit tests cover all states
-- [ ] Presubmit passes
+- [x] Shows "Connected", "Connecting", or "Disconnected" based on `SessionStateService.connectionStatus`
+- [x] Visual indicator (icon or color)
+- [x] Unit tests cover all states
+- [x] Presubmit passes
 
 ---
 
@@ -401,11 +394,11 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Component Test Examples](../research/playwright-testing-research.md#component-test-examples) - Test patterns
 
 **Acceptance Criteria**:
-- [ ] `npm run test:ct` runs Playwright component tests
-- [ ] Sample test for `ConnectionStatusComponent` passes
-- [ ] Screenshot saved to `__snapshots__/`
-- [ ] `test:ct:update` script updates screenshots
-- [ ] Presubmit passes
+- [x] `npm run test:ct` runs Playwright component tests
+- [x] Sample test for `ConnectionStatusComponent` passes
+- [x] Screenshot saved to `__snapshots__/`
+- [x] `test:ct:update` script updates screenshots
+- [x] Presubmit passes
 
 ---
 
@@ -431,11 +424,11 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [E2E Test Example](../research/playwright-testing-research.md#e2e-test-example) - Test patterns
 
 **Acceptance Criteria**:
-- [ ] `npm run test:e2e` starts Docker, runs tests, stops Docker
-- [ ] Session list E2E test loads page and verifies content
-- [ ] Screenshot captured for session list view
-- [ ] Works locally with global setup/teardown
-- [ ] Presubmit passes (without E2E - those run in separate CI job)
+- [x] `npm run test:e2e` starts Docker, runs tests, stops Docker
+- [x] Session list E2E test loads page and verifies content
+- [x] Screenshot captured for session list view
+- [x] Works locally with global setup/teardown
+- [x] Presubmit passes (without E2E - those run in separate CI job)
 
 ---
 
@@ -454,11 +447,11 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [CI Enforcement Strategy](../research/playwright-testing-research.md#ci-enforcement-strategy) - Screenshot change detection
 
 **Acceptance Criteria**:
-- [ ] `component-tests` job runs in Playwright container
-- [ ] `e2e-tests` job uses Docker Compose
-- [ ] Both jobs upload test results as artifacts
-- [ ] Component test job fails if uncommitted screenshots detected
-- [ ] Workflow triggers on `frontend/**` path changes
+- [x] `component-tests` job runs in Playwright container
+- [x] `e2e-tests` job uses Docker Compose
+- [x] Both jobs upload test results as artifacts
+- [x] Component test job fails if uncommitted screenshots detected
+- [x] Workflow triggers on `frontend/**` path changes
 
 ---
 
@@ -481,10 +474,10 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Package Publishing Infrastructure](../research/converter-research.md#package-publishing-infrastructure) - package.json contents
 
 **Acceptance Criteria**:
-- [ ] Package builds with `npm run build`
-- [ ] Exports placeholder functions
-- [ ] `@google/adk` and `@adk-sim/protos` as dependencies
-- [ ] Presubmit passes
+- [x] Package builds with `npm run build`
+- [x] Exports placeholder functions
+- [x] `@google/adk` and `@adk-sim/protos` as dependencies
+- [x] Presubmit passes
 
 ---
 
@@ -504,34 +497,13 @@ The frontend is an empty Angular 21 shell with generated protobuf types in `src/
 - [Trusted Publisher Configuration](../research/converter-research.md#trusted-publisher-configuration) - npmjs.com setup (manual)
 
 **Acceptance Criteria**:
-- [ ] `verify-build` job builds converters package
-- [ ] `publish-npm` job publishes converters (after trusted publisher configured)
-- [ ] `sync_versions.py` includes converters package path
-- [ ] Workflow syntax valid (act or manual review)
+- [x] `verify-build` job builds converters package
+- [x] `publish-npm` job publishes converters (after trusted publisher configured)
+- [x] `sync_versions.py` includes converters package path
+- [x] Workflow syntax valid (act or manual review)
 
 **Manual Step Required**:
-- [ ] Configure npm trusted publisher for `@adk-sim/converters` on npmjs.com
-
----
-
-### S1PR15: Verify Full Stack Integration
-
-**Estimated Lines**: ~30 lines (test updates only)  
-**Depends On**: S1PR8, S1PR11
-
-**Goal**: Add an integration verification test that confirms the session list works with the real backend.
-
-**Files to Create/Modify**:
-- `frontend/tests/e2e/integration-smoke.spec.ts` - Smoke test hitting real backend
-
-**Background Reading**:
-- [E2E Test Example](../research/playwright-testing-research.md#e2e-test-example) - Test structure
-
-**Acceptance Criteria**:
-- [ ] Test creates a session via backend API
-- [ ] Test verifies session appears in list
-- [ ] Test takes screenshot of populated list
-- [ ] E2E suite passes locally and in CI
+- [x] Configure npm trusted publisher for `@adk-sim/converters` on npmjs.com
 
 ---
 

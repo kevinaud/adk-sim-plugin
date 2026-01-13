@@ -116,6 +116,16 @@ Break the sprint scope into small PRs:
 2. Files to create/modify
 3. Relevant background reading links (specific sections, not whole docs)
 4. Acceptance criteria (verifiable outcomes)
+5. **Completes TDD Task** (optional) - see below
+
+**TDD Task Completion Assignment**:
+
+Not every PR completes a TDD task. Many PRs are intermediate steps. Only the **final PR** that fully satisfies a TDD task should include the `Completes TDD Task` field.
+
+- ✅ Include when: This PR finishes all work for a TDD task (e.g., service is complete and tested)
+- ❌ Omit when: This PR is a building block for later work (e.g., types-only, partial implementation)
+
+When included, copy the **exact task name** from `frontend-tdd.md` Implementation Phases table so the implementation agent can find and check it off.
 
 ### Step 5: Write Sprint Plan
 
@@ -163,7 +173,9 @@ Output a summary:
 - ❌ Don't forget to link background reading for each PR
 - ❌ Don't assume context - each PR plan should be self-contained
 
-## Example PR Entry
+## Example PR Entries
+
+### Example 1: PR that completes a TDD task
 
 ```markdown
 ### S1PR2: Create SessionStateService with connection status signals
@@ -172,6 +184,8 @@ Output a summary:
 **Depends On**: S1PR1
 
 **Goal**: Implement the global state service that tracks session and connection state using signals.
+
+**Completes TDD Task**: `SessionStateService` (Phase 1)
 
 **Files to Create/Modify**:
 - `frontend/src/app/data-access/session/session-state.service.ts` - Service implementation
@@ -189,3 +203,27 @@ Output a summary:
 - [ ] Unit tests cover state transitions
 - [ ] Presubmit passes
 ```
+
+### Example 2: Intermediate PR (no TDD task completion)
+
+```markdown
+### S1PR1: Define session types and interfaces
+
+**Estimated Lines**: ~50 lines  
+**Depends On**: -
+
+**Goal**: Create TypeScript interfaces for session state used throughout the app.
+
+**Files to Create/Modify**:
+- `frontend/src/app/data-access/session/session.types.ts` - Type definitions
+
+**Background Reading**:
+- [Session Model](./frontend-tdd.md#session-model) - Required properties
+
+**Acceptance Criteria**:
+- [ ] `Session` interface defined with all required properties
+- [ ] `ConnectionStatus` enum defined
+- [ ] Presubmit passes
+```
+
+> ☝️ Note: S1PR1 has no `Completes TDD Task` field because it's a foundation for S1PR2, which actually completes the `SessionStateService` task.
