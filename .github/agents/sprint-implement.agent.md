@@ -30,6 +30,21 @@ You receive from the Orchestrator:
 
 ## Execution Workflow
 
+### Phase 0: Load Implementation Tips (MANDATORY)
+
+**Do NOT skip this phase.** Each agent invocation starts with fresh context, so you must load learned knowledge.
+
+1. **Read the knowledge base table of contents**:
+   - Open `mddocs/development/implementation-tips.md`
+   - Read the Table of Contents section to know what tips are available
+   - Keep these tips in mind throughout implementation
+
+2. **Reference tips when encountering errors**:
+   - If you get stuck on an error, FIRST check if any existing tips might be relevant
+   - This prevents wasting time re-debugging known issues
+
+---
+
 ### Phase 1: Load Context (CRITICAL)
 
 **Do NOT skip this phase.** The background reading contains essential implementation details.
@@ -214,6 +229,48 @@ Return to Orchestrator:
 
 ---
 
+### Phase 6: Knowledge Base Contribution (When Applicable)
+
+**After solving a difficult problem** that required significant debugging, contribute to the knowledge base so future invocations don't repeat the same debugging:
+
+1. **Identify if a tip should be added**:
+   - Did you encounter an error that took multiple attempts to diagnose?
+   - Was the root cause non-obvious?
+   - Would this knowledge help future agent invocations?
+
+2. **If yes, add a new entry** to `mddocs/development/implementation-tips.md`:
+   - Add entry to the Table of Contents
+   - Add the tip following this format:
+
+   ```markdown
+   ### <Descriptive Title>
+
+   **Problem**: <What error or symptom was seen>
+
+   **Root Cause**: <Why it happened>
+
+   **Solution**: <How to fix it>
+
+   **General Principle**: <Up-leveled insight for similar future issues>
+
+   ---
+   ```
+
+3. **Examples of tip-worthy issues**:
+   - Environment/path issues
+   - Non-obvious configuration requirements
+   - Import/module resolution gotchas
+   - Test setup quirks
+   - Build system peculiarities
+   - Tool-specific behaviors
+
+4. **NOT tip-worthy**:
+   - Simple typos
+   - Obvious syntax errors
+   - Issues specific to one PR that won't recur
+
+---
+
 ## Project-Specific Guidelines
 
 ### Angular/Frontend
@@ -277,9 +334,12 @@ frontend/src/app/
 - ❌ `gh` commands (GitHub CLI)
 - ❌ Creating or managing Pull Requests
 - ❌ Skipping background reading
+- ❌ Skipping the implementation tips knowledge base
 - ❌ Returning control with failing tests
 
 ### REQUIRED Behaviors
+- ✅ **Read implementation tips** from `mddocs/development/implementation-tips.md` before starting
+- ✅ **Check tips first** when encountering an error before extensive debugging
 - ✅ Read ALL background reading links before coding
 - ✅ Follow patterns from research docs
 - ✅ Write tests alongside implementation
@@ -287,6 +347,7 @@ frontend/src/app/
 - ✅ Fix ALL failures before returning control
 - ✅ **Update sprint plan** to check off completed acceptance criteria
 - ✅ **Update frontend-tdd.md** if PR has `Completes TDD Task` field (not all PRs have this)
+- ✅ **Add to knowledge base** if you solved a difficult/non-obvious problem
 - ✅ Report what was implemented clearly
 
 ### Error Handling
