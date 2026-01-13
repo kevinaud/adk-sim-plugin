@@ -284,17 +284,17 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [System Instruction Conversion](../research/converter-research.md#system-instruction-conversion) - Polymorphic handling
 
 **Acceptance Criteria**:
-- [ ] `protoToLlmRequest()` returns complete LlmRequest from proto
-- [ ] Model name has "models/" prefix stripped
-- [ ] Contents array properly converted
-- [ ] System instruction placed in `config.systemInstruction`
-- [ ] Tools placed in `config.tools`
-- [ ] Safety settings placed in `config.safetySettings`
-- [ ] Generation config fields spread into `config`
-- [ ] `liveConnectConfig` set to `{}`
-- [ ] `toolsDict` set to `{}`
-- [ ] Tests mirror Python converter test categories (5+ basic, system instruction variants, etc.)
-- [ ] Presubmit passes
+- [x] `protoToLlmRequest()` returns complete LlmRequest from proto
+- [x] Model name has "models/" prefix stripped
+- [x] Contents array properly converted
+- [x] System instruction placed in `config.systemInstruction`
+- [x] Tools placed in `config.tools`
+- [x] Safety settings placed in `config.safetySettings`
+- [x] Generation config fields spread into `config`
+- [x] `liveConnectConfig` set to `{}`
+- [x] `toolsDict` set to `{}`
+- [x] Tests mirror Python converter test categories (5+ basic, system instruction variants, etc.)
+- [x] Presubmit passes
 
 ---
 

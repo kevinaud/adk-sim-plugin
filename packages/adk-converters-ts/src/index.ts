@@ -58,5 +58,5 @@ export type {
 } from '@google/genai';
 
 // High-level request/response converters (stubs for now)
-export { protoToLlmRequest, type LlmRequestConversionResult } from './request-converter.js';
+export { protoToLlmRequest, type LlmRequest, type LlmRequestConversionResult } from './request-converter.js';
 export { llmResponseToProto, type LlmResponseConversionResult } from './response-converter.js';
