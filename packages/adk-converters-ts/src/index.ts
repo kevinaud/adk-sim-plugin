@@ -27,6 +27,13 @@ export {
   genaiSchemaToProtoSchema,
 } from './tool-converter.js';
 
+// Config conversion utilities
+export {
+  protoGenerationConfigToGenaiConfig,
+  genaiConfigToProtoGenerationConfig,
+  type GenerationConfigFields,
+} from './config-converter.js';
+
 // Re-export @google/genai types for convenience
 export type {
   Content,
@@ -34,6 +41,9 @@ export type {
   FunctionCall,
   FunctionResponse,
   Blob,
+  Tool,
+  FunctionDeclaration,
+  Schema,
   Tool,
   FunctionDeclaration,
   Schema,

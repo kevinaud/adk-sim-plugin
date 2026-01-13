@@ -228,12 +228,12 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [GenerateContentConfig](../research/adk-typescript-research.md#generatecontentconfig) - Target SDK type
 
 **Acceptance Criteria**:
-- [ ] `protoGenerationConfigToGenaiConfig()` extracts generation config fields
-- [ ] Handles all fields: temperature, topP, topK, maxOutputTokens, stopSequences, seed
-- [ ] Also handles: presencePenalty, frequencyPenalty, responseMimeType, responseSchema
-- [ ] Undefined/missing fields in proto result in undefined in output (not defaults)
-- [ ] Tests cover partial configs (only some fields set)
-- [ ] Presubmit passes
+- [x] `protoGenerationConfigToGenaiConfig()` extracts generation config fields
+- [x] Handles all fields: temperature, topP, topK, maxOutputTokens, stopSequences, seed
+- [x] Also handles: presencePenalty, frequencyPenalty, responseMimeType, responseSchema
+- [x] Undefined/missing fields in proto result in undefined in output (not defaults)
+- [x] Tests cover partial configs (only some fields set)
+- [x] Presubmit passes
 
 ---
 
