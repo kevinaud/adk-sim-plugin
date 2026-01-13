@@ -18,7 +18,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@adk-sim/protos": "*"
+    "@adk-sim/protos": "*",
+    "@google/genai": "^1.35.0"
   },
   "peerDependencies": {
     "@bufbuild/protobuf": "^2.0.0"

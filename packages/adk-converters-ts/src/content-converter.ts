@@ -1,7 +1,7 @@
 /**
  * Content Conversion Utilities
  *
- * Converts between proto Content/Part types and SDK-style GenaiContent/GenaiPart types.
+ * Converts between proto Content/Part types and @google/genai Content/Part types.
  * These are the foundational converters used by the higher-level request/response converters.
  *
  * Note: We construct proto objects as plain TypeScript objects rather than using
@@ -12,90 +12,50 @@
  */
 
 import type {
+  Content as ProtoContent,
+  Part as ProtoPart,
+  FunctionCall as ProtoFunctionCall,
+  FunctionResponse as ProtoFunctionResponse,
+  Blob as ProtoBlob,
+} from '@adk-sim/protos';
+
+import type {
   Content,
   Part,
   FunctionCall,
   FunctionResponse,
   Blob,
-} from '@adk-sim/protos';
+} from '@google/genai';
+
+// Re-export the @google/genai types for consumers
+export type { Content, Part, FunctionCall, FunctionResponse, Blob };
 
 // ============================================================================
-// SDK-style Types (Genai)
-// ============================================================================
-
-/**
- * SDK-style Content type matching @google/genai Content interface.
- * Used for display and manipulation in the frontend.
- */
-export interface GenaiContent {
-  role?: string;
-  parts?: GenaiPart[];
-}
-
-/**
- * SDK-style Part type matching @google/genai Part interface.
- * Supports text, function calls, function responses, inline data, and thought markers.
- */
-export interface GenaiPart {
-  text?: string;
-  functionCall?: GenaiFunctionCall;
-  functionResponse?: GenaiFunctionResponse;
-  inlineData?: GenaiInlineData;
-  thought?: boolean;
-}
-
-/**
- * SDK-style FunctionCall type.
- */
-export interface GenaiFunctionCall {
-  id?: string;
-  name: string;
-  args?: Record<string, unknown>;
-}
-
-/**
- * SDK-style FunctionResponse type.
- */
-export interface GenaiFunctionResponse {
-  id?: string;
-  name: string;
-  response: Record<string, unknown>;
-}
-
-/**
- * SDK-style InlineData type for binary content.
- */
-export interface GenaiInlineData {
-  mimeType: string;
-  data: string; // base64 encoded
-}
-
-// ============================================================================
-// Proto → Genai Conversion
+// Proto → @google/genai Conversion
 // ============================================================================
 
 /**
- * Convert a proto Content message to SDK-style GenaiContent.
+ * Convert a proto Content message to @google/genai Content.
  *
  * @param protoContent - The proto Content message
- * @returns SDK-style GenaiContent object
+ * @returns @google/genai Content object
  *
  * @example
  * ```typescript
- * const genai = protoContentToGenaiContent(protoContent);
- * console.log(genai.role); // 'user' or 'model'
- * console.log(genai.parts?.[0].text); // 'Hello!'
+ * const content = protoContentToGenaiContent(protoContent);
+ * console.log(content.role); // 'user' or 'model'
+ * console.log(content.parts?.[0].text); // 'Hello!'
  * ```
  */
-export function protoContentToGenaiContent(protoContent: Content): GenaiContent {
-  const result: GenaiContent = {};
+export function protoContentToGenaiContent(protoContent: ProtoContent): Content {
+  const result: Content = {};
 
   // Role: proto uses empty string as default, we prefer undefined
   if (protoContent.role) {
     result.role = protoContent.role;
   }
 
-  // Parts: convert each proto Part to GenaiPart
+  // Parts: convert each proto Part to @google/genai Part
   if (protoContent.parts && protoContent.parts.length > 0) {
     result.parts = protoContent.parts.map(protoPartToGenaiPart);
   }
@@ -104,13 +64,13 @@ export function protoContentToGenaiContent(protoContent: Content): GenaiContent 
 }
 
 /**
- * Convert a proto Part message to SDK-style GenaiPart.
+ * Convert a proto Part message to @google/genai Part.
  *
  * @param protoPart - The proto Part message
- * @returns SDK-style GenaiPart object
+ * @returns @google/genai Part object
  */
-export function protoPartToGenaiPart(protoPart: Part): GenaiPart {
-  const result: GenaiPart = {};
+export function protoPartToGenaiPart(protoPart: ProtoPart): Part {
+  const result: Part = {};
 
   // Handle the data oneof
   switch (protoPart.data.case) {
@@ -146,10 +106,10 @@ export function protoPartToGenaiPart(protoPart: Part): GenaiPart {
 }
 
 /**
- * Convert a proto FunctionCall to SDK-style GenaiFunctionCall.
+ * Convert a proto FunctionCall to @google/genai FunctionCall.
  */
-function protoFunctionCallToGenai(protoFc: FunctionCall): GenaiFunctionCall {
-  const result: GenaiFunctionCall = {
+function protoFunctionCallToGenai(protoFc: ProtoFunctionCall): FunctionCall {
+  const result: FunctionCall = {
     name: protoFc.name,
   };
 
@@ -165,10 +125,10 @@ function protoFunctionCallToGenai(protoFc: FunctionCall): GenaiFunctionCall {
 }
 
 /**
- * Convert a proto FunctionResponse to SDK-style GenaiFunctionResponse.
+ * Convert a proto FunctionResponse to @google/genai FunctionResponse.
  */
-function protoFunctionResponseToGenai(protoFr: FunctionResponse): GenaiFunctionResponse {
-  const result: GenaiFunctionResponse = {
+function protoFunctionResponseToGenai(protoFr: ProtoFunctionResponse): FunctionResponse {
+  const result: FunctionResponse = {
     name: protoFr.name,
     response: (protoFr.response ?? {}) as Record<string, unknown>,
   };
@@ -181,10 +141,10 @@ function protoFunctionResponseToGenai(protoFr: FunctionResponse): GenaiFunctionR
 }
 
 /**
- * Convert a proto Blob to SDK-style GenaiInlineData.
+ * Convert a proto Blob to @google/genai Blob (inlineData).
  * Converts Uint8Array to base64 string.
  */
-function protoBlobToGenaiInlineData(protoBlob: Blob): GenaiInlineData {
+function protoBlobToGenaiInlineData(protoBlob: ProtoBlob): Blob {
   return {
     mimeType: protoBlob.mimeType,
     data: uint8ArrayToBase64(protoBlob.data),
@@ -192,13 +152,13 @@ function protoBlobToGenaiInlineData(protoBlob: Blob): GenaiInlineData {
 }
 
 // ============================================================================
-// Genai → Proto Conversion
+// @google/genai → Proto Conversion
 // ============================================================================
 
 /**
- * Convert SDK-style GenaiContent to proto Content message.
+ * Convert @google/genai Content to proto Content message.
  *
- * @param genaiContent - The SDK-style content object
+ * @param genaiContent - The @google/genai content object
  * @returns Proto Content message
  *
  * @example
@@ -209,25 +169,25 @@ function protoBlobToGenaiInlineData(protoBlob: Blob): GenaiInlineData {
  * });
  * ```
  */
-export function genaiContentToProtoContent(genaiContent: GenaiContent): Content {
+export function genaiContentToProtoContent(genaiContent: Content): ProtoContent {
   const parts = genaiContent.parts?.map(genaiPartToProtoPart) ?? [];
 
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Content',
     role: genaiContent.role ?? '',
     parts,
-  } as Content;
+  } as ProtoContent;
 }
 
 /**
- * Convert SDK-style GenaiPart to proto Part message.
+ * Convert @google/genai Part to proto Part message.
  *
- * @param genaiPart - The SDK-style part object
+ * @param genaiPart - The @google/genai part object
  * @returns Proto Part message
  */
-export function genaiPartToProtoPart(genaiPart: GenaiPart): Part {
+export function genaiPartToProtoPart(genaiPart: Part): ProtoPart {
   // Determine which data case to use
-  let data: Part['data'] = { case: undefined, value: undefined };
+  let data: ProtoPart['data'] = { case: undefined, value: undefined };
 
   if (genaiPart.text !== undefined) {
     data = { case: 'text', value: genaiPart.text };
@@ -254,45 +214,45 @@ export function genaiPartToProtoPart(genaiPart: GenaiPart): Part {
     thought: genaiPart.thought ?? false,
     thoughtSignature: new Uint8Array(),
     metadata: { case: undefined, value: undefined },
-  } as Part;
+  } as ProtoPart;
 }
 
 /**
- * Convert SDK-style GenaiFunctionCall to proto FunctionCall.
+ * Convert @google/genai FunctionCall to proto FunctionCall.
  */
-function genaiFunctionCallToProto(genaiFc: GenaiFunctionCall): FunctionCall {
+function genaiFunctionCallToProto(genaiFc: FunctionCall): ProtoFunctionCall {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionCall',
     id: genaiFc.id ?? '',
-    name: genaiFc.name,
+    name: genaiFc.name ?? '',
     args: genaiFc.args as Record<string, unknown> | undefined,
-  } as FunctionCall;
+  } as ProtoFunctionCall;
 }
 
 /**
- * Convert SDK-style GenaiFunctionResponse to proto FunctionResponse.
+ * Convert @google/genai FunctionResponse to proto FunctionResponse.
  */
-function genaiFunctionResponseToProto(genaiFr: GenaiFunctionResponse): FunctionResponse {
+function genaiFunctionResponseToProto(genaiFr: FunctionResponse): ProtoFunctionResponse {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionResponse',
     id: genaiFr.id ?? '',
-    name: genaiFr.name,
+    name: genaiFr.name ?? '',
     response: genaiFr.response,
     parts: [],
     willContinue: false,
-  } as FunctionResponse;
+  } as ProtoFunctionResponse;
 }
 
 /**
- * Convert SDK-style GenaiInlineData to proto Blob.
+ * Convert @google/genai Blob (inlineData) to proto Blob.
  * Converts base64 string to Uint8Array.
  */
-function genaiInlineDataToProtoBlob(genaiData: GenaiInlineData): Blob {
+function genaiInlineDataToProtoBlob(genaiData: Blob): ProtoBlob {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Blob',
-    mimeType: genaiData.mimeType,
-    data: base64ToUint8Array(genaiData.data),
-  } as Blob;
+    mimeType: genaiData.mimeType ?? '',
+    data: base64ToUint8Array(genaiData.data ?? ''),
+  } as ProtoBlob;
 }
 
 // ============================================================================

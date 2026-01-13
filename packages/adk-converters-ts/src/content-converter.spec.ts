@@ -7,44 +7,49 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { Content, Part, FunctionCall, FunctionResponse, Blob } from '@adk-sim/protos';
+import type {
+  Content as ProtoContent,
+  Part as ProtoPart,
+  FunctionCall as ProtoFunctionCall,
+  FunctionResponse as ProtoFunctionResponse,
+  Blob as ProtoBlob,
+} from '@adk-sim/protos';
+import type { Content, Part } from '@google/genai';
 import {
   protoContentToGenaiContent,
   genaiContentToProtoContent,
   protoPartToGenaiPart,
   genaiPartToProtoPart,
-  type GenaiContent,
-  type GenaiPart,
 } from './content-converter.js';
 
 // Helper to create a Part-like object for testing
-function createTestPart(data: Part['data'], thought = false): Part {
+function createTestPart(data: ProtoPart['data'], thought = false): ProtoPart {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Part',
     data,
     metadata: { case: undefined, value: undefined },
     thought,
     thoughtSignature: new Uint8Array(),
-  } as Part;
+  } as ProtoPart;
 }
 
 // Helper to create a Content-like object for testing
-function createTestContent(role: string, parts: Part[]): Content {
+function createTestContent(role: string, parts: ProtoPart[]): ProtoContent {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Content',
     role,
     parts,
-  } as Content;
+  } as ProtoContent;
 }
 
 // Helper to create a FunctionCall-like object
-function createTestFunctionCall(name: string, id?: string, args?: Record<string, unknown>): FunctionCall {
+function createTestFunctionCall(name: string, id?: string, args?: Record<string, unknown>): ProtoFunctionCall {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionCall',
     id: id ?? '',
     name,
     args,
-  } as FunctionCall;
+  } as ProtoFunctionCall;
 }
 
 // Helper to create a FunctionResponse-like object
@@ -52,7 +57,7 @@ function createTestFunctionResponse(
   name: string,
   response: Record<string, unknown>,
   id?: string
-): FunctionResponse {
+): ProtoFunctionResponse {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionResponse',
     id: id ?? '',
@@ -60,16 +65,16 @@ function createTestFunctionResponse(
     response,
     parts: [],
     willContinue: false,
-  } as FunctionResponse;
+  } as ProtoFunctionResponse;
 }
 
 // Helper to create a Blob-like object
-function createTestBlob(mimeType: string, data: Uint8Array): Blob {
+function createTestBlob(mimeType: string, data: Uint8Array): ProtoBlob {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Blob',
     mimeType,
     data,
-  } as Blob;
+  } as ProtoBlob;
 }
 
 describe('Content Conversion', () => {
@@ -231,7 +236,7 @@ describe('Content Conversion', () => {
 
   describe('genaiContentToProtoContent', () => {
     it('should convert user content with text', () => {
-      const genaiContent: GenaiContent = {
+      const genaiContent: Content = {
         role: 'user',
         parts: [{ text: 'Hello!' }],
       };
@@ -245,7 +250,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert model content', () => {
-      const genaiContent: GenaiContent = {
+      const genaiContent: Content = {
         role: 'model',
         parts: [{ text: 'Response text' }],
       };
@@ -256,7 +261,7 @@ describe('Content Conversion', () => {
     });
 
     it('should handle undefined role as empty string', () => {
-      const genaiContent: GenaiContent = {
+      const genaiContent: Content = {
         parts: [{ text: 'No role' }],
       };
 
@@ -266,7 +271,7 @@ describe('Content Conversion', () => {
     });
 
     it('should handle undefined parts as empty array', () => {
-      const genaiContent: GenaiContent = {
+      const genaiContent: Content = {
         role: 'user',
       };
 
@@ -276,7 +281,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert multi-part content', () => {
-      const genaiContent: GenaiContent = {
+      const genaiContent: Content = {
         role: 'user',
         parts: [{ text: 'Part 1' }, { text: 'Part 2' }],
       };
@@ -295,7 +300,7 @@ describe('Content Conversion', () => {
 
   describe('genaiPartToProtoPart', () => {
     it('should convert text part', () => {
-      const genaiPart: GenaiPart = { text: 'Hello!' };
+      const genaiPart: Part = { text: 'Hello!' };
 
       const result = genaiPartToProtoPart(genaiPart);
 
@@ -304,7 +309,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert functionCall part', () => {
-      const genaiPart: GenaiPart = {
+      const genaiPart: Part = {
         functionCall: {
           id: 'call-123',
           name: 'get_weather',
@@ -322,7 +327,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert functionCall without id', () => {
-      const genaiPart: GenaiPart = {
+      const genaiPart: Part = {
         functionCall: {
           name: 'simple_func',
         },
@@ -337,7 +342,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert functionResponse part', () => {
-      const genaiPart: GenaiPart = {
+      const genaiPart: Part = {
         functionResponse: {
           id: 'call-123',
           name: 'get_weather',
@@ -355,7 +360,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert inlineData part', () => {
-      const genaiPart: GenaiPart = {
+      const genaiPart: Part = {
         inlineData: {
           mimeType: 'image/png',
           data: 'SGVsbG8=', // "Hello" in base64
@@ -371,7 +376,7 @@ describe('Content Conversion', () => {
     });
 
     it('should convert thought part', () => {
-      const genaiPart: GenaiPart = {
+      const genaiPart: Part = {
         text: 'Thinking...',
         thought: true,
       };
@@ -383,7 +388,7 @@ describe('Content Conversion', () => {
     });
 
     it('should handle empty part', () => {
-      const genaiPart: GenaiPart = {};
+      const genaiPart: Part = {};
 
       const result = genaiPartToProtoPart(genaiPart);
 
@@ -397,7 +402,7 @@ describe('Content Conversion', () => {
 
   describe('Round-trip conversion', () => {
     it('should preserve text content through round-trip', () => {
-      const original: GenaiContent = {
+      const original: Content = {
         role: 'user',
         parts: [{ text: 'Hello, world!' }],
       };
@@ -410,7 +415,7 @@ describe('Content Conversion', () => {
     });
 
     it('should preserve functionCall through round-trip', () => {
-      const original: GenaiContent = {
+      const original: Content = {
         role: 'model',
         parts: [
           {
@@ -432,7 +437,7 @@ describe('Content Conversion', () => {
     });
 
     it('should preserve functionResponse through round-trip', () => {
-      const original: GenaiContent = {
+      const original: Content = {
         role: 'user',
         parts: [
           {
@@ -454,7 +459,7 @@ describe('Content Conversion', () => {
     });
 
     it('should preserve inlineData through round-trip', () => {
-      const original: GenaiContent = {
+      const original: Content = {
         role: 'user',
         parts: [
           {
@@ -474,7 +479,7 @@ describe('Content Conversion', () => {
     });
 
     it('should preserve multi-part mixed content through round-trip', () => {
-      const original: GenaiContent = {
+      const original: Content = {
         role: 'model',
         parts: [
           { text: 'Here is the weather:' },
@@ -496,7 +501,7 @@ describe('Content Conversion', () => {
     });
 
     it('should preserve thought marker through round-trip', () => {
-      const original: GenaiContent = {
+      const original: Content = {
         role: 'model',
         parts: [{ text: 'Let me think...', thought: true }],
       };
