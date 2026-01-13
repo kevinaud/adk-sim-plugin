@@ -315,14 +315,14 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [createLlmResponse Factory](../research/adk-typescript-research.md#factory-function) - Inverse operation reference
 
 **Acceptance Criteria**:
-- [ ] `llmResponseToProto()` returns valid GenerateContentResponse proto
-- [ ] Content wrapped in `candidates[0].content`
-- [ ] FinishReason mapped to proto enum
-- [ ] UsageMetadata preserved if present
-- [ ] Error responses (errorCode/errorMessage) handled appropriately
-- [ ] Tests cover text responses, function calls, function responses
-- [ ] Tests cover error responses and finish reasons
-- [ ] Presubmit passes
+- [x] `llmResponseToProto()` returns valid GenerateContentResponse proto
+- [x] Content wrapped in `candidates[0].content`
+- [x] FinishReason mapped to proto enum
+- [x] UsageMetadata preserved if present
+- [x] Error responses (errorCode/errorMessage) handled appropriately
+- [x] Tests cover text responses, function calls, function responses
+- [x] Tests cover error responses and finish reasons
+- [x] Presubmit passes
 
 ---
 
