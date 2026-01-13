@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================================
-# Presubmit Checks - Runs everything that pre-push would run
+# Presubmit Checks - Same as pre-push hook
 # ============================================================
-# This is equivalent to what happens on `git push`, but can be
-# run manually before pushing to catch issues early.
+# This runs EXACTLY what the pre-push hook runs.
+# Use this to catch issues before pushing.
 # ============================================================
 
 set -e
@@ -15,15 +15,11 @@ echo "🚀 Running Presubmit Checks..."
 npm install --silent
 uv sync --frozen
 
-# Generate protos (with clean to ensure consistency)
-make clean
-make generate
-
-# Build TS packages (required for frontend)
+# Build TS packages (required for frontend build/tests)
 npm run build --workspace=packages/adk-sim-protos-ts
 npm run build --workspace=packages/adk-converters-ts
 
-# Run ALL pre-commit hooks (commit + push stages)
+# Run ALL pre-commit hooks (same as pre-push)
 echo ""
 echo "📋 Running all quality checks and tests..."
 uv run pre-commit run --all-files --hook-stage manual

@@ -149,16 +149,28 @@ repos:
         stages: [pre-push, manual]
 
   # ============================================================
+  # Generated Code Consistency Check (pre-push only)
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: check-generated-code
+        name: check generated code is up-to-date
+        entry: scripts/check-generated.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+  # ============================================================
   # General - File hygiene
   # ============================================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        # Exclude generated proto files (buf generates with trailing whitespace)
-        exclude: ^(packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/|packages/adk-sim-protos-ts/src/(adksim|google)/|.*\.(snap|lock)$)
+        exclude: ^.*\.(snap|lock)$
       - id: end-of-file-fixer
-        exclude: ^(packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/|packages/adk-sim-protos-ts/src/(adksim|google)/|.*\.(snap|lock)$)
+        exclude: ^.*\.(snap|lock)$
       - id: check-yaml
         args: [--unsafe]  # Allow custom tags
       - id: check-json

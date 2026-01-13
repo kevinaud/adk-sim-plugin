@@ -39,6 +39,8 @@ build_protos() {
     # Format generated code
     uv run ruff check --fix "$PYTHON_GEN_DIR" 2>/dev/null || true
     uv run ruff format "$PYTHON_GEN_DIR"
+    # Fix trailing whitespace in docstrings (ruff doesn't fix this)
+    find "$PYTHON_GEN_DIR" -name '*.py' -exec sed -i 's/[[:space:]]*$//' {} \;
     npx prettier --write "$TS_GEN_DIR/**/*.ts" 2>/dev/null || true
 
     echo "✅ Protos generated!"

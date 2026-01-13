@@ -48,6 +48,8 @@ $(PROTO_MARKER): $(PROTO_FILES) buf.yaml buf.gen.yaml
 	@if [ -f /tmp/index.ts.bak ]; then mv /tmp/index.ts.bak "$(TS_GEN_DIR)/index.ts"; fi
 	@uv run ruff check --fix "$(PYTHON_GEN_DIR)" 2>/dev/null || true
 	@uv run ruff format "$(PYTHON_GEN_DIR)"
+	@# Fix trailing whitespace in docstrings (ruff doesn't fix this)
+	@find "$(PYTHON_GEN_DIR)" -name '*.py' -exec sed -i 's/[[:space:]]*$$//' {} \;
 	@cd frontend && npx prettier --write "../$(TS_GEN_DIR)/**/*.ts" 2>/dev/null || true
 	@touch $(PROTO_MARKER)
 	@echo "✅ Proto generation complete!"
