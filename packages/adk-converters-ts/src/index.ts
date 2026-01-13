@@ -44,6 +44,9 @@ export type {
   Tool,
   FunctionDeclaration,
   Schema,
+  Tool,
+  FunctionDeclaration,
+  Schema,
 } from '@google/genai';
 
 // High-level request/response converters (stubs for now)
