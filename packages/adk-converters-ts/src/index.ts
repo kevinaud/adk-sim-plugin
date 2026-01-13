@@ -54,13 +54,7 @@ export type {
   Tool,
   FunctionDeclaration,
   Schema,
-<<<<<<< HEAD
   SafetySetting,
-=======
-  Tool,
-  FunctionDeclaration,
-  Schema,
->>>>>>> sprint-2/pr3/generation-config
 } from '@google/genai';
 
 // High-level request/response converters (stubs for now)
