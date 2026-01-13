@@ -6,8 +6,8 @@
 # Enforced in: CI workflow
 #
 # Stages:
-#   - commit: Fast checks on staged files
-#   - pre-push: Slower checks (Angular build) before push
+#   - commit: Fast checks on staged files (lint, format, type check)
+#   - pre-push: Full test suite (unit, integration, e2e) + Angular build
 #   - manual: Run only with --hook-stage manual
 # ============================================================
 
@@ -94,6 +94,59 @@ repos:
         files: ^frontend/.*\.(ts|html|scss)$
         pass_filenames: false
         stages: [pre-push, manual]  # Only on push, not every commit
+
+  # ============================================================
+  # Tests - Full Test Suite (pre-push only)
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: test-backend
+        name: backend tests (unit + integration)
+        entry: uv run pytest server/tests/unit plugins/python/tests -v
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-converters
+        name: adk-converters-ts tests
+        entry: bash -c 'cd packages/adk-converters-ts && npm test'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-frontend
+        name: frontend tests (vitest)
+        entry: bash -c 'cd frontend && CI=true npm run ng -- test --watch=false'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-frontend-component
+        name: frontend component tests (playwright)
+        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright-ct.config.ts'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-frontend-e2e
+        name: frontend e2e tests (playwright)
+        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright.config.ts'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-e2e
+        name: e2e tests (requires docker)
+        entry: uv run pytest server/tests/e2e --run-e2e -v
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
 
   # ============================================================
   # General - File hygiene

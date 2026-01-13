@@ -51,6 +51,9 @@ out-tsc/
 bazel-out/
 frontend/dist/
 frontend/.angular/
+frontend/test-results/
+**/playwright-report/
+**/.playwright/
 ":memory:?cache=shared"
 notebooks/
 

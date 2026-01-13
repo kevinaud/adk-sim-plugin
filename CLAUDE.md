@@ -7,8 +7,10 @@ This is a monorepo for a gRPC-based agent simulator with Python backend, Angular
 Quality rules are defined in `.pre-commit-config.yaml` (single source of truth).
 
 - Run `./scripts/presubmit.sh` before any `git push` - pushing failing code is prohibited
-- Run `uv run pre-commit run --all-files` for quick quality checks
-- Pre-commit hooks run automatically on `git commit` (staged files) and `git push` (all files)
+- Run `uv run pre-commit run --all-files` for quick quality checks (lint/format only)
+- Pre-commit hooks run automatically:
+  - `git commit`: Fast checks (lint, format, type check) on staged files
+  - `git push`: Full test suite (unit, integration, e2e) + Angular build
 
 ## Git Workflow
 

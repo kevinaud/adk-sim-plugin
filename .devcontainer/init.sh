@@ -50,6 +50,12 @@ if [ -f "frontend/package.json" ]; then
 fi
 
 # ------------------------------------------------------------
+# Playwright: Install browsers for testing
+# ------------------------------------------------------------
+echo "🎭 Installing Playwright browsers..."
+(cd frontend && npx playwright install chromium --with-deps)
+
+# ------------------------------------------------------------
 # Pre-commit: Install Git Hooks
 # ------------------------------------------------------------
 echo "🔗 Installing pre-commit git hooks..."
