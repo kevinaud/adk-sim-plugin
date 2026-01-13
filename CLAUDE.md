@@ -50,16 +50,21 @@ Use state-based verification, not interaction-based verification.
 ## Key Commands
 
 ```bash
-# Quality checks
-./scripts/presubmit.sh               # MUST pass before push
-uv run pre-commit run --all-files    # Quick quality check
-make quality                         # Same as pre-commit
+# Quality checks (pre-commit is single source of truth)
+./scripts/presubmit.sh                              # MUST pass before push (runs all pre-commit hooks)
+uv run pre-commit run --all-files                   # Quick quality check (commit-stage hooks only)
+uv run pre-commit run --all-files --hook-stage manual  # Full check including all tests
+make quality                                        # Same as pre-commit quick check
 
 # Development
 make generate                        # Generate proto code
 make server                          # Run Python server
 make frontend                        # Run Angular dev server
-make format                          # Auto-format all code
+
+# Build
+./scripts/build.sh all               # Full build (protos, ts, frontend, packages)
+./scripts/build.sh protos            # Generate proto code only
+./scripts/build.sh frontend          # Build Angular frontend only
 ```
 
 ## Project Structure

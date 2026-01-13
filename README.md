@@ -36,9 +36,12 @@ uv run adk-sim --help
 
 ### Quality Checks
 
-Run the quality check script:
+Quality gates are defined in `.pre-commit-config.yaml` (single source of truth).
+
+Run quality checks:
 ```bash
-./scripts/check_quality.sh
+uv run pre-commit run --all-files    # Quick check (lint/format)
+./scripts/presubmit.sh               # Full check including tests (must pass before push)
 ```
 
 ### Testing

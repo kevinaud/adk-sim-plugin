@@ -114,9 +114,9 @@ For each file in the PR:
    cd frontend && npm run build  # Catches type errors
    ```
 
-3. **If presubmit exists, run it**:
+3. **Run pre-commit quality checks** (single source of truth for quality):
    ```bash
-   ./scripts/presubmit.sh
+   uv run pre-commit run --all-files  # Quick check (lint/format)
    ```
 
 4. **If any check fails**:
