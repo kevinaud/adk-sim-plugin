@@ -17,6 +17,16 @@ export {
   genaiPartToProtoPart,
 } from './content-converter.js';
 
+// Tool conversion utilities
+export {
+  protoToolToGenaiTool,
+  genaiToolToProtoTool,
+  protoFunctionDeclarationToGenai,
+  genaiFunctionDeclarationToProto,
+  protoSchemaToGenaiSchema,
+  genaiSchemaToProtoSchema,
+} from './tool-converter.js';
+
 // Re-export @google/genai types for convenience
 export type {
   Content,
@@ -24,6 +34,9 @@ export type {
   FunctionCall,
   FunctionResponse,
   Blob,
+  Tool,
+  FunctionDeclaration,
+  Schema,
 } from '@google/genai';
 
 // High-level request/response converters (stubs for now)
