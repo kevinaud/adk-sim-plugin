@@ -1,5 +1,36 @@
 # **Playwright Sequential Test Failure Investigation: Angular 21 (Vite) and Docker Architecture Analysis**
 
+
+## Table of Contents
+
+- [**1\. Executive Summary and Problem Definition**](#1-executive-summary-and-problem-definition)
+- [**2\. Architectural Context: The Angular-Vite Convergence**](#2-architectural-context-the-angular-vite-convergence)
+  - [**2.1 The Paradigm Shift from Webpack to Vite**](#21-the-paradigm-shift-from-webpack-to-vite)
+  - [**2.2 The "Hidden App-Root" Pattern and Bootstrapping**](#22-the-hidden-app-root-pattern-and-bootstrapping)
+  - [**2.3 Angular 21 Zoneless Hydration Mechanics**](#23-angular-21-zoneless-hydration-mechanics)
+  - [**2.4 Docker Network Isolation and Port Binding**](#24-docker-network-isolation-and-port-binding)
+- [**3\. Failure Mechanism Analysis: The Sequential Anomaly**](#3-failure-mechanism-analysis-the-sequential-anomaly)
+  - [**3.1 The "ReuseExistingServer" Trap**](#31-the-reuseexistingserver-trap)
+  - [**3.2 WebSocket Connection Exhaustion and Blocking**](#32-websocket-connection-exhaustion-and-blocking)
+  - [**3.3 The HMR Overlay Interference**](#33-the-hmr-overlay-interference)
+  - [**3.4 Resource Exhaustion in Docker**](#34-resource-exhaustion-in-docker)
+- [**4\. Deep Dive: Configuration Vectors and Root Cause Identification**](#4-deep-dive-configuration-vectors-and-root-cause-identification)
+  - [**4.1 Playwright Configuration Analysis**](#41-playwright-configuration-analysis)
+  - [**4.2 Vite Configuration Analysis**](#42-vite-configuration-analysis)
+  - [**4.3 Angular Bootstrapping Logic**](#43-angular-bootstrapping-logic)
+  - [**4.4 Synthesis of Root Causes**](#44-synthesis-of-root-causes)
+- [**5\. Remediation Strategy and Best Practices**](#5-remediation-strategy-and-best-practices)
+  - [**5.1 Step 1: Network Hardening for Docker**](#51-step-1-network-hardening-for-docker)
+  - [**5.2 Step 2: Disabling HMR for E2E Testing**](#52-step-2-disabling-hmr-for-e2e-testing)
+  - [**5.3 Step 3: Playwright Server Configuration**](#53-step-3-playwright-server-configuration)
+  - [**5.4 Step 4: Application-Level Visibility Fallback**](#54-step-4-application-level-visibility-fallback)
+  - [**5.5 Step 5: Handling Zoneless Stability in Tests**](#55-step-5-handling-zoneless-stability-in-tests)
+- [**6\. Advanced Debugging: The "White Screen" Phenomenon**](#6-advanced-debugging-the-white-screen-phenomenon)
+- [**7\. Conclusion**](#7-conclusion)
+- [**8\. Summary of Findings & Recommendations**](#8-summary-of-findings-recommendations)
+- [**9\. References and Citations**](#9-references-and-citations)
+    - [**Works cited**](#works-cited)
+
 ## **1\. Executive Summary and Problem Definition**
 
 The modernization of the frontend development ecosystem has introduced a paradigm shift in how applications are built, served, and tested. The transition from Webpack to Vite in Angular 21 represents a fundamental architectural change, moving from bundle-based serving to native ESM (ECMAScript Modules) serving with Hot Module Replacement (HMR) powered by persistent WebSockets. While this shift offers significant improvements in developer experience (DX) and build speeds, it introduces complex state management challenges within automated testing environments, particularly when encapsulated in Docker containers.

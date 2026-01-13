@@ -1,5 +1,39 @@
 # Playwright Sequential Test Failure Investigation
 
+
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [Problem Description](#problem-description)
+  - [Observed Behavior](#observed-behavior)
+  - [Key Observations](#key-observations)
+- [Test Setup](#test-setup)
+  - [Test File Structure](#test-file-structure)
+  - [Playwright Configuration](#playwright-configuration)
+  - [Global Setup (Docker Backend)](#global-setup-docker-backend)
+- [Environment Details](#environment-details)
+- [Technology Context](#technology-context)
+  - [Angular 21 Changes](#angular-21-changes)
+  - [Playwright Test Isolation Model](#playwright-test-isolation-model)
+  - [Expected Behavior](#expected-behavior)
+- [Hypotheses](#hypotheses)
+  - [Hypothesis 1: Angular Dev Server State Corruption](#hypothesis-1-angular-dev-server-state-corruption)
+  - [Hypothesis 2: Vite WebSocket Connection Interference](#hypothesis-2-vite-websocket-connection-interference)
+  - [Hypothesis 3: Browser Context Not Fully Isolated](#hypothesis-3-browser-context-not-fully-isolated)
+  - [Hypothesis 4: Port/Connection Exhaustion](#hypothesis-4-portconnection-exhaustion)
+  - [Hypothesis 5: Angular Lazy Loading Race Condition](#hypothesis-5-angular-lazy-loading-race-condition)
+  - [Hypothesis 6: Docker Backend State](#hypothesis-6-docker-backend-state)
+  - [Hypothesis 7: Hidden Element Due to CSS/Visibility](#hypothesis-7-hidden-element-due-to-cssvisibility)
+- [Questions for Investigation](#questions-for-investigation)
+- [Diagnostic Code to Try](#diagnostic-code-to-try)
+  - [Add More Debugging to beforeEach](#add-more-debugging-to-beforeeach)
+  - [Test with Manual Browser Management](#test-with-manual-browser-management)
+  - [Test Without HMR](#test-without-hmr)
+- [Files for Reference](#files-for-reference)
+- [Successful Test Output (Test 1)](#successful-test-output-test-1)
+- [Failed Test Output (Test 2)](#failed-test-output-test-2)
+- [Desired Outcome](#desired-outcome)
+
 **Date**: January 12, 2026  
 **Status**: Open - Need Deep Research  
 **Related**: [Playwright E2E Blocking Investigation](./playwright-e2e-blocking-investigation.md)  

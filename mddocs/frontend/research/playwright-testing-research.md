@@ -511,7 +511,7 @@ jobs:
 
 ### Why Real Backend (Not Mocks)?
 
-Per [existing Python E2E tests](../../server/tests/e2e/conftest.py), we already use Docker to spin up real backends:
+Per [existing Python E2E tests](../../../server/tests/e2e/conftest.py), we already use Docker to spin up real backends:
 
 | Approach | Pros | Cons |
 |----------|------|------|
@@ -998,4 +998,4 @@ Screenshots updated:
 - [Playwright Visual Comparisons](https://playwright.dev/docs/test-snapshots)
 - [Playwright Docker](https://playwright.dev/docs/docker)
 - [GitHub: sand4rt/playwright-ct-angular](https://github.com/sand4rt/playwright-ct-angular)
-- [Existing Python E2E Tests](../../server/tests/e2e/conftest.py)
+- [Existing Python E2E Tests](../../../server/tests/e2e/conftest.py)

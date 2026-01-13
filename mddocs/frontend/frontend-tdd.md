@@ -1360,11 +1360,11 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 
 | Done | Task | FR | Deliverable |
 |:----:|------|-----|-------------|
-| [ ] | Project structure setup | - | Library folders, linting rules |
-| [ ] | `SessionStateService` | FR-023 | Global state signals |
-| [ ] | `SessionFacade` skeleton | FR-020 | Facade with mock gateway |
-| [ ] | `SessionGateway` port + mock | FR-020 | Abstract + test impl |
-| [ ] | Session list route | FR-002, FR-003 | List view with mock data |
+| [x] | Project structure setup | - | Library folders, linting rules |
+| [x] | `SessionStateService` | FR-023 | Global state signals |
+| [x] | `SessionFacade` skeleton | FR-020 | Facade with mock gateway |
+| [x] | `SessionGateway` port + mock | FR-020 | Abstract + test impl |
+| [x] | Session list route | FR-002, FR-003 | List view with mock data |
 | [ ] | Session route + guard | FR-001, FR-004 | Navigation + validation |
 
 ### Phase 2: Communication (Week 2)
@@ -1374,10 +1374,10 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 | Done | Task | FR | Deliverable |
 |:----:|------|-----|-------------|
 | [ ] | `GrpcSessionGateway` | FR-020 | Connect-ES adapter |
-| [ ] | `@adk-sim/converters` package | - | Proto ↔ ADK conversion |
+| [x] | `@adk-sim/converters` package | - | Proto ↔ ADK conversion |
 | [ ] | `LlmRequestConverter` | - | Frontend-specific wrappers |
 | [ ] | Auto-reconnect logic | FR-022, FR-023 | `ReconnectStrategy` |
-| [ ] | Connection status UI | FR-023 | `ConnectionStatusComponent` |
+| [x] | Connection status UI | FR-023 | `ConnectionStatusComponent` |
 
 ### Phase 3: Event Stream (Week 3)
 
@@ -1412,8 +1412,8 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 
 | Done | Task | FR | Deliverable |
 |:----:|------|-----|-------------|
-| [ ] | VRT baseline | - | Playwright screenshots |
-| [ ] | E2E tests | - | Critical user flows |
+| [x] | VRT baseline | - | Playwright screenshots |
+| [x] | E2E tests | - | Critical user flows |
 | [ ] | Error handling | FR-004 | Invalid session UX |
 | [ ] | Loading states | - | Skeleton loaders |
 | [ ] | Accessibility audit | - | ARIA, keyboard nav |

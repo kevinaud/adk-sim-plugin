@@ -1,6 +1,6 @@
 # Integration Testing ADK-Based Code
 
-This document establishes patterns for **integration testing** code built on the Google Agent Development Kit (ADK). These practices are derived from studying ADK's own test suite and complement our [unit testing guide](unit_testing.md).
+This document establishes patterns for **integration testing** code built on the Google Agent Development Kit (ADK). These practices are derived from studying ADK's own test suite and complement our [unit testing guide](adk_unit_testing.md).
 
 ---
 
@@ -173,7 +173,7 @@ pip install "google-cloud-aiplatform[evaluation]"
 
 For more control over integration tests, use `IntegrationRunner` — a wrapper around ADK's `Runner` that simplifies session management and event collection.
 
-### Basic Usage
+### IntegrationRunner Basic Usage
 
 ```python
 from tests.integration.helpers import IntegrationRunner

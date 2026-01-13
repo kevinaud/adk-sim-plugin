@@ -9,7 +9,7 @@ parent: prd.md
 ## Related Documents
 
 - [Product Requirements](prd.md) - Goals, user stories, and success metrics
-- [Plugin Specification](../docs/adk-sim-python-plugin-spec.md) - Python plugin details
+- [Plugin Specification](plugins/adk-sim-python-plugin-spec.md) - Python plugin details
 
 ## Table of Contents
 
@@ -19,11 +19,11 @@ parent: prd.md
 - [Architecture](#architecture)
 - [Components](#components)
   - [Simulator Server](#simulator-server)
-    - [Responsibilities](#adk-simulator-technical-design-document/components/simulator-server/responsibilities)
+    - [Simulator Server Responsibilities](#simulator-server-responsibilities)
   - [Plugin Layer](#plugin-layer)
-    - [Responsibilities](#adk-simulator-technical-design-document/components/plugin-layer/responsibilities)
+    - [Plugin Layer Responsibilities](#plugin-layer-responsibilities)
   - [Frontend](#frontend)
-    - [Responsibilities](#adk-simulator-technical-design-document/components/frontend/responsibilities)
+    - [Frontend Responsibilities](#frontend-responsibilities)
 - [Session Management](#session-management)
   - [Data Model](#data-model)
   - [API Design](#api-design)
@@ -37,10 +37,9 @@ parent: prd.md
   - [In-Process Simulation](#in-process-simulation)
 - [Open Questions](#open-questions)
 
-
 ## Overview
 
-This document describes the technical architecture for the ADK Simulator, addressing the requirements defined in the [PRD](prd.md#overview).
+This document describes the technical architecture for the ADK Simulator, addressing the requirements defined in the [PRD](prd.md#product-vision).
 
 ## Design Goals
 
@@ -69,7 +68,7 @@ This document describes the technical architecture for the ADK Simulator, addres
 
 Python-based gRPC server that manages simulation sessions.
 
-#### Responsibilities
+#### Simulator Server Responsibilities
 
 - Session lifecycle management
 - Conversation state tracking
@@ -80,7 +79,7 @@ Python-based gRPC server that manages simulation sessions.
 
 Framework-specific plugins that intercept LLM calls.
 
-#### Responsibilities
+#### Plugin Layer Responsibilities
 
 - Intercept outgoing LLM requests
 - Forward to simulator server
@@ -90,7 +89,7 @@ Framework-specific plugins that intercept LLM calls.
 
 Angular-based UI for session management and observation.
 
-#### Responsibilities
+#### Frontend Responsibilities
 
 - Session creation and management
 - Real-time conversation display
@@ -98,7 +97,7 @@ Angular-based UI for session management and observation.
 
 ## Session Management
 
-Addresses [Session Management requirements](prd.md#session-management/requirements).
+Addresses [Simulator Server requirements](prd.md#simulator-server-requirements).
 
 ### Data Model
 
@@ -132,7 +131,7 @@ service SimulatorService {
 
 ## Conversation Simulation
 
-Addresses [Conversation Simulation requirements](prd.md#conversation-simulation/requirements).
+Addresses the streaming and real-time requirements in [Simulator Server requirements](prd.md#simulator-server-requirements).
 
 ### Request Flow
 
@@ -151,11 +150,11 @@ For streaming responses, the simulator:
 
 ## Plugin Integration
 
-Addresses [Plugin Integration requirements](prd.md#plugin-integration/requirements).
+Addresses [ADK Plugin requirements](prd.md#adk-plugin-requirements).
 
 ### Python Plugin
 
-See [Python Plugin Specification](../docs/adk-sim-python-plugin-spec.md) for implementation details.
+See [Python Plugin Specification](plugins/adk-sim-python-plugin-spec.md) for implementation details.
 
 The plugin:
 1. Patches the `google.generativeai` client

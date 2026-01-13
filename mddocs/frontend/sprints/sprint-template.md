@@ -1,5 +1,26 @@
 # Sprint [N]: [Sprint Title]
 
+
+## Table of Contents
+
+- [Sprint Goal](#sprint-goal)
+- [Selected Scope](#selected-scope)
+  - [Tasks from TDD](#tasks-from-tdd)
+- [Research Summary](#research-summary)
+  - [Relevant Findings](#relevant-findings)
+    - [[Topic 1]](#topic-1)
+    - [[Topic 2]](#topic-2)
+  - [Key Decisions Already Made](#key-decisions-already-made)
+  - [Open Questions for This Sprint](#open-questions-for-this-sprint)
+- [Pull Request Plan](#pull-request-plan)
+  - [S[N]PR1: [PR Title]](#snpr1-pr-title)
+  - [S[N]PR2: [PR Title]](#snpr2-pr-title)
+- [Implementation Notes](#implementation-notes)
+  - [Patterns to Follow](#patterns-to-follow)
+  - [Gotchas to Avoid](#gotchas-to-avoid)
+- [Definition of Done](#definition-of-done)
+- [Retrospective Notes](#retrospective-notes)
+
 **Created**: [DATE]  
 **Status**: Planning | In Progress | Complete  
 **TDD Phase(s)**: [e.g., Phase 1: Foundation]
@@ -98,6 +119,21 @@
 
 **Goal**: [One sentence describing what this PR accomplishes]
 
+<!--
+  OPTIONAL: Completes TDD Task
+  
+  Include this field ONLY if this PR fully completes a task from the
+  frontend-tdd.md Implementation Phases table. Many PRs are intermediate
+  steps and won't have this field.
+  
+  When present, the implementation agent will check off BOTH:
+  1. The acceptance criteria in this sprint plan
+  2. The corresponding row in frontend-tdd.md
+  
+  Format: Copy the exact task name and phase from frontend-tdd.md
+-->
+**Completes TDD Task**: [Task name] (Phase [N])  
+
 **Files to Create/Modify**:
 - `path/to/file.ts` - [what changes]
 - `path/to/file.spec.ts` - [test coverage]
@@ -124,6 +160,11 @@
 **Depends On**: S[N]PR1
 
 **Goal**: [One sentence]
+
+<!--
+  No "Completes TDD Task" here - this PR is an intermediate step.
+  The TDD task will be completed by a later PR.
+-->
 
 **Files to Create/Modify**:
 - `path/to/file.ts` - [what changes]

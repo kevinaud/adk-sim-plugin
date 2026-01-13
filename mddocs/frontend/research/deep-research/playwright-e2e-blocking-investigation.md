@@ -1,5 +1,53 @@
 # Playwright E2E Test Blocking Investigation
 
+
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [Project Context](#project-context)
+  - [Technology Stack](#technology-stack)
+  - [Repository Structure](#repository-structure)
+  - [npm Workspace Configuration](#npm-workspace-configuration)
+- [Problem Description](#problem-description)
+  - [Symptoms](#symptoms)
+  - [Commands Tried and Results](#commands-tried-and-results)
+  - [Expected Behavior](#expected-behavior)
+  - [Actual Behavior](#actual-behavior)
+- [Configuration Files](#configuration-files)
+  - [playwright.config.ts](#playwrightconfigts)
+  - [global-setup.ts (for local dev, skipped in CI)](#global-setupts-for-local-dev-skipped-in-ci)
+  - [global-teardown.ts](#global-teardownts)
+  - [frontend/package.json scripts](#frontendpackagejson-scripts)
+  - [Test File: session-list.spec.ts](#test-file-session-listspects)
+- [Known Issues / Context](#known-issues-context)
+  - [1. Missing docker-compose.e2e.yaml](#1-missing-docker-composee2eyaml)
+  - [2. CI Environment Variable](#2-ci-environment-variable)
+  - [3. webServer Configuration](#3-webserver-configuration)
+  - [4. Dev Container Environment](#4-dev-container-environment)
+- [Hypotheses for Why Tests Hang](#hypotheses-for-why-tests-hang)
+  - [Hypothesis 1: webServer blocking](#hypothesis-1-webserver-blocking)
+  - [Hypothesis 2: reuseExistingServer not working](#hypothesis-2-reuseexistingserver-not-working)
+  - [Hypothesis 3: Terminal/TTY issues in dev container](#hypothesis-3-terminaltty-issues-in-dev-container)
+  - [Hypothesis 4: Chromium not properly installed](#hypothesis-4-chromium-not-properly-installed)
+  - [Hypothesis 5: npm workspace resolution issues](#hypothesis-5-npm-workspace-resolution-issues)
+  - [Hypothesis 6: stdout/stderr buffering](#hypothesis-6-stdoutstderr-buffering)
+- [What We've Already Tried](#what-weve-already-tried)
+  - [1. Clean node_modules reinstall](#1-clean-nodemodules-reinstall)
+  - [2. Different reporter options](#2-different-reporter-options)
+  - [3. Shorter timeouts](#3-shorter-timeouts)
+  - [4. Single test filter](#4-single-test-filter)
+  - [5. Different CI values](#5-different-ci-values)
+  - [6. Killing processes](#6-killing-processes)
+- [Questions for Deep Research](#questions-for-deep-research)
+- [Environment Details](#environment-details)
+  - [Node/npm versions](#nodenpm-versions)
+  - [Playwright version](#playwright-version)
+  - [OS details](#os-details)
+  - [Dev container base image](#dev-container-base-image)
+- [Desired Outcome](#desired-outcome)
+- [Additional Files for Reference](#additional-files-for-reference)
+- [Sprint Context](#sprint-context)
+
 **Date**: January 12, 2026  
 **Status**: Open - Need Deep Research  
 **Author**: Sprint Orchestrator Agent

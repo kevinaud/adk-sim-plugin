@@ -12,7 +12,7 @@ This report provides a comprehensive architectural analysis and implementation g
 2. **Synchronized Polyglot Versioning:** Implementation of **Changesets** in "Fixed Mode," augmented by a custom Python synchronization hook. This provides the requisite version-locked updates across languages and supports the developer-initiated "Release PR" workflow superior to fully automated alternatives like *Release Please*.  
 3. **Local-First Verification:** Rejection of TestPyPI for CI staging in favor of **Ephemeral Local Registries** (Verdaccio for NPM) and **Local Wheel Installation** (for Python) using uv. This guarantees that the exact bytes tested are the bytes published, eliminating the "Dependency Hell" associated with mixing test and production indices.
 
-## ---
+---
 
 **1\. Strategic Context: The Shift to OIDC and SLSA Compliance**
 
@@ -47,7 +47,7 @@ When the proposed GitHub Actions workflow runs, the following cryptographic hand
 Implication for adk-agent-sim:  
 This architecture mandates that the workflow filename and the repository structure become part of the security identity. Changing the workflow filename (publish.yaml to release.yaml) breaks the trust relationship, causing immediate authentication failures. This rigidity is a feature, not a bug, ensuring that only the specific, audited CI process can publish releases.4
 
-## ---
+---
 
 **2\. Architectural Analysis of the Polyglot Monorepo**
 
@@ -85,7 +85,7 @@ A critical insight is the difference between *Development* dependency resolution
 
 **Architectural Risk:** If the CI pipeline verifies the build using *local* links but publishes artifacts expecting *remote* links, we introduce a verification gap. The "Staging Strategy" (Section 5\) must address this by verifying the *installability* of the artifacts as if they were remote, even if they are local.
 
-## ---
+---
 
 **3\. Deep Dive: PyPI Trusted Publisher Constraints**
 
@@ -131,7 +131,7 @@ We have two architectural options to bootstrap the repository:
 
 **Conclusion for Area 1:** PyPI does *not* enforce a permanent 1:1 mapping for existing projects. It only enforces it for *pending* projects to resolve the creation ambiguity. Use the "Manual Prime" method to allow a consolidated, DRY publish.yaml workflow.3
 
-## ---
+---
 
 **4\. Deep Dive: NPM OIDC Implementation**
 
@@ -176,7 +176,7 @@ JSON
 
 *Insight:* The directory field in the repository object is vital in a monorepo. It tells the provenance verifier exactly where in the repo this package lives.15
 
-## ---
+---
 
 **5\. Release Orchestration: The "Release PR" Workflow**
 
@@ -213,7 +213,7 @@ We must implement a Synchronization Hook.
 
 This approach keeps the tooling simple (Changesets handles the math and changelogs; Python handles the file IO) and satisfies the "Version Locked" requirement perfectly.
 
-## ---
+---
 
 **6\. Pre-Publish Verification: The Staging Strategy**
 
@@ -254,7 +254,7 @@ For NPM, local file linking (npm link) behaves differently than registry install
 
 This approach guarantees "installability" with 100% fidelity to a public release.18
 
-## ---
+---
 
 **7\. Implementation Guide**
 
@@ -503,7 +503,7 @@ jobs:
           packages-dir: dist/  
           skip-existing: true \# In case Protos is in the same dir
 
-## ---
+---
 
 **8\. Conclusion**
 

@@ -1,0 +1,5 @@
+# Ignore template files that have placeholder links
+frontend/sprints/sprint-template.md
+
+# Ignore WIP documentation with broken links
+infrastructure/research/release-best-practices-research-report.md

@@ -1,5 +1,35 @@
 # **Comprehensive Root Cause Analysis: Playwright E2E Test Blocking in Angular 21 Containerized Environments**
 
+
+## Table of Contents
+
+- [**1\. Executive Summary**](#1-executive-summary)
+  - [**2.1 The Modern Dev Container Ecosystem**](#21-the-modern-dev-container-ecosystem)
+  - [**2.2 The Node.js 20 Runtime Environment**](#22-the-nodejs-20-runtime-environment)
+  - [**2.3 Angular 21 and the Esbuild/Vite Paradigm Shift**](#23-angular-21-and-the-esbuildvite-paradigm-shift)
+  - [**2.4 Playwright 1.52.0 Orchestration**](#24-playwright-1520-orchestration)
+  - [**3.1 Symptom Deconstruction: The Null Output State**](#31-symptom-deconstruction-the-null-output-state)
+  - [**3.2 Process State Analysis: Sleep vs. Deadlock**](#32-process-state-analysis-sleep-vs-deadlock)
+  - [**3.3 The Failure of Timeouts: Signal Propagation in NPM Scripts**](#33-the-failure-of-timeouts-signal-propagation-in-npm-scripts)
+  - [**4.1 The Mechanics of the Angular Analytics Prompt**](#41-the-mechanics-of-the-angular-analytics-prompt)
+  - [**4.2 TTY Detection in Virtualized Environments**](#42-tty-detection-in-virtualized-environments)
+  - [**4.3 The "CI" Environment Variable Paradox**](#43-the-ci-environment-variable-paradox)
+  - [**5.1 Node.js DNS Resolution Ordering (Verbatim Mode)**](#51-nodejs-dns-resolution-ordering-verbatim-mode)
+  - [**5.2 Angular/Vite Port Binding Behaviors**](#52-angularvite-port-binding-behaviors)
+  - [**5.3 The localhost Ambiguity in Playwright**](#53-the-localhost-ambiguity-in-playwright)
+  - [**6.1 Signal Trapping in Nested Shells**](#61-signal-trapping-in-nested-shells)
+  - [**6.2 Port Conflict Resolution and Silent Failures**](#62-port-conflict-resolution-and-silent-failures)
+  - [**6.3 Docker Lifecycle Management in Monorepos**](#63-docker-lifecycle-management-in-monorepos)
+  - [**7.1 Standard Stream Buffering**](#71-standard-stream-buffering)
+  - [**7.2 Playwright's Stream Handling**](#72-playwrights-stream-handling)
+  - [**8.1 Step 1: Force Visibility (Observability)**](#81-step-1-force-visibility-observability)
+  - [**8.2 Step 2: Disable Angular Analytics (The Silent Killer)**](#82-step-2-disable-angular-analytics-the-silent-killer)
+  - [**8.3 Step 3: Enforce IPv4 Binding (The Network Fix)**](#83-step-3-enforce-ipv4-binding-the-network-fix)
+  - [**8.4 Step 4: Direct Binary Execution (Process Management)**](#84-step-4-direct-binary-execution-process-management)
+  - [**8.5 Step 5: Port-Based Readiness Check (Reliability Fallback)**](#85-step-5-port-based-readiness-check-reliability-fallback)
+  - [**Summary of Recommended Configuration State**](#summary-of-recommended-configuration-state)
+    - [**Works cited**](#works-cited)
+
 ## **1\. Executive Summary**
 
 The modern software development lifecycle relies heavily on the determinism of automated testing pipelines to ensure velocity without compromising stability. When this determinism fractures—manifesting as silent, indefinite hangs in a Continuous Integration (CI) or containerized environment—it represents a critical operational bottleneck that halts release cadences and erodes engineering confidence. This report details a forensic investigation into a catastrophic blocking failure within the End-to-End (E2E) testing suite for an Angular 21 application running inside a Docker-based VS Code Dev Container.
@@ -10,7 +40,7 @@ Through a synthesis of architectural analysis regarding the Node.js 20.19.2 runt
 
 This document serves as an exhaustive technical breakdown of these mechanisms, supported by deep research into kernel-level process management, network stack implementations in Debian 13, and the internal state machines of modern JavaScript tooling. It concludes with a remediated configuration strategy designed to restore observability and reliability to the testing pipeline.
 
-## ---
+---
 
 **2\. Operational Context and Architectural Forensics**
 
@@ -57,7 +87,7 @@ The following table summarizes the component versions and their relevant behavio
 | **Playwright** | 1.52.0 | webServer defaults to ignore output in some contexts. | Hides the root cause (prompts/errors) from the user. |
 | **OS** | Debian 13 | Modern glibc & gai.conf prefer IPv6. | Reinforces the IPv6 resolution preference. |
 
-## ---
+---
 
 **3\. The Phenomenology of the Silent Hang**
 
@@ -85,7 +115,7 @@ When Playwright attempts to time out the webServer, it sends a SIGTERM signal to
 npm scripts on Linux often forward signals to their child processes, but this behavior can be inconsistent depending on the shell implementation (sh vs bash) and the version of npm. If npm receives the SIGTERM but fails to forward it to the ng serve grandchild process, or if ng serve traps the signal to perform cleanup but gets stuck in that cleanup (e.g., waiting for a build to finish cancelling), the process tree remains alive.14  
 Furthermore, if the Playwright runner itself is blocked waiting for the webServer promise to resolve, and that promise logic does not have a secondary internal timer that effectively force-kills the process, the runner will appear to hang indefinitely.
 
-## ---
+---
 
 **4\. Hypothesis Alpha: The Interactive CLI Blockade**
 
@@ -118,7 +148,7 @@ More critically, snippet 6 highlights that in certain Angular CLI versions, the 
 
 The convergence of "Fresh Container" (missing config) \+ "Dev Container" (TTY present) \+ "Silent Output" creates the perfect conditions for this hang. The prompt is waiting in the dark.
 
-## ---
+---
 
 **5\. Hypothesis Beta: The IPv6/IPv4 Divergence**
 
@@ -157,7 +187,7 @@ If the "Silent Hang" is actually a "Timeout with no output," this hypothesis fit
 
 Snippet 17 explicitly confirms this behavior: "Replacing url: http://localhost:4200/, with port: 4200 fixes the issue." This works because checking a *port* usually involves trying all available interfaces or is implemented differently than the high-level HTTP request used for the url check.
 
-## ---
+---
 
 **6\. Hypothesis Gamma: Process Management and Zombie States**
 
@@ -189,7 +219,7 @@ On the *subsequent* test run:
 The user's setup involves global-setup.ts launching Docker Compose. While CI=true skips this, the local development flow relies on it. If docker-compose.e2e.yaml is missing (as noted in the problem description), local runs fail. But in CI, where CI=true, this file is skipped.  
 The risk is that the "Dev Container" environment itself might have pre-existing services running on port 4200 if the user is reusing the same container instance for multiple runs.
 
-## ---
+---
 
 **7\. Diagnostic Visibility and Output Streams**
 
@@ -220,7 +250,7 @@ webServer: {
 The default behavior in Playwright has varied across versions, but in many contexts, it defaults to ignore or only shows output on failure after the timeout. Since the process hangs before the timeout logic triggers cleanly (or is killed by external timeout), the output is lost.  
 By explicitly setting stdout: 'pipe' and stderr: 'pipe', we force the output to be relayed to the parent process immediately (or at least visibly), bypassing the "silent" aspect of the failure.
 
-## ---
+---
 
 **8\. Comprehensive Remediation Strategy**
 
@@ -324,7 +354,7 @@ webServer: {
   //...  
 }
 
-## ---
+---
 
 **9\. Conclusion and Strategic Recommendations**
 
