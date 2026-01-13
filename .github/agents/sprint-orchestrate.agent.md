@@ -308,11 +308,9 @@ For each PR in scope (in dependency order):
 
 ### Phase 5: Create PR and Monitor CI
 
-1. **Create Draft PR**:
+1. **Create Draft PR using Git Town**:
    ```bash
-   gh pr create --draft \
-     --title "<PR-ID>: <description>" \
-     --body "## Goal
+   git town propose --title "<PR-ID>: <description>" --body "## Goal
    <PR goal from sprint plan>
 
    ## Sprint Context
@@ -326,6 +324,13 @@ For each PR in scope (in dependency order):
    - <links from sprint plan>
    "
    ```
+   
+   > **Note**: Use `git town propose`, NOT `gh pr create`. Git Town's propose command ensures proper branch tracking and stack management.
+   >
+   > After creating, mark as draft if needed:
+   > ```bash
+   > gh pr ready --undo  # Converts to draft
+   > ```
 
 2. **Monitor CI** (non-blocking):
    ```bash
