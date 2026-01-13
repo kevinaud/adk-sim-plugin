@@ -1,15 +1,10 @@
 /**
  * @adk-sim/converters
  *
- * Provides conversion utilities between ADK SDK types and
- * Simulator proto types (from @adk-sim/protos).
- *
- * This package enables the frontend to:
- * - Display incoming LLM requests (Proto → ADK LlmRequest)
- * - Submit human responses (ADK LlmResponse → Proto)
+ * Provides conversion utilities between ADK SDK types and Simulator proto types.
  */
 
-// Content conversion utilities
+// Content conversion
 export {
   protoContentToGenaiContent,
   genaiContentToProtoContent,
@@ -17,7 +12,7 @@ export {
   genaiPartToProtoPart,
 } from './content-converter.js';
 
-// Tool conversion utilities
+// Tool conversion
 export {
   protoToolToGenaiTool,
   genaiToolToProtoTool,
@@ -27,14 +22,13 @@ export {
   genaiSchemaToProtoSchema,
 } from './tool-converter.js';
 
-// Config conversion utilities
+// Config conversion
 export {
   protoGenerationConfigToGenaiConfig,
   genaiConfigToProtoGenerationConfig,
-  type GenerationConfigFields,
 } from './config-converter.js';
 
-// Safety settings conversion utilities
+// Safety settings conversion
 export {
   protoSafetyToGenaiSafety,
   genaiSafetyToProtoSafety,
@@ -43,6 +37,10 @@ export {
   protoHarmBlockThresholdToGenai,
   genaiHarmBlockThresholdToProto,
 } from './safety-converter.js';
+
+// High-level converters
+export { protoToLlmRequest, type LlmRequest, type LlmRequestConversionResult } from './request-converter.js';
+export { llmResponseToProto, type LlmResponse, type LlmResponseConversionResult } from './response-converter.js';
 
 // Re-export @google/genai types for convenience
 export type {
@@ -56,7 +54,3 @@ export type {
   Schema,
   SafetySetting,
 } from '@google/genai';
-
-// High-level request/response converters (stubs for now)
-export { protoToLlmRequest, type LlmRequest, type LlmRequestConversionResult } from './request-converter.js';
-export { llmResponseToProto, type LlmResponse, type LlmResponseConversionResult } from './response-converter.js';

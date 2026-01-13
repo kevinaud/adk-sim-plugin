@@ -1,7 +1,5 @@
 /**
  * Converts ADK LlmResponse format to GenerateContentResponse proto.
- *
- * This is the inverse of the Python plugin's proto_to_llm_response().
  */
 
 import {
@@ -11,65 +9,48 @@ import {
   GenerateContentResponse_UsageMetadata,
 } from '@adk-sim/protos';
 
-import {
-  Content,
-  Part,
-  genaiContentToProtoContent
-} from './content-converter.js';
+import { Content, Part, genaiContentToProtoContent } from './content-converter.js';
 
-/**
- * Result of converting an LlmResponse to proto format.
- */
 export interface LlmResponseConversionResult {
-  /** The converted proto message */
   proto: GenerateContentResponse;
-  /** Any warnings generated during conversion */
   warnings: string[];
 }
 
-/**
- * Usage metadata for the response.
- * Mirrors @google/genai UsageMetadata.
- */
 export interface UsageMetadata {
   promptTokenCount?: number;
   candidatesTokenCount?: number;
   totalTokenCount?: number;
 }
 
-/**
- * Input structure for LlmResponse conversion.
- * Mirrors the ADK LlmResponse type.
- */
 export interface LlmResponse {
-  /** The response content - can be Content object, array of Parts, or simple string */
   content?: Content | Part[] | string;
-  /** The reason generation finished */
   finishReason?: string;
-  /** Token usage statistics */
   usageMetadata?: UsageMetadata;
-  /** Error code (if response represents an error) */
   errorCode?: number;
-  /** Error message (if response represents an error) */
   errorMessage?: string;
 }
 
-/**
- * Convert an LlmResponse to GenerateContentResponse proto format.
- *
- * @param response - The LlmResponse to convert
- * @returns The converted proto message and any warnings
- */
-export function llmResponseToProto(
-  response: LlmResponse
-): LlmResponseConversionResult {
+const FINISH_REASON_MAP: Record<string, Candidate_FinishReason> = {
+  STOP: Candidate_FinishReason.STOP,
+  MAX_TOKENS: Candidate_FinishReason.MAX_TOKENS,
+  SAFETY: Candidate_FinishReason.SAFETY,
+  RECITATION: Candidate_FinishReason.RECITATION,
+  LANGUAGE: Candidate_FinishReason.LANGUAGE,
+  OTHER: Candidate_FinishReason.OTHER,
+  BLOCKLIST: Candidate_FinishReason.OTHER,
+  PROHIBITED_CONTENT: Candidate_FinishReason.OTHER,
+  SPII: Candidate_FinishReason.OTHER,
+  MALFORMED_FUNCTION_CALL: Candidate_FinishReason.OTHER,
+  IMAGE_SAFETY: Candidate_FinishReason.OTHER,
+};
+
+export function llmResponseToProto(response: LlmResponse): LlmResponseConversionResult {
   const warnings: string[] = [];
-  
-  // 1. Handle Candidate
-  // The proto expects candidates[] array. We'll create one candidate.
+
+  // Build candidate
   const candidate: Candidate = {
     $typeName: 'google.ai.generativelanguage.v1beta.Candidate',
-    finishReason: Candidate_FinishReason.STOP, // Default
+    finishReason: Candidate_FinishReason.STOP,
     safetyRatings: [],
     citationMetadata: undefined,
     tokenCount: 0,
@@ -78,21 +59,9 @@ export function llmResponseToProto(
     avgLogprobs: 0,
   };
 
-  // Convert Content
+  // Convert content
   if (response.content) {
-    let contentObj: Content;
-    
-    if (typeof response.content === 'string') {
-      contentObj = { role: 'model', parts: [{ text: response.content }] };
-    } else if (Array.isArray(response.content)) {
-      contentObj = { role: 'model', parts: response.content };
-    } else {
-      contentObj = response.content;
-      if (!contentObj.role) {
-        contentObj.role = 'model';
-      }
-    }
-
+    const contentObj = normalizeContent(response.content);
     try {
       candidate.content = genaiContentToProtoContent(contentObj);
     } catch (e) {
@@ -100,17 +69,17 @@ export function llmResponseToProto(
     }
   }
 
-  // Convert Finish Reason
+  // Convert finish reason
   if (response.finishReason) {
-    candidate.finishReason = mapFinishReason(response.finishReason);
-    if (candidate.finishReason === Candidate_FinishReason.FINISH_REASON_UNSPECIFIED) {
-      if (response.finishReason !== 'FINISH_REASON_UNSPECIFIED' && response.finishReason !== 'UNSPECIFIED') {
-        warnings.push(`Unknown finishReason: ${response.finishReason}, defaulting to UNSPECIFIED`);
-      }
+    const normalized = response.finishReason.toUpperCase();
+    candidate.finishReason = FINISH_REASON_MAP[normalized] ?? Candidate_FinishReason.FINISH_REASON_UNSPECIFIED;
+    if (candidate.finishReason === Candidate_FinishReason.FINISH_REASON_UNSPECIFIED &&
+        normalized !== 'FINISH_REASON_UNSPECIFIED' && normalized !== 'UNSPECIFIED') {
+      warnings.push(`Unknown finishReason: ${response.finishReason}`);
     }
   }
 
-  // 2. Handle UsageMetadata
+  // Build usage metadata
   let usageMetadata: GenerateContentResponse_UsageMetadata | undefined;
   if (response.usageMetadata) {
     usageMetadata = {
@@ -128,40 +97,29 @@ export function llmResponseToProto(
     };
   }
 
-  // 3. Construct GenerateContentResponse
+  // Build response
   const proto: GenerateContentResponse = {
     $typeName: 'google.ai.generativelanguage.v1beta.GenerateContentResponse',
     candidates: [candidate],
     promptFeedback: undefined,
-    usageMetadata: usageMetadata,
+    usageMetadata,
     modelVersion: '',
     responseId: '',
   };
 
   if (response.errorCode || response.errorMessage) {
-     warnings.push(`Response contains error info (${response.errorCode}: ${response.errorMessage}) which cannot be fully represented in a successful GenerateContentResponse proto.`);
+    warnings.push(`Response contains error info (${response.errorCode}: ${response.errorMessage})`);
   }
 
   return { proto, warnings };
 }
 
-/**
- * Maps string finish reason to Proto enum.
- */
-function mapFinishReason(reason: string): Candidate_FinishReason {
-  const normalized = reason.toUpperCase();
-  switch (normalized) {
-    case 'STOP': return Candidate_FinishReason.STOP;
-    case 'MAX_TOKENS': return Candidate_FinishReason.MAX_TOKENS;
-    case 'SAFETY': return Candidate_FinishReason.SAFETY;
-    case 'RECITATION': return Candidate_FinishReason.RECITATION;
-    case 'LANGUAGE': return Candidate_FinishReason.LANGUAGE;
-    case 'OTHER': return Candidate_FinishReason.OTHER;
-    case 'BLOCKLIST': return Candidate_FinishReason.OTHER;
-    case 'PROHIBITED_CONTENT': return Candidate_FinishReason.OTHER;
-    case 'SPII': return Candidate_FinishReason.OTHER;
-    case 'MALFORMED_FUNCTION_CALL': return Candidate_FinishReason.OTHER; 
-    case 'IMAGE_SAFETY': return Candidate_FinishReason.OTHER;
-    default: return Candidate_FinishReason.FINISH_REASON_UNSPECIFIED;
+function normalizeContent(content: Content | Part[] | string): Content {
+  if (typeof content === 'string') {
+    return { role: 'model', parts: [{ text: content }] };
   }
+  if (Array.isArray(content)) {
+    return { role: 'model', parts: content };
+  }
+  return { role: content.role || 'model', parts: content.parts };
 }

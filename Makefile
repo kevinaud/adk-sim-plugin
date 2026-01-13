@@ -80,6 +80,11 @@ $(PROTO_MARKER): $(PROTO_FILES) buf.yaml buf.gen.yaml
 	@echo "// ADK Simulator Protocol Buffers - TypeScript (auto-generated)" > "$(TS_GEN_DIR)/index.ts"
 	@echo "export * from './adksim/v1/simulator_service_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
 	@echo "export * from './adksim/v1/simulator_session_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './google/ai/generativelanguage/v1beta/citation_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './google/ai/generativelanguage/v1beta/content_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './google/ai/generativelanguage/v1beta/generative_service_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './google/ai/generativelanguage/v1beta/retriever_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
+	@echo "export * from './google/ai/generativelanguage/v1beta/safety_pb.js';" >> "$(TS_GEN_DIR)/index.ts"
 	@touch $(PROTO_MARKER)
 	@echo "✅ Proto generation complete!"
 

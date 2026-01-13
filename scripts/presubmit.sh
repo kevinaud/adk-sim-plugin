@@ -38,6 +38,15 @@ cd "$PROJECT_ROOT/packages/adk-sim-protos-ts"
 npm run build
 cd "$PROJECT_ROOT"
 
+# Build and test adk-converters-ts package
+echo ""
+echo "📦 Building and testing adk-converters-ts package..."
+cd "$PROJECT_ROOT/packages/adk-converters-ts"
+npm install --silent
+npm run build
+npm run test
+cd "$PROJECT_ROOT"
+
 # Run Quality Checks
 echo ""
 echo "📋 Running Quality Checks..."
