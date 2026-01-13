@@ -155,9 +155,10 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^.*\.(snap|lock)$
+        # Exclude generated proto files (buf generates with trailing whitespace)
+        exclude: ^(packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/|packages/adk-sim-protos-ts/src/(adksim|google)/|.*\.(snap|lock)$)
       - id: end-of-file-fixer
-        exclude: ^.*\.(snap|lock)$
+        exclude: ^(packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/|packages/adk-sim-protos-ts/src/(adksim|google)/|.*\.(snap|lock)$)
       - id: check-yaml
         args: [--unsafe]  # Allow custom tags
       - id: check-json
