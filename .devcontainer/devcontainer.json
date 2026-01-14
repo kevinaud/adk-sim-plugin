@@ -4,6 +4,19 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
+
+  // ============================================================
+  // Container Runtime Configuration
+  // ============================================================
+  // --shm-size: Increases shared memory from default 64MB to 2GB.
+  //   Modern browsers (Chromium) require significant shared memory
+  //   for rendering operations. Insufficient shm causes SIGKILL
+  //   crashes during complex rendering in Playwright tests.
+  //
+  // See: https://playwright.dev/docs/docker
+  // ============================================================
+  "runArgs": ["--shm-size=2g"],
+
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "enableNonRootDocker": "true",
@@ -41,7 +54,9 @@
     }
   },
 
-  "initializeCommand": "touch ${localEnv:HOME}/.gh_token_file",
+  // Initialize command runs on host before container starts.
+  // Creates directories that will be bind-mounted to prevent mount failures.
+  "initializeCommand": "touch ${localEnv:HOME}/.gh_token_file && mkdir -p ${localEnv:HOME}/.cache/ms-playwright",
 
   "mounts": [
     "source=${localEnv:HOME}/.gh_token_file,target=/home/vscode/.gh_token_file,type=bind,readonly",
@@ -53,7 +68,13 @@
 
     // 2. SHARED BASH HISTORY (Optional quality of life)
     // Static name "adk-bash-history" = You keep your command history
-    "source=adk-bash-history,target=/commandhistory,type=volume"
+    "source=adk-bash-history,target=/commandhistory,type=volume",
+
+    // 3. PLAYWRIGHT BROWSER CACHE (Performance optimization)
+    // Prevents re-downloading ~500MB of browser binaries on container rebuild.
+    // Uses bind mount from host so browsers downloaded once are reused.
+    // Note: Requires browsers to be installed on host first (npx playwright install)
+    "source=${localEnv:HOME}/.cache/ms-playwright,target=/home/vscode/.cache/ms-playwright,type=bind"
   ],
 
   "forwardPorts": [4200, 8080, 50051],
