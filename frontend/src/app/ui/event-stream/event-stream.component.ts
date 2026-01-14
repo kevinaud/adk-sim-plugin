@@ -6,9 +6,8 @@
  * rendered as a structured stream of distinct blocks.
  *
  * The component receives Content[] (conversation turns) via input signal
- * and iterates over them using @for control flow. In its current state,
- * it renders a placeholder for each event - actual EventBlockComponent
- * integration will be added in S3PR6.
+ * and iterates over them using @for control flow. Each event is rendered
+ * using EventBlockComponent which handles role-based styling.
  *
  * @see mddocs/frontend/frontend-spec.md#fr-context-inspection - FR-007
  * @see mddocs/frontend/frontend-tdd.md#event-stream-components
@@ -16,6 +15,8 @@
 
 import type { Content } from '@adk-sim/converters';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
+import { EventBlockComponent } from './event-block';
 
 /**
  * Event stream container component (FR-007).
@@ -32,7 +33,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 @Component({
   selector: 'app-event-stream',
   standalone: true,
-  imports: [],
+  imports: [EventBlockComponent],
   template: `
     <div class="event-stream" data-testid="event-stream">
       @if (isEmpty()) {
@@ -45,11 +46,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       } @else {
         <div class="event-list">
           @for (event of events(); track trackByIndex($index)) {
-            <!-- EventBlockComponent will be integrated here in S3PR6 -->
-            <div class="event-placeholder" [attr.data-role]="event.role" data-testid="event-block">
-              <span class="role-badge">{{ event.role }}</span>
-              <span class="parts-count">{{ getPartsCount(event) }} part(s)</span>
-            </div>
+            <app-event-block [content]="event" />
           }
         </div>
       }
@@ -90,35 +87,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       flex-direction: column;
       gap: 12px;
     }
-
-    .event-placeholder {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      background-color: var(--mat-sys-surface-container, #fafafa);
-      border-radius: 8px;
-      border-left: 4px solid var(--mat-sys-primary, #6750a4);
-    }
-
-    .event-placeholder[data-role='user'] {
-      border-left-color: #2196f3;
-    }
-
-    .event-placeholder[data-role='model'] {
-      border-left-color: #4caf50;
-    }
-
-    .role-badge {
-      font-weight: 500;
-      text-transform: capitalize;
-      font-size: 14px;
-    }
-
-    .parts-count {
-      font-size: 12px;
-      color: var(--mat-sys-on-surface-variant, #666);
-    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -143,16 +111,5 @@ export class EventStreamComponent {
    */
   trackByIndex(index: number): number {
     return index;
-  }
-
-  /**
-   * Helper to get the number of parts in a Content item.
-   * Handles undefined/null parts array safely.
-   *
-   * @param event - The Content item to count parts for
-   * @returns The number of parts, or 0 if parts is undefined
-   */
-  getPartsCount(event: Content): number {
-    return event.parts?.length ?? 0;
   }
 }

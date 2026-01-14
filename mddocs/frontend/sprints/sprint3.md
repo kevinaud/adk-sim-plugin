@@ -270,17 +270,17 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 - [FR-007](../frontend-spec.md#fr-context-inspection) - Block rendering requirements
 
 **Acceptance Criteria**:
-- [ ] Component accepts `content` input signal of type `Content`
-- [ ] `blockType` computed signal returns 'user', 'model', or 'tool' based on role and parts
-- [ ] `parts` computed signal extracts parts array from content
-- [ ] `icon` computed signal maps block type to Material icon name
-- [ ] `label` computed signal maps block type to display label
-- [ ] Template renders header with icon and label
-- [ ] Template iterates parts and displays text content (function call/response display deferred to DataTree PR)
-- [ ] Styling differentiates block types with CSS classes
-- [ ] Unit tests cover all block type computations
-- [ ] EventStreamComponent updated to render EventBlockComponents
-- [ ] Presubmit passes
+- [x] Component accepts `content` input signal of type `Content`
+- [x] `blockType` computed signal returns 'user', 'model', or 'tool' based on role and parts
+- [x] `parts` computed signal extracts parts array from content
+- [x] `icon` computed signal maps block type to Material icon name
+- [x] `label` computed signal maps block type to display label
+- [x] Template renders header with icon and label
+- [x] Template iterates parts and displays text content (function call/response display deferred to DataTree PR)
+- [x] Styling differentiates block types with CSS classes
+- [x] Unit tests cover all block type computations
+- [x] EventStreamComponent updated to render EventBlockComponents
+- [x] Presubmit passes
 
 ---
 
