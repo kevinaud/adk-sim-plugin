@@ -26,6 +26,19 @@ fi
 uv sync
 
 # ------------------------------------------------------------
+# Sync Claude Code Agents from .github/agents
+# ------------------------------------------------------------
+# Claude Code expects .claude/agents/*.md with 'name' field
+# Source of truth: .github/agents/ (for GitHub Copilot compatibility)
+# ------------------------------------------------------------
+
+if [ -x .github/sync-claude-agents.sh ]; then
+    .github/sync-claude-agents.sh
+else
+    echo "⚠️  .github/sync-claude-agents.sh not found or not executable"
+fi
+
+# ------------------------------------------------------------
 # Clone Repositories (Idempotent) - Skipped in CI
 # ------------------------------------------------------------
 # Only clones if the directory does not already exist in /workspaces

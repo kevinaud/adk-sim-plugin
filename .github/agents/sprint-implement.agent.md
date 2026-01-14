@@ -1,4 +1,5 @@
 ---
+name: sprint-implement
 description: Implement a single PR from a sprint plan with full context from background reading. Does NOT manage git.
 ---
 
@@ -192,7 +193,69 @@ Before returning control, verify each acceptance criterion AND update the sprint
 
 ---
 
-### Phase 5: Completion Report
+### Phase 5: Knowledge Base Contribution (CONDITIONAL)
+
+**This phase is NOT required for every PR.** Only contribute if you have genuinely useful knowledge to share.
+
+Before writing your completion report, reflect on whether you encountered any **non-obvious problems** during this implementation that future agent invocations would benefit from knowing.
+
+#### When to Add a Tip
+
+Ask yourself these questions:
+
+| Question | If YES → Consider adding a tip |
+|----------|-------------------------------|
+| Did I hit an error that took multiple attempts to diagnose? | Tip-worthy |
+| Was the root cause surprising or non-obvious? | Tip-worthy |
+| Did I have to read multiple files or search extensively to understand why something failed? | Tip-worthy |
+| Would I want to know this if I encountered the same situation again? | Tip-worthy |
+| Is this a simple typo, syntax error, or one-off mistake? | **NOT tip-worthy** |
+| Is this specific to this PR's unique requirements and unlikely to recur? | **NOT tip-worthy** |
+
+#### Examples of Tip-Worthy Issues
+
+- **Environment/path issues**: Commands failing because of working directory assumptions
+- **Configuration gotchas**: Non-obvious settings required for something to work
+- **Import/module resolution**: Unexpected behavior with imports or barrel files
+- **Test setup quirks**: TestBed configuration, async timing, or fixture issues
+- **Build system peculiarities**: Dependency order, caching, or bundling issues
+- **Tool-specific behaviors**: How ruff, pyright, eslint, or Angular CLI behave unexpectedly
+- **API usage patterns**: When the obvious approach doesn't work and you found the correct pattern
+
+#### How to Add a Tip
+
+If you have something tip-worthy:
+
+1. **Open** `mddocs/development/implementation-tips.md`
+2. **Add to Table of Contents** (numbered list at top)
+3. **Add new entry** following this format:
+
+```markdown
+### <Descriptive Title>
+
+**Problem**: <What error or symptom was seen — include actual error messages if helpful>
+
+**Root Cause**: <Why it happened — the non-obvious insight>
+
+**Solution**: <How to fix it — specific steps>
+
+**General Principle**: <Up-leveled insight that applies to similar future issues>
+
+---
+```
+
+4. **Or update an existing tip** if you found additional nuance to an existing entry
+
+#### Skip This Phase If
+
+- Implementation went smoothly with no significant debugging
+- All errors were obvious and self-explanatory
+- The issue was already covered by an existing tip
+- The knowledge is too specific to this one PR
+
+---
+
+### Phase 6: Completion Report
 
 Return to Orchestrator:
 
@@ -221,53 +284,17 @@ Return to Orchestrator:
 - Lint: ✓ PASS
 - Build: ✓ PASS
 
+### Knowledge Base
+<!-- Include only if you added/updated a tip -->
+- Added tip: "<tip title>"
+<!-- Or if no tip added: -->
+- No tips added (smooth implementation)
+
 ### Implementation Notes
 - <Any decisions made>
 - <Patterns followed from research>
 - <Deviations from plan and why>
 ```
-
----
-
-### Phase 6: Knowledge Base Contribution (When Applicable)
-
-**After solving a difficult problem** that required significant debugging, contribute to the knowledge base so future invocations don't repeat the same debugging:
-
-1. **Identify if a tip should be added**:
-   - Did you encounter an error that took multiple attempts to diagnose?
-   - Was the root cause non-obvious?
-   - Would this knowledge help future agent invocations?
-
-2. **If yes, add a new entry** to `mddocs/development/implementation-tips.md`:
-   - Add entry to the Table of Contents
-   - Add the tip following this format:
-
-   ```markdown
-   ### <Descriptive Title>
-
-   **Problem**: <What error or symptom was seen>
-
-   **Root Cause**: <Why it happened>
-
-   **Solution**: <How to fix it>
-
-   **General Principle**: <Up-leveled insight for similar future issues>
-
-   ---
-   ```
-
-3. **Examples of tip-worthy issues**:
-   - Environment/path issues
-   - Non-obvious configuration requirements
-   - Import/module resolution gotchas
-   - Test setup quirks
-   - Build system peculiarities
-   - Tool-specific behaviors
-
-4. **NOT tip-worthy**:
-   - Simple typos
-   - Obvious syntax errors
-   - Issues specific to one PR that won't recur
 
 ---
 
@@ -347,7 +374,7 @@ frontend/src/app/
 - ✅ Fix ALL failures before returning control
 - ✅ **Update sprint plan** to check off completed acceptance criteria
 - ✅ **Update frontend-tdd.md** if PR has `Completes TDD Task` field (not all PRs have this)
-- ✅ **Add to knowledge base** if you solved a difficult/non-obvious problem
+- ✅ **Consider adding to knowledge base** if you solved a difficult/non-obvious problem (Phase 5)
 - ✅ Report what was implemented clearly
 
 ### Error Handling
@@ -390,7 +417,8 @@ Acceptance Criteria:
 6. Run `npm run lint` - verify pass
 7. **Update sprint plan** - check off acceptance criteria in `sprint1.md`
 8. **Update frontend-tdd.md** - check off `SessionStateService` row (because `Completes TDD Task` was present)
-9. Return completion report with all criteria checked
+9. **Consider knowledge base** - add tip if any non-obvious issues were solved
+10. Return completion report with all criteria checked
 
 ---
 
@@ -420,4 +448,5 @@ Acceptance Criteria:
 3. Run verification
 4. **Update sprint plan** - check off acceptance criteria
 5. **Skip TDD update** - no `Completes TDD Task` field present
-6. Return completion report noting "TDD Task: N/A (intermediate PR)"
+6. **Skip knowledge base** - smooth implementation, nothing tip-worthy
+7. Return completion report noting "TDD Task: N/A (intermediate PR)" and "Knowledge Base: No tips added"

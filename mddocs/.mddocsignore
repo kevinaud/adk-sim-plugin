@@ -3,3 +3,7 @@ frontend/sprints/sprint-template.md
 
 # Ignore WIP documentation with broken links
 infrastructure/research/release-best-practices-research-report.md
+
+typer/
+
+cli-best-practices.md
