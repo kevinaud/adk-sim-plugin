@@ -1,4 +1,5 @@
 ---
+name: frontend-sprint-plan
 description: Plan a frontend sprint by researching existing docs and creating a focused sprint plan with PR breakdown.
 handoffs:
   - label: Start Implementation

@@ -1,4 +1,5 @@
 ---
+name: adk-unit-test
 description: Generate or improve unit tests following project best practices for ADK-based code with classical testing style.
 ---
 
