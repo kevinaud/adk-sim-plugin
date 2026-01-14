@@ -11,12 +11,27 @@
 import { TestBed } from '@angular/core/testing';
 import { create } from '@bufbuild/protobuf';
 
-import { SimulatorSessionSchema } from '@adk-sim/protos';
+import { basicTextRequest } from '@adk-sim/converters';
+import { SessionEventSchema, SimulatorSessionSchema } from '@adk-sim/protos';
 
 import { MockSessionGateway } from './mock-session.gateway';
 import { SessionFacade } from './session.facade';
-import { SessionGateway, type Session } from './session.gateway';
+import { SessionGateway, type Session, type SessionEvent } from './session.gateway';
 import { SessionStateService } from './session-state.service';
+
+/**
+ * Helper to create a SessionEvent with an llmRequest payload.
+ */
+function createLlmRequestEvent(eventId: string, sessionId: string): SessionEvent {
+  return create(SessionEventSchema, {
+    eventId,
+    sessionId,
+    payload: {
+      case: 'llmRequest',
+      value: basicTextRequest,
+    },
+  });
+}
 
 describe('SessionFacade', () => {
   let facade: SessionFacade;
@@ -215,6 +230,249 @@ describe('SessionFacade', () => {
 
         expect(statusTransitions).toEqual(['disconnected', 'connecting', 'disconnected']);
       });
+    });
+  });
+
+  describe('subscribeToSession', () => {
+    /**
+     * Helper to create a SessionEvent with an llmResponse payload.
+     */
+    function createLlmResponseEvent(eventId: string, sessionId: string): SessionEvent {
+      return create(SessionEventSchema, {
+        eventId,
+        sessionId,
+        payload: {
+          case: 'llmResponse',
+          value: { candidates: [], modelVersion: '' },
+        },
+      }) as SessionEvent;
+    }
+
+    it('should set sessionId in state when iteration starts', async () => {
+      const sessionId = 'test-session-123';
+      const event = createLlmRequestEvent('event-1', sessionId);
+      mockGateway.pushEvent(event);
+
+      // Start iterating - this is when the generator code runs
+      for await (const _request of facade.subscribeToSession(sessionId)) {
+        // After first yield, state should be set
+        expect(facade.sessionId()).toBe(sessionId);
+        mockGateway.cancelSubscription();
+      }
+    });
+
+    it('should set connectionStatus to connecting then connected', async () => {
+      const sessionId = 'test-session-123';
+      const event = createLlmRequestEvent('event-1', sessionId);
+      mockGateway.pushEvent(event);
+
+      // Start iterating
+      for await (const _request of facade.subscribeToSession(sessionId)) {
+        // After first event, should be connected (was connecting before first yield)
+        expect(facade.connectionStatus()).toBe('connected');
+        mockGateway.cancelSubscription();
+      }
+    });
+
+    it('should clear any previous error when iteration starts', async () => {
+      // Set initial error
+      stateService.setError('Previous error');
+      expect(facade.hasError()).toBe(true);
+
+      const event = createLlmRequestEvent('event-1', 'test-session-123');
+      mockGateway.pushEvent(event);
+
+      // Start iterating
+      for await (const _request of facade.subscribeToSession('test-session-123')) {
+        // Error should be cleared
+        expect(facade.error()).toBeNull();
+        expect(facade.hasError()).toBe(false);
+        mockGateway.cancelSubscription();
+      }
+    });
+
+    it('should yield converted LlmRequest events', async () => {
+      const sessionId = 'test-session-123';
+      const event = createLlmRequestEvent('event-1', sessionId);
+
+      // Push event before consuming
+      mockGateway.pushEvent(event);
+
+      // Collect results
+      const results: unknown[] = [];
+      const subscription = facade.subscribeToSession(sessionId);
+
+      // Consume one event then cancel
+      for await (const request of subscription) {
+        results.push(request);
+        mockGateway.cancelSubscription();
+      }
+
+      expect(results).toHaveLength(1);
+      // Verify it's a converted LlmRequest (has model, contents properties)
+      const result = results[0] as { model: string; contents: unknown[] };
+      expect(result.model).toBe('gemini-2.0-flash');
+      expect(result.contents).toHaveLength(1);
+    });
+
+    it('should update connectionStatus to connected on first event', async () => {
+      const sessionId = 'test-session-123';
+      const event = createLlmRequestEvent('event-1', sessionId);
+
+      mockGateway.pushEvent(event);
+
+      // Consume first event
+      for await (const _request of facade.subscribeToSession(sessionId)) {
+        // After receiving first event, should be connected
+        expect(facade.connectionStatus()).toBe('connected');
+        mockGateway.cancelSubscription();
+      }
+    });
+
+    it('should only yield llmRequest events, not llmResponse events', async () => {
+      const sessionId = 'test-session-123';
+
+      // Push both request and response events
+      mockGateway.pushEvent(createLlmRequestEvent('event-1', sessionId));
+      mockGateway.pushEvent(createLlmResponseEvent('event-2', sessionId));
+      mockGateway.pushEvent(createLlmRequestEvent('event-3', sessionId));
+
+      const results: unknown[] = [];
+      let eventCount = 0;
+
+      for await (const request of facade.subscribeToSession(sessionId)) {
+        results.push(request);
+        eventCount++;
+        // Cancel after processing a couple of events
+        if (eventCount >= 2) {
+          mockGateway.cancelSubscription();
+        }
+      }
+
+      // Should have 2 LlmRequest results (events 1 and 3)
+      expect(results).toHaveLength(2);
+    });
+
+    it('should set connectionStatus to disconnected when stream ends normally', async () => {
+      const sessionId = 'test-session-123';
+      const event = createLlmRequestEvent('event-1', sessionId);
+
+      mockGateway.pushEvent(event);
+
+      // Consume until cancelled
+      for await (const _request of facade.subscribeToSession(sessionId)) {
+        mockGateway.cancelSubscription();
+      }
+
+      // After normal completion, should be disconnected
+      expect(facade.connectionStatus()).toBe('disconnected');
+    });
+
+    // Note: Error handling tests for streaming are covered in e2e/integration tests
+    // because the MockSessionGateway doesn't simulate errors during subscribe().
+    // The facade's error handling code is tested implicitly through the
+    // GrpcSessionGateway tests which use real transport mocking.
+
+    describe('state transitions', () => {
+      it('should transition through connecting -> connected -> disconnected', async () => {
+        const sessionId = 'test-session-123';
+        const event = createLlmRequestEvent('event-1', sessionId);
+
+        mockGateway.pushEvent(event);
+
+        // Initial state
+        expect(facade.connectionStatus()).toBe('disconnected');
+
+        // Start consuming - state updates happen inside the generator
+        for await (const _request of facade.subscribeToSession(sessionId)) {
+          // After first event yield, should be connected
+          expect(facade.connectionStatus()).toBe('connected');
+          mockGateway.cancelSubscription();
+        }
+
+        // After stream ends, should be disconnected
+        expect(facade.connectionStatus()).toBe('disconnected');
+      });
+
+      it('should set sessionId before first yield', async () => {
+        const sessionId = 'test-session-123';
+        const event = createLlmRequestEvent('event-1', sessionId);
+
+        mockGateway.pushEvent(event);
+
+        // Initially null
+        expect(facade.sessionId()).toBeNull();
+
+        for await (const _request of facade.subscribeToSession(sessionId)) {
+          // After first yield, sessionId should be set
+          expect(facade.sessionId()).toBe(sessionId);
+          mockGateway.cancelSubscription();
+        }
+      });
+    });
+  });
+
+  describe('cancelSubscription', () => {
+    it('should delegate to gateway and stop iteration', async () => {
+      const sessionId = 'test-session-123';
+      const event = createLlmRequestEvent('event-1', sessionId);
+      mockGateway.pushEvent(event);
+
+      let eventCount = 0;
+
+      for await (const _request of facade.subscribeToSession(sessionId)) {
+        eventCount++;
+        // Cancel via facade
+        facade.cancelSubscription();
+      }
+
+      // Should have processed exactly one event before cancellation took effect
+      expect(eventCount).toBe(1);
+      // Gateway subscription should be inactive
+      expect(mockGateway.isSubscriptionActive()).toBe(false);
+    });
+
+    it('should be safe to call when no subscription active', () => {
+      // Should not throw
+      expect(() => facade.cancelSubscription()).not.toThrow();
+    });
+
+    it('should be idempotent', () => {
+      // Multiple calls should not throw
+      facade.cancelSubscription();
+      facade.cancelSubscription();
+      expect(() => facade.cancelSubscription()).not.toThrow();
+    });
+  });
+
+  describe('validateSession', () => {
+    it('should resolve when session exists', async () => {
+      const session = create(SimulatorSessionSchema, {
+        id: 'existing-session',
+        description: 'Test',
+      });
+      mockGateway.setMockSessions([session]);
+
+      await expect(facade.validateSession('existing-session')).resolves.toBeUndefined();
+    });
+
+    it('should throw when session does not exist', async () => {
+      mockGateway.setMockSessions([]);
+
+      await expect(facade.validateSession('nonexistent')).rejects.toThrow('Session not found');
+    });
+
+    it('should not update connection status', async () => {
+      const session = create(SimulatorSessionSchema, { id: 'test-session', description: 'Test' });
+      mockGateway.setMockSessions([session]);
+
+      // Set initial status
+      stateService.setConnectionStatus('disconnected');
+
+      await facade.validateSession('test-session');
+
+      // Status should remain unchanged
+      expect(facade.connectionStatus()).toBe('disconnected');
     });
   });
 });

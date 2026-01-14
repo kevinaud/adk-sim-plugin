@@ -11,6 +11,7 @@
  * @see mddocs/frontend/research/angular-architecture-analysis.md#critical-improvement-the-facade-pattern
  */
 
+import { type LlmRequest, protoToLlmRequest } from '@adk-sim/converters';
 import { inject, Injectable } from '@angular/core';
 
 import type { Session } from './session.gateway';
@@ -114,5 +115,62 @@ export class SessionFacade {
       );
       throw error;
     }
+  }
+
+  /**
+   * Subscribes to session events, converting protos to ADK types.
+   *
+   * This async generator yields LlmRequest objects as they are received from
+   * the server. The subscription updates connection status throughout its
+   * lifecycle:
+   * - 'connecting' when subscription starts
+   * - 'connected' when first event is received
+   * - 'disconnected' when subscription ends (normally or via error)
+   *
+   * @param sessionId - The session to subscribe to
+   * @yields LlmRequest objects converted from proto events
+   *
+   * @example
+   * ```typescript
+   * for await (const request of facade.subscribeToSession('session-123')) {
+   *   console.log('Received request:', request);
+   * }
+   * ```
+   */
+  async *subscribeToSession(sessionId: string): AsyncIterable<LlmRequest> {
+    this.stateService.setSessionId(sessionId);
+    this.stateService.setConnectionStatus('connecting');
+    this.stateService.clearError();
+
+    try {
+      for await (const event of this.gateway.subscribe(sessionId)) {
+        // Update to connected on first (and subsequent) events
+        if (this.stateService.connectionStatus() !== 'connected') {
+          this.stateService.setConnectionStatus('connected');
+        }
+
+        // Only process llmRequest events, convert and yield
+        if (event.payload.case === 'llmRequest') {
+          const llmRequest = protoToLlmRequest(event.payload.value);
+          yield llmRequest;
+        }
+      }
+      // Normal completion - stream ended
+      this.stateService.setConnectionStatus('disconnected');
+    } catch (error) {
+      this.stateService.setConnectionStatus('disconnected');
+      this.stateService.setError(error instanceof Error ? error.message : 'Connection lost');
+      throw error;
+    }
+  }
+
+  /**
+   * Cancels any active session subscription.
+   *
+   * Delegates to the gateway to abort the stream. Safe to call even
+   * if no subscription is active.
+   */
+  cancelSubscription(): void {
+    this.gateway.cancelSubscription();
   }
 }
