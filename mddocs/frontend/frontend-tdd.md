@@ -1375,7 +1375,7 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 |:----:|------|-----|-------------|
 | [ ] | `GrpcSessionGateway` | FR-020 | Connect-ES adapter |
 | [x] | `@adk-sim/converters` package | - | Proto ↔ ADK conversion |
-| [ ] | `LlmRequestConverter` | - | Frontend-specific wrappers |
+| [x] | `LlmRequestConverter` | - | Frontend-specific wrappers |
 | [ ] | Auto-reconnect logic | FR-022, FR-023 | `ReconnectStrategy` |
 | [x] | Connection status UI | FR-023 | `ConnectionStatusComponent` |
 

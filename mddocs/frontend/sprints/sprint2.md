@@ -402,14 +402,15 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [Data Model Integration](../frontend-tdd.md#data-model-integration) - Flow diagram
 
 **Acceptance Criteria**:
-- [ ] `LlmRequestConverterService` injectable via `providedIn: 'root'`
-- [ ] `protoToLlmRequest()` method delegates to package function
-- [ ] `createToolInvocationResponse()` method delegates to package helper
-- [ ] `createTextResponse()` method delegates to package helper
-- [ ] `createStructuredResponse()` method delegates to package helper
-- [ ] Sheriff allows import from `@adk-sim/converters` in data-access
-- [ ] Unit tests verify delegation works
-- [ ] Presubmit passes
+- [x] `LlmRequestConverterService` injectable via `providedIn: 'root'`
+- [x] `protoToLlmRequest()` method delegates to package function
+- [x] `createToolInvocationResponse()` method delegates to package helper
+- [x] `createTextResponse()` method delegates to package helper
+- [x] `createStructuredResponse()` method delegates to package helper
+- [x] `createFunctionResultResponse()` method delegates to package helper
+- [x] Sheriff allows import from `@adk-sim/converters` in data-access
+- [x] Unit tests verify delegation works
+- [x] Presubmit passes
 
 ---
 

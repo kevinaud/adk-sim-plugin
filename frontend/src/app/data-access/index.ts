@@ -4,9 +4,16 @@
  * This layer contains services that manage state and communicate with backends.
  * Components in this layer include facades, stores, and gateways.
  *
+ * Import directly from submodules due to Sheriff module boundaries:
+ * - Session: `./data-access/session`
+ * - LLM Request: `./data-access/llm-request`
+ *
  * @module data-access
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
  */
 
-// Placeholder - data access exports will be added as services are implemented
-export type DataAccessDomain = 'session' | 'tool-form';
+/**
+ * Domains available in the data-access layer.
+ * Each domain has its own index.ts barrel file for exports.
+ */
+export type DataAccessDomain = 'session' | 'llm-request';
