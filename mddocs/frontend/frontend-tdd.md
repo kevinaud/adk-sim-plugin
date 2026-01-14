@@ -1385,7 +1385,7 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 
 | Done | Task | FR | Deliverable |
 |:----:|------|-----|-------------|
-| [ ] | `EventStreamComponent` | FR-007 | Container for blocks |
+| [x] | `EventStreamComponent` | FR-007 | Container for blocks |
 | [ ] | `EventBlockComponent` | FR-007 | User/Agent/Tool blocks |
 | [ ] | `DataTreeComponent` | FR-008-011 | JSON tree with thread lines |
 | [ ] | `SmartBlobComponent` | FR-012-014 | JSON/MD/RAW toggle |
