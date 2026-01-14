@@ -283,6 +283,32 @@ uv run pre-commit run --all-files --hook-stage manual
 
 ## Build Systems
 
+### Docker Build Optimization
+
+**File**: `docker/backend.Dockerfile`
+
+The backend Dockerfile uses several optimizations for fast, reproducible builds:
+
+**UV Environment Variables**:
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `UV_LINK_MODE` | `copy` | Prevents hardlink issues in Docker overlayfs |
+| `UV_COMPILE_BYTECODE` | `1` | Pre-compiles `.pyc` files for faster startup |
+
+**BuildKit Cache Mounting**:
+
+```dockerfile
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-install-workspace
+```
+
+This persists the uv cache across builds, transforming dependency installation from a network-bound operation (~45-60s) to a local I/O operation (~2-5s) when the layer cache is invalidated.
+
+**Dependency Layer Caching**:
+
+The Dockerfile copies dependency definitions (`pyproject.toml`, `uv.lock`) before source code. This creates a cached dependency layer that is only invalidated when dependencies change, not when application source changes.
+
 ### Proto Generation
 
 **Files**: `buf.yaml`, `buf.gen.yaml`
@@ -357,6 +383,10 @@ The devcontainer provides a consistent development environment with all tools pr
 **Lifecycle Scripts**:
 - `init.sh`: Post-create setup (uv sync, npm install, pre-commit install)
 - `post-start.sh`: Post-start setup (GitHub auth)
+
+**Playwright Optimizations**:
+- `--shm-size=2g`: Increased shared memory for browser stability (default 64MB is insufficient)
+- Playwright browser cache mounted from host (`~/.cache/ms-playwright`) to avoid re-downloading ~500MB of binaries on rebuild
 
 ### Docker Compose
 
@@ -461,11 +491,22 @@ npx playwright test -c playwright.config.ts
 
 The CI pipeline uses a **lightweight setup** for fast startup (~30s vs ~5min with devcontainer):
 
-1. Setup uv with `astral-sh/setup-uv@v7`
-2. Setup Node.js with `actions/setup-node@v4`
+1. Setup uv with `astral-sh/setup-uv@v7` (with caching enabled)
+2. Setup Node.js with `actions/setup-node@v4` (with npm caching)
 3. Install buf CLI globally
 4. Install dependencies (`npm ci`, `uv sync`)
-5. Run `ops ci check`
+5. Cache and install Playwright browsers
+6. Run `ops ci check`
+
+**CI Caching Strategy**:
+
+| Cache | Key | Benefit |
+|-------|-----|---------|
+| **uv cache** | Auto-derived from `uv.lock` | Dependency install: ~45s -> ~5s |
+| **npm cache** | Auto-derived from `package-lock.json` | npm install: ~30s -> ~10s |
+| **Playwright browsers** | `{runner.os}-playwright-{version}` | Browser download: ~60s -> ~2s |
+
+The Playwright browser cache is keyed by the exact Playwright version from `package-lock.json` to ensure browser binary compatibility.
 
 **Devcontainer Verification Job**:
 
@@ -631,11 +672,14 @@ ops release patch --dry-run
 | `package.json` | npm workspace config |
 | `buf.yaml` | Protobuf linting rules |
 | `buf.gen.yaml` | Protobuf code generation |
-| `.devcontainer/devcontainer.json` | Dev container config |
+| `.devcontainer/devcontainer.json` | Dev container config (includes Playwright optimizations) |
 | `.devcontainer/Dockerfile` | Dev container image |
+| `docker/backend.Dockerfile` | Backend container (optimized with BuildKit cache) |
+| `docker/frontend.Dockerfile` | Frontend container |
 | `docker-compose.yaml` | Full dev stack |
 | `docker-compose.test.yaml` | Test stack |
-| `.github/workflows/ci.yaml` | CI pipeline |
+| `.github/workflows/ci.yaml` | CI pipeline (with uv and Playwright caching) |
 | `.github/workflows/publish.yaml` | Publishing pipeline |
 | `scripts/sync_versions.py` | Version synchronization |
 | `mddocs/development/ops-cli/tdd.md` | ops CLI design document |
+| `mddocs/development/research/playwright-optimization.md` | Research: Playwright/Docker/CI optimization strategies |
