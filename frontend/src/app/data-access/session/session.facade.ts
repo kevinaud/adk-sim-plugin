@@ -73,6 +73,21 @@ export class SessionFacade {
   // ─────────────────────────────────────────────────────────────────────────
 
   /**
+   * Validates that a session exists.
+   *
+   * This method is used by route guards to verify session existence
+   * before allowing navigation. It does not update connection status
+   * since it's a validation check, not a data fetch operation.
+   *
+   * @param sessionId - The session ID to validate
+   * @returns Promise that resolves if session exists
+   * @throws Error if session does not exist or validation fails
+   */
+  async validateSession(sessionId: string): Promise<void> {
+    await this.gateway.getSession(sessionId);
+  }
+
+  /**
    * Lists all available sessions.
    *
    * Updates connection status and error state based on the result.
