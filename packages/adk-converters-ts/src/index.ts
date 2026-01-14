@@ -58,6 +58,20 @@ export {
   createStructuredResponse,
 } from './response-helpers.js';
 
+// Test fixtures (for integration testing)
+export {
+  basicTextRequest,
+  fullFeaturedRequest,
+  emptyContentsRequest,
+  multiPartRequest,
+  basicTextResponse,
+  toolInvocationResponse,
+  emptyResponse,
+  maxTokensResponse,
+  safetyBlockedResponse,
+  multiPartResponse,
+} from './fixtures/index.js';
+
 // Re-export @google/genai types for convenience
 export type {
   Content,
