@@ -9,8 +9,8 @@ related:
 
 # Converter Architecture and Package Design Research
 
-**Source**: Project codebase (`plugins/python/`, `docs/developers/publishing.md`)  
-**Date**: January 11, 2026  
+**Source**: Project codebase (`plugins/python/`, `docs/developers/publishing.md`)
+**Date**: January 11, 2026
 **Purpose**: Analyze the Python converter implementation and inform the design of `adk-converters-ts`.
 
 ## Related Documents

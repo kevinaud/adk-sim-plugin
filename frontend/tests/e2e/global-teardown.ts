@@ -11,10 +11,10 @@ export default function globalTeardown() {
   // Get the repo root (parent of frontend/)
   const repoRoot = resolve(__dirname, '../../..');
 
-  console.log('🐳 Stopping Docker Compose E2E stack...');
+  console.log('🐳 Stopping Docker Compose test stack...');
 
   try {
-    execSync('docker compose -f docker-compose.e2e.yaml down', {
+    execSync('docker compose -f docker-compose.test.yaml down', {
       stdio: 'inherit',
       cwd: repoRoot,
     });

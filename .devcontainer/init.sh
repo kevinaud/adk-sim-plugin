@@ -3,7 +3,7 @@
 # Dev Container Initialization Script
 # ============================================================
 # Syncs dependencies after workspace mount.
-# 
+#
 # This runs as postCreateCommand (once after container create).
 # See post-start.sh for things that run every container start.
 # ============================================================
@@ -48,5 +48,18 @@ if [ -f "frontend/package.json" ]; then
     echo "📦 Syncing frontend npm dependencies..."
     (cd frontend && npm install)
 fi
+
+# ------------------------------------------------------------
+# Playwright: Install browsers for testing
+# ------------------------------------------------------------
+echo "🎭 Installing Playwright browsers..."
+(cd frontend && npx playwright install chromium --with-deps)
+
+# ------------------------------------------------------------
+# Pre-commit: Install Git Hooks
+# ------------------------------------------------------------
+echo "🔗 Installing pre-commit git hooks..."
+uv run pre-commit install
+uv run pre-commit install --hook-type pre-push
 
 echo "✅ Dev container initialization complete!"

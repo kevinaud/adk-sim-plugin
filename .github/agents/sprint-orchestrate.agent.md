@@ -243,7 +243,7 @@ For each PR in scope (in dependency order):
    ```bash
    # For first PR (off main):
    git town hack sprint-<N>/<pr-id>/<description>
-   
+
    # For subsequent PRs (stacked on current):
    git town append sprint-<N>/<pr-id>/<description>
    ```
@@ -267,7 +267,7 @@ For each PR in scope (in dependency order):
 
 2. **Invoke `sprint-implement` agent**:
    Pass the full PR details including background reading.
-   
+
    **WAIT** for implementer to complete.
 
 3. **Verify implementation**:
@@ -324,7 +324,7 @@ For each PR in scope (in dependency order):
    - <links from sprint plan>
    "
    ```
-   
+
    > **Note**: Use `git town propose`, NOT `gh pr create`. Git Town's propose command ensures proper branch tracking and stack management.
    >
    > After creating, mark as draft if needed:
@@ -336,11 +336,11 @@ For each PR in scope (in dependency order):
    ```bash
    # Get run ID
    gh run list --branch $(git branch --show-current) --limit 1 --json databaseId,status
-   
+
    # Check status (poll every 30s)
    gh run view <run-id> --json status,conclusion
    ```
-   
+
    **NEVER use `gh run watch`** — it's interactive and blocks.
 
 3. **Handle CI Failure**:
@@ -384,7 +384,7 @@ After ALL requested PRs are complete:
    | S1PR2 | sprint-1/pr2/state-service | ✓ Ready | 82 |
 
    All PRs ready for review.
-   
+
    ⚠️ AWAITING YOUR APPROVAL — I will NOT merge anything until you explicitly approve.
    ```
 
@@ -431,7 +431,7 @@ For each approved PR (in dependency order — oldest/parent first):
    ```bash
    # Find child PRs that target the branch being merged
    gh pr list --base <branch-being-merged> --json number,headRefName
-   
+
    # Update each child PR to target the parent's base (e.g., main)
    gh pr edit <child-pr-number> --base <parent-base-branch>
    ```

@@ -20,8 +20,14 @@ export type { Tool, FunctionDeclaration, Schema };
 
 // Simple schema fields that copy directly (same name in proto and genai)
 const SCHEMA_SIMPLE_FIELDS = [
-  'format', 'title', 'description', 'nullable', 'pattern', 'example',
-  'minimum', 'maximum',
+  'format',
+  'title',
+  'description',
+  'nullable',
+  'pattern',
+  'example',
+  'minimum',
+  'maximum',
 ] as const;
 
 // Array fields that need shallow copy
@@ -59,7 +65,9 @@ export function protoToolToGenaiTool(protoTool: ProtoTool): Tool {
   const result: Tool = {};
 
   if (protoTool.functionDeclarations?.length) {
-    result.functionDeclarations = protoTool.functionDeclarations.map(protoFunctionDeclarationToGenai);
+    result.functionDeclarations = protoTool.functionDeclarations.map(
+      protoFunctionDeclarationToGenai,
+    );
   }
   if (protoTool.codeExecution) result.codeExecution = {};
   if (protoTool.googleSearch) result.googleSearch = {};
@@ -68,7 +76,9 @@ export function protoToolToGenaiTool(protoTool: ProtoTool): Tool {
   return result;
 }
 
-export function protoFunctionDeclarationToGenai(protoFd: ProtoFunctionDeclaration): FunctionDeclaration {
+export function protoFunctionDeclarationToGenai(
+  protoFd: ProtoFunctionDeclaration,
+): FunctionDeclaration {
   const result: FunctionDeclaration = {};
 
   if (protoFd.name) result.name = protoFd.name;
@@ -103,8 +113,10 @@ export function protoSchemaToGenaiSchema(proto: ProtoSchema): Schema {
   // BigInt fields -> string (only if non-zero)
   if (proto.minItems && proto.minItems !== 0n) result.minItems = proto.minItems.toString();
   if (proto.maxItems && proto.maxItems !== 0n) result.maxItems = proto.maxItems.toString();
-  if (proto.minProperties && proto.minProperties !== 0n) result.minProperties = proto.minProperties.toString();
-  if (proto.maxProperties && proto.maxProperties !== 0n) result.maxProperties = proto.maxProperties.toString();
+  if (proto.minProperties && proto.minProperties !== 0n)
+    result.minProperties = proto.minProperties.toString();
+  if (proto.maxProperties && proto.maxProperties !== 0n)
+    result.maxProperties = proto.maxProperties.toString();
   if (proto.minLength && proto.minLength !== 0n) result.minLength = proto.minLength.toString();
   if (proto.maxLength && proto.maxLength !== 0n) result.maxLength = proto.maxLength.toString();
 
@@ -126,22 +138,29 @@ export function protoSchemaToGenaiSchema(proto: ProtoSchema): Schema {
 // ============================================================================
 
 export function genaiToolToProtoTool(genaiTool: Tool): ProtoTool {
-  const result = createProto<ProtoTool>(
-    'google.ai.generativelanguage.v1beta.Tool',
-    { functionDeclarations: [] }
-  );
+  const result = createProto<ProtoTool>('google.ai.generativelanguage.v1beta.Tool', {
+    functionDeclarations: [],
+  });
 
   if (genaiTool.functionDeclarations?.length) {
-    result.functionDeclarations = genaiTool.functionDeclarations.map(genaiFunctionDeclarationToProto);
+    result.functionDeclarations = genaiTool.functionDeclarations.map(
+      genaiFunctionDeclarationToProto,
+    );
   }
   if (genaiTool.codeExecution) {
-    result.codeExecution = { $typeName: 'google.ai.generativelanguage.v1beta.CodeExecution' } as ProtoTool['codeExecution'];
+    result.codeExecution = {
+      $typeName: 'google.ai.generativelanguage.v1beta.CodeExecution',
+    } as ProtoTool['codeExecution'];
   }
   if (genaiTool.googleSearch) {
-    result.googleSearch = { $typeName: 'google.ai.generativelanguage.v1beta.Tool.GoogleSearch' } as ProtoTool['googleSearch'];
+    result.googleSearch = {
+      $typeName: 'google.ai.generativelanguage.v1beta.Tool.GoogleSearch',
+    } as ProtoTool['googleSearch'];
   }
   if (genaiTool.googleSearchRetrieval) {
-    result.googleSearchRetrieval = { $typeName: 'google.ai.generativelanguage.v1beta.GoogleSearchRetrieval' } as ProtoTool['googleSearchRetrieval'];
+    result.googleSearchRetrieval = {
+      $typeName: 'google.ai.generativelanguage.v1beta.GoogleSearchRetrieval',
+    } as ProtoTool['googleSearchRetrieval'];
   }
 
   return result;
@@ -156,9 +175,13 @@ export function genaiFunctionDeclarationToProto(fd: FunctionDeclaration): ProtoF
   };
 
   if (fd.parameters) result.parameters = genaiSchemaToProtoSchema(fd.parameters);
-  if (fd.parametersJsonSchema) result.parametersJsonSchema = fd.parametersJsonSchema as ProtoFunctionDeclaration['parametersJsonSchema'];
+  if (fd.parametersJsonSchema)
+    result.parametersJsonSchema =
+      fd.parametersJsonSchema as ProtoFunctionDeclaration['parametersJsonSchema'];
   if (fd.response) result.response = genaiSchemaToProtoSchema(fd.response);
-  if (fd.responseJsonSchema) result.responseJsonSchema = fd.responseJsonSchema as ProtoFunctionDeclaration['responseJsonSchema'];
+  if (fd.responseJsonSchema)
+    result.responseJsonSchema =
+      fd.responseJsonSchema as ProtoFunctionDeclaration['responseJsonSchema'];
 
   return result as ProtoFunctionDeclaration;
 }
@@ -166,7 +189,9 @@ export function genaiFunctionDeclarationToProto(fd: FunctionDeclaration): ProtoF
 export function genaiSchemaToProtoSchema(genai: Schema): ProtoSchema {
   const result: Partial<ProtoSchema> = {
     $typeName: 'google.ai.generativelanguage.v1beta.Schema',
-    type: genai.type ? (GENAI_TO_PROTO_TYPE[genai.type] ?? ProtoType.TYPE_UNSPECIFIED) : ProtoType.TYPE_UNSPECIFIED,
+    type: genai.type
+      ? (GENAI_TO_PROTO_TYPE[genai.type] ?? ProtoType.TYPE_UNSPECIFIED)
+      : ProtoType.TYPE_UNSPECIFIED,
     format: genai.format ?? '',
     title: genai.title ?? '',
     description: genai.description ?? '',

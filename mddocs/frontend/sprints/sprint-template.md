@@ -21,8 +21,8 @@
 - [Definition of Done](#definition-of-done)
 - [Retrospective Notes](#retrospective-notes)
 
-**Created**: [DATE]  
-**Status**: Planning | In Progress | Complete  
+**Created**: [DATE]
+**Status**: Planning | In Progress | Complete
 **TDD Phase(s)**: [e.g., Phase 1: Foundation]
 
 ---
@@ -108,31 +108,31 @@
   Break down the sprint's work into discrete PRs.
   Target ~200 lines max per PR, but smaller is fine.
   Each PR should be independently mergeable and testable.
-  
+
   PR IDs use format: S[sprint#]PR[#] (e.g., S1PR1, S1PR2)
 -->
 
 ### S[N]PR1: [PR Title]
 
-**Estimated Lines**: ~[X] lines  
+**Estimated Lines**: ~[X] lines
 **Depends On**: - (or previous PR)
 
 **Goal**: [One sentence describing what this PR accomplishes]
 
 <!--
   OPTIONAL: Completes TDD Task
-  
+
   Include this field ONLY if this PR fully completes a task from the
   frontend-tdd.md Implementation Phases table. Many PRs are intermediate
   steps and won't have this field.
-  
+
   When present, the implementation agent will check off BOTH:
   1. The acceptance criteria in this sprint plan
   2. The corresponding row in frontend-tdd.md
-  
+
   Format: Copy the exact task name and phase from frontend-tdd.md
 -->
-**Completes TDD Task**: [Task name] (Phase [N])  
+**Completes TDD Task**: [Task name] (Phase [N])
 
 **Files to Create/Modify**:
 - `path/to/file.ts` - [what changes]
@@ -156,7 +156,7 @@
 
 ### S[N]PR2: [PR Title]
 
-**Estimated Lines**: ~[X] lines  
+**Estimated Lines**: ~[X] lines
 **Depends On**: S[N]PR1
 
 **Goal**: [One sentence]

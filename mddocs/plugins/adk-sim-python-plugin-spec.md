@@ -1,8 +1,8 @@
 # Python Plugin Public Interface Specification
 
-**Component:** `adk-agent-sim` Python Plugin  
-**Version:** 1.1  
-**Status:** Approved  
+**Component:** `adk-agent-sim` Python Plugin
+**Version:** 1.1
+**Status:** Approved
 
 ## 1. Overview
 
@@ -37,7 +37,7 @@ async def main():
             )
         ]
     )
-    
+
     # ... Run logic ...
 ```
 
@@ -50,7 +50,7 @@ The `SimulatorPlugin` class accepts configuration via its constructor to control
 ```python
 class SimulatorPlugin(BasePlugin):
     def __init__(
-        self, 
+        self,
         server_url: Optional[str] = None,
         target_agents: Optional[List[str]] = None,
         session_description: Optional[str] = None
@@ -123,6 +123,6 @@ SimulatorPlugin(
 # environment:
 #   - ADK_SIM_SERVER_URL=simulator-backend:50051
 
-SimulatorPlugin() 
+SimulatorPlugin()
 ```
 *   Automatically picks up the env var to connect to the backend container.

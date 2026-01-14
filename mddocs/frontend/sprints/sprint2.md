@@ -158,7 +158,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR1: Content Conversion Helpers
 
-**Estimated Lines**: ~120 lines  
+**Estimated Lines**: ~120 lines
 **Depends On**: -
 
 **Goal**: Implement the foundational `protoContentToGenaiContent()` and `genaiContentToProtoContent()` helper functions for converting between proto `Content` and SDK `Content` types.
@@ -185,7 +185,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR2: Tool and FunctionDeclaration Conversion
 
-**Estimated Lines**: ~100 lines  
+**Estimated Lines**: ~100 lines
 **Depends On**: S2PR1
 
 **Goal**: Implement conversion for `Tool` and `FunctionDeclaration` types, including nested `Schema` objects for function parameters.
@@ -213,7 +213,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR3: Generation Config Conversion
 
-**Estimated Lines**: ~80 lines  
+**Estimated Lines**: ~80 lines
 **Depends On**: -
 
 **Goal**: Implement conversion for `GenerationConfig` proto to SDK config fields (`temperature`, `topP`, `topK`, `maxOutputTokens`, etc.).
@@ -239,7 +239,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR4: Safety Settings Conversion
 
-**Estimated Lines**: ~90 lines  
+**Estimated Lines**: ~90 lines
 **Depends On**: -
 
 **Goal**: Implement conversion for `SafetySetting` with enum mapping between proto and SDK representations.
@@ -266,7 +266,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR5: Full protoToLlmRequest Implementation
 
-**Estimated Lines**: ~150 lines  
+**Estimated Lines**: ~150 lines
 **Depends On**: S2PR1, S2PR2, S2PR3, S2PR4
 
 **Goal**: Implement the complete `protoToLlmRequest()` function that composes all helper converters into a full LlmRequest.
@@ -300,7 +300,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR6: LlmResponse to Proto Conversion
 
-**Estimated Lines**: ~120 lines  
+**Estimated Lines**: ~120 lines
 **Depends On**: S2PR1
 
 **Goal**: Implement `llmResponseToProto()` to convert ADK LlmResponse back to GenerateContentResponse proto format.
@@ -328,7 +328,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR7: Response Construction Helpers
 
-**Estimated Lines**: ~100 lines  
+**Estimated Lines**: ~100 lines
 **Depends On**: S2PR6
 
 **Goal**: Add convenience factory functions for creating common response types that the frontend needs to submit.
@@ -355,7 +355,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR8: Round-Trip and Integration Tests
 
-**Estimated Lines**: ~120 lines  
+**Estimated Lines**: ~120 lines
 **Depends On**: S2PR5, S2PR6, S2PR7
 
 **Goal**: Add comprehensive round-trip tests and integration test fixtures that verify conversion fidelity.
@@ -384,7 +384,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 
 ### S2PR9: Frontend LlmRequestConverter Service
 
-**Estimated Lines**: ~80 lines  
+**Estimated Lines**: ~80 lines
 **Depends On**: S2PR5, S2PR7
 
 **Goal**: Create the Angular service wrapper that provides the converter functions with proper DI integration.
@@ -422,7 +422,7 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
    ```typescript
    import { create, toJson } from '@bufbuild/protobuf';
    import { GenerateContentResponseSchema } from '@adk-sim/protos';
-   
+
    const response = create(GenerateContentResponseSchema, {
      candidates: [{ content: { parts: [{ text: 'Hello' }] } }],
    });

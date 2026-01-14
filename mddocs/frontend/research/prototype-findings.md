@@ -8,8 +8,8 @@ related:
 
 # Prototype Architecture Research Findings
 
-**Source**: `/tmp/rpc-streaming-prototype/frontend`  
-**Date**: January 11, 2026  
+**Source**: `/tmp/rpc-streaming-prototype/frontend`
+**Date**: January 11, 2026
 **Purpose**: Extract proven patterns from the gRPC streaming prototype for application to the ADK Simulator Web UI.
 
 ## Related Documents
@@ -103,7 +103,7 @@ export class SessionStateService {
 
   readonly proposalHistory = computed(() => {
     const pending = this.pendingProposal();
-    return pending 
+    return pending
       ? this._proposals().filter(p => p.proposalId !== pending.proposalId)
       : this._proposals();
   });
@@ -195,15 +195,15 @@ export class SessionComponent implements OnInit {
     try {
       for await (const response of this.approvalService.subscribe(sessionId, this.clientId)) {
         if (this.abortController.signal.aborted) break;
-        
+
         if (this.sessionState.connectionStatus() !== 'connected') {
           this.sessionState.setConnectionStatus('connected');
           this.reconnectAttempts = 0;
         }
-        
+
         this.processSessionEvent(response.event);
       }
-      
+
       if (!this.abortController.signal.aborted) {
         this.handleDisconnect(sessionId);
       }

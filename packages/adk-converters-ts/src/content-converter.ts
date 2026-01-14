@@ -92,7 +92,10 @@ export function genaiPartToProtoPart(genai: Part): ProtoPart {
   } else if (genai.functionCall) {
     data = { case: 'functionCall', value: genaiFunctionCallToProto(genai.functionCall) };
   } else if (genai.functionResponse) {
-    data = { case: 'functionResponse', value: genaiFunctionResponseToProto(genai.functionResponse) };
+    data = {
+      case: 'functionResponse',
+      value: genaiFunctionResponseToProto(genai.functionResponse),
+    };
   } else if (genai.inlineData) {
     data = { case: 'inlineData', value: genaiInlineDataToProto(genai.inlineData) };
   }

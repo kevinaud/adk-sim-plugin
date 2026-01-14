@@ -10,8 +10,7 @@ permissions:
   id-token: write
 
 jobs:
-  # Job 1: Build all packages and verify they're installable
-  verify-build:
+  build-and-verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,133 +29,62 @@ jobs:
           uv sync
           npm ci
 
-      - name: Build TypeScript packages (required by frontend)
-        run: |
-          npm run build --workspace=packages/adk-sim-protos-ts
-          npm run build --workspace=packages/adk-converters-ts
+      - name: Build all artifacts
+        run: ./scripts/build.sh all
 
-      - name: Bundle frontend into server
-        run: |
-          cd frontend && CI=TRUE npm run build && cd ..
-          rm -rf server/src/adk_sim_server/static/*
-          cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/
-          echo "Frontend bundled:"
-          ls -la server/src/adk_sim_server/static/browser/
-
-      - name: Build Python packages
-        run: |
-          uv build --package adk-sim-protos --out-dir dist/
-          uv build --package adk-sim-testing --out-dir dist/
-          uv build --package adk-sim-server --out-dir dist/
-          uv build --package adk-agent-sim --out-dir dist/
-
-      - name: Verify Python installation (local wheels)
+      - name: Verify installation
         run: |
           uv venv .verify-venv
-          # Install leaf package - use local wheels for internal deps, allow external deps from PyPI
-          # Note: --prerelease=allow is needed for betterproto>=2.0.0b7
           uv pip install --python .verify-venv adk-sim-server --find-links dist/ --prerelease=allow
-          # Smoke test - verify we can import the packages
-          .verify-venv/bin/python -c "
-          from importlib.metadata import version
-          print(f'adk-sim-server: {version(\"adk-sim-server\")}')
-          print(f'adk-sim-protos: {version(\"adk-sim-protos\")}')
-          # Verify imports work
-          import adk_sim_server
-          import adk_sim_protos
-          print('All imports successful!')
-          "
+          .verify-venv/bin/python -c "import adk_sim_server; import adk_sim_protos; print('✅ Imports OK')"
 
-      - name: Verify frontend is bundled and servable
-        run: |
-          # Start the server in background
+          # Verify frontend bundled
           .verify-venv/bin/adk-sim &
-          SERVER_PID=$!
-          
-          # Wait for server to start
           sleep 3
-          
-          # Test that the frontend is served (not "Frontend not bundled")
-          RESPONSE=$(curl -s http://localhost:8080/)
-          
-          # Kill the server
-          kill $SERVER_PID 2>/dev/null || true
-          
-          # Check response contains expected Angular app markers
-          if echo "$RESPONSE" | grep -q "Frontend not bundled"; then
-            echo "❌ FATAL: Frontend is not bundled in the package!"
-            echo "Response was: $RESPONSE"
-            exit 1
-          fi
-          
-          if echo "$RESPONSE" | grep -q "<app-root>"; then
-            echo "✅ Frontend is properly bundled and served"
-          else
-            echo "❌ FATAL: Frontend response does not contain expected Angular markers"
-            echo "Response was: $RESPONSE"
-            exit 1
-          fi
+          curl -s http://localhost:8080/ | grep -q "<app-root>" || exit 1
+          kill %1
+          echo "✅ Frontend served correctly"
 
-      - name: Upload Python artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: python-dist
+          name: dist
           path: dist/
 
-  # Job 2: Publish Python packages to PyPI
   publish-pypi:
-    needs: verify-build
+    needs: build-and-verify
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
       contents: read
       id-token: write
     steps:
-      - name: Download Python artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: python-dist
+          name: dist
           path: dist/
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
           skip-existing: true
 
-  # Job 3: Publish TypeScript package to npm
   publish-npm:
-    needs: verify-build
+    needs: build-and-verify
     runs-on: ubuntu-latest
-    # No environment - npm trusted publisher configured without environment
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Install and build
-        run: |
+      - run: |
           npm ci
           npm run build --workspace=packages/adk-sim-protos-ts
           npm run build --workspace=packages/adk-converters-ts
-
-      - name: Publish @adk-sim/protos to npm
-        working-directory: packages/adk-sim-protos-ts
+      - name: Publish packages
         run: |
-          # Unset NODE_AUTH_TOKEN to force npm to use OIDC instead of token auth
-          # See: https://github.com/npm/cli/issues/1440
-          unset NODE_AUTH_TOKEN
-          npm publish --provenance --access public
-
-      - name: Publish @adk-sim/converters to npm
-        working-directory: packages/adk-converters-ts
-        run: |
-          unset NODE_AUTH_TOKEN
-          npm publish --provenance --access public
+          cd packages/adk-sim-protos-ts && unset NODE_AUTH_TOKEN && npm publish --provenance --access public
+          cd ../adk-converters-ts && unset NODE_AUTH_TOKEN && npm publish --provenance --access public

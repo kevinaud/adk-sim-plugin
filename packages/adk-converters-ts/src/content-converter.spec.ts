@@ -43,7 +43,11 @@ function createTestContent(role: string, parts: ProtoPart[]): ProtoContent {
 }
 
 // Helper to create a FunctionCall-like object
-function createTestFunctionCall(name: string, id?: string, args?: Record<string, unknown>): ProtoFunctionCall {
+function createTestFunctionCall(
+  name: string,
+  id?: string,
+  args?: Record<string, unknown>,
+): ProtoFunctionCall {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionCall',
     id: id ?? '',
@@ -56,7 +60,7 @@ function createTestFunctionCall(name: string, id?: string, args?: Record<string,
 function createTestFunctionResponse(
   name: string,
   response: Record<string, unknown>,
-  id?: string
+  id?: string,
 ): ProtoFunctionResponse {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionResponse',
@@ -156,7 +160,10 @@ describe('Content Conversion', () => {
     it('should convert functionCall part', () => {
       const protoPart = createTestPart({
         case: 'functionCall',
-        value: createTestFunctionCall('get_weather', 'call-123', { location: 'NYC', units: 'celsius' }),
+        value: createTestFunctionCall('get_weather', 'call-123', {
+          location: 'NYC',
+          units: 'celsius',
+        }),
       });
 
       const result = protoPartToGenaiPart(protoPart);
@@ -183,7 +190,11 @@ describe('Content Conversion', () => {
     it('should convert functionResponse part', () => {
       const protoPart = createTestPart({
         case: 'functionResponse',
-        value: createTestFunctionResponse('get_weather', { temperature: 20, conditions: 'sunny' }, 'call-123'),
+        value: createTestFunctionResponse(
+          'get_weather',
+          { temperature: 20, conditions: 'sunny' },
+          'call-123',
+        ),
       });
 
       const result = protoPartToGenaiPart(protoPart);
@@ -353,7 +364,11 @@ describe('Content Conversion', () => {
       const result = genaiPartToProtoPart(genaiPart);
 
       expect(result.data.case).toBe('functionResponse');
-      const fr = result.data.value as { id: string; name: string; response: Record<string, unknown> };
+      const fr = result.data.value as {
+        id: string;
+        name: string;
+        response: Record<string, unknown>;
+      };
       expect(fr.id).toBe('call-123');
       expect(fr.name).toBe('get_weather');
       expect(fr.response).toEqual({ temperature: 20 });

@@ -40,7 +40,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({...})
 export class UserComponent {
   private users$ = this.http.get<User[]>('/api/users');
-  
+
   // Convert final stage for template consumption
   users = toSignal(this.users$, { initialValue: [] });
 }
@@ -51,9 +51,9 @@ import { toObservable } from '@angular/core/rxjs-interop';
 @Component({...})
 export class SearchComponent {
   searchTerm = signal('');
-  
+
   private searchTerm$ = toObservable(this.searchTerm);
-  
+
   results = toSignal(
     this.searchTerm$.pipe(
       debounceTime(300),
@@ -151,7 +151,7 @@ export const bookRoutes: Routes = [
 @Component({...})
 export class BookListComponent {
   readonly store = inject(BookStore);
-  
+
   books = this.store.books;
   loading = this.store.loading;
 }
@@ -239,12 +239,12 @@ import { required, email, minLength } from '@angular/forms/signals/validators';
           <span class="error">{{ form.email.errors()[0] }}</span>
         }
       </div>
-      
+
       <div class="field">
         <label for="name">Name</label>
         <input id="name" [field]="form.name" type="text" />
       </div>
-      
+
       <button type="submit" [disabled]="form.invalid()">Save</button>
     </form>
   `
@@ -306,7 +306,7 @@ it('should validate email', async () => {
   await user.tab();
   await fixture.whenStable();
   fixture.detectChanges();
-  
+
   expect(screen.getByText(/invalid email/i)).toBeVisible();
   expect(button).toBeDisabled();
 
@@ -349,7 +349,7 @@ import { effect, signal } from '@angular/core';
 @Component({...})
 export class LoggingComponent {
   userName = signal('');
-  
+
   constructor() {
     // Runs when userName changes
     effect(() => {
@@ -364,7 +364,7 @@ export class LoggingComponent {
 ```typescript
 effect((onCleanup) => {
   const subscription = someObservable$.subscribe();
-  
+
   onCleanup(() => {
     subscription.unsubscribe();
   });
@@ -378,10 +378,10 @@ Effects are scheduled on microtask queue. Use `TestBed.tick()`:
 ```typescript
 it('should trigger logging effect', async () => {
   const consoleSpy = vi.spyOn(console, 'log');
-  
+
   component.userName.set('John');
   TestBed.tick(); // Flush effect queue
-  
+
   expect(consoleSpy).toHaveBeenCalledWith('User changed to:', 'John');
 });
 ```
@@ -410,7 +410,7 @@ sortBy = signal<'name' | 'date'>('name');
 filteredAndSortedUsers = computed(() => {
   const filterValue = this.filter().toLowerCase();
   const sortKey = this.sortBy();
-  
+
   return this.users()
     .filter(u => u.name.toLowerCase().includes(filterValue))
     .sort((a, b) => a[sortKey].localeCompare(b[sortKey]));

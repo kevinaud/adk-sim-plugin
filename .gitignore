@@ -46,11 +46,15 @@ coverage/
 libpeerconnection.log
 testem.log
 typings/
-__screenshots__/
 out-tsc/
 bazel-out/
 frontend/dist/
 frontend/.angular/
+
+# Playwright test artifacts (NOT baseline snapshots - those are committed)
+frontend/test-results/
+**/playwright-report/
+**/.playwright/
 ":memory:?cache=shared"
 notebooks/
 

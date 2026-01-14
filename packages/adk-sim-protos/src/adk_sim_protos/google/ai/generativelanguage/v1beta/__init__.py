@@ -703,7 +703,7 @@ class CitationSource(betterproto.Message):
   """
     Optional. Start of segment of the response that is attributed to this
      source.
-    
+
      Index indicates the start of the segment, measured in bytes.
     """
 
@@ -719,7 +719,7 @@ class CitationSource(betterproto.Message):
   """
     Optional. License for the GitHub project that is attributed as a source for
      segment.
-    
+
      License info is required for code citations.
     """
 
@@ -743,7 +743,7 @@ class Content(betterproto.Message):
   role: str = betterproto.string_field(2)
   """
     Optional. The producer of the content. Must be either 'user' or 'model'.
-    
+
      Useful to set for multi-turn conversations, otherwise can be left blank
      or unset.
     """
@@ -963,7 +963,7 @@ class Tool(betterproto.Message):
   """
     Optional. A list of `FunctionDeclarations` available to the model that can
      be used for function calling.
-    
+
      The model or system does not execute the function. Instead the defined
      function may be returned as a
      [FunctionCall][google.ai.generativelanguage.v1beta.Part.function_call] with
@@ -1188,7 +1188,7 @@ class FunctionCallingConfig(betterproto.Message):
   """
     Optional. A set of function names that, when provided, limits the functions
      the model will call.
-    
+
      This should only be set when the Mode is ANY or VALIDATED. Function names
      should match [FunctionDeclaration.name]. When set, model will
      predict a function call from only allowed function names.
@@ -1230,7 +1230,7 @@ class FunctionDeclaration(betterproto.Message):
     Optional. Describes the parameters to the function in JSON Schema format.
      The schema must describe an object where the properties are the parameters
      to the function. For example:
-    
+
      ```
      {
        "type": "object",
@@ -1243,7 +1243,7 @@ class FunctionDeclaration(betterproto.Message):
        "propertyOrdering": ["name", "age"]
      }
      ```
-    
+
      This field is mutually exclusive with `parameters`.
     """
 
@@ -1260,7 +1260,7 @@ class FunctionDeclaration(betterproto.Message):
   """
     Optional. Describes the output from this function in JSON Schema format.
      The value specified by the schema is the response value of the function.
-    
+
      This field is mutually exclusive with `response`.
     """
 
@@ -1768,7 +1768,7 @@ class GenerateContentRequest(betterproto.Message):
   model: str = betterproto.string_field(1)
   """
     Required. The name of the `Model` to use for generating the completion.
-    
+
      Format: `models/{model}`.
     """
 
@@ -1782,7 +1782,7 @@ class GenerateContentRequest(betterproto.Message):
   contents: List["Content"] = betterproto.message_field(2)
   """
     Required. The content of the current conversation with the model.
-    
+
      For single-turn queries, this is a single instance. For multi-turn queries
      like [chat](https://ai.google.dev/gemini-api/docs/text-generation#chat),
      this is a repeated field that contains the conversation history and the
@@ -1793,7 +1793,7 @@ class GenerateContentRequest(betterproto.Message):
   """
     Optional. A list of `Tools` the `Model` may use to generate the next
      response.
-    
+
      A `Tool` is a piece of code that enables the system to interact with
      external systems to perform an action, or set of actions, outside of
      knowledge and scope of the `Model`. Supported `Tool`s are `Function` and
@@ -1815,7 +1815,7 @@ class GenerateContentRequest(betterproto.Message):
   """
     Optional. A list of unique `SafetySetting` instances for blocking unsafe
      content.
-    
+
      This will be enforced on the `GenerateContentRequest.contents` and
      `GenerateContentResponse.candidates`. There should not be more than one
      setting for each `SafetyCategory` type. The API will block any contents and
@@ -1902,7 +1902,7 @@ class SpeechConfig(betterproto.Message):
   """
     Optional. Language code (in BCP 47 format, e.g. "en-US") for speech
      synthesis.
-    
+
      Valid values are: de-DE, en-AU, en-GB, en-IN, en-US, es-US, fr-FR, hi-IN,
      pt-BR, ar-XA, es-ES, fr-CA, id-ID, it-IT, ja-JP, tr-TR, vi-VN, bn-IN,
      gu-IN, kn-IN, ml-IN, mr-IN, ta-IN, te-IN, nl-NL, ko-KR, cmn-CN, pl-PL,
@@ -1932,7 +1932,7 @@ class ImageConfig(betterproto.Message):
   """
     Optional. The aspect ratio of the image to generate. Supported aspect
      ratios: 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, 21:9.
-    
+
      If not specified, the model will choose a default aspect ratio based on any
      reference images provided.
     """
@@ -1963,7 +1963,7 @@ class GenerationConfig(betterproto.Message):
   max_output_tokens: Optional[int] = betterproto.int32_field(4, optional=True)
   """
     Optional. The maximum number of tokens to include in a response candidate.
-    
+
      Note: The default value varies by model, see the `Model.output_token_limit`
      attribute of the `Model` returned from the `getModel` function.
     """
@@ -1971,10 +1971,10 @@ class GenerationConfig(betterproto.Message):
   temperature: Optional[float] = betterproto.float_field(5, optional=True)
   """
     Optional. Controls the randomness of the output.
-    
+
      Note: The default value varies by model, see the `Model.temperature`
      attribute of the `Model` returned from the `getModel` function.
-    
+
      Values can range from [0.0, 2.0].
     """
 
@@ -1982,14 +1982,14 @@ class GenerationConfig(betterproto.Message):
   """
     Optional. The maximum cumulative probability of tokens to consider when
      sampling.
-    
+
      The model uses combined Top-k and Top-p (nucleus) sampling.
-    
+
      Tokens are sorted based on their assigned probabilities so that only the
      most likely tokens are considered. Top-k sampling directly limits the
      maximum number of tokens to consider, while Nucleus sampling limits the
      number of tokens based on the cumulative probability.
-    
+
      Note: The default value varies by `Model` and is specified by
      the`Model.top_p` attribute returned from the `getModel` function. An empty
      `top_k` attribute indicates that the model doesn't apply top-k sampling
@@ -1999,11 +1999,11 @@ class GenerationConfig(betterproto.Message):
   top_k: Optional[int] = betterproto.int32_field(7, optional=True)
   """
     Optional. The maximum number of tokens to consider when sampling.
-    
+
      Gemini models use Top-p (nucleus) sampling or a combination of Top-k and
      nucleus sampling. Top-k sampling considers the set of `top_k` most probable
      tokens. Models running with nucleus sampling don't allow top_k setting.
-    
+
      Note: The default value varies by `Model` and is specified by
      the`Model.top_p` attribute returned from the `getModel` function. An empty
      `top_k` attribute indicates that the model doesn't apply top-k sampling
@@ -2033,7 +2033,7 @@ class GenerationConfig(betterproto.Message):
     Optional. Output schema of the generated candidate text. Schemas must be a
      subset of the [OpenAPI schema](https://spec.openapis.org/oas/v3.0.3#schema)
      and can be objects, primitives or arrays.
-    
+
      If set, a compatible `response_mime_type` must also be set.
      Compatible MIME types:
      `application/json`: Schema for JSON response.
@@ -2047,13 +2047,13 @@ class GenerationConfig(betterproto.Message):
   """
     Optional. Output schema of the generated response. This is an alternative
      to `response_schema` that accepts [JSON Schema](https://json-schema.org/).
-    
+
      If set, `response_schema` must be omitted, but `response_mime_type` is
      required.
-    
+
      While the full JSON Schema may be sent, not all features are supported.
      Specifically, only the following properties are supported:
-    
+
      - `$id`
      - `$defs`
      - `$ref`
@@ -2074,9 +2074,9 @@ class GenerationConfig(betterproto.Message):
      - `properties`
      - `additionalProperties`
      - `required`
-    
+
      The non-standard `propertyOrdering` property may also be set.
-    
+
      Cyclic references are unrolled to a limited degree and, as such, may only
      be used within non-required properties. (Nullable properties are not
      sufficient.) If `$ref` is set on a sub-schema, no other properties, except
@@ -2095,15 +2095,15 @@ class GenerationConfig(betterproto.Message):
   """
     Optional. Presence penalty applied to the next token's logprobs if the
      token has already been seen in the response.
-    
+
      This penalty is binary on/off and not dependant on the number of times the
      token is used (after the first). Use
      [frequency_penalty][google.ai.generativelanguage.v1beta.GenerationConfig.frequency_penalty]
      for a penalty that increases with each use.
-    
+
      A positive penalty will discourage the use of tokens that have already
      been used in the response, increasing the vocabulary.
-    
+
      A negative penalty will encourage the use of tokens that have already been
      used in the response, decreasing the vocabulary.
     """
@@ -2113,12 +2113,12 @@ class GenerationConfig(betterproto.Message):
     Optional. Frequency penalty applied to the next token's logprobs,
      multiplied by the number of times each token has been seen in the respponse
      so far.
-    
+
      A positive penalty will discourage the use of tokens that have already
      been used, proportional to the number of times the token has been used:
      The more a token is used, the more difficult it is for the model to use
      that token again increasing the vocabulary of responses.
-    
+
      Caution: A _negative_ penalty will encourage the model to reuse tokens
      proportional to the number of times the token has been used. Small
      negative values will reduce the vocabulary of a response. Larger negative
@@ -2153,11 +2153,11 @@ class GenerationConfig(betterproto.Message):
     Optional. The requested modalities of the response. Represents the set of
      modalities that the model can return, and should be expected in the
      response. This is an exact match to the modalities of the response.
-    
+
      A model may have multiple combinations of supported modalities. If the
      requested modalities do not match any of the supported combinations, an
      error will be returned.
-    
+
      An empty list is equivalent to requesting only text.
     """
 
@@ -2342,7 +2342,7 @@ class Candidate(betterproto.Message):
   finish_reason: "CandidateFinishReason" = betterproto.enum_field(2)
   """
     Optional. Output only. The reason why the model stopped generating tokens.
-    
+
      If empty, the model has not stopped generating tokens.
     """
 
@@ -2355,14 +2355,14 @@ class Candidate(betterproto.Message):
   safety_ratings: List["SafetyRating"] = betterproto.message_field(5)
   """
     List of ratings for the safety of a response candidate.
-    
+
      There is at most one rating per category.
     """
 
   citation_metadata: "CitationMetadata" = betterproto.message_field(6)
   """
     Output only. Citation information for model-generated candidate.
-    
+
      This field may be populated with recitation information for any text
      included in the `content`. These are passages that are "recited" from
      copyrighted material in the foundational LLM's training data.
@@ -2375,14 +2375,14 @@ class Candidate(betterproto.Message):
   """
     Output only. Attribution information for sources that contributed to a
      grounded answer.
-    
+
      This field is populated for `GenerateAnswer` calls.
     """
 
   grounding_metadata: "GroundingMetadata" = betterproto.message_field(9)
   """
     Output only. Grounding metadata for the candidate.
-    
+
      This field is populated for `GenerateContent` calls.
     """
 
@@ -2771,7 +2771,7 @@ class GenerateAnswerRequest(betterproto.Message):
   """
     Required. The name of the `Model` to use for generating the grounded
      response.
-    
+
      Format: `model=models/{model}`.
     """
 
@@ -2781,7 +2781,7 @@ class GenerateAnswerRequest(betterproto.Message):
      single-turn queries, this is a single question to answer. For multi-turn
      queries, this is a repeated field that contains conversation history and
      the last `Content` in the list containing the question.
-    
+
      Note: `GenerateAnswer` only supports queries in English.
     """
 
@@ -2792,7 +2792,7 @@ class GenerateAnswerRequest(betterproto.Message):
   """
     Optional. A list of unique `SafetySetting` instances for blocking unsafe
      content.
-    
+
      This will be enforced on the `GenerateAnswerRequest.contents` and
      `GenerateAnswerResponse.candidate`. There should not be more than one
      setting for each `SafetyCategory` type. The API will block any contents and
@@ -2813,7 +2813,7 @@ class GenerateAnswerRequest(betterproto.Message):
   temperature: Optional[float] = betterproto.float_field(4, optional=True)
   """
     Optional. Controls the randomness of the output.
-    
+
      Values can range from [0.0,1.0], inclusive. A value closer to 1.0 will
      produce responses that are more varied and creative, while a value closer
      to 0.0 will typically result in more straightforward responses from the
@@ -2829,7 +2829,7 @@ class GenerateAnswerResponse(betterproto.Message):
   answer: "Candidate" = betterproto.message_field(1)
   """
     Candidate answer from the model.
-    
+
      Note: The model *always* attempts to provide a grounded answer, even when
      the answer is unlikely to be answerable from the given passages.
      In that case, a low-quality or ungrounded answer may be provided, along
@@ -2840,12 +2840,12 @@ class GenerateAnswerResponse(betterproto.Message):
   """
     Output only. The model's estimate of the probability that its answer is
      correct and grounded in the input passages.
-    
+
      A low `answerable_probability` indicates that the answer might not be
      grounded in the sources.
-    
+
      When `answerable_probability` is low, you may want to:
-    
+
      * Display a message to the effect of "We couldn’t answer that question" to
      the user.
      * Fall back to a general-purpose LLM that answers the question from world
@@ -2859,9 +2859,9 @@ class GenerateAnswerResponse(betterproto.Message):
   """
     Output only. Feedback related to the input data used to answer the
      question, as opposed to the model-generated response to the question.
-    
+
      The input data can be one or more of the following:
-    
+
      - Question specified by the last entry in `GenerateAnswerRequest.content`
      - Conversation history specified by the other entries in
      `GenerateAnswerRequest.content`
@@ -2900,9 +2900,9 @@ class EmbedContentRequest(betterproto.Message):
   """
     Required. The model's resource name. This serves as an ID for the Model to
      use.
-    
+
      This name should match a model name returned by the `ListModels` method.
-    
+
      Format: `models/{model}`
     """
 
@@ -2922,7 +2922,7 @@ class EmbedContentRequest(betterproto.Message):
   """
     Optional. An optional title for the text. Only applicable when TaskType is
      `RETRIEVAL_DOCUMENT`.
-    
+
      Note: Specifying a `title` for `RETRIEVAL_DOCUMENT` provides better quality
      embeddings for retrieval.
     """
@@ -2962,9 +2962,9 @@ class BatchEmbedContentsRequest(betterproto.Message):
   """
     Required. The model's resource name. This serves as an ID for the Model to
      use.
-    
+
      This name should match a model name returned by the `ListModels` method.
-    
+
      Format: `models/{model}`
     """
 
@@ -2999,9 +2999,9 @@ class CountTokensRequest(betterproto.Message):
   """
     Required. The model's resource name. This serves as an ID for the Model to
      use.
-    
+
      This name should match a model name returned by the `ListModels` method.
-    
+
      Format: `models/{model}`
     """
 
@@ -3129,7 +3129,7 @@ class SessionResumptionConfig(betterproto.Message):
   """
     The handle of a previous session. If not present then a new session is
      created.
-    
+
      Session handles come from `SessionResumptionUpdate.token` values in
      previous connections.
     """
@@ -3151,12 +3151,12 @@ class ContextWindowCompressionConfig(betterproto.Message):
   """
     The number of tokens (before running a turn) required to trigger a context
      window compression.
-    
+
      This can be used to balance quality against latency as shorter context
      windows may result in faster model responses. However, any compression
      operation will cause a temporary latency increase, so they should not be
      triggered frequently.
-    
+
      If not set, the default is 80% of the model's context window limit. This
      leaves 20% for the next user request/model response.
     """
@@ -3176,7 +3176,7 @@ class ContextWindowCompressionConfigSlidingWindow(betterproto.Message):
   """
     The target number of tokens to keep. The default value is
      trigger_tokens/2.
-    
+
      Discarding parts of the context window causes a temporary latency
      increase so this value should be calibrated to avoid frequent compression
      operations.
@@ -3205,16 +3205,16 @@ class BidiGenerateContentSetup(betterproto.Message):
   """
     Required. The model's resource name. This serves as an ID for the Model to
      use.
-    
+
      Format: `models/{model}`
     """
 
   generation_config: "GenerationConfig" = betterproto.message_field(2)
   """
     Optional. Generation config.
-    
+
      The following fields are not supported:
-    
+
       - `response_logprobs`
       - `response_mime_type`
       - `logprobs`
@@ -3228,7 +3228,7 @@ class BidiGenerateContentSetup(betterproto.Message):
   system_instruction: "Content" = betterproto.message_field(3)
   """
     Optional. The user provided system instructions for the model.
-    
+
      Note: Only text should be used in parts and content in each part will be
      in a separate paragraph.
     """
@@ -3237,7 +3237,7 @@ class BidiGenerateContentSetup(betterproto.Message):
   """
     Optional. A list of `Tools` the model may use to generate the next
      response.
-    
+
      A `Tool` is a piece of code that enables the system to interact with
      external systems to perform an action, or set of actions, outside of
      knowledge and scope of the model.
@@ -3249,7 +3249,7 @@ class BidiGenerateContentSetup(betterproto.Message):
   session_resumption: "SessionResumptionConfig" = betterproto.message_field(7)
   """
     Optional. Configures session resumption mechanism.
-    
+
      If included, the server will send `SessionResumptionUpdate` messages.
     """
 
@@ -3258,7 +3258,7 @@ class BidiGenerateContentSetup(betterproto.Message):
   )
   """
     Optional. Configures a context window compression mechanism.
-    
+
      If included, the server will automatically reduce the size of the context
      when it exceeds the configured length.
     """
@@ -3290,7 +3290,7 @@ class BidiGenerateContentClientContent(betterproto.Message):
   turns: List["Content"] = betterproto.message_field(1)
   """
     Optional. The content appended to the current conversation with the model.
-    
+
      For single-turn queries, this is a single instance. For multi-turn
      queries, this is a repeated field that contains conversation history and
      the latest request.
@@ -3333,7 +3333,7 @@ class BidiGenerateContentRealtimeInput(betterproto.Message):
   """
     Optional. Inlined bytes data for media input. Multiple `media_chunks` are
      not supported, all but the first will be ignored.
-    
+
      DEPRECATED: Use one of `audio`, `video`, or `text` instead.
     """
 
@@ -3344,10 +3344,10 @@ class BidiGenerateContentRealtimeInput(betterproto.Message):
   """
     Optional. Indicates that the audio stream has ended, e.g. because the
      microphone was turned off.
-    
+
      This should only be sent when automatic activity detection is enabled
      (which is the default).
-    
+
      The client can reopen the stream by sending an audio message.
     """
 
@@ -3461,11 +3461,11 @@ class BidiGenerateContentServerContent(betterproto.Message):
   generation_complete: bool = betterproto.bool_field(5)
   """
     Output only. If true, indicates that the model is done generating.
-    
+
      When model is interrupted while generating there will be no
      'generation_complete' message in interrupted turn, it will go through
      'interrupted > turn_complete'.
-    
+
      When model assumes realtime playback there will be delay between
      generation_complete and turn_complete that is caused by model waiting for
      playback to finish.
@@ -3547,7 +3547,7 @@ class GoAway(betterproto.Message):
   time_left: timedelta = betterproto.message_field(1)
   """
     The remaining time before the connection will be terminated as ABORTED.
-    
+
      This duration will never be less than a model-specific minimum, which will
      be specified together with the rate limits for the model.
     """
@@ -3570,7 +3570,7 @@ class SessionResumptionUpdate(betterproto.Message):
   resumable: bool = betterproto.bool_field(2)
   """
     True if the current session can be resumed at this point.
-    
+
      Resumption is not possible at some points in the session. For example, when
      the model is executing function calls or generating. Resuming the session
      (using a previous session token) in such a state will result in some data

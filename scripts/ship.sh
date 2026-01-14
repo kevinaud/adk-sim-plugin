@@ -127,17 +127,17 @@ wait_for_checks() {
     local max_wait=600  # 10 minutes max
     local elapsed=0
     local interval=10
-    
+
     while [[ $elapsed -lt $max_wait ]]; do
         local checks_json
         checks_json=$(check_ci_status)
-        
+
         local total pending passed failed
         total=$(echo "$checks_json" | jq 'length')
         pending=$(echo "$checks_json" | jq '[.[] | select(.state == "PENDING" or .state == "IN_PROGRESS" or .state == "QUEUED")] | length')
         passed=$(echo "$checks_json" | jq '[.[] | select(.state == "SUCCESS" or .state == "SKIPPED")] | length')
         failed=$(echo "$checks_json" | jq '[.[] | select(.state == "FAILURE" or .state == "CANCELLED" or .state == "ERROR")] | length')
-        
+
         if [[ "$total" -eq 0 ]]; then
             echo -ne "\r⏳ Waiting for checks to start...                    "
         elif [[ "$pending" -gt 0 ]]; then
@@ -154,11 +154,11 @@ wait_for_checks() {
             success "All ${total} checks passed!"
             return 0
         fi
-        
+
         sleep "$interval"
         elapsed=$((elapsed + interval))
     done
-    
+
     echo ""
     warn "Timed out waiting for checks (${max_wait}s)"
     return 1
@@ -271,15 +271,15 @@ monitor_publish() {
     local max_wait=600  # 10 minutes
     local elapsed=0
     local interval=10
-    
+
     while [[ $elapsed -lt $max_wait ]]; do
         local run_json
         run_json=$(gh run view "$RUN_ID" --json status,conclusion,jobs 2>/dev/null)
-        
+
         local status conclusion
         status=$(echo "$run_json" | jq -r '.status')
         conclusion=$(echo "$run_json" | jq -r '.conclusion')
-        
+
         if [[ "$status" == "completed" ]]; then
             echo ""
             if [[ "$conclusion" == "success" ]]; then
@@ -300,16 +300,16 @@ monitor_publish() {
                 return 1
             fi
         fi
-        
+
         # Show job progress
         local jobs_summary
         jobs_summary=$(echo "$run_json" | jq -r '[.jobs[] | "\(.name): \(.status)"] | join(", ")')
         echo -ne "\r⏳ ${jobs_summary}    "
-        
+
         sleep "$interval"
         elapsed=$((elapsed + interval))
     done
-    
+
     echo ""
     warn "Timed out waiting for publish workflow (${max_wait}s)"
     info "Check manually at: https://github.com/${REPO}/actions/runs/${RUN_ID}"

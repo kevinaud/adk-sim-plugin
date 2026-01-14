@@ -83,7 +83,9 @@ const ProtoTypeValues = {
 /**
  * Create a minimal GenerateContentRequest proto for testing.
  */
-function createProtoRequest(overrides: Partial<GenerateContentRequest> = {}): GenerateContentRequest {
+function createProtoRequest(
+  overrides: Partial<GenerateContentRequest> = {},
+): GenerateContentRequest {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.GenerateContentRequest',
     model: '',
@@ -162,7 +164,7 @@ function createProtoTool(functionDeclarations: ProtoFunctionDeclaration[]): Prot
 function createProtoFunctionDeclaration(
   name: string,
   description?: string,
-  parameters?: ProtoSchema
+  parameters?: ProtoSchema,
 ): ProtoFunctionDeclaration {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionDeclaration',
@@ -178,7 +180,7 @@ function createProtoFunctionDeclaration(
 function createProtoSchema(
   type: number,
   properties?: Record<string, ProtoSchema>,
-  required?: string[]
+  required?: string[],
 ): ProtoSchema {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Schema',
@@ -210,10 +212,7 @@ function createProtoSchema(
 /**
  * Create a proto SafetySetting.
  */
-function createProtoSafetySetting(
-  category: number,
-  threshold: number
-): ProtoSafetySetting {
+function createProtoSafetySetting(category: number, threshold: number): ProtoSafetySetting {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.SafetySetting',
     category,
@@ -225,7 +224,7 @@ function createProtoSafetySetting(
  * Create a proto GenerationConfig.
  */
 function createProtoGenerationConfig(
-  overrides: Partial<ProtoGenerationConfig> = {}
+  overrides: Partial<ProtoGenerationConfig> = {},
 ): ProtoGenerationConfig {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.GenerationConfig',
@@ -353,7 +352,9 @@ describe('protoToLlmRequest', () => {
 
       expect(result.config.systemInstruction).toBeDefined();
       expect((result.config.systemInstruction as GenaiContent).parts).toHaveLength(1);
-      expect((result.config.systemInstruction as GenaiContent).parts![0].text).toBe('You are a helpful assistant.');
+      expect((result.config.systemInstruction as GenaiContent).parts![0].text).toBe(
+        'You are a helpful assistant.',
+      );
     });
 
     it('should convert systemInstruction with multiple parts', () => {
@@ -367,7 +368,9 @@ describe('protoToLlmRequest', () => {
       const result = protoToLlmRequest(proto);
 
       expect((result.config.systemInstruction as GenaiContent).parts).toHaveLength(2);
-      expect((result.config.systemInstruction as GenaiContent).parts![0].text).toBe('You are a helpful assistant.');
+      expect((result.config.systemInstruction as GenaiContent).parts![0].text).toBe(
+        'You are a helpful assistant.',
+      );
       expect((result.config.systemInstruction as GenaiContent).parts![1].text).toBe('Be concise.');
     });
 
@@ -398,9 +401,7 @@ describe('protoToLlmRequest', () => {
     it('should convert single tool with function declaration', () => {
       const proto = createProtoRequest({
         tools: [
-          createProtoTool([
-            createProtoFunctionDeclaration('get_weather', 'Get current weather'),
-          ]),
+          createProtoTool([createProtoFunctionDeclaration('get_weather', 'Get current weather')]),
         ],
       });
 
@@ -420,7 +421,7 @@ describe('protoToLlmRequest', () => {
           location: createProtoSchema(ProtoTypeValues.STRING),
           units: createProtoSchema(ProtoTypeValues.STRING),
         },
-        ['location']
+        ['location'],
       );
 
       const proto = createProtoRequest({
@@ -494,7 +495,7 @@ describe('protoToLlmRequest', () => {
         safetySettings: [
           createProtoSafetySetting(
             ProtoHarmCategoryValues.HARASSMENT,
-            ProtoHarmBlockThresholdValues.BLOCK_MEDIUM_AND_ABOVE
+            ProtoHarmBlockThresholdValues.BLOCK_MEDIUM_AND_ABOVE,
           ),
         ],
       });
@@ -502,8 +503,12 @@ describe('protoToLlmRequest', () => {
       const result = protoToLlmRequest(proto);
 
       expect(result.config.safetySettings).toHaveLength(1);
-      expect(result.config.safetySettings![0].category).toBe(GenaiHarmCategory.HARM_CATEGORY_HARASSMENT);
-      expect(result.config.safetySettings![0].threshold).toBe(GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE);
+      expect(result.config.safetySettings![0].category).toBe(
+        GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
+      );
+      expect(result.config.safetySettings![0].threshold).toBe(
+        GenaiHarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+      );
     });
 
     it('should convert multiple safety settings', () => {
@@ -511,15 +516,15 @@ describe('protoToLlmRequest', () => {
         safetySettings: [
           createProtoSafetySetting(
             ProtoHarmCategoryValues.HARASSMENT,
-            ProtoHarmBlockThresholdValues.BLOCK_MEDIUM_AND_ABOVE
+            ProtoHarmBlockThresholdValues.BLOCK_MEDIUM_AND_ABOVE,
           ),
           createProtoSafetySetting(
             ProtoHarmCategoryValues.DANGEROUS_CONTENT,
-            ProtoHarmBlockThresholdValues.BLOCK_LOW_AND_ABOVE
+            ProtoHarmBlockThresholdValues.BLOCK_LOW_AND_ABOVE,
           ),
           createProtoSafetySetting(
             ProtoHarmCategoryValues.HATE_SPEECH,
-            ProtoHarmBlockThresholdValues.BLOCK_ONLY_HIGH
+            ProtoHarmBlockThresholdValues.BLOCK_ONLY_HIGH,
           ),
         ],
       });
@@ -527,9 +532,15 @@ describe('protoToLlmRequest', () => {
       const result = protoToLlmRequest(proto);
 
       expect(result.config.safetySettings).toHaveLength(3);
-      expect(result.config.safetySettings![0].category).toBe(GenaiHarmCategory.HARM_CATEGORY_HARASSMENT);
-      expect(result.config.safetySettings![1].category).toBe(GenaiHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT);
-      expect(result.config.safetySettings![2].category).toBe(GenaiHarmCategory.HARM_CATEGORY_HATE_SPEECH);
+      expect(result.config.safetySettings![0].category).toBe(
+        GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
+      );
+      expect(result.config.safetySettings![1].category).toBe(
+        GenaiHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      );
+      expect(result.config.safetySettings![2].category).toBe(
+        GenaiHarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      );
     });
   });
 
@@ -682,9 +693,7 @@ describe('protoToLlmRequest', () => {
         model: 'models/gemini-1.5-pro',
         contents: [
           createProtoContent('user', [createTextPart('What is the weather?')]),
-          createProtoContent('model', [
-            createFunctionCallPart('get_weather', { location: 'NYC' }),
-          ]),
+          createProtoContent('model', [createFunctionCallPart('get_weather', { location: 'NYC' })]),
         ],
         systemInstruction: createProtoContent('', [createTextPart('You are a weather assistant.')]),
         tools: [
@@ -695,15 +704,15 @@ describe('protoToLlmRequest', () => {
               createProtoSchema(
                 ProtoTypeValues.OBJECT,
                 { location: createProtoSchema(ProtoTypeValues.STRING) },
-                ['location']
-              )
+                ['location'],
+              ),
             ),
           ]),
         ],
         safetySettings: [
           createProtoSafetySetting(
             ProtoHarmCategoryValues.HARASSMENT,
-            ProtoHarmBlockThresholdValues.BLOCK_MEDIUM_AND_ABOVE
+            ProtoHarmBlockThresholdValues.BLOCK_MEDIUM_AND_ABOVE,
           ),
         ],
         generationConfig: createProtoGenerationConfig({
@@ -727,15 +736,21 @@ describe('protoToLlmRequest', () => {
 
       // System instruction
       expect(result.config.systemInstruction).toBeDefined();
-      expect((result.config.systemInstruction as GenaiContent).parts![0].text).toBe('You are a weather assistant.');
+      expect((result.config.systemInstruction as GenaiContent).parts![0].text).toBe(
+        'You are a weather assistant.',
+      );
 
       // Tools
       expect(result.config.tools).toHaveLength(1);
-      expect((result.config.tools![0] as GenaiTool).functionDeclarations![0].name).toBe('get_weather');
+      expect((result.config.tools![0] as GenaiTool).functionDeclarations![0].name).toBe(
+        'get_weather',
+      );
 
       // Safety settings
       expect(result.config.safetySettings).toHaveLength(1);
-      expect(result.config.safetySettings![0].category).toBe(GenaiHarmCategory.HARM_CATEGORY_HARASSMENT);
+      expect(result.config.safetySettings![0].category).toBe(
+        GenaiHarmCategory.HARM_CATEGORY_HARASSMENT,
+      );
 
       // Generation config
       expect(result.config.temperature).toBe(0.7);

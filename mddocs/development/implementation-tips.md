@@ -35,7 +35,7 @@ cd /workspaces/adk-sim-plugin
 
 ---
 
-<!-- 
+<!--
 Template for new entries:
 
 ### <Title>

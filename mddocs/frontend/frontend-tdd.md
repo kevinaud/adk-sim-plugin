@@ -19,9 +19,9 @@ related:
 
 # Web UI Technical Design Document
 
-**Feature Branch**: `002-web-ui`  
-**Created**: January 11, 2026  
-**Status**: Draft  
+**Feature Branch**: `002-web-ui`
+**Created**: January 11, 2026
+**Status**: Draft
 **Spec**: [Frontend Spec](./frontend-spec.md)
 
 ## Related Documents
@@ -335,7 +335,7 @@ import type { LlmRequest, LlmResponse } from '@google/adk';
 export class EventStreamComponent {
   // Input is ADK type (converted from proto in data-access layer)
   readonly request = input.required<LlmRequest>();
-  
+
   // Computed for rendering
   readonly contents = computed(() => this.request().contents);
   readonly systemInstruction = computed(() => this.request().config?.systemInstruction);
@@ -1049,7 +1049,7 @@ export interface ToolFormConfig {
       @if (config().toolDescription) {
         <p class="description">{{ config().toolDescription }}</p>
       }
-      
+
       <jsonforms
         [schema]="config().schema"
         [uischema]="config().uischema"
@@ -1058,7 +1058,7 @@ export interface ToolFormConfig {
         (dataChange)="formData.set($event)"
         (errors)="errors.set($event)"
       />
-      
+
       <button
         mat-raised-button
         color="primary"
@@ -1072,13 +1072,13 @@ export interface ToolFormConfig {
 })
 export class ToolFormComponent {
   readonly renderers = angularMaterialRenderers;
-  
+
   readonly config = input.required<ToolFormConfig>();
   readonly formData = signal<unknown>({});
   readonly errors = signal<ErrorObject[]>([]);
-  
+
   readonly invokeOutput = output<{ toolName: string; args: unknown }>();
-  
+
   submit(): void {
     this.invokeOutput.emit({
       toolName: this.config().toolName,
@@ -1107,7 +1107,7 @@ export class ToolFormService {
    */
   createFormConfig(tool: FunctionDeclaration): ToolFormConfig {
     let jsonSchema: JsonSchema7;
-    
+
     if (tool.parametersJsonSchema) {
       // Tool already provides JSON Schema directly
       jsonSchema = tool.parametersJsonSchema as JsonSchema7;
@@ -1222,7 +1222,7 @@ test('renders nested object with thread lines', async ({ mount }) => {
       showThreadLines: true,
     },
   });
-  
+
   // Visual regression test - screenshots stored in repo
   await expect(component).toHaveScreenshot('data-tree-nested.png');
 });
@@ -1245,7 +1245,7 @@ import { test, expect } from '@playwright/test';
 test('user can create and join a session', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'New Session' }).click();
-  
+
   await expect(page).toHaveURL(/\/session\/[\w-]+/);
   await expect(page.getByTestId('connection-status')).toHaveText('Connected');
 });

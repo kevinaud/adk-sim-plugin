@@ -9,7 +9,7 @@ related:
 
 # Frontend Configuration Research
 
-**Date**: January 11, 2026  
+**Date**: January 11, 2026
 **Purpose**: Define a configuration strategy that makes the frontend agnostic to server URLs and ports, enabling seamless development and production deployment.
 
 ## Table of Contents
@@ -283,7 +283,7 @@ services:
     ports:
       - "50051:50051"  # gRPC (plugins)
       - "8080:8080"    # HTTP/gRPC-Web
-    
+
   frontend:
     ports:
       - "4200:4200"
@@ -337,13 +337,13 @@ services:
 # nginx.conf
 server {
     listen 80;
-    
+
     # Serve Angular app
     location / {
         root /usr/share/nginx/html;
         try_files $uri $uri/ /index.html;
     }
-    
+
     # Proxy gRPC-Web to backend
     location /adksim.v1.SimulatorService {
         proxy_pass http://backend:8080;

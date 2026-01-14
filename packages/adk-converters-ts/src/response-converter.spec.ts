@@ -8,11 +8,11 @@ describe('llmResponseToProto', () => {
       content: 'Hello world',
     };
     const { proto, warnings } = llmResponseToProto(input);
-    
+
     expect(warnings).toHaveLength(0);
     expect(proto.candidates).toHaveLength(1);
     const candidate = proto.candidates[0];
-    
+
     expect(candidate.finishReason).toBe(Candidate_FinishReason.STOP); // Default
     expect(candidate.content).toBeDefined();
     expect(candidate.content?.role).toBe('model');
@@ -34,20 +34,22 @@ describe('llmResponseToProto', () => {
     const input: LlmResponse = {
       content: {
         role: 'model',
-        parts: [{
-          functionCall: {
-            name: 'get_weather',
-            args: { location: 'Paris' }
-          }
-        }]
-      }
+        parts: [
+          {
+            functionCall: {
+              name: 'get_weather',
+              args: { location: 'Paris' },
+            },
+          },
+        ],
+      },
     };
     const { proto } = llmResponseToProto(input);
     const part = proto.candidates[0].content?.parts[0];
     if (part?.data.case === 'functionCall') {
-         expect(part.data.value.name).toBe('get_weather');
+      expect(part.data.value.name).toBe('get_weather');
     } else {
-        throw new Error('Expected functionCall part data, got: ' + part?.data.case);
+      throw new Error('Expected functionCall part data, got: ' + part?.data.case);
     }
   });
 
@@ -58,7 +60,7 @@ describe('llmResponseToProto', () => {
         promptTokenCount: 10,
         candidatesTokenCount: 5,
         totalTokenCount: 15,
-      }
+      },
     };
     const { proto } = llmResponseToProto(input);
     expect(proto.usageMetadata).toBeDefined();
@@ -83,7 +85,10 @@ describe('llmResponseToProto', () => {
   });
 
   it('warns on unknown finish reason and defaults to UNSPECIFIED', () => {
-    const { proto, warnings } = llmResponseToProto({ content: 'x', finishReason: 'UNKNOWN_REASON_XY' });
+    const { proto, warnings } = llmResponseToProto({
+      content: 'x',
+      finishReason: 'UNKNOWN_REASON_XY',
+    });
     expect(proto.candidates[0].finishReason).toBe(Candidate_FinishReason.FINISH_REASON_UNSPECIFIED);
     expect(warnings.length).toBeGreaterThan(0);
     expect(warnings[0]).toContain('Unknown finishReason');
@@ -93,17 +98,17 @@ describe('llmResponseToProto', () => {
     const input: LlmResponse = {
       content: 'Error occurred',
       errorCode: 400,
-      errorMessage: 'Bad Request'
+      errorMessage: 'Bad Request',
     };
     const { warnings } = llmResponseToProto(input);
     expect(warnings.length).toBeGreaterThan(0);
     expect(warnings[0]).toContain('error info');
   });
-  
+
   it('handles empty content (undefined)', () => {
-      const { proto } = llmResponseToProto({});
-      expect(proto.candidates).toHaveLength(1);
-      // Content might be undefined or empty
-      expect(proto.candidates[0].content).toBeUndefined();
+    const { proto } = llmResponseToProto({});
+    expect(proto.candidates).toHaveLength(1);
+    // Content might be undefined or empty
+    expect(proto.candidates[0].content).toBeUndefined();
   });
 });

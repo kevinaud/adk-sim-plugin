@@ -4,8 +4,13 @@ This is a monorepo for a gRPC-based agent simulator with Python backend, Angular
 
 ## Quality Gates
 
+Quality rules are defined in `.pre-commit-config.yaml` (single source of truth).
+
 - Run `./scripts/presubmit.sh` before any `git push` - pushing failing code is prohibited
-- Run `./scripts/check_quality.sh` before considering code complete
+- Run `uv run pre-commit run --all-files` for quick quality checks (lint/format only)
+- Pre-commit hooks run automatically:
+  - `git commit`: Fast checks (lint, format, type check) on staged files
+  - `git push`: Full test suite (unit, integration, e2e) + Angular build
 
 ## Git Workflow
 
@@ -40,18 +45,26 @@ Use state-based verification, not interaction-based verification.
 - Python: managed by `uv` (NOT pip)
 - Frontend: managed by `npm`
 - Protos: managed by `buf`
+- Quality checks: managed by `pre-commit`
 
 ## Key Commands
 
 ```bash
-# Quality checks
-./scripts/presubmit.sh      # MUST pass before push
-./scripts/check_quality.sh  # Run before code complete
+# Quality checks (pre-commit is single source of truth)
+./scripts/presubmit.sh                              # MUST pass before push (runs all pre-commit hooks)
+uv run pre-commit run --all-files                   # Quick quality check (commit-stage hooks only)
+uv run pre-commit run --all-files --hook-stage manual  # Full check including all tests
+make quality                                        # Same as pre-commit quick check
 
 # Development
-make protos                  # Generate proto code
-make server                  # Run Python server
-make frontend                # Run Angular dev server
+make generate                        # Generate proto code
+make server                          # Run Python server
+make frontend                        # Run Angular dev server
+
+# Build
+./scripts/build.sh all               # Full build (protos, ts, frontend, packages)
+./scripts/build.sh protos            # Generate proto code only
+./scripts/build.sh frontend          # Build Angular frontend only
 ```
 
 ## Project Structure

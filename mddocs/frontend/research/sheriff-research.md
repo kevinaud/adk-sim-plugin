@@ -9,7 +9,7 @@ related:
 
 # Sheriff Dependency Enforcement Research
 
-**Date**: January 11, 2026  
+**Date**: January 11, 2026
 **Purpose**: Define Sheriff configuration for enforcing module boundaries in the ADK Simulator Web UI.
 
 ## Table of Contents
@@ -213,54 +213,54 @@ import { noDependencies, sameTag, SheriffConfig } from '@softarc/sheriff-core';
 
 export const config: SheriffConfig = {
   version: 1,
-  
+
   // Use barrel-less modules with internal/ encapsulation
   enableBarrelLess: true,
-  
+
   // Entry point for traversal
   entryFile: './src/main.ts',
-  
+
   // Module tagging
   modules: {
     'src/app': {
       // Feature modules - one per feature
       'features/<feature>': 'type:feature',
-      
+
       // UI components - nested by domain
       'ui/event-stream/<component>': ['type:ui', 'domain:event-stream'],
       'ui/control-panel/<component>': ['type:ui', 'domain:control-panel'],
-      
+
       // Data access layer
       'data-access/<domain>': 'type:data-access',
-      
+
       // Utilities - no domain, just type
       'util/<lib>': 'type:util',
-      
+
       // Shared code accessible by all
       'shared/<lib>': 'type:shared',
     },
   },
-  
+
   // Dependency rules - enforce layered architecture
   depRules: {
     // Root (main.ts, app.ts, app.routes.ts) can access features
     root: ['type:feature', 'type:shared'],
-    
+
     // Features can access UI, data-access, util, and shared
     'type:feature': ['type:ui', 'type:data-access', 'type:util', 'type:shared'],
-    
+
     // UI can only access util and shared (no data-access!)
     'type:ui': ['type:util', 'type:shared'],
-    
+
     // Data-access can only access util and shared
     'type:data-access': ['type:util', 'type:shared'],
-    
+
     // Util has no dependencies (leaf layer)
     'type:util': noDependencies,
-    
+
     // Shared can access util only
     'type:shared': 'type:util',
-    
+
     // Domain isolation: UI components can only access same domain or none
     'domain:event-stream': sameTag,
     'domain:control-panel': sameTag,
@@ -321,7 +321,7 @@ export const config: SheriffConfig = {
   version: 1,
   enableBarrelLess: true,
   entryFile: './src/main.ts',
-  
+
   // Auto-detect modules, no manual tagging yet
   depRules: {
     root: 'noTag',
@@ -344,7 +344,7 @@ export const config: SheriffConfig = {
   version: 1,
   enableBarrelLess: true,
   entryFile: './src/main.ts',
-  
+
   modules: {
     'src/app': {
       'features/<feature>': 'type:feature',
@@ -354,7 +354,7 @@ export const config: SheriffConfig = {
       'shared/<lib>': 'type:shared',
     },
   },
-  
+
   depRules: {
     root: ['type:feature', 'type:shared', 'noTag'],
     'type:feature': ['type:ui', 'type:data-access', 'type:util', 'type:shared', 'noTag'],

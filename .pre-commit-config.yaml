@@ -1,0 +1,181 @@
+# ============================================================
+# Pre-commit Quality Gates for ADK Simulator
+# ============================================================
+# Single source of truth for all quality checks.
+# Run locally: uv run pre-commit run --all-files
+# Enforced in: CI workflow
+#
+# Stages:
+#   - commit: Fast checks on staged files (lint, format, type check)
+#   - pre-push: Full test suite (unit, integration, e2e) + Angular build
+#   - manual: Run only with --hook-stage manual
+# ============================================================
+
+default_language_version:
+  python: python3.14
+  node: "22"
+
+repos:
+  # ============================================================
+  # Protocol Buffers
+  # ============================================================
+  - repo: https://github.com/bufbuild/buf
+    rev: v1.47.2
+    hooks:
+      - id: buf-lint
+        args: [--config, buf.yaml]
+      - id: buf-format
+        args: [--config, buf.yaml, --diff, --exit-code]
+
+  # ============================================================
+  # Python - Linting & Formatting
+  # ============================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^(server/|plugins/python/|packages/)/.*\.py$
+        exclude: ^packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/
+      - id: ruff-format
+        name: ruff (format)
+        files: ^(server/|plugins/python/|packages/)/.*\.py$
+        exclude: ^packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/
+
+  # ============================================================
+  # Python - Type Checking
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright (type check)
+        entry: uv run pyright
+        language: system
+        types: [python]
+        pass_filenames: false
+        # Only run if Python files changed
+        files: ^(server/|plugins/python/|packages/)/.*\.py$
+        exclude: ^packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/
+
+  # ============================================================
+  # TypeScript/Angular - Linting
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (frontend)
+        entry: npm run lint --workspace=frontend --
+        language: system
+        files: ^frontend/.*\.(ts|html)$
+        pass_filenames: false
+
+  # ============================================================
+  # TypeScript - Formatting
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier (typescript)
+        entry: npx prettier --check
+        language: system
+        files: \.(ts|tsx|js|jsx|json|html|css|scss)$
+        exclude: ^(node_modules/|dist/|\.angular/|packages/adk-sim-protos-ts/src/(adksim|google)/)
+
+  # ============================================================
+  # Angular - Build Verification (AOT template checking)
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: angular-build
+        name: angular build (template verification)
+        entry: bash -c 'cd frontend && CI=true npm run build -- --configuration production --no-progress'
+        language: system
+        files: ^frontend/.*\.(ts|html|scss)$
+        pass_filenames: false
+        stages: [pre-push, manual]  # Only on push, not every commit
+
+  # ============================================================
+  # Tests - Full Test Suite (pre-push only)
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: test-backend
+        name: backend tests (unit + integration)
+        entry: uv run pytest server/tests/unit plugins/python/tests -v
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-converters
+        name: adk-converters-ts tests
+        entry: bash -c 'cd packages/adk-converters-ts && npm test'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-frontend
+        name: frontend tests (vitest)
+        entry: bash -c 'cd frontend && CI=true npm run ng -- test --watch=false'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-frontend-component
+        name: frontend component tests (playwright)
+        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright-ct.config.ts'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-frontend-e2e
+        name: frontend e2e tests (playwright)
+        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright.config.ts'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+      - id: test-e2e
+        name: e2e tests (requires docker)
+        entry: uv run pytest server/tests/e2e --run-e2e -v
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+  # ============================================================
+  # Generated Code Consistency Check (pre-push only)
+  # ============================================================
+  - repo: local
+    hooks:
+      - id: check-generated-code
+        name: check generated code is up-to-date
+        entry: scripts/check-generated.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
+  # ============================================================
+  # General - File hygiene
+  # ============================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^.*\.(snap|lock)$
+      - id: end-of-file-fixer
+        exclude: ^.*\.(snap|lock)$
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom tags
+      - id: check-json
+        # Exclude JSONC files (VS Code configs with comments)
+        exclude: ^(\.vscode/|\.devcontainer/|frontend/tsconfig)
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]

@@ -5,7 +5,8 @@ Proto definitions for gRPC services, managed by Buf.
 ## Commands
 
 ```bash
-make protos                  # Generate all proto code (Python + TypeScript)
+make generate                # Generate all proto code (Python + TypeScript)
+./scripts/build.sh protos    # Alternative: generate protos only
 buf lint                     # Lint proto files
 buf build                    # Build/validate protos
 ```

@@ -80,10 +80,7 @@ export function assertNoBrowserErrors(logs: BrowserLogs): void {
   });
 
   // Also include page errors (uncaught exceptions)
-  const allErrors = [
-    ...criticalErrors,
-    ...logs.pageErrors.map((e) => `Uncaught: ${e.message}`),
-  ];
+  const allErrors = [...criticalErrors, ...logs.pageErrors.map((e) => `Uncaught: ${e.message}`)];
 
   if (allErrors.length > 0) {
     // Format error message with clear indication of what went wrong
@@ -92,12 +89,13 @@ export function assertNoBrowserErrors(logs: BrowserLogs): void {
       .map((err, i) => `  ${String(i + 1)}. ${err}`)
       .join('\n');
 
-    const moreErrors = allErrors.length > 5 ? `\n  ... and ${String(allErrors.length - 5)} more errors` : '';
+    const moreErrors =
+      allErrors.length > 5 ? `\n  ... and ${String(allErrors.length - 5)} more errors` : '';
 
     throw new Error(
       `JavaScript runtime errors detected in browser:\n${errorDetails}${moreErrors}\n\n` +
         `These errors indicate the Angular application failed to bootstrap correctly.\n` +
-        `Check for missing providers, import errors, or initialization failures.`
+        `Check for missing providers, import errors, or initialization failures.`,
     );
   }
 }

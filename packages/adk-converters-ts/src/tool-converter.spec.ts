@@ -46,7 +46,7 @@ function createProtoTool(functionDeclarations: ProtoFunctionDeclaration[]): Prot
 function createProtoFunctionDeclaration(
   name: string,
   description: string,
-  parameters?: ProtoSchema
+  parameters?: ProtoSchema,
 ): ProtoFunctionDeclaration {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.FunctionDeclaration',
@@ -62,7 +62,7 @@ function createProtoFunctionDeclaration(
  */
 function createProtoSchema(
   type: ProtoType,
-  options: Partial<Omit<ProtoSchema, 'type'>> = {}
+  options: Partial<Omit<ProtoSchema, 'type'>> = {},
 ): ProtoSchema {
   return {
     $typeName: 'google.ai.generativelanguage.v1beta.Schema',
@@ -98,10 +98,7 @@ describe('Tool Conversion', () => {
   describe('protoToolToGenaiTool', () => {
     it('should convert tool with single function declaration', () => {
       const protoTool = createProtoTool([
-        createProtoFunctionDeclaration(
-          'get_weather',
-          'Gets the current weather for a location'
-        ),
+        createProtoFunctionDeclaration('get_weather', 'Gets the current weather for a location'),
       ]);
 
       const result = protoToolToGenaiTool(protoTool);
@@ -109,7 +106,7 @@ describe('Tool Conversion', () => {
       expect(result.functionDeclarations).toHaveLength(1);
       expect(result.functionDeclarations![0].name).toBe('get_weather');
       expect(result.functionDeclarations![0].description).toBe(
-        'Gets the current weather for a location'
+        'Gets the current weather for a location',
       );
     });
 
@@ -169,10 +166,7 @@ describe('Tool Conversion', () => {
 
   describe('protoFunctionDeclarationToGenai', () => {
     it('should convert function with name and description only', () => {
-      const protoFd = createProtoFunctionDeclaration(
-        'simple_func',
-        'A simple function'
-      );
+      const protoFd = createProtoFunctionDeclaration('simple_func', 'A simple function');
 
       const result = protoFunctionDeclarationToGenai(protoFd);
 
@@ -198,7 +192,7 @@ describe('Tool Conversion', () => {
       const protoFd = createProtoFunctionDeclaration(
         'get_weather',
         'Gets weather for a location',
-        parametersSchema
+        parametersSchema,
       );
 
       const result = protoFunctionDeclarationToGenai(protoFd);
@@ -209,10 +203,7 @@ describe('Tool Conversion', () => {
       expect(result.parameters!.properties).toBeDefined();
       expect(result.parameters!.properties!['location']).toBeDefined();
       expect(result.parameters!.properties!['location'].type).toBe(GenaiType.STRING);
-      expect(result.parameters!.properties!['units'].enum).toEqual([
-        'celsius',
-        'fahrenheit',
-      ]);
+      expect(result.parameters!.properties!['units'].enum).toEqual(['celsius', 'fahrenheit']);
       expect(result.parameters!.required).toEqual(['location']);
     });
 
@@ -309,9 +300,7 @@ describe('Tool Conversion', () => {
       expect(result.properties!['name'].type).toBe(GenaiType.STRING);
       expect(result.properties!['age'].type).toBe(GenaiType.INTEGER);
       expect(result.properties!['address'].type).toBe(GenaiType.OBJECT);
-      expect(result.properties!['address'].properties!['street'].type).toBe(
-        GenaiType.STRING
-      );
+      expect(result.properties!['address'].properties!['street'].type).toBe(GenaiType.STRING);
       expect(result.required).toEqual(['name', 'age']);
     });
 
@@ -328,10 +317,7 @@ describe('Tool Conversion', () => {
 
     it('should convert schema with anyOf', () => {
       const protoSchema = createProtoSchema(ProtoType.TYPE_UNSPECIFIED, {
-        anyOf: [
-          createProtoSchema(ProtoType.STRING),
-          createProtoSchema(ProtoType.INTEGER),
-        ],
+        anyOf: [createProtoSchema(ProtoType.STRING), createProtoSchema(ProtoType.INTEGER)],
       });
 
       const result = protoSchemaToGenaiSchema(protoSchema);
@@ -393,9 +379,7 @@ describe('Tool Conversion', () => {
 
       expect(result.functionDeclarations).toHaveLength(1);
       expect(result.functionDeclarations[0].name).toBe('search');
-      expect(result.functionDeclarations[0].description).toBe(
-        'Search for information'
-      );
+      expect(result.functionDeclarations[0].description).toBe('Search for information');
     });
 
     it('should convert empty tool', () => {
@@ -536,7 +520,7 @@ describe('Tool Conversion', () => {
               input: createProtoSchema(ProtoType.STRING),
             },
             required: ['input'],
-          })
+          }),
         ),
       ]);
 
@@ -545,17 +529,11 @@ describe('Tool Conversion', () => {
 
       expect(roundTrippedTool.functionDeclarations).toHaveLength(1);
       expect(roundTrippedTool.functionDeclarations[0].name).toBe('test_func');
-      expect(roundTrippedTool.functionDeclarations[0].description).toBe(
-        'Test function'
+      expect(roundTrippedTool.functionDeclarations[0].description).toBe('Test function');
+      expect(roundTrippedTool.functionDeclarations[0].parameters?.type).toBe(ProtoType.OBJECT);
+      expect(roundTrippedTool.functionDeclarations[0].parameters?.properties?.['input']?.type).toBe(
+        ProtoType.STRING,
       );
-      expect(roundTrippedTool.functionDeclarations[0].parameters?.type).toBe(
-        ProtoType.OBJECT
-      );
-      expect(
-        roundTrippedTool.functionDeclarations[0].parameters?.properties?.[
-          'input'
-        ]?.type
-      ).toBe(ProtoType.STRING);
     });
 
     it('should preserve schema data through genai → proto → genai', () => {

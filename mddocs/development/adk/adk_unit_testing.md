@@ -244,13 +244,13 @@ The prompt sent to the LLM is as important as handling the response:
 async def test_instruction_includes_budget():
     fake_llm = FakeLlm.with_responses(["done"])
     agent = create_navigator_agent(model=fake_llm)
-    
+
     ctx = await create_invocation_context(
         agent,
         state={"budget_remaining": 100},
     )
     # ... run agent ...
-    
+
     # Verify the instruction included budget info
     request = fake_llm.requests[0]
     system_instruction = request.config.system_instruction
@@ -277,7 +277,7 @@ def sample_agent():
     """Create agent for tool context (tools need an agent reference)."""
     from google.adk.agents import LlmAgent
     from tests.adk_helpers import FakeLlm
-    
+
     return LlmAgent(
         name="test_agent",
         model=FakeLlm.with_responses([]),
@@ -295,14 +295,14 @@ async def test_refine_map_updates_state(sample_agent, tmp_path):
         }
     }
     ctx = await create_tool_context(sample_agent, state=initial_state)
-    
+
     # Act
     result = await refine_map(
         ctx,
         reasoning="Testing focus on auth module",
         config_changes={"focus_files": ["src/auth.py"]},
     )
-    
+
     # Assert
     state = ctx.state["navigator_state"]
     assert len(state["decision_log"]) == 1
@@ -323,7 +323,7 @@ async def test_refine_map_saves_artifact(sample_agent, tmp_path):
         }
     }
     ctx = await create_tool_context(sample_agent, state=initial_state)
-    
+
     # Act (with mocked subprocess for the CLI call)
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(
@@ -331,7 +331,7 @@ async def test_refine_map_saves_artifact(sample_agent, tmp_path):
             stdout="Generated map content\nTokens: 1000\nFiles: 5",
         )
         result = await refine_map(ctx, reasoning="test", config_changes={})
-    
+
     # Assert artifact was saved
     artifact_service = ctx._invocation_context.artifact_service
     artifacts = await artifact_service.list_artifact_keys(
@@ -365,15 +365,15 @@ async def test_plugin_blocks_over_budget(sample_agent):
     }
     ctx = await create_callback_context(sample_agent, state=state)
     plugin = NavigatorPlugin()
-    
+
     request = LlmRequest(
         model="gemini-2.0-flash",
         contents=[],
     )
-    
+
     # Act
     response = plugin.before_model_callback(ctx, request)
-    
+
     # Assert: Plugin short-circuits with error
     assert response is not None
     assert "BUDGET_EXCEEDED" in response.content.parts[0].text
@@ -391,12 +391,12 @@ async def test_plugin_allows_under_budget(sample_agent):
     }
     ctx = await create_callback_context(sample_agent, state=state)
     plugin = NavigatorPlugin()
-    
+
     request = LlmRequest(model="gemini-2.0-flash", contents=[])
-    
+
     # Act
     response = plugin.before_model_callback(ctx, request)
-    
+
     # Assert: Plugin allows request to proceed
     assert response is None
 ```
@@ -409,7 +409,7 @@ async def test_plugin_tracks_usage(sample_agent):
     """Plugin should update cost tracking from response usage metadata."""
     from google.adk.models import LlmResponse
     from google.genai import types
-    
+
     # Arrange
     state = {
         "navigator_state": {
@@ -418,7 +418,7 @@ async def test_plugin_tracks_usage(sample_agent):
     }
     ctx = await create_callback_context(sample_agent, state=state)
     plugin = NavigatorPlugin()
-    
+
     response = LlmResponse(
         content=types.Content(role="model", parts=[types.Part(text="Hello")]),
         usage_metadata=types.GenerateContentResponseUsageMetadata(
@@ -427,10 +427,10 @@ async def test_plugin_tracks_usage(sample_agent):
             total_token_count=150,
         ),
     )
-    
+
     # Act
     plugin.after_model_callback(ctx, response)
-    
+
     # Assert: Cost tracking updated
     tracking = ctx.state["navigator_state"]["cost_tracking"]
     assert tracking["total_tokens"] == 150
@@ -457,9 +457,9 @@ async def test_instruction_includes_user_task(sample_agent):
         }
     }
     ctx = await create_readonly_context(sample_agent, state=state)
-    
+
     instruction = await get_navigator_instruction(ctx)
-    
+
     assert "Find authentication bugs" in instruction
 
 
@@ -475,9 +475,9 @@ async def test_instruction_includes_budget_status(sample_agent):
         }
     }
     ctx = await create_readonly_context(sample_agent, state=state)
-    
+
     instruction = await get_navigator_instruction(ctx)
-    
+
     # Should indicate ~70% budget remaining or $7 remaining
     assert "7" in instruction or "70%" in instruction
 
@@ -495,9 +495,9 @@ async def test_instruction_includes_decision_history(sample_agent):
         }
     }
     ctx = await create_readonly_context(sample_agent, state=state)
-    
+
     instruction = await get_navigator_instruction(ctx)
-    
+
     assert "auth module" in instruction
     assert "tests" in instruction
 ```
@@ -509,15 +509,15 @@ async def test_instruction_includes_decision_history(sample_agent):
 async def test_instruction_loads_current_map(sample_agent):
     """Instruction should include the current map artifact."""
     state = {"navigator_state": {"user_task": "test", "decision_log": []}}
-    
+
     ctx = await create_readonly_context(
         sample_agent,
         state=state,
         artifacts={"current_map.txt": "src/auth.py\n  class AuthManager\n"},
     )
-    
+
     instruction = await get_navigator_instruction(ctx)
-    
+
     assert "AuthManager" in instruction
 
 
@@ -525,12 +525,12 @@ async def test_instruction_loads_current_map(sample_agent):
 async def test_instruction_handles_missing_map(sample_agent):
     """Instruction should handle missing map artifact gracefully."""
     state = {"navigator_state": {"user_task": "test", "decision_log": []}}
-    
+
     # No artifacts provided
     ctx = await create_readonly_context(sample_agent, state=state)
-    
+
     instruction = await get_navigator_instruction(ctx)
-    
+
     # Should not crash, should indicate no map yet
     assert instruction is not None
     assert "no map" in instruction.lower() or "not yet" in instruction.lower()
@@ -552,7 +552,7 @@ def test_state_requires_user_task():
             user_task="",  # Empty
             repo_path="/valid/path",
         )
-    
+
     assert "user_task" in str(exc_info.value)
 
 
@@ -560,7 +560,7 @@ def test_budget_config_validates_bounds():
     """Budget config should reject invalid values."""
     with pytest.raises(ValidationError):
         BudgetConfig(max_cost_usd=-1.0)  # Negative not allowed
-    
+
     with pytest.raises(ValidationError):
         BudgetConfig(max_iterations=0)  # Must be positive
 
@@ -568,7 +568,7 @@ def test_budget_config_validates_bounds():
 def test_state_roundtrip_serialization(tmp_path):
     """State should survive JSON roundtrip through session."""
     from repo_map.navigator.state import get_state_from_context, save_state_to_context
-    
+
     original = NavigatorState(
         user_task="Find bugs",
         repo_path=str(tmp_path),
@@ -576,13 +576,13 @@ def test_state_roundtrip_serialization(tmp_path):
             {"step": 1, "reasoning": "test", "timestamp": "2024-01-01T00:00:00Z"}
         ],
     )
-    
+
     # Simulate session state storage
     session_state = {"navigator_state": original.model_dump(mode="json")}
-    
+
     # Reconstruct
     reconstructed = NavigatorState.model_validate(session_state["navigator_state"])
-    
+
     assert reconstructed.user_task == original.user_task
     assert len(reconstructed.decision_log) == 1
 ```

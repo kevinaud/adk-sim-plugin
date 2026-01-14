@@ -28,7 +28,7 @@ export async function waitForAngularApp(page: Page, timeout = 45000): Promise<vo
       const isVisible = style.display !== 'none' && style.visibility !== 'hidden';
       return hasContent && isVisible;
     },
-    { timeout }
+    { timeout },
   );
 }
 

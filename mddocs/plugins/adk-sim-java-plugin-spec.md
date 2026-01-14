@@ -1,8 +1,8 @@
 # Java Plugin Public Interface Specification
 
-**Component:** `adk-agent-sim` Java Plugin  
-**Version:** 1.0  
-**Status:** Approved  
+**Component:** `adk-agent-sim` Java Plugin
+**Version:** 1.0
+**Status:** Approved
 
 ## 1. Overview
 
@@ -52,7 +52,7 @@ public static void main(String[] args) {
                 .build()
         )
         .build();
-    
+
     // ... Run logic ...
 }
 ```
@@ -66,7 +66,7 @@ The `SimulatorPlugin` utilizes the Builder pattern for configuration to control 
 ```java
 public class SimulatorPlugin extends BasePlugin {
     public static Builder builder();
-    
+
     public static class Builder {
         public Builder serverUrl(String url);
         public Builder targetAgents(List<String> agentNames);

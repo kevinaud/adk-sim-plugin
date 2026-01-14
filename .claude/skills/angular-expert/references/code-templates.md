@@ -34,9 +34,9 @@ import { UserCardComponent } from '../ui/user-card.component';
     } @else {
       <div class="user-grid">
         @for (user of facade.users(); track user.id) {
-          <app-user-card 
-            [user]="user" 
-            (select)="onUserSelect($event)" 
+          <app-user-card
+            [user]="user"
+            (select)="onUserSelect($event)"
           />
         }
       </div>
@@ -81,7 +81,7 @@ import { User } from '../models/user.model';
       border: 1px solid var(--border-color);
       border-radius: 8px;
       transition: box-shadow 0.2s;
-      
+
       &:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
@@ -91,7 +91,7 @@ import { User } from '../models/user.model';
 export class UserCardComponent {
   // Signal inputs
   user = input.required<User>();
-  
+
   // Output events
   select = output<string>();
 }
@@ -104,12 +104,12 @@ export class UserCardComponent {
 ### Feature SignalStore with Entities
 
 ```typescript
-import { 
-  signalStore, 
-  withState, 
-  withMethods, 
+import {
+  signalStore,
+  withState,
+  withMethods,
   withComputed,
-  patchState 
+  patchState
 } from '@ngrx/signals';
 import { withEntities, setEntities, addEntity, updateEntity, removeEntity } from '@ngrx/signals/entities';
 import { inject, computed } from '@angular/core';
@@ -127,7 +127,7 @@ interface UserStoreState {
 export const UserStore = signalStore(
   // Entity management
   withEntities<User>(),
-  
+
   // Additional state
   withState<UserStoreState>({
     selectedId: null,
@@ -135,7 +135,7 @@ export const UserStore = signalStore(
     error: null,
     filter: '',
   }),
-  
+
   // Computed/derived values
   withComputed((store) => ({
     selectedUser: computed(() => {
@@ -145,12 +145,12 @@ export const UserStore = signalStore(
     filteredUsers: computed(() => {
       const filter = store.filter().toLowerCase();
       if (!filter) return store.entities();
-      return store.entities().filter(u => 
+      return store.entities().filter(u =>
         u.name.toLowerCase().includes(filter)
       );
     }),
   })),
-  
+
   // Methods/actions
   withMethods((store, api = inject(UserApi)) => ({
     async loadAll() {
@@ -162,26 +162,26 @@ export const UserStore = signalStore(
         patchState(store, { loading: false, error: 'Failed to load users' });
       }
     },
-    
+
     async create(data: Omit<User, 'id'>) {
       const user = await lastValueFrom(api.create(data));
       patchState(store, addEntity(user));
     },
-    
+
     async update(id: string, changes: Partial<User>) {
       await lastValueFrom(api.update(id, changes));
       patchState(store, updateEntity({ id, changes }));
     },
-    
+
     async delete(id: string) {
       await lastValueFrom(api.delete(id));
       patchState(store, removeEntity(id));
     },
-    
+
     select(id: string | null) {
       patchState(store, { selectedId: id });
     },
-    
+
     setFilter(filter: string) {
       patchState(store, { filter });
     },
@@ -204,29 +204,29 @@ import { User } from '../models/user.model';
 @Injectable({ providedIn: 'root' })
 export class UserFacade {
   private readonly gateway = inject(UserGateway);
-  
+
   // State
   private readonly _users = signal<User[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _selectedId = signal<string | null>(null);
-  
+
   // Public read-only signals
   readonly users = this._users.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
-  
+
   // Derived state
   readonly selectedUser = computed(() => {
     const id = this._selectedId();
     return this._users().find(u => u.id === id) ?? null;
   });
-  
+
   // Actions
   async loadUsers(): Promise<void> {
     this._loading.set(true);
     this._error.set(null);
-    
+
     try {
       const users = await this.gateway.getAll();
       this._users.set(users);
@@ -236,11 +236,11 @@ export class UserFacade {
       this._loading.set(false);
     }
   }
-  
+
   selectUser(id: string | null): void {
     this._selectedId.set(id);
   }
-  
+
   async createUser(data: Omit<User, 'id'>): Promise<void> {
     const user = await this.gateway.create(data);
     this._users.update(users => [...users, user]);
@@ -287,7 +287,7 @@ describe('UserListComponent (Sociable)', () => {
 
     fixture = TestBed.createComponent(UserListComponent);
     await fixture.whenStable();
-    
+
     const loader = TestbedHarnessEnvironment.loader(fixture);
     harness = await loader.getHarness(UserListHarness);
   });
@@ -306,16 +306,16 @@ describe('UserListComponent (Sociable)', () => {
     server.use(
       getUsersMockHandler((req, res, ctx) => res(ctx.status(500)))
     );
-    
+
     // Force reload
     await harness.refresh();
-    
+
     expect(await harness.getErrorMessage()).toBe('Failed to load users');
   });
 
   it('should select user on click', async () => {
     await harness.selectUser(0);
-    
+
     const selected = await harness.getSelectedUserId();
     expect(selected).toBeTruthy();
   });
@@ -357,9 +357,9 @@ describe('UserStore', () => {
   describe('loadAll', () => {
     it('should load users from API', async () => {
       expect(store.entities().length).toBe(0);
-      
+
       await store.loadAll();
-      
+
       expect(store.entities().length).toBeGreaterThan(0);
       expect(store.loading()).toBe(false);
       expect(store.error()).toBeNull();
@@ -369,9 +369,9 @@ describe('UserStore', () => {
       server.use(
         getUsersMockHandler((req, res, ctx) => res(ctx.status(500)))
       );
-      
+
       await store.loadAll();
-      
+
       expect(store.error()).toBe('Failed to load users');
       expect(store.loading()).toBe(false);
     });
@@ -380,9 +380,9 @@ describe('UserStore', () => {
   describe('filteredUsers', () => {
     it('should filter by name', async () => {
       await store.loadAll();
-      
+
       store.setFilter('john');
-      
+
       const filtered = store.filteredUsers();
       expect(filtered.every(u => u.name.toLowerCase().includes('john'))).toBe(true);
     });
@@ -392,9 +392,9 @@ describe('UserStore', () => {
     it('should track selected user', async () => {
       await store.loadAll();
       const firstUser = store.entities()[0];
-      
+
       store.select(firstUser.id);
-      
+
       expect(store.selectedUser()).toEqual(firstUser);
     });
   });

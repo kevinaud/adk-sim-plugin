@@ -45,10 +45,16 @@ make frontend       # Start Angular dev server
 make test           # Run all tests
 make test-unit      # Run unit tests only
 make test-int       # Run integration tests only
-make quality        # Run all quality checks
-make lint           # Run linters
-make format         # Auto-format all code
+make quality        # Run quality checks (lint/format via pre-commit)
 make docker-up      # Start services via Docker Compose
+```
+
+Quality gates are defined in `.pre-commit-config.yaml` (single source of truth):
+
+```bash
+./scripts/presubmit.sh                                 # Full quality + tests (must pass before push)
+uv run pre-commit run --all-files                      # Quick quality check (commit-stage hooks)
+uv run pre-commit run --all-files --hook-stage manual  # All hooks including full test suite
 ```
 
 Direct commands (when needed):

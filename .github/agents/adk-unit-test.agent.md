@@ -75,10 +75,10 @@ async def test_<tool>_updates_state(sample_agent, tmp_path):
         }
     }
     ctx = await create_tool_context(sample_agent, state=initial_state)
-    
+
     # Act
     result = await <tool_function>(ctx, <args>)
-    
+
     # Assert on STATE, not mock calls
     assert ctx.state["navigator_state"]["<key>"] == <expected>
 ```
@@ -89,12 +89,12 @@ async def test_<tool>_updates_state(sample_agent, tmp_path):
 async def test_<tool>_saves_artifact(sample_agent, tmp_path):
     """Tool should save <artifact description>."""
     ctx = await create_tool_context(sample_agent, state={...})
-    
+
     # Act (mock subprocess if calling external CLI)
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0, stdout="...")
         result = await <tool_function>(ctx, ...)
-    
+
     # Assert artifact exists
     artifact_service = ctx._invocation_context.artifact_service
     artifacts = await artifact_service.list_artifact_keys(...)
@@ -109,12 +109,12 @@ async def test_plugin_<behavior>(sample_agent):
     state = {...}
     ctx = await create_callback_context(sample_agent, state=state)
     plugin = <PluginClass>()
-    
+
     request = LlmRequest(model="...", contents=[])
-    
+
     # Act
     response = plugin.before_model_callback(ctx, request)
-    
+
     # Assert
     assert response is None  # or check response content
 ```
@@ -126,9 +126,9 @@ async def test_instruction_includes_<element>(sample_agent):
     """Instruction should include <element>."""
     state = {...}
     ctx = await create_readonly_context(sample_agent, state=state)
-    
+
     instruction = await <instruction_function>(ctx)
-    
+
     assert "<expected_content>" in instruction
 ```
 
@@ -138,7 +138,7 @@ def test_<model>_validates_<field>():
     """<Model> should reject invalid <field>."""
     with pytest.raises(ValidationError) as exc_info:
         <Model>(<field>=<invalid_value>, ...)
-    
+
     assert "<field>" in str(exc_info.value)
 ```
 
@@ -210,10 +210,10 @@ class Test<Category>:
         """<One-line description>."""
         # Arrange
         ...
-        
+
         # Act
         ...
-        
+
         # Assert
         ...
 ```

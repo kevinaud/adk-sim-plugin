@@ -98,5 +98,5 @@ module.exports = tseslint.config(
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
     },
   },
-  eslintConfigPrettier
+  eslintConfigPrettier,
 );

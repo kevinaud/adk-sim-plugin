@@ -52,7 +52,14 @@ export const config: SheriffConfig = {
     root: ['type:feature', 'type:shared', 'type:data-access', 'type:config', 'noTag'],
 
     // Features can access UI, data-access, util, and shared
-    'type:feature': ['type:ui', 'type:data-access', 'type:util', 'type:shared', 'type:config', 'noTag'],
+    'type:feature': [
+      'type:ui',
+      'type:data-access',
+      'type:util',
+      'type:shared',
+      'type:config',
+      'noTag',
+    ],
 
     // UI can only access util and shared (no data-access!)
     'type:ui': ['type:util', 'type:shared', 'type:config', 'noTag', sameTag],
