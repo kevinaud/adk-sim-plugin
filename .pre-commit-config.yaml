@@ -77,7 +77,7 @@ repos:
     hooks:
       - id: prettier
         name: prettier (typescript)
-        entry: npx prettier --check
+        entry: npm exec prettier -- --check
         language: system
         files: \.(ts|tsx|js|jsx|json|html|css|scss)$
         exclude: ^(node_modules/|dist/|\.angular/|packages/adk-sim-protos-ts/src/(adksim|google)/)
