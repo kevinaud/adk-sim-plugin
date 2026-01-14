@@ -9,7 +9,7 @@ T053-T059 [ph3f12]
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 from adk_agent_sim.plugin import SimulatorPlugin
@@ -25,10 +25,8 @@ from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
+from grpclib.client import Channel
 from hamcrest import assert_that, contains_string
-
-if TYPE_CHECKING:
-  from grpclib.client import Channel
 
 logger = logging.getLogger(__name__)
 

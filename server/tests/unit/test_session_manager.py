@@ -1,14 +1,11 @@
 """Tests for SessionManager."""
 
 import uuid
-from typing import TYPE_CHECKING
 
 import pytest
 from adk_sim_protos.adksim.v1 import SimulatorSession
-
-if TYPE_CHECKING:
-  from adk_sim_server.session_manager import SessionManager
-  from adk_sim_testing.fixtures import FakeEventRepository, FakeSessionRepository
+from adk_sim_server.session_manager import SessionManager
+from adk_sim_testing.fixtures import FakeEventRepository, FakeSessionRepository
 
 
 class TestSessionManager:

@@ -77,28 +77,32 @@ class GitHubClient:
     base: str = "main",
   ) -> str:
     """Create a pull request, return URL."""
-    return self._run([
-      "pr",
-      "create",
-      "--title",
-      title,
-      "--body",
-      body,
-      "--head",
-      branch,
-      "--base",
-      base,
-    ])
+    return self._run(
+      [
+        "pr",
+        "create",
+        "--title",
+        title,
+        "--body",
+        body,
+        "--head",
+        branch,
+        "--base",
+        base,
+      ]
+    )
 
   def get_pr_checks(self, pr_number: int) -> list[CheckStatus]:
     """Get status of PR checks."""
-    output = self._run([
-      "pr",
-      "checks",
-      str(pr_number),
-      "--json",
-      "name,state",
-    ])
+    output = self._run(
+      [
+        "pr",
+        "checks",
+        str(pr_number),
+        "--json",
+        "name,state",
+      ]
+    )
     data = json.loads(output)
     return [CheckStatus(name=c["name"], state=c["state"]) for c in data]
 
@@ -137,11 +141,13 @@ class GitHubClient:
 
   def get_repo_name(self) -> str:
     """Get the repository name in owner/repo format."""
-    return self._run([
-      "repo",
-      "view",
-      "--json",
-      "nameWithOwner",
-      "-q",
-      ".nameWithOwner",
-    ])
+    return self._run(
+      [
+        "repo",
+        "view",
+        "--json",
+        "nameWithOwner",
+        "-q",
+        ".nameWithOwner",
+      ]
+    )

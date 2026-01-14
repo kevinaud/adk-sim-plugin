@@ -6,35 +6,29 @@ a web UI for manual decision-making.
 """
 
 import uuid
-from collections.abc import AsyncIterator  # noqa: TC003
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
 
 from adk_sim_protos.adksim.v1 import (
+  CreateSessionRequest,
   CreateSessionResponse,
+  ListSessionsRequest,
   ListSessionsResponse,
   SessionEvent,
   SimulatorServiceBase,
+  SubmitDecisionRequest,
   SubmitDecisionResponse,
+  SubmitRequestRequest,
   SubmitRequestResponse,
-  SubscribeRequest,  # noqa: TC002 - Runtime import required for grpclib
+  SubscribeRequest,
   SubscribeResponse,
 )
 
+from adk_sim_server.broadcaster import EventBroadcaster
 from adk_sim_server.logging import get_logger
-
-if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import (
-    CreateSessionRequest,
-    ListSessionsRequest,
-    SubmitDecisionRequest,
-    SubmitRequestRequest,
-  )
-
-  from adk_sim_server.broadcaster import EventBroadcaster
-  from adk_sim_server.persistence.event_repo import EventRepository
-  from adk_sim_server.queue import RequestQueue
-  from adk_sim_server.session_manager import SessionManager
+from adk_sim_server.persistence.event_repo import EventRepository
+from adk_sim_server.queue import RequestQueue
+from adk_sim_server.session_manager import SessionManager
 
 logger = get_logger("simulator_service")
 

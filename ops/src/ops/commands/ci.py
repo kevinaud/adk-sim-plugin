@@ -151,15 +151,11 @@ def ci_callback(ctx: typer.Context) -> None:
 
 @app.command()
 def check(
-  skip_e2e: bool = typer.Option(
-    False, "--skip-e2e", help="Skip E2E tests (faster)"
-  ),
+  skip_e2e: bool = typer.Option(False, "--skip-e2e", help="Skip E2E tests (faster)"),
   fail_fast: bool = typer.Option(
     False, "--fail-fast", "-x", help="Stop on first failure"
   ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Run full CI validation suite.
@@ -190,10 +186,12 @@ def check(
 
   run_e2e = not skip_e2e and _should_run_e2e()
   if run_e2e:
-    steps.extend([
-      ("Running frontend E2E tests", _run_frontend_e2e),
-      ("Running backend E2E tests", _run_backend_e2e),
-    ])
+    steps.extend(
+      [
+        ("Running frontend E2E tests", _run_frontend_e2e),
+        ("Running backend E2E tests", _run_backend_e2e),
+      ]
+    )
   elif not skip_e2e:
     console.print("[dim]Skipping E2E tests (only docs changed)[/dim]")
   else:
@@ -223,9 +221,7 @@ def build_cmd(
   output_dir: Path = typer.Option(
     Path("dist"), "--output", "-o", help="Output directory for artifacts"
   ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Build all release artifacts.
@@ -281,9 +277,7 @@ def verify(
   dist_dir: Path = typer.Option(
     Path("dist"), "--dist", "-d", help="Directory containing built artifacts"
   ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Verify built artifacts are installable and functional.
@@ -366,9 +360,7 @@ def verify(
 
 @app.command()
 def matrix(
-  matrix_type: str = typer.Argument(
-    ..., help="Matrix type: 'python' or 'node'"
-  ),
+  matrix_type: str = typer.Argument(..., help="Matrix type: 'python' or 'node'"),
 ) -> None:
   """
   Output CI matrix configuration as JSON.
@@ -401,3 +393,151 @@ def matrix(
 
   # Output raw JSON for GHA consumption (to stdout, not console)
   print(json.dumps(matrices[matrix_type]))
+
+
+@app.command("should-run-e2e")
+def should_run_e2e_cmd() -> None:
+  """
+  Check if E2E tests should run based on changed files.
+
+  Exits 0 if E2E tests should run, exits 1 if they can be skipped.
+  Used by pre-commit hooks to conditionally skip E2E tests.
+
+  Example:
+    ops ci should-run-e2e && pytest --run-e2e
+  """
+  if _should_run_e2e():
+    console.print("E2E tests required (runtime files changed)")
+    raise typer.Exit(0)
+  console.print("[dim]E2E tests can be skipped (only docs/config changed)[/dim]")
+  raise typer.Exit(1)
+
+
+@app.command("test")
+def test_cmd(
+  workflow: str = typer.Argument(
+    "ci", help="Workflow name to test (e.g., 'ci', 'publish')"
+  ),
+  dry_run: bool = typer.Option(
+    False, "--dry-run", "-n", help="Show act command without executing"
+  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+) -> None:
+  """
+  Run GitHub Actions workflows locally using act.
+
+  Uses nektos/act to execute workflows in a local Docker environment.
+  This is useful for testing workflow changes before pushing.
+
+  The 'publish' workflow automatically sets DRY_RUN=true to skip
+  actual publishing to PyPI/npm.
+
+  Examples:
+    ops ci test              Run ci.yaml locally
+    ops ci test ci           Same as above (explicit)
+    ops ci test publish      Run publish.yaml in dry-run mode
+    ops ci test ci --dry-run Show command without executing
+  """
+  require_tools("act", "docker")
+
+  console.print(Panel(f"Testing Workflow: {workflow}", style="blue"))
+
+  workflow_file = REPO_ROOT / ".github" / "workflows" / f"{workflow}.yaml"
+  if not workflow_file.exists():
+    console.print(f"[red]Error:[/red] Workflow not found: {workflow_file}")
+    raise typer.Exit(1)
+
+  # Build act command
+  # Use medium image for better compatibility with common actions
+  cmd = [
+    "act",
+    "-W",
+    str(workflow_file),
+    "--container-architecture",
+    "linux/amd64",
+  ]
+
+  # For publish workflow, use workflow_dispatch with dry_run input
+  if workflow == "publish":
+    # Trigger workflow_dispatch event with dry_run=true
+    cmd.extend(["--input", "dry_run=true"])
+    console.print("[dim]Using workflow_dispatch with dry_run=true[/dim]")
+
+  if verbose:
+    cmd.append("--verbose")
+
+  if dry_run:
+    console.print(f"[dim]Would run:[/dim] {' '.join(cmd)}")
+    return
+
+  console.print(f"[dim]Running:[/dim] {' '.join(cmd)}")
+  run(cmd, cwd=REPO_ROOT, verbose=verbose)
+
+  console.print(f"\n[green]![/green] Workflow '{workflow}' completed successfully!")
+
+
+@app.command("check-generated")
+def check_generated_cmd(
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+) -> None:
+  """
+  Check that generated code is up-to-date.
+
+  Regenerates proto code and verifies there are no uncommitted changes.
+  Used by pre-commit hooks to ensure generated code is committed.
+
+  Example:
+    ops ci check-generated
+  """
+  import subprocess
+
+  from ops.commands.build import build_protos, clean_generated
+
+  console.print("Checking generated code consistency...")
+
+  # Clean and regenerate
+  clean_generated(verbose=verbose)
+  build_protos(force=True, verbose=verbose)
+
+  # Check for changes
+  result = subprocess.run(
+    [
+      "git",
+      "diff",
+      "--quiet",
+      "--",
+      "packages/adk-sim-protos",
+      "packages/adk-sim-protos-ts",
+    ],
+    cwd=REPO_ROOT,
+    capture_output=True,
+    check=False,
+  )
+
+  if result.returncode != 0:
+    console.print("\n[red]Error:[/red] Generated code is out of date!")
+    console.print("\nThe following files differ from what 'ops build protos' produces:")
+
+    # Show which files changed
+    diff_result = subprocess.run(
+      [
+        "git",
+        "diff",
+        "--name-only",
+        "--",
+        "packages/adk-sim-protos",
+        "packages/adk-sim-protos-ts",
+      ],
+      cwd=REPO_ROOT,
+      capture_output=True,
+      text=True,
+      check=False,
+    )
+    if diff_result.stdout:
+      for line in diff_result.stdout.strip().split("\n"):
+        console.print(f"  {line}")
+
+    console.print("\nPlease run 'ops build protos' and commit the changes.")
+    raise typer.Exit(1)
+
+  console.print("[green]![/green] Generated code is up-to-date!")

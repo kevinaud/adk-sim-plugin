@@ -14,9 +14,7 @@ app = typer.Typer(
 
 @app.command()
 def server(
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Start the backend gRPC server.
@@ -51,9 +49,7 @@ def server(
 
 @app.command()
 def frontend(
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Start the frontend Angular dev server.

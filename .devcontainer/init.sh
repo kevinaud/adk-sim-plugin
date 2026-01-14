@@ -34,6 +34,14 @@ echo "🐍 Syncing Python dependencies..."
 uv sync
 
 # ------------------------------------------------------------
+# Install ops CLI as Editable
+# ------------------------------------------------------------
+# The ops package is a workspace member but needs editable install
+# for CLI development (changes reflect immediately)
+echo "🔧 Installing ops CLI as editable..."
+uv pip install -e ops/
+
+# ------------------------------------------------------------
 # Frontend Node.js Dependencies: Restore from backup
 # ------------------------------------------------------------
 if [ -d "/opt/backup/frontend_node_modules" ]; then

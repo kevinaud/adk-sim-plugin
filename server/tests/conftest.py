@@ -1,14 +1,11 @@
 """Test configuration and shared fixtures for server tests."""
 
-from typing import TYPE_CHECKING
+from collections.abc import AsyncGenerator
 
 import pytest
 from adk_sim_server.persistence.database import Database
 from adk_sim_server.session_manager import SessionManager
 from adk_sim_testing.fixtures import FakeEventRepository, FakeSessionRepository
-
-if TYPE_CHECKING:
-  from collections.abc import AsyncGenerator
 
 
 @pytest.fixture

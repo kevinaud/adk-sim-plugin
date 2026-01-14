@@ -19,7 +19,7 @@ Create high-quality unit tests that follow the project's testing philosophy: **a
 
 - **File Modifications**: May create/update test files in `tests/unit/`
 - **Token Efficiency**: Load only necessary source code context
-- **Quality First**: All generated tests must pass `make test-unit`
+- **Quality First**: All generated tests must pass `ops quality test unit`
 - **Constitution Compliance**: Follow Principle III (Testing Strategy) and Principle IV (Clean Modern Python)
 
 ## Execution Steps
@@ -221,8 +221,8 @@ class Test<Category>:
 
 ### 6. Validate & Report
 
-1. **Run the tests**: `make test-unit` or target specific file
-2. **Check for errors**: `make quality` to verify type hints and style
+1. **Run the tests**: `ops quality test unit` or target specific file
+2. **Check for errors**: `ops quality` to verify type hints and style
 3. **Report summary**:
    - Number of tests created
    - Test categories covered
@@ -285,4 +285,4 @@ After generating tests, provide:
    |-----------|----------|-------------------|
    | `test_...` | State | ... |
 3. **Coverage notes**: Any untested paths or edge cases identified
-4. **Run command**: `make test-unit` or specific pytest command
+4. **Run command**: `ops quality test unit` or specific pytest command

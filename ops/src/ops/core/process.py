@@ -29,6 +29,7 @@ def run(
   check: bool = True,
   capture: bool = False,
   verbose: bool = False,
+  input_data: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
   """
   Run a subprocess with sensible defaults.
@@ -40,6 +41,7 @@ def run(
     check: Raise on non-zero exit
     capture: Capture stdout/stderr
     verbose: Show command output in real-time
+    input_data: String to pass to stdin
 
   Returns:
     CompletedProcess with stdout/stderr if captured
@@ -62,6 +64,7 @@ def run(
       check=check,
       capture_output=capture,
       text=True,
+      input=input_data,
     )
   except subprocess.CalledProcessError as e:
     console.print(f"[red]Error:[/red] Command failed: {' '.join(cmd)}")
@@ -80,6 +83,7 @@ def run(
 def require_tools(*tools: str) -> None:
   """Ensure required external tools are available."""
   install_hints = {
+    "act": "brew install act  # or see https://nektosact.com/",
     "gh": "brew install gh  # or see https://cli.github.com/",
     "git": "brew install git  # or https://git-scm.com/",
     "buf": "brew install bufbuild/buf/buf  # or see https://buf.build/",
@@ -91,9 +95,7 @@ def require_tools(*tools: str) -> None:
   missing = [tool for tool in tools if shutil.which(tool) is None]
 
   if missing:
-    console.print(
-      f"[red]Error:[/red] Missing required tools: {', '.join(missing)}"
-    )
+    console.print(f"[red]Error:[/red] Missing required tools: {', '.join(missing)}")
     console.print("\nInstall with:")
     for tool in missing:
       hint = install_hints.get(tool, f"# Install {tool}")

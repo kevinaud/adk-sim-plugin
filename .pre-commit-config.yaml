@@ -36,11 +36,11 @@ repos:
       - id: ruff
         name: ruff (lint)
         args: [--fix, --exit-non-zero-on-fix]
-        files: ^(server/|plugins/python/|packages/)/.*\.py$
+        files: ^(server|plugins/python|packages|ops)/.*\.py$
         exclude: ^packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/
       - id: ruff-format
         name: ruff (format)
-        files: ^(server/|plugins/python/|packages/)/.*\.py$
+        files: ^(server|plugins/python|packages|ops)/.*\.py$
         exclude: ^packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/
 
   # ============================================================
@@ -55,7 +55,7 @@ repos:
         types: [python]
         pass_filenames: false
         # Only run if Python files changed
-        files: ^(server/|plugins/python/|packages/)/.*\.py$
+        files: ^(server|plugins/python|packages|ops)/.*\.py$
         exclude: ^packages/adk-sim-protos/src/adk_sim_protos/(adksim|google)/
 
   # ============================================================
@@ -134,7 +134,7 @@ repos:
 
       - id: test-frontend-e2e
         name: frontend e2e tests (playwright)
-        entry: bash -c 'scripts/should-run-e2e.sh || exit 0; cd frontend && npm exec playwright test -- -c playwright.config.ts'
+        entry: bash -c 'ops ci should-run-e2e || exit 0; cd frontend && npm exec playwright test -- -c playwright.config.ts'
         language: system
         pass_filenames: false
         always_run: true
@@ -142,7 +142,7 @@ repos:
 
       - id: test-e2e
         name: e2e tests (requires docker)
-        entry: bash -c 'scripts/should-run-e2e.sh || exit 0; uv run pytest server/tests/e2e --run-e2e -v'
+        entry: bash -c 'ops ci should-run-e2e || exit 0; uv run pytest server/tests/e2e --run-e2e -v'
         language: system
         pass_filenames: false
         always_run: true
@@ -155,8 +155,8 @@ repos:
     hooks:
       - id: check-generated-code
         name: check generated code is up-to-date
-        entry: scripts/check-generated.sh
-        language: script
+        entry: ops ci check-generated
+        language: system
         pass_filenames: false
         always_run: true
         stages: [pre-push, manual]

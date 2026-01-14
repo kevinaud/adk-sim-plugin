@@ -41,9 +41,7 @@ app.add_typer(ci_app, name="ci")
 @app.callback(invoke_without_command=True)
 def main(
   ctx: typer.Context,
-  version: bool = typer.Option(
-    False, "--version", help="Show version and exit"
-  ),
+  version: bool = typer.Option(False, "--version", help="Show version and exit"),
 ) -> None:
   """
   Developer CLI for adk-sim-plugin.

@@ -14,21 +14,17 @@ This document serves as a knowledge base for the implementation agent to record 
 
 ### Commands fail with "No such file or directory"
 
-**Problem**: When running commands like `./scripts/presubmit.sh`, `make generate`, or similar repo-level commands, you get errors like:
+**Problem**: When running commands like `ops build` or similar repo-level commands, you get errors like:
 ```
-bash: ./scripts/presubmit.sh: No such file or directory
-```
-or
-```
-make: *** No rule to make target 'generate'. Stop.
+bash: ops: command not found
 ```
 
-**Root Cause**: The terminal is in a subdirectory (e.g., `packages/adk-converters-ts/`) instead of the repository root.
+**Root Cause**: Either the terminal is in a subdirectory without the virtual environment activated, or the ops CLI isn't installed.
 
-**Solution**: Always run repo-level commands from the repository root:
+**Solution**: Always run repo-level commands from the repository root with `uv run`:
 ```bash
 cd /workspaces/adk-sim-plugin
-./scripts/presubmit.sh
+uv run ops ci check
 ```
 
 **General Principle**: When commands that should exist "don't exist", first check your current working directory with `pwd`. Repo-level scripts and Makefile targets must be run from the repo root.

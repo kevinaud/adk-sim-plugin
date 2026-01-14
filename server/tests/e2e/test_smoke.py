@@ -1,15 +1,11 @@
 """Smoke test to verify the server is reachable."""
 
-from typing import TYPE_CHECKING
-
 import pytest
 from adk_sim_protos.adksim.v1 import (
   CreateSessionRequest,
   SimulatorServiceStub,
 )
-
-if TYPE_CHECKING:
-  from grpclib.client import Channel
+from grpclib.client import Channel
 
 
 @pytest.mark.e2e

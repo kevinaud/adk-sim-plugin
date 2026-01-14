@@ -21,12 +21,12 @@ All packages are **version-locked** — when one bumps, they all bump to the sam
 To release a new version:
 
 ```bash
-./scripts/ship.sh patch   # For bug fixes (0.1.0 → 0.1.1)
-./scripts/ship.sh minor   # For new features (0.1.0 → 0.2.0)
-./scripts/ship.sh major   # For breaking changes (0.1.0 → 1.0.0)
+ops release patch   # For bug fixes (0.1.0 -> 0.1.1)
+ops release minor   # For new features (0.1.0 -> 0.2.0)
+ops release major   # For breaking changes (0.1.0 -> 1.0.0)
 ```
 
-The script will:
+The command will:
 1. Create a release PR with version bumps
 2. Monitor CI checks until they pass
 3. Prompt you to merge the PR
@@ -34,6 +34,11 @@ The script will:
 5. Create and push a version tag (e.g., `v0.2.0`)
 
 The tag push triggers the publish workflow automatically.
+
+**Options:**
+- `--dry-run` / `-n`: Preview what would happen without executing
+- `--yes` / `-y`: Auto-confirm prompts (fully automated)
+- `--skip-ci`: Don't wait for CI checks
 
 ## Architecture
 
@@ -115,15 +120,15 @@ Updates:
 
 Also updates internal dependency pins (e.g., `adk-sim-protos==0.2.0`).
 
-### Makefile Targets
+### Release Commands
 
-For manual control, these targets are available:
+For manual control, these commands are available:
 
 ```bash
-make release-pr-patch  # Create a patch release PR
-make release-pr-minor  # Create a minor release PR
-make release-pr-major  # Create a major release PR
-make release-tag       # Create and push tag for current version
+ops release patch      # Create a patch release PR
+ops release minor      # Create a minor release PR
+ops release major      # Create a major release PR
+ops release status     # Show current version info
 ```
 
 ## Installation Notes for Users
@@ -181,6 +186,6 @@ If CI fails with version mismatch errors:
 
 3. **Version-locked releases** — All packages share the same version to simplify dependency management
 
-4. **Manual tagging via `ship.sh`** — Gives developers explicit control over when releases happen
+4. **Manual release via `ops release`** — Gives developers explicit control over when releases happen
 
 5. **`betterproto` pre-release dependency** — Required for async gRPC support; users must use `--prerelease=allow`

@@ -25,9 +25,7 @@ class TestScope(str, Enum):
 
 @app.command()
 def check(
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Run quality checks (lint, format, type check).
@@ -54,9 +52,7 @@ def check(
 
 @app.command()
 def fix(
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Run quality checks with auto-fix enabled.
@@ -103,9 +99,7 @@ def run_tests(
     TestScope.all,
     help="Test scope [unit|integration|e2e|all]",
   ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
   fail_fast: bool = typer.Option(
     False, "--fail-fast", "-x", help="Stop on first failure"
   ),
@@ -174,9 +168,7 @@ def run_tests(
 @app.callback(invoke_without_command=True)
 def quality_callback(
   ctx: typer.Context,
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Run quality checks and tests.

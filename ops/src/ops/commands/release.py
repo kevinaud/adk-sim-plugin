@@ -93,18 +93,10 @@ def status() -> None:
 
 @app.command()
 def patch(
-  skip_ci: bool = typer.Option(
-    False, "--skip-ci", help="Don't wait for CI checks"
-  ),
-  yes: bool = typer.Option(
-    False, "--yes", "-y", help="Auto-confirm prompts"
-  ),
-  dry_run: bool = typer.Option(
-    False, "--dry-run", "-n", help="Show what would happen"
-  ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  skip_ci: bool = typer.Option(False, "--skip-ci", help="Don't wait for CI checks"),
+  yes: bool = typer.Option(False, "--yes", "-y", help="Auto-confirm prompts"),
+  dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Show what would happen"),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Create a patch release (x.y.Z).

@@ -14,12 +14,8 @@ app = typer.Typer(
 
 @app.command()
 def up(
-  detach: bool = typer.Option(
-    False, "--detach", "-d", help="Run in background"
-  ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  detach: bool = typer.Option(False, "--detach", "-d", help="Run in background"),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Start Docker containers.
@@ -47,12 +43,8 @@ def up(
 
 @app.command()
 def down(
-  volumes: bool = typer.Option(
-    False, "--volumes", "-v", help="Remove volumes too"
-  ),
-  verbose: bool = typer.Option(
-    False, "--verbose", help="Show detailed output"
-  ),
+  volumes: bool = typer.Option(False, "--volumes", "-v", help="Remove volumes too"),
+  verbose: bool = typer.Option(False, "--verbose", help="Show detailed output"),
 ) -> None:
   """
   Stop Docker containers.
@@ -79,9 +71,7 @@ def logs(
   follow: bool = typer.Option(
     True, "--follow/--no-follow", "-f", help="Follow log output"
   ),
-  service: str | None = typer.Argument(
-    None, help="Service name to show logs for"
-  ),
+  service: str | None = typer.Argument(None, help="Service name to show logs for"),
 ) -> None:
   """
   View container logs.
@@ -104,9 +94,7 @@ def logs(
 
 @app.command()
 def ps(
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show detailed output"
-  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   List running containers.

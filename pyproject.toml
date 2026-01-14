@@ -42,7 +42,7 @@ adk-agent-sim = { workspace = true }
 ops = { workspace = true }
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py313"
 line-length = 88
 indent-width = 2
 
@@ -115,6 +115,10 @@ select = [
 # Common test-specific ignores
 # S101: "Use of assert detected" (flake8-bandit) - asserts are normal in tests
 "tests/**" = ["S101"]
+
+# TC004 false positive - these imports ARE only for type hints, but ruff
+# can't distinguish lazy-evaluated annotations (PEP 649) from eager ones
+"packages/adk-sim-testing/src/adk_sim_testing/helpers.py" = ["TC004"]
 
 # Ops CLI - ignore Typer-specific patterns that ruff incorrectly flags:
 # B008: typer.Argument/Option in function defaults is the intended Typer pattern

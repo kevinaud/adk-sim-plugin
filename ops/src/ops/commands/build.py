@@ -168,17 +168,29 @@ def bundle_frontend(verbose: bool = False) -> None:
   """Copy frontend dist into server package for bundling."""
   import shutil
 
-  frontend_dist = FRONTEND_DIR / "dist" / "frontend" / "browser"
+  # Angular builds to frontend/dist/frontend/ with a browser/ subdirectory
+  # The server expects static/browser/index.html, so we copy the entire frontend/
+  # directory structure to preserve the browser/ subdirectory
+  frontend_dist = FRONTEND_DIR / "dist" / "frontend"
   server_static = REPO_ROOT / "server" / "src" / "adk_sim_server" / "static"
 
   if not frontend_dist.exists():
     console.print("[yellow]Warning:[/yellow] Frontend not built, skipping bundle")
     return
 
-  # Clear and copy
+  # Clear static directory but preserve .gitkeep
+  gitkeep_content = None
+  gitkeep_path = server_static / ".gitkeep"
+  if gitkeep_path.exists():
+    gitkeep_content = gitkeep_path.read_text()
+
   if server_static.exists():
     shutil.rmtree(server_static)
   shutil.copytree(frontend_dist, server_static)
+
+  # Restore .gitkeep
+  if gitkeep_content:
+    gitkeep_path.write_text(gitkeep_content)
 
   console.print("[green]![/green] Frontend bundled into server")
 
@@ -232,27 +244,30 @@ def build(
     BuildTarget.all,
     help="What to build [protos|frontend|packages|all]",
   ),
-  clean: bool = typer.Option(
-    False, "--clean", help="Clean before building"
-  ),
+  clean: bool = typer.Option(False, "--clean", help="Clean before building"),
   force: bool = typer.Option(
     False, "--skip-cache", help="Force rebuild even if outputs are fresh"
   ),
-  verbose: bool = typer.Option(
-    False, "--verbose", "-v", help="Show build output"
+  update_vendor: bool = typer.Option(
+    False, "--update-vendor", help="Update vendored protos from googleapis first"
   ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show build output"),
 ) -> None:
   """
   Build project artifacts.
 
   Examples:
-    ops build              Build everything
-    ops build protos       Generate proto code only
-    ops build frontend     Build Angular bundle
-    ops build --clean      Clean then build
+    ops build                      Build everything
+    ops build protos               Generate proto code only
+    ops build protos --update-vendor  Update vendored protos then generate
+    ops build frontend             Build Angular bundle
+    ops build --clean              Clean then build
   """
   if clean:
     clean_generated(verbose=verbose)
+
+  if update_vendor:
+    update_vendored_protos(verbose=verbose)
 
   if target == BuildTarget.protos:
     build_protos(force=force, verbose=verbose)
@@ -265,3 +280,36 @@ def build(
 
   console.print("\n[green]![/green] Build complete")
   console.print("[dim]Next: ops dev[/dim]")
+
+
+def update_vendored_protos(verbose: bool = False) -> None:
+  """Update vendored Google AI protos from googleapis."""
+  import urllib.request
+
+  vendor_dir = REPO_ROOT / "protos" / "google" / "ai" / "generativelanguage" / "v1beta"
+  base_url = "https://raw.githubusercontent.com/googleapis/googleapis/master/google/ai/generativelanguage/v1beta"
+
+  protos = [
+    "generative_service.proto",
+    "content.proto",
+    "citation.proto",
+    "retriever.proto",
+    "safety.proto",
+  ]
+
+  console.print("[bold]Updating vendored Google AI protos...[/bold]")
+  console.print(f"[dim]Target: {vendor_dir}[/dim]")
+
+  vendor_dir.mkdir(parents=True, exist_ok=True)
+
+  for proto in protos:
+    url = f"{base_url}/{proto}"
+    dest = vendor_dir / proto
+    if verbose:
+      console.print(f"[dim]Downloading {url}[/dim]")
+    else:
+      console.print(f"  Downloading {proto}...")
+
+    urllib.request.urlretrieve(url, dest)
+
+  console.print("[green]![/green] Vendored protos updated")

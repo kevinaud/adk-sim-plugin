@@ -6,12 +6,9 @@ concrete persistence implementations.
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
-from adk_sim_protos.adksim.v1 import SessionStatus
-
-if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import SessionEvent, SimulatorSession
+from adk_sim_protos.adksim.v1 import SessionEvent, SessionStatus, SimulatorSession
 
 
 @dataclass

@@ -5,7 +5,7 @@ Reusable utilities for testing code built on Google ADK.
 See docs/developer/unit_testing.md for usage patterns.
 """
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from google.adk.agents import LlmAgent, RunConfig
 from google.adk.agents.invocation_context import InvocationContext
@@ -74,12 +74,12 @@ class FakeLlm(BaseLlm):
   def with_responses(
     cls,
     responses: list[str | types.Part | list[types.Part]],
-  ) -> FakeLlm:
+  ) -> Self:
     """Create a FakeLlm with scripted responses."""
     return cls(responses=responses)
 
   @classmethod
-  def with_error(cls, error: Exception) -> FakeLlm:
+  def with_error(cls, error: Exception) -> Self:
     """Create a FakeLlm that raises an error."""
     return cls(error=error)
 
