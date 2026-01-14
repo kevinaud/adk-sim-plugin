@@ -343,13 +343,13 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [FR Response Construction](../frontend-spec.md#fr-response-construction) - FR-017, FR-018, FR-019
 
 **Acceptance Criteria**:
-- [ ] `createTextResponse(text: string)` creates proto for text-only response
-- [ ] `createToolInvocationResponse(toolName: string, args: unknown)` creates proto for function call
-- [ ] `createFunctionResultResponse(toolName: string, result: unknown)` creates proto for function response
-- [ ] `createStructuredResponse(data: unknown)` creates proto for JSON schema response
-- [ ] All helpers return valid `GenerateContentResponse` protos
-- [ ] Tests verify proto structure for each helper
-- [ ] Presubmit passes
+- [x] `createTextResponse(text: string)` creates proto for text-only response
+- [x] `createToolInvocationResponse(toolName: string, args: unknown)` creates proto for function call
+- [x] `createFunctionResultResponse(toolName: string, result: unknown)` creates proto for function response
+- [x] `createStructuredResponse(data: unknown)` creates proto for JSON schema response
+- [x] All helpers return valid `GenerateContentResponse` protos
+- [x] Tests verify proto structure for each helper
+- [x] Presubmit passes
 
 ---
 

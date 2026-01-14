@@ -50,6 +50,14 @@ export {
   type LlmResponseConversionResult,
 } from './response-converter.js';
 
+// Response construction helpers
+export {
+  createTextResponse,
+  createToolInvocationResponse,
+  createFunctionResultResponse,
+  createStructuredResponse,
+} from './response-helpers.js';
+
 // Re-export @google/genai types for convenience
 export type {
   Content,
