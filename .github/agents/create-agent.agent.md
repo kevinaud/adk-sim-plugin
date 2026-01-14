@@ -40,10 +40,13 @@ From user input, extract:
 
 ### 3. Generate Agent Structure
 
-Create the agent file at `.github/agents/{agent-name}.agent.md` using this template:
+Create the agent file at `.github/agents/{agent-name}.agent.md`.
+
+**IMPORTANT**: Agent files are plain markdown files. They start directly with YAML frontmatter (delimited by `---`). Do NOT wrap the content in code fences.
+
+**Template**:
 
 ```markdown
-````chatagent
 ---
 description: {one-line description of what the agent does}
 handoffs:                          # OPTIONAL - remove if no handoffs needed
@@ -55,9 +58,9 @@ handoffs:                          # OPTIONAL - remove if no handoffs needed
 
 ## User Input
 
-```text
+` ` `text
 $ARGUMENTS
-```
+` ` `
 
 You **MUST** consider the user input before proceeding (if not empty).
 
@@ -109,9 +112,9 @@ Summarize execution:
 - {Rule 1: e.g., "Use absolute paths for all file references"}
 - {Rule 2: e.g., "Limit output to 50 findings; summarize overflow"}
 - {Rule 3: e.g., "Mark ambiguous items with [NEEDS CLARIFICATION]"}
-
-````
 ```
+
+**Note**: In the template above, the triple backticks for the $ARGUMENTS code block are shown with spaces (` ` `) for display purposes. When creating an actual agent file, use normal triple backticks without spaces.
 
 ### 4. Customize for Use Case
 
@@ -152,7 +155,8 @@ Before finalizing, verify the agent includes:
 - **Naming Convention**: Use lowercase kebab-case for agent names (e.g., `code-review`, `api-docs`)
 - **File Location**: All agents MUST be created in `.github/agents/`
 - **Extension**: Agent files MUST use `.agent.md` extension
-- **Frontmatter**: MUST start with ````chatagent and include `---` delimited YAML
+- **Frontmatter**: Agent files are plain markdown starting with YAML frontmatter delimited by `---`
+- **No Code Fences Around File**: Do NOT wrap the entire file content in code fences like ` ``` `, ` ```` `, or ` ````chatagent `. The file is plain markdown.
 - **No Hallucination**: Only include patterns relevant to the user's stated purpose
 - **Idempotency**: Check if agent file already exists; ask before overwriting
 

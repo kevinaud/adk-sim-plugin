@@ -1,4 +1,3 @@
-````chatagent
 ---
 description: Expert in project infrastructure - build systems, CI/CD, testing, linting, formatting, type-checking, publishing, and dev environment configuration.
 ---
@@ -150,4 +149,3 @@ Every infrastructure file should be well-commented:
 - **Verify locally before proposing CI changes** — use `make quality`
 - **Preserve backward compatibility** — don't break existing developer workflows
 - **Consider all environments** — local, CI, and production may differ
-````
