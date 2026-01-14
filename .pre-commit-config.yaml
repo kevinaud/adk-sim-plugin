@@ -77,10 +77,10 @@ repos:
     hooks:
       - id: prettier
         name: prettier (typescript)
-        entry: npm exec prettier -- --check
+        entry: npm run format:check --workspace=frontend --
         language: system
-        files: \.(ts|tsx|js|jsx|json|html|css|scss)$
-        exclude: ^(node_modules/|dist/|\.angular/|packages/adk-sim-protos-ts/src/(adksim|google)/)
+        files: ^frontend/.*\.(ts|html|scss)$
+        pass_filenames: false
 
   # ============================================================
   # Angular - Build Verification (AOT template checking)
