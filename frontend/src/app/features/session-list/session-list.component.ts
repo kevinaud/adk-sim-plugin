@@ -14,16 +14,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   type OnInit,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { timestampDate } from '@bufbuild/protobuf/wkt';
 
 import { type Session, SessionFacade } from '../../data-access/session';
@@ -60,12 +62,21 @@ import { type Session, SessionFacade } from '../../data-access/session';
 export class SessionListComponent implements OnInit {
   private readonly facade = inject(SessionFacade);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** List of sessions retrieved from the backend */
   readonly sessions = signal<Session[]>([]);
 
   /** Whether we're currently loading sessions */
   readonly isLoading = signal(false);
+
+  /** Error message from URL query params (e.g., redirect from invalid session) */
+  private readonly _routeError = signal<string | null>(null);
+  readonly routeError = this._routeError.asReadonly();
+
+  /** Whether there's a route error */
+  readonly hasRouteError = computed(() => this._routeError() !== null);
 
   /** Connection status from the facade */
   readonly connectionStatus = this.facade.connectionStatus;
@@ -86,9 +97,39 @@ export class SessionListComponent implements OnInit {
 
   /**
    * Load sessions on component initialization.
+   * Also subscribes to query params to display route errors (e.g., from invalid session redirect).
    */
   ngOnInit(): void {
     void this.loadSessions();
+    this.subscribeToRouteErrors();
+  }
+
+  /**
+   * Subscribes to query params to detect and display route errors.
+   * The session route guard redirects to /?error=... when session validation fails.
+   */
+  private subscribeToRouteErrors(): void {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const errorParam = params['error'] as string | undefined;
+      if (errorParam) {
+        this._routeError.set(errorParam);
+      } else {
+        this._routeError.set(null);
+      }
+    });
+  }
+
+  /**
+   * Dismisses the route error message.
+   */
+  dismissRouteError(): void {
+    this._routeError.set(null);
+    // Remove the error query param from the URL without navigation
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { error: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   /**

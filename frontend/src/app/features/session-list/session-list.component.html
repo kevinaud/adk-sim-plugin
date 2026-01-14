@@ -2,6 +2,22 @@
 <!-- Implements FR-002 (Session List) and FR-003 (Session Metadata) -->
 
 <div class="session-list-container">
+  <!-- Route Error Banner (shown when redirected from invalid session) -->
+  @if (hasRouteError()) {
+    <div class="route-error-banner" data-testid="route-error-banner">
+      <mat-icon class="route-error-icon">warning</mat-icon>
+      <span class="route-error-message" data-testid="route-error-message">{{ routeError() }}</span>
+      <button
+        mat-icon-button
+        class="route-error-dismiss"
+        (click)="dismissRouteError()"
+        aria-label="Dismiss error"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
   <mat-card class="session-list-card">
     <mat-card-header>
       <mat-card-title>
