@@ -11,8 +11,8 @@ directly in-process.
 import base64
 import struct
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+import betterproto
 from adk_sim_protos.adksim.v1 import (
   CreateSessionRequest,
   CreateSessionResponse,
@@ -24,16 +24,12 @@ from adk_sim_protos.adksim.v1 import (
   SubmitRequestResponse,
 )
 from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import FileResponse, Response
 from starlette.routing import Route
 
 from adk_sim_server.logging import get_logger
-
-if TYPE_CHECKING:
-  import betterproto
-  from starlette.requests import Request
-
-  from adk_sim_server.services.simulator_service import SimulatorService
+from adk_sim_server.services.simulator_service import SimulatorService
 
 logger = get_logger("web")
 

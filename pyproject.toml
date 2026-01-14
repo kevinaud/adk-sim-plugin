@@ -11,6 +11,7 @@ dev = [
     "adk-sim-testing",
     "adk-sim-server",
     "adk-agent-sim",
+    "ops",
     "betterproto[compiler]>=2.0.0b7",
     "grpcio-tools>=1.60.0",
     "ipykernel>=7.1.0",
@@ -31,16 +32,17 @@ dev = [
 package = false
 
 [tool.uv.workspace]
-members = ["server", "plugins/python", "packages/adk-sim-protos", "packages/adk-sim-testing"]
+members = ["server", "plugins/python", "packages/adk-sim-protos", "packages/adk-sim-testing", "ops"]
 
 [tool.uv.sources]
 adk-sim-protos = { workspace = true }
 adk-sim-testing = { workspace = true }
 adk-sim-server = { workspace = true }
 adk-agent-sim = { workspace = true }
+ops = { workspace = true }
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py313"
 line-length = 88
 indent-width = 2
 
@@ -114,6 +116,15 @@ select = [
 # S101: "Use of assert detected" (flake8-bandit) - asserts are normal in tests
 "tests/**" = ["S101"]
 
+# TC004 false positive - these imports ARE only for type hints, but ruff
+# can't distinguish lazy-evaluated annotations (PEP 649) from eager ones
+"packages/adk-sim-testing/src/adk_sim_testing/helpers.py" = ["TC004"]
+
+# Ops CLI - ignore Typer-specific patterns that ruff incorrectly flags:
+# B008: typer.Argument/Option in function defaults is the intended Typer pattern
+# TC003: Path import at runtime is needed for Typer type hints
+"ops/**" = ["B008", "TC003"]
+
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "__future__.annotations".msg = "Python 3.14+ deferred evaluation is standard. Do not use future import."
 "typing.List".msg = "Use builtin `list` instead."
@@ -134,7 +145,7 @@ pythonVersion = "3.14"
 typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
-include = ["server/src", "server/tests", "plugins/python/src", "plugins/python/tests", "packages/*/src"]
+include = ["server/src", "server/tests", "plugins/python/src", "plugins/python/tests", "packages/*/src", "ops/src"]
 exclude = [
     "packages/adk-sim-protos/src/adk_sim_protos/adksim",
     "packages/adk-sim-protos/src/adk_sim_protos/google",

@@ -20,12 +20,10 @@ Usage:
 """
 
 import asyncio
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-  from adk_sim_protos.google.ai.generativelanguage.v1beta import (
-    GenerateContentResponse,
-  )
+from adk_sim_protos.google.ai.generativelanguage.v1beta import (
+  GenerateContentResponse,
+)
 
 
 class PendingFutureRegistry:

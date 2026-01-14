@@ -14,8 +14,6 @@ Requirements:
     pip install markdown-it-py
 """
 
-from __future__ import annotations
-
 import argparse
 import re
 import sys
@@ -213,10 +211,9 @@ def get_section_end_line(
         if shallow:
             # Stop at any heading
             return h.line_start
-        else:
-            # Stop at same or higher level (lower number = higher level)
-            if h.level <= heading.level:
-                return h.line_start
+        # Stop at same or higher level (lower number = higher level)
+        if h.level <= heading.level:
+            return h.line_start
 
     # No stopping point found, go to end of document
     return heading.line_end if heading.line_end else 0
@@ -316,7 +313,7 @@ Examples:
         print(f"Error: File not found: {path}", file=sys.stderr)
         sys.exit(1)
 
-    if not path.suffix.lower() == ".md":
+    if path.suffix.lower() != ".md":
         print(f"Warning: File does not have .md extension: {path}", file=sys.stderr)
 
     raw_content = path.read_text(encoding="utf-8")

@@ -6,8 +6,8 @@ This is a monorepo for a gRPC-based agent simulator with Python backend, Angular
 
 Quality rules are defined in `.pre-commit-config.yaml` (single source of truth).
 
-- Run `./scripts/presubmit.sh` before any `git push` - pushing failing code is prohibited
-- Run `uv run pre-commit run --all-files` for quick quality checks (lint/format only)
+- Run `ops ci check` before any `git push` - pushing failing code is prohibited
+- Run `ops quality` for quick quality checks (lint/format only)
 - Pre-commit hooks run automatically:
   - `git commit`: Fast checks (lint, format, type check) on staged files
   - `git push`: Full test suite (unit, integration, e2e) + Angular build
@@ -46,25 +46,35 @@ Use state-based verification, not interaction-based verification.
 - Frontend: managed by `npm`
 - Protos: managed by `buf`
 - Quality checks: managed by `pre-commit`
+- Developer CLI: `ops` (installed via `uv sync`)
 
 ## Key Commands
 
 ```bash
-# Quality checks (pre-commit is single source of truth)
-./scripts/presubmit.sh                              # MUST pass before push (runs all pre-commit hooks)
-uv run pre-commit run --all-files                   # Quick quality check (commit-stage hooks only)
-uv run pre-commit run --all-files --hook-stage manual  # Full check including all tests
-make quality                                        # Same as pre-commit quick check
+# Quality checks (ops CLI is the primary interface)
+ops ci check                             # MUST pass before push (runs all tests + checks)
+ops quality                              # Quick quality check (lint, format, type check)
+ops quality fix                          # Auto-fix lint/format issues
 
 # Development
-make generate                        # Generate proto code
-make server                          # Run Python server
-make frontend                        # Run Angular dev server
+ops dev server                           # Run Python server with hot reload
+ops dev frontend                         # Run Angular dev server
+ops docker up                            # Run via Docker Compose
 
 # Build
-./scripts/build.sh all               # Full build (protos, ts, frontend, packages)
-./scripts/build.sh protos            # Generate proto code only
-./scripts/build.sh frontend          # Build Angular frontend only
+ops build                                # Full build (protos, ts, frontend, packages)
+ops build protos                         # Generate proto code only
+ops build frontend                       # Build Angular frontend only
+
+# Testing
+ops quality test                         # Run all tests
+ops quality test unit                    # Unit tests only
+ops quality test e2e                     # E2E tests (requires Docker)
+
+# Releasing
+ops release patch                        # Create patch release
+ops release minor                        # Create minor release
+ops release status                       # Show current version
 ```
 
 ## Project Structure
@@ -74,4 +84,5 @@ make frontend                        # Run Angular dev server
 - `protos/` - Protocol buffer definitions
 - `packages/` - Shared packages (protos, testing utilities)
 - `plugins/python/` - ADK agent plugin
+- `ops/` - Unified developer CLI
 - `mddocs/` - Linked markdown documentation

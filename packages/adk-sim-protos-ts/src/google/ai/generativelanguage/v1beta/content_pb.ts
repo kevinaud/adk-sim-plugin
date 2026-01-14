@@ -16,32 +16,22 @@
 // @generated from file google/ai/generativelanguage/v1beta/content.proto (package google.ai.generativelanguage.v1beta, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage } from '@bufbuild/protobuf/codegenv2';
-import { enumDesc, fileDesc, messageDesc } from '@bufbuild/protobuf/codegenv2';
-import { file_google_api_field_behavior } from '../../../api/field_behavior_pb';
-import type { Duration, Value } from '@bufbuild/protobuf/wkt';
-import { file_google_protobuf_duration, file_google_protobuf_struct } from '@bufbuild/protobuf/wkt';
-import type { Interval } from '../../../type/interval_pb';
-import { file_google_type_interval } from '../../../type/interval_pb';
-import type { LatLng } from '../../../type/latlng_pb';
-import { file_google_type_latlng } from '../../../type/latlng_pb';
-import type { JsonObject, Message } from '@bufbuild/protobuf';
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import { file_google_api_field_behavior } from "../../../api/field_behavior_pb";
+import type { Duration, Value } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_duration, file_google_protobuf_struct } from "@bufbuild/protobuf/wkt";
+import type { Interval } from "../../../type/interval_pb";
+import { file_google_type_interval } from "../../../type/interval_pb";
+import type { LatLng } from "../../../type/latlng_pb";
+import { file_google_type_latlng } from "../../../type/latlng_pb";
+import type { JsonObject, Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file google/ai/generativelanguage/v1beta/content.proto.
  */
-export const file_google_ai_generativelanguage_v1beta_content: GenFile =
-  /*@__PURE__*/
-  fileDesc(
-    'CjFnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9jb250ZW50LnByb3RvEiNnb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YSJWCgdDb250ZW50EjgKBXBhcnRzGAEgAygLMikuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuUGFydBIRCgRyb2xlGAIgASgJQgPgQQEitAUKBFBhcnQSDgoEdGV4dBgCIAEoCUgAEkAKC2lubGluZV9kYXRhGAMgASgLMikuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQmxvYkgAEkoKDWZ1bmN0aW9uX2NhbGwYBCABKAsyMS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvbkNhbGxIABJSChFmdW5jdGlvbl9yZXNwb25zZRgFIAEoCzI1Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkZ1bmN0aW9uUmVzcG9uc2VIABJCCglmaWxlX2RhdGEYBiABKAsyLS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GaWxlRGF0YUgAEk4KD2V4ZWN1dGFibGVfY29kZRgJIAEoCzIzLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkV4ZWN1dGFibGVDb2RlSAASWQoVY29kZV9leGVjdXRpb25fcmVzdWx0GAogASgLMjguZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ29kZUV4ZWN1dGlvblJlc3VsdEgAElEKDnZpZGVvX21ldGFkYXRhGA4gASgLMjIuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuVmlkZW9NZXRhZGF0YUID4EEBSAESFAoHdGhvdWdodBgLIAEoCEID4EEBEh4KEXRob3VnaHRfc2lnbmF0dXJlGA0gASgMQgPgQQESLgoNcGFydF9tZXRhZGF0YRgIIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3RCBgoEZGF0YUIKCghtZXRhZGF0YSJwChRGdW5jdGlvblJlc3BvbnNlUGFydBJQCgtpbmxpbmVfZGF0YRgBIAEoCzI5Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkZ1bmN0aW9uUmVzcG9uc2VCbG9iSABCBgoEZGF0YSInCgRCbG9iEhEKCW1pbWVfdHlwZRgBIAEoCRIMCgRkYXRhGAIgASgMIjcKFEZ1bmN0aW9uUmVzcG9uc2VCbG9iEhEKCW1pbWVfdHlwZRgBIAEoCRIMCgRkYXRhGAIgASgMIjkKCEZpbGVEYXRhEhYKCW1pbWVfdHlwZRgBIAEoCUID4EEBEhUKCGZpbGVfdXJpGAIgASgJQgPgQQIiiwEKDVZpZGVvTWV0YWRhdGESNAoMc3RhcnRfb2Zmc2V0GAEgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uQgPgQQESMgoKZW5kX29mZnNldBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbkID4EEBEhAKA2ZwcxgDIAEoAUID4EEBIqoBCg5FeGVjdXRhYmxlQ29kZRJTCghsYW5ndWFnZRgBIAEoDjI8Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkV4ZWN1dGFibGVDb2RlLkxhbmd1YWdlQgPgQQISEQoEY29kZRgCIAEoCUID4EECIjAKCExhbmd1YWdlEhgKFExBTkdVQUdFX1VOU1BFQ0lGSUVEEAASCgoGUFlUSE9OEAEi6QEKE0NvZGVFeGVjdXRpb25SZXN1bHQSVgoHb3V0Y29tZRgBIAEoDjJALmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvZGVFeGVjdXRpb25SZXN1bHQuT3V0Y29tZUID4EECEhMKBm91dHB1dBgCIAEoCUID4EEBImUKB091dGNvbWUSFwoTT1VUQ09NRV9VTlNQRUNJRklFRBAAEg4KCk9VVENPTUVfT0sQARISCg5PVVRDT01FX0ZBSUxFRBACEh0KGU9VVENPTUVfREVBRExJTkVfRVhDRUVERUQQAyLDBwoEVG9vbBJcChVmdW5jdGlvbl9kZWNsYXJhdGlvbnMYASADKAsyOC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvbkRlY2xhcmF0aW9uQgPgQQESYAoXZ29vZ2xlX3NlYXJjaF9yZXRyaWV2YWwYAiABKAsyOi5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Hb29nbGVTZWFyY2hSZXRyaWV2YWxCA+BBARJPCg5jb2RlX2V4ZWN1dGlvbhgDIAEoCzIyLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvZGVFeGVjdXRpb25CA+BBARJSCg1nb29nbGVfc2VhcmNoGAQgASgLMjYuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuVG9vbC5Hb29nbGVTZWFyY2hCA+BBARJQCgxjb21wdXRlcl91c2UYBiABKAsyNS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Ub29sLkNvbXB1dGVyVXNlQgPgQQESSQoLdXJsX2NvbnRleHQYCCABKAsyLy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5VcmxDb250ZXh0QgPgQQESSQoLZmlsZV9zZWFyY2gYCSABKAsyLy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GaWxlU2VhcmNoQgPgQQESSQoLZ29vZ2xlX21hcHMYCyABKAsyLy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Hb29nbGVNYXBzQgPgQQEaRQoMR29vZ2xlU2VhcmNoEjUKEXRpbWVfcmFuZ2VfZmlsdGVyGAIgASgLMhUuZ29vZ2xlLnR5cGUuSW50ZXJ2YWxCA+BBARrbAQoLQ29tcHV0ZXJVc2USWwoLZW52aXJvbm1lbnQYAyABKA4yQS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Ub29sLkNvbXB1dGVyVXNlLkVudmlyb25tZW50QgPgQQISKgodZXhjbHVkZWRfcHJlZGVmaW5lZF9mdW5jdGlvbnMYBSADKAlCA+BBASJDCgtFbnZpcm9ubWVudBIbChdFTlZJUk9OTUVOVF9VTlNQRUNJRklFRBAAEhcKE0VOVklST05NRU5UX0JST1dTRVIQASIoCgpHb29nbGVNYXBzEhoKDWVuYWJsZV93aWRnZXQYASABKAhCA+BBASIMCgpVcmxDb250ZXh0ItcCCgpGaWxlU2VhcmNoEmMKE3JldHJpZXZhbF9yZXNvdXJjZXMYASADKAsyQS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GaWxlU2VhcmNoLlJldHJpZXZhbFJlc291cmNlQgPgQQISXgoQcmV0cmlldmFsX2NvbmZpZxgCIAEoCzI/Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkZpbGVTZWFyY2guUmV0cmlldmFsQ29uZmlnQgPgQQEaMAoRUmV0cmlldmFsUmVzb3VyY2USGwoOcmFnX3N0b3JlX25hbWUYASABKAlCA+BBAhpSCg9SZXRyaWV2YWxDb25maWcSFwoFdG9wX2sYASABKAVCA+BBAUgAiAEBEhwKD21ldGFkYXRhX2ZpbHRlchgDIAEoCUID4EEBQggKBl90b3BfayJ2ChVHb29nbGVTZWFyY2hSZXRyaWV2YWwSXQoYZHluYW1pY19yZXRyaWV2YWxfY29uZmlnGAEgASgLMjsuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRHluYW1pY1JldHJpZXZhbENvbmZpZyLOAQoWRHluYW1pY1JldHJpZXZhbENvbmZpZxJOCgRtb2RlGAEgASgOMkAuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRHluYW1pY1JldHJpZXZhbENvbmZpZy5Nb2RlEh4KEWR5bmFtaWNfdGhyZXNob2xkGAIgASgCSACIAQEiLgoETW9kZRIUChBNT0RFX1VOU1BFQ0lGSUVEEAASEAoMTU9ERV9EWU5BTUlDEAFCFAoSX2R5bmFtaWNfdGhyZXNob2xkIg8KDUNvZGVFeGVjdXRpb24iwwEKClRvb2xDb25maWcSYAoXZnVuY3Rpb25fY2FsbGluZ19jb25maWcYASABKAsyOi5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvbkNhbGxpbmdDb25maWdCA+BBARJTChByZXRyaWV2YWxfY29uZmlnGAIgASgLMjQuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuUmV0cmlldmFsQ29uZmlnQgPgQQEiWAoPUmV0cmlldmFsQ29uZmlnEikKB2xhdF9sbmcYASABKAsyEy5nb29nbGUudHlwZS5MYXRMbmdCA+BBARIaCg1sYW5ndWFnZV9jb2RlGAIgASgJQgPgQQEi2gEKFUZ1bmN0aW9uQ2FsbGluZ0NvbmZpZxJSCgRtb2RlGAEgASgOMj8uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRnVuY3Rpb25DYWxsaW5nQ29uZmlnLk1vZGVCA+BBARIjChZhbGxvd2VkX2Z1bmN0aW9uX25hbWVzGAIgAygJQgPgQQEiSAoETW9kZRIUChBNT0RFX1VOU1BFQ0lGSUVEEAASCAoEQVVUTxABEgcKA0FOWRACEggKBE5PTkUQAxINCglWQUxJREFURUQQBCK/BAoTRnVuY3Rpb25EZWNsYXJhdGlvbhIRCgRuYW1lGAEgASgJQgPgQQISGAoLZGVzY3JpcHRpb24YAiABKAlCA+BBAhJJCgpwYXJhbWV0ZXJzGAMgASgLMisuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hQgPgQQFIAIgBARJAChZwYXJhbWV0ZXJzX2pzb25fc2NoZW1hGAYgASgLMhYuZ29vZ2xlLnByb3RvYnVmLlZhbHVlQgPgQQFIAYgBARJHCghyZXNwb25zZRgEIAEoCzIrLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLlNjaGVtYUID4EEBSAKIAQESPgoUcmVzcG9uc2VfanNvbl9zY2hlbWEYByABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWVCA+BBAUgDiAEBElgKCGJlaGF2aW9yGAUgASgOMkEuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRnVuY3Rpb25EZWNsYXJhdGlvbi5CZWhhdmlvckID4EEBIjsKCEJlaGF2aW9yEg8KC1VOU1BFQ0lGSUVEEAASDAoIQkxPQ0tJTkcQARIQCgxOT05fQkxPQ0tJTkcQAkINCgtfcGFyYW1ldGVyc0IZChdfcGFyYW1ldGVyc19qc29uX3NjaGVtYUILCglfcmVzcG9uc2VCFwoVX3Jlc3BvbnNlX2pzb25fc2NoZW1hImwKDEZ1bmN0aW9uQ2FsbBIPCgJpZBgDIAEoCUID4EEBEhEKBG5hbWUYASABKAlCA+BBAhIvCgRhcmdzGAIgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdEID4EEBSACIAQFCBwoFX2FyZ3MilAMKEEZ1bmN0aW9uUmVzcG9uc2USDwoCaWQYAyABKAlCA+BBARIRCgRuYW1lGAEgASgJQgPgQQISLgoIcmVzcG9uc2UYAiABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0QgPgQQISTQoFcGFydHMYCCADKAsyOS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvblJlc3BvbnNlUGFydEID4EEBEhoKDXdpbGxfY29udGludWUYBCABKAhCA+BBARJeCgpzY2hlZHVsaW5nGAUgASgOMkAuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRnVuY3Rpb25SZXNwb25zZS5TY2hlZHVsaW5nQgPgQQFIAIgBASJSCgpTY2hlZHVsaW5nEhoKFlNDSEVEVUxJTkdfVU5TUEVDSUZJRUQQABIKCgZTSUxFTlQQARINCglXSEVOX0lETEUQAhINCglJTlRFUlJVUFQQA0INCgtfc2NoZWR1bGluZyKOBwoGU2NoZW1hEjwKBHR5cGUYASABKA4yKS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5UeXBlQgPgQQISEwoGZm9ybWF0GAIgASgJQgPgQQESEgoFdGl0bGUYGCABKAlCA+BBARIYCgtkZXNjcmlwdGlvbhgDIAEoCUID4EEBEhUKCG51bGxhYmxlGAQgASgIQgPgQQESEQoEZW51bRgFIAMoCUID4EEBEkQKBWl0ZW1zGAYgASgLMisuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hQgPgQQFIAIgBARIWCgltYXhfaXRlbXMYFSABKANCA+BBARIWCgltaW5faXRlbXMYFiABKANCA+BBARJUCgpwcm9wZXJ0aWVzGAcgAygLMjsuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hLlByb3BlcnRpZXNFbnRyeUID4EEBEhUKCHJlcXVpcmVkGAggAygJQgPgQQESGwoObWluX3Byb3BlcnRpZXMYCSABKANCA+BBARIbCg5tYXhfcHJvcGVydGllcxgKIAEoA0ID4EEBEhkKB21pbmltdW0YCyABKAFCA+BBAUgBiAEBEhkKB21heGltdW0YDCABKAFCA+BBAUgCiAEBEhcKCm1pbl9sZW5ndGgYDSABKANCA+BBARIXCgptYXhfbGVuZ3RoGA4gASgDQgPgQQESFAoHcGF0dGVybhgPIAEoCUID4EEBEiwKB2V4YW1wbGUYECABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWVCA+BBARJACgZhbnlfb2YYEiADKAsyKy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5TY2hlbWFCA+BBARIeChFwcm9wZXJ0eV9vcmRlcmluZxgXIAMoCUID4EEBEiwKB2RlZmF1bHQYGSABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWVCA+BBARpeCg9Qcm9wZXJ0aWVzRW50cnkSCwoDa2V5GAEgASgJEjoKBXZhbHVlGAIgASgLMisuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hOgI4AUIICgZfaXRlbXNCCgoIX21pbmltdW1CCgoIX21heGltdW0iXQoQR3JvdW5kaW5nUGFzc2FnZRIKCgJpZBgBIAEoCRI9Cgdjb250ZW50GAIgASgLMiwuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ29udGVudCJcChFHcm91bmRpbmdQYXNzYWdlcxJHCghwYXNzYWdlcxgBIAMoCzI1Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkdyb3VuZGluZ1Bhc3NhZ2UiagoSTW9kYWxpdHlUb2tlbkNvdW50Ej8KCG1vZGFsaXR5GAEgASgOMi0uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuTW9kYWxpdHkSEwoLdG9rZW5fY291bnQYAiABKAUqbwoEVHlwZRIUChBUWVBFX1VOU1BFQ0lGSUVEEAASCgoGU1RSSU5HEAESCgoGTlVNQkVSEAISCwoHSU5URUdFUhADEgsKB0JPT0xFQU4QBBIJCgVBUlJBWRAFEgoKBk9CSkVDVBAGEggKBE5VTEwQBypdCghNb2RhbGl0eRIYChRNT0RBTElUWV9VTlNQRUNJRklFRBAAEggKBFRFWFQQARIJCgVJTUFHRRACEgkKBVZJREVPEAMSCQoFQVVESU8QBBIMCghET0NVTUVOVBAFQpgBCidjb20uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGFCDENvbnRlbnRQcm90b1ABWl1jbG91ZC5nb29nbGUuY29tL2dvL2FpL2dlbmVyYXRpdmVsYW5ndWFnZS9hcGl2MWJldGEvZ2VuZXJhdGl2ZWxhbmd1YWdlcGI7Z2VuZXJhdGl2ZWxhbmd1YWdlcGJiBnByb3RvMw',
-    [
-      file_google_api_field_behavior,
-      file_google_protobuf_duration,
-      file_google_protobuf_struct,
-      file_google_type_interval,
-      file_google_type_latlng,
-    ],
-  );
+export const file_google_ai_generativelanguage_v1beta_content: GenFile = /*@__PURE__*/
+  fileDesc("CjFnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9jb250ZW50LnByb3RvEiNnb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YSJWCgdDb250ZW50EjgKBXBhcnRzGAEgAygLMikuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuUGFydBIRCgRyb2xlGAIgASgJQgPgQQEitAUKBFBhcnQSDgoEdGV4dBgCIAEoCUgAEkAKC2lubGluZV9kYXRhGAMgASgLMikuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQmxvYkgAEkoKDWZ1bmN0aW9uX2NhbGwYBCABKAsyMS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvbkNhbGxIABJSChFmdW5jdGlvbl9yZXNwb25zZRgFIAEoCzI1Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkZ1bmN0aW9uUmVzcG9uc2VIABJCCglmaWxlX2RhdGEYBiABKAsyLS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GaWxlRGF0YUgAEk4KD2V4ZWN1dGFibGVfY29kZRgJIAEoCzIzLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkV4ZWN1dGFibGVDb2RlSAASWQoVY29kZV9leGVjdXRpb25fcmVzdWx0GAogASgLMjguZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ29kZUV4ZWN1dGlvblJlc3VsdEgAElEKDnZpZGVvX21ldGFkYXRhGA4gASgLMjIuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuVmlkZW9NZXRhZGF0YUID4EEBSAESFAoHdGhvdWdodBgLIAEoCEID4EEBEh4KEXRob3VnaHRfc2lnbmF0dXJlGA0gASgMQgPgQQESLgoNcGFydF9tZXRhZGF0YRgIIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3RCBgoEZGF0YUIKCghtZXRhZGF0YSJwChRGdW5jdGlvblJlc3BvbnNlUGFydBJQCgtpbmxpbmVfZGF0YRgBIAEoCzI5Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkZ1bmN0aW9uUmVzcG9uc2VCbG9iSABCBgoEZGF0YSInCgRCbG9iEhEKCW1pbWVfdHlwZRgBIAEoCRIMCgRkYXRhGAIgASgMIjcKFEZ1bmN0aW9uUmVzcG9uc2VCbG9iEhEKCW1pbWVfdHlwZRgBIAEoCRIMCgRkYXRhGAIgASgMIjkKCEZpbGVEYXRhEhYKCW1pbWVfdHlwZRgBIAEoCUID4EEBEhUKCGZpbGVfdXJpGAIgASgJQgPgQQIiiwEKDVZpZGVvTWV0YWRhdGESNAoMc3RhcnRfb2Zmc2V0GAEgASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uQgPgQQESMgoKZW5kX29mZnNldBgCIAEoCzIZLmdvb2dsZS5wcm90b2J1Zi5EdXJhdGlvbkID4EEBEhAKA2ZwcxgDIAEoAUID4EEBIqoBCg5FeGVjdXRhYmxlQ29kZRJTCghsYW5ndWFnZRgBIAEoDjI8Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkV4ZWN1dGFibGVDb2RlLkxhbmd1YWdlQgPgQQISEQoEY29kZRgCIAEoCUID4EECIjAKCExhbmd1YWdlEhgKFExBTkdVQUdFX1VOU1BFQ0lGSUVEEAASCgoGUFlUSE9OEAEi6QEKE0NvZGVFeGVjdXRpb25SZXN1bHQSVgoHb3V0Y29tZRgBIAEoDjJALmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvZGVFeGVjdXRpb25SZXN1bHQuT3V0Y29tZUID4EECEhMKBm91dHB1dBgCIAEoCUID4EEBImUKB091dGNvbWUSFwoTT1VUQ09NRV9VTlNQRUNJRklFRBAAEg4KCk9VVENPTUVfT0sQARISCg5PVVRDT01FX0ZBSUxFRBACEh0KGU9VVENPTUVfREVBRExJTkVfRVhDRUVERUQQAyLDBwoEVG9vbBJcChVmdW5jdGlvbl9kZWNsYXJhdGlvbnMYASADKAsyOC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvbkRlY2xhcmF0aW9uQgPgQQESYAoXZ29vZ2xlX3NlYXJjaF9yZXRyaWV2YWwYAiABKAsyOi5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Hb29nbGVTZWFyY2hSZXRyaWV2YWxCA+BBARJPCg5jb2RlX2V4ZWN1dGlvbhgDIAEoCzIyLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvZGVFeGVjdXRpb25CA+BBARJSCg1nb29nbGVfc2VhcmNoGAQgASgLMjYuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuVG9vbC5Hb29nbGVTZWFyY2hCA+BBARJQCgxjb21wdXRlcl91c2UYBiABKAsyNS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Ub29sLkNvbXB1dGVyVXNlQgPgQQESSQoLdXJsX2NvbnRleHQYCCABKAsyLy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5VcmxDb250ZXh0QgPgQQESSQoLZmlsZV9zZWFyY2gYCSABKAsyLy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GaWxlU2VhcmNoQgPgQQESSQoLZ29vZ2xlX21hcHMYCyABKAsyLy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Hb29nbGVNYXBzQgPgQQEaRQoMR29vZ2xlU2VhcmNoEjUKEXRpbWVfcmFuZ2VfZmlsdGVyGAIgASgLMhUuZ29vZ2xlLnR5cGUuSW50ZXJ2YWxCA+BBARrbAQoLQ29tcHV0ZXJVc2USWwoLZW52aXJvbm1lbnQYAyABKA4yQS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5Ub29sLkNvbXB1dGVyVXNlLkVudmlyb25tZW50QgPgQQISKgodZXhjbHVkZWRfcHJlZGVmaW5lZF9mdW5jdGlvbnMYBSADKAlCA+BBASJDCgtFbnZpcm9ubWVudBIbChdFTlZJUk9OTUVOVF9VTlNQRUNJRklFRBAAEhcKE0VOVklST05NRU5UX0JST1dTRVIQASIoCgpHb29nbGVNYXBzEhoKDWVuYWJsZV93aWRnZXQYASABKAhCA+BBASIMCgpVcmxDb250ZXh0ItcCCgpGaWxlU2VhcmNoEmMKE3JldHJpZXZhbF9yZXNvdXJjZXMYASADKAsyQS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GaWxlU2VhcmNoLlJldHJpZXZhbFJlc291cmNlQgPgQQISXgoQcmV0cmlldmFsX2NvbmZpZxgCIAEoCzI/Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkZpbGVTZWFyY2guUmV0cmlldmFsQ29uZmlnQgPgQQEaMAoRUmV0cmlldmFsUmVzb3VyY2USGwoOcmFnX3N0b3JlX25hbWUYASABKAlCA+BBAhpSCg9SZXRyaWV2YWxDb25maWcSFwoFdG9wX2sYASABKAVCA+BBAUgAiAEBEhwKD21ldGFkYXRhX2ZpbHRlchgDIAEoCUID4EEBQggKBl90b3BfayJ2ChVHb29nbGVTZWFyY2hSZXRyaWV2YWwSXQoYZHluYW1pY19yZXRyaWV2YWxfY29uZmlnGAEgASgLMjsuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRHluYW1pY1JldHJpZXZhbENvbmZpZyLOAQoWRHluYW1pY1JldHJpZXZhbENvbmZpZxJOCgRtb2RlGAEgASgOMkAuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRHluYW1pY1JldHJpZXZhbENvbmZpZy5Nb2RlEh4KEWR5bmFtaWNfdGhyZXNob2xkGAIgASgCSACIAQEiLgoETW9kZRIUChBNT0RFX1VOU1BFQ0lGSUVEEAASEAoMTU9ERV9EWU5BTUlDEAFCFAoSX2R5bmFtaWNfdGhyZXNob2xkIg8KDUNvZGVFeGVjdXRpb24iwwEKClRvb2xDb25maWcSYAoXZnVuY3Rpb25fY2FsbGluZ19jb25maWcYASABKAsyOi5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvbkNhbGxpbmdDb25maWdCA+BBARJTChByZXRyaWV2YWxfY29uZmlnGAIgASgLMjQuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuUmV0cmlldmFsQ29uZmlnQgPgQQEiWAoPUmV0cmlldmFsQ29uZmlnEikKB2xhdF9sbmcYASABKAsyEy5nb29nbGUudHlwZS5MYXRMbmdCA+BBARIaCg1sYW5ndWFnZV9jb2RlGAIgASgJQgPgQQEi2gEKFUZ1bmN0aW9uQ2FsbGluZ0NvbmZpZxJSCgRtb2RlGAEgASgOMj8uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRnVuY3Rpb25DYWxsaW5nQ29uZmlnLk1vZGVCA+BBARIjChZhbGxvd2VkX2Z1bmN0aW9uX25hbWVzGAIgAygJQgPgQQEiSAoETW9kZRIUChBNT0RFX1VOU1BFQ0lGSUVEEAASCAoEQVVUTxABEgcKA0FOWRACEggKBE5PTkUQAxINCglWQUxJREFURUQQBCK/BAoTRnVuY3Rpb25EZWNsYXJhdGlvbhIRCgRuYW1lGAEgASgJQgPgQQISGAoLZGVzY3JpcHRpb24YAiABKAlCA+BBAhJJCgpwYXJhbWV0ZXJzGAMgASgLMisuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hQgPgQQFIAIgBARJAChZwYXJhbWV0ZXJzX2pzb25fc2NoZW1hGAYgASgLMhYuZ29vZ2xlLnByb3RvYnVmLlZhbHVlQgPgQQFIAYgBARJHCghyZXNwb25zZRgEIAEoCzIrLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLlNjaGVtYUID4EEBSAKIAQESPgoUcmVzcG9uc2VfanNvbl9zY2hlbWEYByABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWVCA+BBAUgDiAEBElgKCGJlaGF2aW9yGAUgASgOMkEuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRnVuY3Rpb25EZWNsYXJhdGlvbi5CZWhhdmlvckID4EEBIjsKCEJlaGF2aW9yEg8KC1VOU1BFQ0lGSUVEEAASDAoIQkxPQ0tJTkcQARIQCgxOT05fQkxPQ0tJTkcQAkINCgtfcGFyYW1ldGVyc0IZChdfcGFyYW1ldGVyc19qc29uX3NjaGVtYUILCglfcmVzcG9uc2VCFwoVX3Jlc3BvbnNlX2pzb25fc2NoZW1hImwKDEZ1bmN0aW9uQ2FsbBIPCgJpZBgDIAEoCUID4EEBEhEKBG5hbWUYASABKAlCA+BBAhIvCgRhcmdzGAIgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdEID4EEBSACIAQFCBwoFX2FyZ3MilAMKEEZ1bmN0aW9uUmVzcG9uc2USDwoCaWQYAyABKAlCA+BBARIRCgRuYW1lGAEgASgJQgPgQQISLgoIcmVzcG9uc2UYAiABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0QgPgQQISTQoFcGFydHMYCCADKAsyOS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5GdW5jdGlvblJlc3BvbnNlUGFydEID4EEBEhoKDXdpbGxfY29udGludWUYBCABKAhCA+BBARJeCgpzY2hlZHVsaW5nGAUgASgOMkAuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuRnVuY3Rpb25SZXNwb25zZS5TY2hlZHVsaW5nQgPgQQFIAIgBASJSCgpTY2hlZHVsaW5nEhoKFlNDSEVEVUxJTkdfVU5TUEVDSUZJRUQQABIKCgZTSUxFTlQQARINCglXSEVOX0lETEUQAhINCglJTlRFUlJVUFQQA0INCgtfc2NoZWR1bGluZyKOBwoGU2NoZW1hEjwKBHR5cGUYASABKA4yKS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5UeXBlQgPgQQISEwoGZm9ybWF0GAIgASgJQgPgQQESEgoFdGl0bGUYGCABKAlCA+BBARIYCgtkZXNjcmlwdGlvbhgDIAEoCUID4EEBEhUKCG51bGxhYmxlGAQgASgIQgPgQQESEQoEZW51bRgFIAMoCUID4EEBEkQKBWl0ZW1zGAYgASgLMisuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hQgPgQQFIAIgBARIWCgltYXhfaXRlbXMYFSABKANCA+BBARIWCgltaW5faXRlbXMYFiABKANCA+BBARJUCgpwcm9wZXJ0aWVzGAcgAygLMjsuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hLlByb3BlcnRpZXNFbnRyeUID4EEBEhUKCHJlcXVpcmVkGAggAygJQgPgQQESGwoObWluX3Byb3BlcnRpZXMYCSABKANCA+BBARIbCg5tYXhfcHJvcGVydGllcxgKIAEoA0ID4EEBEhkKB21pbmltdW0YCyABKAFCA+BBAUgBiAEBEhkKB21heGltdW0YDCABKAFCA+BBAUgCiAEBEhcKCm1pbl9sZW5ndGgYDSABKANCA+BBARIXCgptYXhfbGVuZ3RoGA4gASgDQgPgQQESFAoHcGF0dGVybhgPIAEoCUID4EEBEiwKB2V4YW1wbGUYECABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWVCA+BBARJACgZhbnlfb2YYEiADKAsyKy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5TY2hlbWFCA+BBARIeChFwcm9wZXJ0eV9vcmRlcmluZxgXIAMoCUID4EEBEiwKB2RlZmF1bHQYGSABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWVCA+BBARpeCg9Qcm9wZXJ0aWVzRW50cnkSCwoDa2V5GAEgASgJEjoKBXZhbHVlGAIgASgLMisuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2NoZW1hOgI4AUIICgZfaXRlbXNCCgoIX21pbmltdW1CCgoIX21heGltdW0iXQoQR3JvdW5kaW5nUGFzc2FnZRIKCgJpZBgBIAEoCRI9Cgdjb250ZW50GAIgASgLMiwuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ29udGVudCJcChFHcm91bmRpbmdQYXNzYWdlcxJHCghwYXNzYWdlcxgBIAMoCzI1Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkdyb3VuZGluZ1Bhc3NhZ2UiagoSTW9kYWxpdHlUb2tlbkNvdW50Ej8KCG1vZGFsaXR5GAEgASgOMi0uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuTW9kYWxpdHkSEwoLdG9rZW5fY291bnQYAiABKAUqbwoEVHlwZRIUChBUWVBFX1VOU1BFQ0lGSUVEEAASCgoGU1RSSU5HEAESCgoGTlVNQkVSEAISCwoHSU5URUdFUhADEgsKB0JPT0xFQU4QBBIJCgVBUlJBWRAFEgoKBk9CSkVDVBAGEggKBE5VTEwQBypdCghNb2RhbGl0eRIYChRNT0RBTElUWV9VTlNQRUNJRklFRBAAEggKBFRFWFQQARIJCgVJTUFHRRACEgkKBVZJREVPEAMSCQoFQVVESU8QBBIMCghET0NVTUVOVBAFQpgBCidjb20uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGFCDENvbnRlbnRQcm90b1ABWl1jbG91ZC5nb29nbGUuY29tL2dvL2FpL2dlbmVyYXRpdmVsYW5ndWFnZS9hcGl2MWJldGEvZ2VuZXJhdGl2ZWxhbmd1YWdlcGI7Z2VuZXJhdGl2ZWxhbmd1YWdlcGJiBnByb3RvMw", [file_google_api_field_behavior, file_google_protobuf_duration, file_google_protobuf_struct, file_google_type_interval, file_google_type_latlng]);
 
 /**
  * The base structured datatype containing multi-part content of a message.
@@ -52,7 +42,7 @@ export const file_google_ai_generativelanguage_v1beta_content: GenFile =
  *
  * @generated from message google.ai.generativelanguage.v1beta.Content
  */
-export type Content = Message<'google.ai.generativelanguage.v1beta.Content'> & {
+export type Content = Message<"google.ai.generativelanguage.v1beta.Content"> & {
   /**
    * Ordered `Parts` that constitute a single message. Parts may have different
    * MIME types.
@@ -76,8 +66,7 @@ export type Content = Message<'google.ai.generativelanguage.v1beta.Content'> & {
  * Describes the message google.ai.generativelanguage.v1beta.Content.
  * Use `create(ContentSchema)` to create a new message.
  */
-export const ContentSchema: GenMessage<Content> =
-  /*@__PURE__*/
+export const ContentSchema: GenMessage<Content> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 0);
 
 /**
@@ -91,98 +80,88 @@ export const ContentSchema: GenMessage<Content> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.Part
  */
-export type Part = Message<'google.ai.generativelanguage.v1beta.Part'> & {
+export type Part = Message<"google.ai.generativelanguage.v1beta.Part"> & {
   /**
    * @generated from oneof google.ai.generativelanguage.v1beta.Part.data
    */
-  data:
-    | {
-        /**
-         * Inline text.
-         *
-         * @generated from field: string text = 2;
-         */
-        value: string;
-        case: 'text';
-      }
-    | {
-        /**
-         * Inline media bytes.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.Blob inline_data = 3;
-         */
-        value: Blob;
-        case: 'inlineData';
-      }
-    | {
-        /**
-         * A predicted `FunctionCall` returned from the model that contains
-         * a string representing the `FunctionDeclaration.name` with the
-         * arguments and their values.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.FunctionCall function_call = 4;
-         */
-        value: FunctionCall;
-        case: 'functionCall';
-      }
-    | {
-        /**
-         * The result output of a `FunctionCall` that contains a string
-         * representing the `FunctionDeclaration.name` and a structured JSON
-         * object containing any output from the function is used as context to
-         * the model.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.FunctionResponse function_response = 5;
-         */
-        value: FunctionResponse;
-        case: 'functionResponse';
-      }
-    | {
-        /**
-         * URI based data.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.FileData file_data = 6;
-         */
-        value: FileData;
-        case: 'fileData';
-      }
-    | {
-        /**
-         * Code generated by the model that is meant to be executed.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.ExecutableCode executable_code = 9;
-         */
-        value: ExecutableCode;
-        case: 'executableCode';
-      }
-    | {
-        /**
-         * Result of executing the `ExecutableCode`.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.CodeExecutionResult code_execution_result = 10;
-         */
-        value: CodeExecutionResult;
-        case: 'codeExecutionResult';
-      }
-    | { case: undefined; value?: undefined };
+  data: {
+    /**
+     * Inline text.
+     *
+     * @generated from field: string text = 2;
+     */
+    value: string;
+    case: "text";
+  } | {
+    /**
+     * Inline media bytes.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.Blob inline_data = 3;
+     */
+    value: Blob;
+    case: "inlineData";
+  } | {
+    /**
+     * A predicted `FunctionCall` returned from the model that contains
+     * a string representing the `FunctionDeclaration.name` with the
+     * arguments and their values.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.FunctionCall function_call = 4;
+     */
+    value: FunctionCall;
+    case: "functionCall";
+  } | {
+    /**
+     * The result output of a `FunctionCall` that contains a string
+     * representing the `FunctionDeclaration.name` and a structured JSON
+     * object containing any output from the function is used as context to
+     * the model.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.FunctionResponse function_response = 5;
+     */
+    value: FunctionResponse;
+    case: "functionResponse";
+  } | {
+    /**
+     * URI based data.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.FileData file_data = 6;
+     */
+    value: FileData;
+    case: "fileData";
+  } | {
+    /**
+     * Code generated by the model that is meant to be executed.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.ExecutableCode executable_code = 9;
+     */
+    value: ExecutableCode;
+    case: "executableCode";
+  } | {
+    /**
+     * Result of executing the `ExecutableCode`.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.CodeExecutionResult code_execution_result = 10;
+     */
+    value: CodeExecutionResult;
+    case: "codeExecutionResult";
+  } | { case: undefined; value?: undefined };
 
   /**
    * Controls extra preprocessing of data.
    *
    * @generated from oneof google.ai.generativelanguage.v1beta.Part.metadata
    */
-  metadata:
-    | {
-        /**
-         * Optional. Video metadata. The metadata should only be specified while the
-         * video data is presented in inline_data or file_data.
-         *
-         * @generated from field: google.ai.generativelanguage.v1beta.VideoMetadata video_metadata = 14;
-         */
-        value: VideoMetadata;
-        case: 'videoMetadata';
-      }
-    | { case: undefined; value?: undefined };
+  metadata: {
+    /**
+     * Optional. Video metadata. The metadata should only be specified while the
+     * video data is presented in inline_data or file_data.
+     *
+     * @generated from field: google.ai.generativelanguage.v1beta.VideoMetadata video_metadata = 14;
+     */
+    value: VideoMetadata;
+    case: "videoMetadata";
+  } | { case: undefined; value?: undefined };
 
   /**
    * Optional. Indicates if the part is thought from the model.
@@ -214,8 +193,7 @@ export type Part = Message<'google.ai.generativelanguage.v1beta.Part'> & {
  * Describes the message google.ai.generativelanguage.v1beta.Part.
  * Use `create(PartSchema)` to create a new message.
  */
-export const PartSchema: GenMessage<Part> =
-  /*@__PURE__*/
+export const PartSchema: GenMessage<Part> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 1);
 
 /**
@@ -231,32 +209,28 @@ export const PartSchema: GenMessage<Part> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FunctionResponsePart
  */
-export type FunctionResponsePart =
-  Message<'google.ai.generativelanguage.v1beta.FunctionResponsePart'> & {
+export type FunctionResponsePart = Message<"google.ai.generativelanguage.v1beta.FunctionResponsePart"> & {
+  /**
+   * The data of the function response part.
+   *
+   * @generated from oneof google.ai.generativelanguage.v1beta.FunctionResponsePart.data
+   */
+  data: {
     /**
-     * The data of the function response part.
+     * Inline media bytes.
      *
-     * @generated from oneof google.ai.generativelanguage.v1beta.FunctionResponsePart.data
+     * @generated from field: google.ai.generativelanguage.v1beta.FunctionResponseBlob inline_data = 1;
      */
-    data:
-      | {
-          /**
-           * Inline media bytes.
-           *
-           * @generated from field: google.ai.generativelanguage.v1beta.FunctionResponseBlob inline_data = 1;
-           */
-          value: FunctionResponseBlob;
-          case: 'inlineData';
-        }
-      | { case: undefined; value?: undefined };
-  };
+    value: FunctionResponseBlob;
+    case: "inlineData";
+  } | { case: undefined; value?: undefined };
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.FunctionResponsePart.
  * Use `create(FunctionResponsePartSchema)` to create a new message.
  */
-export const FunctionResponsePartSchema: GenMessage<FunctionResponsePart> =
-  /*@__PURE__*/
+export const FunctionResponsePartSchema: GenMessage<FunctionResponsePart> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 2);
 
 /**
@@ -266,7 +240,7 @@ export const FunctionResponsePartSchema: GenMessage<FunctionResponsePart> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.Blob
  */
-export type Blob = Message<'google.ai.generativelanguage.v1beta.Blob'> & {
+export type Blob = Message<"google.ai.generativelanguage.v1beta.Blob"> & {
   /**
    * The IANA standard MIME type of the source data.
    * Examples:
@@ -292,8 +266,7 @@ export type Blob = Message<'google.ai.generativelanguage.v1beta.Blob'> & {
  * Describes the message google.ai.generativelanguage.v1beta.Blob.
  * Use `create(BlobSchema)` to create a new message.
  */
-export const BlobSchema: GenMessage<Blob> =
-  /*@__PURE__*/
+export const BlobSchema: GenMessage<Blob> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 3);
 
 /**
@@ -304,35 +277,33 @@ export const BlobSchema: GenMessage<Blob> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FunctionResponseBlob
  */
-export type FunctionResponseBlob =
-  Message<'google.ai.generativelanguage.v1beta.FunctionResponseBlob'> & {
-    /**
-     * The IANA standard MIME type of the source data.
-     * Examples:
-     *   - image/png
-     *   - image/jpeg
-     * If an unsupported MIME type is provided, an error will be returned. For a
-     * complete list of supported types, see [Supported file
-     * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
-     *
-     * @generated from field: string mime_type = 1;
-     */
-    mimeType: string;
+export type FunctionResponseBlob = Message<"google.ai.generativelanguage.v1beta.FunctionResponseBlob"> & {
+  /**
+   * The IANA standard MIME type of the source data.
+   * Examples:
+   *   - image/png
+   *   - image/jpeg
+   * If an unsupported MIME type is provided, an error will be returned. For a
+   * complete list of supported types, see [Supported file
+   * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
+   *
+   * @generated from field: string mime_type = 1;
+   */
+  mimeType: string;
 
-    /**
-     * Raw bytes for media formats.
-     *
-     * @generated from field: bytes data = 2;
-     */
-    data: Uint8Array;
-  };
+  /**
+   * Raw bytes for media formats.
+   *
+   * @generated from field: bytes data = 2;
+   */
+  data: Uint8Array;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.FunctionResponseBlob.
  * Use `create(FunctionResponseBlobSchema)` to create a new message.
  */
-export const FunctionResponseBlobSchema: GenMessage<FunctionResponseBlob> =
-  /*@__PURE__*/
+export const FunctionResponseBlobSchema: GenMessage<FunctionResponseBlob> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 4);
 
 /**
@@ -340,7 +311,7 @@ export const FunctionResponseBlobSchema: GenMessage<FunctionResponseBlob> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FileData
  */
-export type FileData = Message<'google.ai.generativelanguage.v1beta.FileData'> & {
+export type FileData = Message<"google.ai.generativelanguage.v1beta.FileData"> & {
   /**
    * Optional. The IANA standard MIME type of the source data.
    *
@@ -360,8 +331,7 @@ export type FileData = Message<'google.ai.generativelanguage.v1beta.FileData'> &
  * Describes the message google.ai.generativelanguage.v1beta.FileData.
  * Use `create(FileDataSchema)` to create a new message.
  */
-export const FileDataSchema: GenMessage<FileData> =
-  /*@__PURE__*/
+export const FileDataSchema: GenMessage<FileData> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 5);
 
 /**
@@ -369,7 +339,7 @@ export const FileDataSchema: GenMessage<FileData> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.VideoMetadata
  */
-export type VideoMetadata = Message<'google.ai.generativelanguage.v1beta.VideoMetadata'> & {
+export type VideoMetadata = Message<"google.ai.generativelanguage.v1beta.VideoMetadata"> & {
   /**
    * Optional. The start offset of the video.
    *
@@ -397,8 +367,7 @@ export type VideoMetadata = Message<'google.ai.generativelanguage.v1beta.VideoMe
  * Describes the message google.ai.generativelanguage.v1beta.VideoMetadata.
  * Use `create(VideoMetadataSchema)` to create a new message.
  */
-export const VideoMetadataSchema: GenMessage<VideoMetadata> =
-  /*@__PURE__*/
+export const VideoMetadataSchema: GenMessage<VideoMetadata> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 6);
 
 /**
@@ -411,7 +380,7 @@ export const VideoMetadataSchema: GenMessage<VideoMetadata> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.ExecutableCode
  */
-export type ExecutableCode = Message<'google.ai.generativelanguage.v1beta.ExecutableCode'> & {
+export type ExecutableCode = Message<"google.ai.generativelanguage.v1beta.ExecutableCode"> & {
   /**
    * Required. Programming language of the `code`.
    *
@@ -431,8 +400,7 @@ export type ExecutableCode = Message<'google.ai.generativelanguage.v1beta.Execut
  * Describes the message google.ai.generativelanguage.v1beta.ExecutableCode.
  * Use `create(ExecutableCodeSchema)` to create a new message.
  */
-export const ExecutableCodeSchema: GenMessage<ExecutableCode> =
-  /*@__PURE__*/
+export const ExecutableCodeSchema: GenMessage<ExecutableCode> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 7);
 
 /**
@@ -459,8 +427,7 @@ export enum ExecutableCode_Language {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.ExecutableCode.Language.
  */
-export const ExecutableCode_LanguageSchema: GenEnum<ExecutableCode_Language> =
-  /*@__PURE__*/
+export const ExecutableCode_LanguageSchema: GenEnum<ExecutableCode_Language> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 7, 0);
 
 /**
@@ -471,30 +438,28 @@ export const ExecutableCode_LanguageSchema: GenEnum<ExecutableCode_Language> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.CodeExecutionResult
  */
-export type CodeExecutionResult =
-  Message<'google.ai.generativelanguage.v1beta.CodeExecutionResult'> & {
-    /**
-     * Required. Outcome of the code execution.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.CodeExecutionResult.Outcome outcome = 1;
-     */
-    outcome: CodeExecutionResult_Outcome;
+export type CodeExecutionResult = Message<"google.ai.generativelanguage.v1beta.CodeExecutionResult"> & {
+  /**
+   * Required. Outcome of the code execution.
+   *
+   * @generated from field: google.ai.generativelanguage.v1beta.CodeExecutionResult.Outcome outcome = 1;
+   */
+  outcome: CodeExecutionResult_Outcome;
 
-    /**
-     * Optional. Contains stdout when code execution is successful, stderr or
-     * other description otherwise.
-     *
-     * @generated from field: string output = 2;
-     */
-    output: string;
-  };
+  /**
+   * Optional. Contains stdout when code execution is successful, stderr or
+   * other description otherwise.
+   *
+   * @generated from field: string output = 2;
+   */
+  output: string;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.CodeExecutionResult.
  * Use `create(CodeExecutionResultSchema)` to create a new message.
  */
-export const CodeExecutionResultSchema: GenMessage<CodeExecutionResult> =
-  /*@__PURE__*/
+export const CodeExecutionResultSchema: GenMessage<CodeExecutionResult> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 8);
 
 /**
@@ -537,8 +502,7 @@ export enum CodeExecutionResult_Outcome {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.CodeExecutionResult.Outcome.
  */
-export const CodeExecutionResult_OutcomeSchema: GenEnum<CodeExecutionResult_Outcome> =
-  /*@__PURE__*/
+export const CodeExecutionResult_OutcomeSchema: GenEnum<CodeExecutionResult_Outcome> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 8, 0);
 
 /**
@@ -552,7 +516,7 @@ export const CodeExecutionResult_OutcomeSchema: GenEnum<CodeExecutionResult_Outc
  *
  * @generated from message google.ai.generativelanguage.v1beta.Tool
  */
-export type Tool = Message<'google.ai.generativelanguage.v1beta.Tool'> & {
+export type Tool = Message<"google.ai.generativelanguage.v1beta.Tool"> & {
   /**
    * Optional. A list of `FunctionDeclarations` available to the model that can
    * be used for function calling.
@@ -631,8 +595,7 @@ export type Tool = Message<'google.ai.generativelanguage.v1beta.Tool'> & {
  * Describes the message google.ai.generativelanguage.v1beta.Tool.
  * Use `create(ToolSchema)` to create a new message.
  */
-export const ToolSchema: GenMessage<Tool> =
-  /*@__PURE__*/
+export const ToolSchema: GenMessage<Tool> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 9);
 
 /**
@@ -641,7 +604,7 @@ export const ToolSchema: GenMessage<Tool> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.Tool.GoogleSearch
  */
-export type Tool_GoogleSearch = Message<'google.ai.generativelanguage.v1beta.Tool.GoogleSearch'> & {
+export type Tool_GoogleSearch = Message<"google.ai.generativelanguage.v1beta.Tool.GoogleSearch"> & {
   /**
    * Optional. Filter search results to a specific time range.
    * If customers set a start time, they must set an end time (and vice
@@ -656,8 +619,7 @@ export type Tool_GoogleSearch = Message<'google.ai.generativelanguage.v1beta.Too
  * Describes the message google.ai.generativelanguage.v1beta.Tool.GoogleSearch.
  * Use `create(Tool_GoogleSearchSchema)` to create a new message.
  */
-export const Tool_GoogleSearchSchema: GenMessage<Tool_GoogleSearch> =
-  /*@__PURE__*/
+export const Tool_GoogleSearchSchema: GenMessage<Tool_GoogleSearch> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 9, 0);
 
 /**
@@ -665,7 +627,7 @@ export const Tool_GoogleSearchSchema: GenMessage<Tool_GoogleSearch> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.Tool.ComputerUse
  */
-export type Tool_ComputerUse = Message<'google.ai.generativelanguage.v1beta.Tool.ComputerUse'> & {
+export type Tool_ComputerUse = Message<"google.ai.generativelanguage.v1beta.Tool.ComputerUse"> & {
   /**
    * Required. The environment being operated.
    *
@@ -689,8 +651,7 @@ export type Tool_ComputerUse = Message<'google.ai.generativelanguage.v1beta.Tool
  * Describes the message google.ai.generativelanguage.v1beta.Tool.ComputerUse.
  * Use `create(Tool_ComputerUseSchema)` to create a new message.
  */
-export const Tool_ComputerUseSchema: GenMessage<Tool_ComputerUse> =
-  /*@__PURE__*/
+export const Tool_ComputerUseSchema: GenMessage<Tool_ComputerUse> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 9, 1);
 
 /**
@@ -717,8 +678,7 @@ export enum Tool_ComputerUse_Environment {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.Tool.ComputerUse.Environment.
  */
-export const Tool_ComputerUse_EnvironmentSchema: GenEnum<Tool_ComputerUse_Environment> =
-  /*@__PURE__*/
+export const Tool_ComputerUse_EnvironmentSchema: GenEnum<Tool_ComputerUse_Environment> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 9, 1, 0);
 
 /**
@@ -726,7 +686,7 @@ export const Tool_ComputerUse_EnvironmentSchema: GenEnum<Tool_ComputerUse_Enviro
  *
  * @generated from message google.ai.generativelanguage.v1beta.GoogleMaps
  */
-export type GoogleMaps = Message<'google.ai.generativelanguage.v1beta.GoogleMaps'> & {
+export type GoogleMaps = Message<"google.ai.generativelanguage.v1beta.GoogleMaps"> & {
   /**
    * Optional. Whether to return a widget context token in the GroundingMetadata
    * of the response. Developers can use the widget context token to render a
@@ -742,8 +702,7 @@ export type GoogleMaps = Message<'google.ai.generativelanguage.v1beta.GoogleMaps
  * Describes the message google.ai.generativelanguage.v1beta.GoogleMaps.
  * Use `create(GoogleMapsSchema)` to create a new message.
  */
-export const GoogleMapsSchema: GenMessage<GoogleMaps> =
-  /*@__PURE__*/
+export const GoogleMapsSchema: GenMessage<GoogleMaps> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 10);
 
 /**
@@ -751,14 +710,14 @@ export const GoogleMapsSchema: GenMessage<GoogleMaps> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.UrlContext
  */
-export type UrlContext = Message<'google.ai.generativelanguage.v1beta.UrlContext'> & {};
+export type UrlContext = Message<"google.ai.generativelanguage.v1beta.UrlContext"> & {
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.UrlContext.
  * Use `create(UrlContextSchema)` to create a new message.
  */
-export const UrlContextSchema: GenMessage<UrlContext> =
-  /*@__PURE__*/
+export const UrlContextSchema: GenMessage<UrlContext> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 11);
 
 /**
@@ -767,7 +726,7 @@ export const UrlContextSchema: GenMessage<UrlContext> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FileSearch
  */
-export type FileSearch = Message<'google.ai.generativelanguage.v1beta.FileSearch'> & {
+export type FileSearch = Message<"google.ai.generativelanguage.v1beta.FileSearch"> & {
   /**
    * Required. Semantic retrieval resources to retrieve from.
    * Currently only supports one corpus. In the future we may open up multiple
@@ -789,8 +748,7 @@ export type FileSearch = Message<'google.ai.generativelanguage.v1beta.FileSearch
  * Describes the message google.ai.generativelanguage.v1beta.FileSearch.
  * Use `create(FileSearchSchema)` to create a new message.
  */
-export const FileSearchSchema: GenMessage<FileSearch> =
-  /*@__PURE__*/
+export const FileSearchSchema: GenMessage<FileSearch> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 12);
 
 /**
@@ -798,23 +756,21 @@ export const FileSearchSchema: GenMessage<FileSearch> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FileSearch.RetrievalResource
  */
-export type FileSearch_RetrievalResource =
-  Message<'google.ai.generativelanguage.v1beta.FileSearch.RetrievalResource'> & {
-    /**
-     * Required. The name of the semantic retrieval resource to retrieve from.
-     * Example: `ragStores/my-rag-store-123`
-     *
-     * @generated from field: string rag_store_name = 1;
-     */
-    ragStoreName: string;
-  };
+export type FileSearch_RetrievalResource = Message<"google.ai.generativelanguage.v1beta.FileSearch.RetrievalResource"> & {
+  /**
+   * Required. The name of the semantic retrieval resource to retrieve from.
+   * Example: `ragStores/my-rag-store-123`
+   *
+   * @generated from field: string rag_store_name = 1;
+   */
+  ragStoreName: string;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.FileSearch.RetrievalResource.
  * Use `create(FileSearch_RetrievalResourceSchema)` to create a new message.
  */
-export const FileSearch_RetrievalResourceSchema: GenMessage<FileSearch_RetrievalResource> =
-  /*@__PURE__*/
+export const FileSearch_RetrievalResourceSchema: GenMessage<FileSearch_RetrievalResource> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 12, 0);
 
 /**
@@ -822,30 +778,28 @@ export const FileSearch_RetrievalResourceSchema: GenMessage<FileSearch_Retrieval
  *
  * @generated from message google.ai.generativelanguage.v1beta.FileSearch.RetrievalConfig
  */
-export type FileSearch_RetrievalConfig =
-  Message<'google.ai.generativelanguage.v1beta.FileSearch.RetrievalConfig'> & {
-    /**
-     * Optional. The number of semantic retrieval chunks to retrieve.
-     *
-     * @generated from field: optional int32 top_k = 1;
-     */
-    topK?: number;
+export type FileSearch_RetrievalConfig = Message<"google.ai.generativelanguage.v1beta.FileSearch.RetrievalConfig"> & {
+  /**
+   * Optional. The number of semantic retrieval chunks to retrieve.
+   *
+   * @generated from field: optional int32 top_k = 1;
+   */
+  topK?: number;
 
-    /**
-     * Optional. Metadata filter to apply to the semantic retrieval documents
-     * and chunks.
-     *
-     * @generated from field: string metadata_filter = 3;
-     */
-    metadataFilter: string;
-  };
+  /**
+   * Optional. Metadata filter to apply to the semantic retrieval documents
+   * and chunks.
+   *
+   * @generated from field: string metadata_filter = 3;
+   */
+  metadataFilter: string;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.FileSearch.RetrievalConfig.
  * Use `create(FileSearch_RetrievalConfigSchema)` to create a new message.
  */
-export const FileSearch_RetrievalConfigSchema: GenMessage<FileSearch_RetrievalConfig> =
-  /*@__PURE__*/
+export const FileSearch_RetrievalConfigSchema: GenMessage<FileSearch_RetrievalConfig> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 12, 1);
 
 /**
@@ -853,22 +807,20 @@ export const FileSearch_RetrievalConfigSchema: GenMessage<FileSearch_RetrievalCo
  *
  * @generated from message google.ai.generativelanguage.v1beta.GoogleSearchRetrieval
  */
-export type GoogleSearchRetrieval =
-  Message<'google.ai.generativelanguage.v1beta.GoogleSearchRetrieval'> & {
-    /**
-     * Specifies the dynamic retrieval configuration for the given source.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.DynamicRetrievalConfig dynamic_retrieval_config = 1;
-     */
-    dynamicRetrievalConfig?: DynamicRetrievalConfig;
-  };
+export type GoogleSearchRetrieval = Message<"google.ai.generativelanguage.v1beta.GoogleSearchRetrieval"> & {
+  /**
+   * Specifies the dynamic retrieval configuration for the given source.
+   *
+   * @generated from field: google.ai.generativelanguage.v1beta.DynamicRetrievalConfig dynamic_retrieval_config = 1;
+   */
+  dynamicRetrievalConfig?: DynamicRetrievalConfig;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.GoogleSearchRetrieval.
  * Use `create(GoogleSearchRetrievalSchema)` to create a new message.
  */
-export const GoogleSearchRetrievalSchema: GenMessage<GoogleSearchRetrieval> =
-  /*@__PURE__*/
+export const GoogleSearchRetrievalSchema: GenMessage<GoogleSearchRetrieval> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 13);
 
 /**
@@ -876,30 +828,28 @@ export const GoogleSearchRetrievalSchema: GenMessage<GoogleSearchRetrieval> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.DynamicRetrievalConfig
  */
-export type DynamicRetrievalConfig =
-  Message<'google.ai.generativelanguage.v1beta.DynamicRetrievalConfig'> & {
-    /**
-     * The mode of the predictor to be used in dynamic retrieval.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.DynamicRetrievalConfig.Mode mode = 1;
-     */
-    mode: DynamicRetrievalConfig_Mode;
+export type DynamicRetrievalConfig = Message<"google.ai.generativelanguage.v1beta.DynamicRetrievalConfig"> & {
+  /**
+   * The mode of the predictor to be used in dynamic retrieval.
+   *
+   * @generated from field: google.ai.generativelanguage.v1beta.DynamicRetrievalConfig.Mode mode = 1;
+   */
+  mode: DynamicRetrievalConfig_Mode;
 
-    /**
-     * The threshold to be used in dynamic retrieval.
-     * If not set, a system default value is used.
-     *
-     * @generated from field: optional float dynamic_threshold = 2;
-     */
-    dynamicThreshold?: number;
-  };
+  /**
+   * The threshold to be used in dynamic retrieval.
+   * If not set, a system default value is used.
+   *
+   * @generated from field: optional float dynamic_threshold = 2;
+   */
+  dynamicThreshold?: number;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.DynamicRetrievalConfig.
  * Use `create(DynamicRetrievalConfigSchema)` to create a new message.
  */
-export const DynamicRetrievalConfigSchema: GenMessage<DynamicRetrievalConfig> =
-  /*@__PURE__*/
+export const DynamicRetrievalConfigSchema: GenMessage<DynamicRetrievalConfig> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 14);
 
 /**
@@ -926,8 +876,7 @@ export enum DynamicRetrievalConfig_Mode {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.DynamicRetrievalConfig.Mode.
  */
-export const DynamicRetrievalConfig_ModeSchema: GenEnum<DynamicRetrievalConfig_Mode> =
-  /*@__PURE__*/
+export const DynamicRetrievalConfig_ModeSchema: GenEnum<DynamicRetrievalConfig_Mode> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 14, 0);
 
 /**
@@ -939,14 +888,14 @@ export const DynamicRetrievalConfig_ModeSchema: GenEnum<DynamicRetrievalConfig_M
  *
  * @generated from message google.ai.generativelanguage.v1beta.CodeExecution
  */
-export type CodeExecution = Message<'google.ai.generativelanguage.v1beta.CodeExecution'> & {};
+export type CodeExecution = Message<"google.ai.generativelanguage.v1beta.CodeExecution"> & {
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.CodeExecution.
  * Use `create(CodeExecutionSchema)` to create a new message.
  */
-export const CodeExecutionSchema: GenMessage<CodeExecution> =
-  /*@__PURE__*/
+export const CodeExecutionSchema: GenMessage<CodeExecution> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 15);
 
 /**
@@ -955,7 +904,7 @@ export const CodeExecutionSchema: GenMessage<CodeExecution> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.ToolConfig
  */
-export type ToolConfig = Message<'google.ai.generativelanguage.v1beta.ToolConfig'> & {
+export type ToolConfig = Message<"google.ai.generativelanguage.v1beta.ToolConfig"> & {
   /**
    * Optional. Function calling config.
    *
@@ -975,8 +924,7 @@ export type ToolConfig = Message<'google.ai.generativelanguage.v1beta.ToolConfig
  * Describes the message google.ai.generativelanguage.v1beta.ToolConfig.
  * Use `create(ToolConfigSchema)` to create a new message.
  */
-export const ToolConfigSchema: GenMessage<ToolConfig> =
-  /*@__PURE__*/
+export const ToolConfigSchema: GenMessage<ToolConfig> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 16);
 
 /**
@@ -984,7 +932,7 @@ export const ToolConfigSchema: GenMessage<ToolConfig> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.RetrievalConfig
  */
-export type RetrievalConfig = Message<'google.ai.generativelanguage.v1beta.RetrievalConfig'> & {
+export type RetrievalConfig = Message<"google.ai.generativelanguage.v1beta.RetrievalConfig"> & {
   /**
    * Optional. The location of the user.
    *
@@ -1006,8 +954,7 @@ export type RetrievalConfig = Message<'google.ai.generativelanguage.v1beta.Retri
  * Describes the message google.ai.generativelanguage.v1beta.RetrievalConfig.
  * Use `create(RetrievalConfigSchema)` to create a new message.
  */
-export const RetrievalConfigSchema: GenMessage<RetrievalConfig> =
-  /*@__PURE__*/
+export const RetrievalConfigSchema: GenMessage<RetrievalConfig> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 17);
 
 /**
@@ -1015,35 +962,33 @@ export const RetrievalConfigSchema: GenMessage<RetrievalConfig> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FunctionCallingConfig
  */
-export type FunctionCallingConfig =
-  Message<'google.ai.generativelanguage.v1beta.FunctionCallingConfig'> & {
-    /**
-     * Optional. Specifies the mode in which function calling should execute. If
-     * unspecified, the default value will be set to AUTO.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.FunctionCallingConfig.Mode mode = 1;
-     */
-    mode: FunctionCallingConfig_Mode;
+export type FunctionCallingConfig = Message<"google.ai.generativelanguage.v1beta.FunctionCallingConfig"> & {
+  /**
+   * Optional. Specifies the mode in which function calling should execute. If
+   * unspecified, the default value will be set to AUTO.
+   *
+   * @generated from field: google.ai.generativelanguage.v1beta.FunctionCallingConfig.Mode mode = 1;
+   */
+  mode: FunctionCallingConfig_Mode;
 
-    /**
-     * Optional. A set of function names that, when provided, limits the functions
-     * the model will call.
-     *
-     * This should only be set when the Mode is ANY or VALIDATED. Function names
-     * should match [FunctionDeclaration.name]. When set, model will
-     * predict a function call from only allowed function names.
-     *
-     * @generated from field: repeated string allowed_function_names = 2;
-     */
-    allowedFunctionNames: string[];
-  };
+  /**
+   * Optional. A set of function names that, when provided, limits the functions
+   * the model will call.
+   *
+   * This should only be set when the Mode is ANY or VALIDATED. Function names
+   * should match [FunctionDeclaration.name]. When set, model will
+   * predict a function call from only allowed function names.
+   *
+   * @generated from field: repeated string allowed_function_names = 2;
+   */
+  allowedFunctionNames: string[];
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.FunctionCallingConfig.
  * Use `create(FunctionCallingConfigSchema)` to create a new message.
  */
-export const FunctionCallingConfigSchema: GenMessage<FunctionCallingConfig> =
-  /*@__PURE__*/
+export const FunctionCallingConfigSchema: GenMessage<FunctionCallingConfig> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 18);
 
 /**
@@ -1102,8 +1047,7 @@ export enum FunctionCallingConfig_Mode {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.FunctionCallingConfig.Mode.
  */
-export const FunctionCallingConfig_ModeSchema: GenEnum<FunctionCallingConfig_Mode> =
-  /*@__PURE__*/
+export const FunctionCallingConfig_ModeSchema: GenEnum<FunctionCallingConfig_Mode> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 18, 0);
 
 /**
@@ -1115,92 +1059,90 @@ export const FunctionCallingConfig_ModeSchema: GenEnum<FunctionCallingConfig_Mod
  *
  * @generated from message google.ai.generativelanguage.v1beta.FunctionDeclaration
  */
-export type FunctionDeclaration =
-  Message<'google.ai.generativelanguage.v1beta.FunctionDeclaration'> & {
-    /**
-     * Required. The name of the function.
-     * Must be a-z, A-Z, 0-9, or contain underscores, colons, dots, and dashes,
-     * with a maximum length of 64.
-     *
-     * @generated from field: string name = 1;
-     */
-    name: string;
+export type FunctionDeclaration = Message<"google.ai.generativelanguage.v1beta.FunctionDeclaration"> & {
+  /**
+   * Required. The name of the function.
+   * Must be a-z, A-Z, 0-9, or contain underscores, colons, dots, and dashes,
+   * with a maximum length of 64.
+   *
+   * @generated from field: string name = 1;
+   */
+  name: string;
 
-    /**
-     * Required. A brief description of the function.
-     *
-     * @generated from field: string description = 2;
-     */
-    description: string;
+  /**
+   * Required. A brief description of the function.
+   *
+   * @generated from field: string description = 2;
+   */
+  description: string;
 
-    /**
-     * Optional. Describes the parameters to this function. Reflects the Open
-     * API 3.03 Parameter Object string Key: the name of the parameter. Parameter
-     * names are case sensitive. Schema Value: the Schema defining the type used
-     * for the parameter.
-     *
-     * @generated from field: optional google.ai.generativelanguage.v1beta.Schema parameters = 3;
-     */
-    parameters?: Schema;
+  /**
+   * Optional. Describes the parameters to this function. Reflects the Open
+   * API 3.03 Parameter Object string Key: the name of the parameter. Parameter
+   * names are case sensitive. Schema Value: the Schema defining the type used
+   * for the parameter.
+   *
+   * @generated from field: optional google.ai.generativelanguage.v1beta.Schema parameters = 3;
+   */
+  parameters?: Schema;
 
-    /**
-     * Optional. Describes the parameters to the function in JSON Schema format.
-     * The schema must describe an object where the properties are the parameters
-     * to the function. For example:
-     *
-     * ```
-     * {
-     *   "type": "object",
-     *   "properties": {
-     *     "name": { "type": "string" },
-     *     "age": { "type": "integer" }
-     *   },
-     *   "additionalProperties": false,
-     *   "required": ["name", "age"],
-     *   "propertyOrdering": ["name", "age"]
-     * }
-     * ```
-     *
-     * This field is mutually exclusive with `parameters`.
-     *
-     * @generated from field: optional google.protobuf.Value parameters_json_schema = 6;
-     */
-    parametersJsonSchema?: Value;
+  /**
+   * Optional. Describes the parameters to the function in JSON Schema format.
+   * The schema must describe an object where the properties are the parameters
+   * to the function. For example:
+   *
+   * ```
+   * {
+   *   "type": "object",
+   *   "properties": {
+   *     "name": { "type": "string" },
+   *     "age": { "type": "integer" }
+   *   },
+   *   "additionalProperties": false,
+   *   "required": ["name", "age"],
+   *   "propertyOrdering": ["name", "age"]
+   * }
+   * ```
+   *
+   * This field is mutually exclusive with `parameters`.
+   *
+   * @generated from field: optional google.protobuf.Value parameters_json_schema = 6;
+   */
+  parametersJsonSchema?: Value;
 
-    /**
-     * Optional. Describes the output from this function in JSON Schema format.
-     * Reflects the Open API 3.03 Response Object. The Schema defines the type
-     * used for the response value of the function.
-     *
-     * @generated from field: optional google.ai.generativelanguage.v1beta.Schema response = 4;
-     */
-    response?: Schema;
+  /**
+   * Optional. Describes the output from this function in JSON Schema format.
+   * Reflects the Open API 3.03 Response Object. The Schema defines the type
+   * used for the response value of the function.
+   *
+   * @generated from field: optional google.ai.generativelanguage.v1beta.Schema response = 4;
+   */
+  response?: Schema;
 
-    /**
-     * Optional. Describes the output from this function in JSON Schema format.
-     * The value specified by the schema is the response value of the function.
-     *
-     * This field is mutually exclusive with `response`.
-     *
-     * @generated from field: optional google.protobuf.Value response_json_schema = 7;
-     */
-    responseJsonSchema?: Value;
+  /**
+   * Optional. Describes the output from this function in JSON Schema format.
+   * The value specified by the schema is the response value of the function.
+   *
+   * This field is mutually exclusive with `response`.
+   *
+   * @generated from field: optional google.protobuf.Value response_json_schema = 7;
+   */
+  responseJsonSchema?: Value;
 
-    /**
-     * Optional. Specifies the function Behavior.
-     * Currently only supported by the BidiGenerateContent method.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.FunctionDeclaration.Behavior behavior = 5;
-     */
-    behavior: FunctionDeclaration_Behavior;
-  };
+  /**
+   * Optional. Specifies the function Behavior.
+   * Currently only supported by the BidiGenerateContent method.
+   *
+   * @generated from field: google.ai.generativelanguage.v1beta.FunctionDeclaration.Behavior behavior = 5;
+   */
+  behavior: FunctionDeclaration_Behavior;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.FunctionDeclaration.
  * Use `create(FunctionDeclarationSchema)` to create a new message.
  */
-export const FunctionDeclarationSchema: GenMessage<FunctionDeclaration> =
-  /*@__PURE__*/
+export const FunctionDeclarationSchema: GenMessage<FunctionDeclaration> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 19);
 
 /**
@@ -1238,8 +1180,7 @@ export enum FunctionDeclaration_Behavior {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.FunctionDeclaration.Behavior.
  */
-export const FunctionDeclaration_BehaviorSchema: GenEnum<FunctionDeclaration_Behavior> =
-  /*@__PURE__*/
+export const FunctionDeclaration_BehaviorSchema: GenEnum<FunctionDeclaration_Behavior> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 19, 0);
 
 /**
@@ -1249,7 +1190,7 @@ export const FunctionDeclaration_BehaviorSchema: GenEnum<FunctionDeclaration_Beh
  *
  * @generated from message google.ai.generativelanguage.v1beta.FunctionCall
  */
-export type FunctionCall = Message<'google.ai.generativelanguage.v1beta.FunctionCall'> & {
+export type FunctionCall = Message<"google.ai.generativelanguage.v1beta.FunctionCall"> & {
   /**
    * Optional. The unique id of the function call. If populated, the client to
    * execute the `function_call` and return the response with the matching `id`.
@@ -1279,8 +1220,7 @@ export type FunctionCall = Message<'google.ai.generativelanguage.v1beta.Function
  * Describes the message google.ai.generativelanguage.v1beta.FunctionCall.
  * Use `create(FunctionCallSchema)` to create a new message.
  */
-export const FunctionCallSchema: GenMessage<FunctionCall> =
-  /*@__PURE__*/
+export const FunctionCallSchema: GenMessage<FunctionCall> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 20);
 
 /**
@@ -1292,7 +1232,7 @@ export const FunctionCallSchema: GenMessage<FunctionCall> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.FunctionResponse
  */
-export type FunctionResponse = Message<'google.ai.generativelanguage.v1beta.FunctionResponse'> & {
+export type FunctionResponse = Message<"google.ai.generativelanguage.v1beta.FunctionResponse"> & {
   /**
    * Optional. The id of the function call this response is for. Populated by
    * the client to match the corresponding function call `id`.
@@ -1357,8 +1297,7 @@ export type FunctionResponse = Message<'google.ai.generativelanguage.v1beta.Func
  * Describes the message google.ai.generativelanguage.v1beta.FunctionResponse.
  * Use `create(FunctionResponseSchema)` to create a new message.
  */
-export const FunctionResponseSchema: GenMessage<FunctionResponse> =
-  /*@__PURE__*/
+export const FunctionResponseSchema: GenMessage<FunctionResponse> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 21);
 
 /**
@@ -1402,8 +1341,7 @@ export enum FunctionResponse_Scheduling {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.FunctionResponse.Scheduling.
  */
-export const FunctionResponse_SchedulingSchema: GenEnum<FunctionResponse_Scheduling> =
-  /*@__PURE__*/
+export const FunctionResponse_SchedulingSchema: GenEnum<FunctionResponse_Scheduling> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 21, 0);
 
 /**
@@ -1414,7 +1352,7 @@ export const FunctionResponse_SchedulingSchema: GenEnum<FunctionResponse_Schedul
  *
  * @generated from message google.ai.generativelanguage.v1beta.Schema
  */
-export type Schema = Message<'google.ai.generativelanguage.v1beta.Schema'> & {
+export type Schema = Message<"google.ai.generativelanguage.v1beta.Schema"> & {
   /**
    * Required. Data type.
    *
@@ -1588,8 +1526,7 @@ export type Schema = Message<'google.ai.generativelanguage.v1beta.Schema'> & {
  * Describes the message google.ai.generativelanguage.v1beta.Schema.
  * Use `create(SchemaSchema)` to create a new message.
  */
-export const SchemaSchema: GenMessage<Schema> =
-  /*@__PURE__*/
+export const SchemaSchema: GenMessage<Schema> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 22);
 
 /**
@@ -1597,7 +1534,7 @@ export const SchemaSchema: GenMessage<Schema> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.GroundingPassage
  */
-export type GroundingPassage = Message<'google.ai.generativelanguage.v1beta.GroundingPassage'> & {
+export type GroundingPassage = Message<"google.ai.generativelanguage.v1beta.GroundingPassage"> & {
   /**
    * Identifier for the passage for attributing this passage in grounded
    * answers.
@@ -1618,8 +1555,7 @@ export type GroundingPassage = Message<'google.ai.generativelanguage.v1beta.Grou
  * Describes the message google.ai.generativelanguage.v1beta.GroundingPassage.
  * Use `create(GroundingPassageSchema)` to create a new message.
  */
-export const GroundingPassageSchema: GenMessage<GroundingPassage> =
-  /*@__PURE__*/
+export const GroundingPassageSchema: GenMessage<GroundingPassage> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 23);
 
 /**
@@ -1627,7 +1563,7 @@ export const GroundingPassageSchema: GenMessage<GroundingPassage> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.GroundingPassages
  */
-export type GroundingPassages = Message<'google.ai.generativelanguage.v1beta.GroundingPassages'> & {
+export type GroundingPassages = Message<"google.ai.generativelanguage.v1beta.GroundingPassages"> & {
   /**
    * List of passages.
    *
@@ -1640,8 +1576,7 @@ export type GroundingPassages = Message<'google.ai.generativelanguage.v1beta.Gro
  * Describes the message google.ai.generativelanguage.v1beta.GroundingPassages.
  * Use `create(GroundingPassagesSchema)` to create a new message.
  */
-export const GroundingPassagesSchema: GenMessage<GroundingPassages> =
-  /*@__PURE__*/
+export const GroundingPassagesSchema: GenMessage<GroundingPassages> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 24);
 
 /**
@@ -1649,29 +1584,27 @@ export const GroundingPassagesSchema: GenMessage<GroundingPassages> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.ModalityTokenCount
  */
-export type ModalityTokenCount =
-  Message<'google.ai.generativelanguage.v1beta.ModalityTokenCount'> & {
-    /**
-     * The modality associated with this token count.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.Modality modality = 1;
-     */
-    modality: Modality;
+export type ModalityTokenCount = Message<"google.ai.generativelanguage.v1beta.ModalityTokenCount"> & {
+  /**
+   * The modality associated with this token count.
+   *
+   * @generated from field: google.ai.generativelanguage.v1beta.Modality modality = 1;
+   */
+  modality: Modality;
 
-    /**
-     * Number of tokens.
-     *
-     * @generated from field: int32 token_count = 2;
-     */
-    tokenCount: number;
-  };
+  /**
+   * Number of tokens.
+   *
+   * @generated from field: int32 token_count = 2;
+   */
+  tokenCount: number;
+};
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.ModalityTokenCount.
  * Use `create(ModalityTokenCountSchema)` to create a new message.
  */
-export const ModalityTokenCountSchema: GenMessage<ModalityTokenCount> =
-  /*@__PURE__*/
+export const ModalityTokenCountSchema: GenMessage<ModalityTokenCount> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_content, 25);
 
 /**
@@ -1741,8 +1674,7 @@ export enum Type {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.Type.
  */
-export const TypeSchema: GenEnum<Type> =
-  /*@__PURE__*/
+export const TypeSchema: GenEnum<Type> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 0);
 
 /**
@@ -1797,6 +1729,5 @@ export enum Modality {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.Modality.
  */
-export const ModalitySchema: GenEnum<Modality> =
-  /*@__PURE__*/
+export const ModalitySchema: GenEnum<Modality> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_content, 1);

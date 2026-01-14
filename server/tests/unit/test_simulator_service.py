@@ -2,7 +2,6 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import pytest
 from adk_sim_protos.adksim.v1 import (
@@ -20,13 +19,11 @@ from adk_sim_protos.google.ai.generativelanguage.v1beta import (
   GenerateContentResponse,
 )
 from adk_sim_server.broadcaster import EventBroadcaster
+from adk_sim_server.persistence.event_repo import EventRepository
 from adk_sim_server.queue import RequestQueue
 from adk_sim_server.services.simulator_service import SimulatorService
+from adk_sim_server.session_manager import SessionManager
 from hamcrest import assert_that, has_properties, instance_of
-
-if TYPE_CHECKING:
-  from adk_sim_server.persistence.event_repo import EventRepository
-  from adk_sim_server.session_manager import SessionManager
 
 
 async def _empty_history() -> list[SessionEvent]:

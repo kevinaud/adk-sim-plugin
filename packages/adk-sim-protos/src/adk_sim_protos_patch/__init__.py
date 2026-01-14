@@ -24,18 +24,15 @@ References:
     https://github.com/danielgtaylor/python-betterproto/issues/459
 """
 
-from typing import TYPE_CHECKING, Any
+from collections.abc import Mapping
+from typing import Any
 
 import betterproto.lib.google.protobuf
 from betterproto import Casing
+from betterproto.lib.google.protobuf import Struct
 from betterproto.utils import hybridmethod
 from google.protobuf.json_format import MessageToDict as pb_MessageToDict
 from google.protobuf.struct_pb2 import Struct as pb_Struct
-
-if TYPE_CHECKING:
-  from collections.abc import Mapping
-
-  from betterproto.lib.google.protobuf import Struct
 
 _patch_applied = False
 

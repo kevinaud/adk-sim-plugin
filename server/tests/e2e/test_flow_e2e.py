@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import pytest
 from adk_sim_protos.adksim.v1 import (
   CreateSessionRequest,
-  SessionEvent,
   SimulatorServiceStub,
   SubmitDecisionRequest,
   SubmitRequestRequest,
@@ -16,6 +15,7 @@ from adk_sim_protos.google.ai.generativelanguage.v1beta import (
   GenerateContentRequest,
   GenerateContentResponse,
 )
+from grpclib.client import Channel
 from hamcrest import (
   assert_that,
   greater_than,
@@ -26,7 +26,9 @@ from hamcrest import (
 )
 
 if TYPE_CHECKING:
-  from grpclib.client import Channel
+  from adk_sim_protos.adksim.v1 import (
+    SessionEvent,
+  )
 
 
 @pytest.mark.e2e

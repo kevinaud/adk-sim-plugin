@@ -43,7 +43,7 @@ Integration tests are **skipped by default** to avoid accidental API costs and s
 
 ```bash
 # Run only unit tests (default)
-make test-unit
+ops quality test unit
 
 # Run integration tests explicitly
 pytest tests/integration/ --run-integration

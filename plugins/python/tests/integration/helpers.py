@@ -10,21 +10,17 @@ WARNING: These helpers make real API calls and incur costs.
 
 import importlib
 import os
-from typing import TYPE_CHECKING, Any
+from typing import Any, Self
 
 from dotenv import load_dotenv
 from google.adk import Runner
+from google.adk.agents.base_agent import BaseAgent
 from google.adk.artifacts import InMemoryArtifactService
+from google.adk.events import Event
 from google.adk.memory import InMemoryMemoryService
-from google.adk.sessions import InMemorySessionService
-
-if TYPE_CHECKING:
-  from google.adk.agents.base_agent import BaseAgent
-  from google.adk.events import Event
-  from google.adk.plugins import BasePlugin
-  from google.adk.sessions import Session
-  from google.genai.types import FunctionCall
-
+from google.adk.plugins import BasePlugin
+from google.adk.sessions import InMemorySessionService, Session
+from google.genai.types import FunctionCall
 
 # Default model for integration tests - fast and cost-effective
 DEFAULT_TEST_MODEL = "gemini-2.5-flash"
@@ -191,7 +187,7 @@ class IntegrationRunner:
     *,
     initial_state: dict[str, Any] | None = None,
     plugins: list[BasePlugin] | None = None,
-  ) -> IntegrationRunner:
+  ) -> Self:
     """
     Create an IntegrationRunner from an agent module path.
 
@@ -231,7 +227,7 @@ class IntegrationRunner:
     *,
     initial_state: dict[str, Any] | None = None,
     plugins: list[BasePlugin] | None = None,
-  ) -> IntegrationRunner:
+  ) -> Self:
     """
     Create an IntegrationRunner from a fixture agent.
 
@@ -256,7 +252,7 @@ class IntegrationRunner:
     agent: BaseAgent,
     *,
     plugins: list[BasePlugin] | None = None,
-  ) -> IntegrationRunner:
+  ) -> Self:
     """
     Create an IntegrationRunner from an agent instance.
 

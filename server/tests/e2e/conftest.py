@@ -1,16 +1,12 @@
 """E2E test fixtures using pytest-docker."""
 
 import socket
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
 from grpclib.client import Channel
-
-if TYPE_CHECKING:
-  from collections.abc import AsyncGenerator
-
-  from pytest_docker.plugin import Services
+from pytest_docker.plugin import Services
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:

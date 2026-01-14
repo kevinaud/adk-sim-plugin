@@ -9,7 +9,7 @@ To bundle the frontend for production:
 1. Build the frontend: `cd frontend && npm run build`
 2. Copy the built files: `cp -r frontend/dist/frontend/* server/src/adk_sim_server/static/`
 
-Or simply run: `make bundle-frontend`
+Or simply run: `ops build frontend`
 
 The CI publish workflow automatically bundles the frontend before building
 the Python wheel, ensuring published packages always include the frontend.

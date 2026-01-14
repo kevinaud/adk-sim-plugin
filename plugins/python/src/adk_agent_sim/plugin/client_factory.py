@@ -22,14 +22,12 @@ Usage:
         await factory.close()
 """
 
-from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from adk_sim_protos.adksim.v1 import SimulatorServiceStub
 from grpclib.client import Channel
 
-if TYPE_CHECKING:
-  from adk_agent_sim.plugin.config import PluginConfig
+from adk_agent_sim.plugin.config import PluginConfig
 
 
 class SimulatorClientFactory:

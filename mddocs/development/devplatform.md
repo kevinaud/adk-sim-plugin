@@ -10,13 +10,16 @@ This document is the **single source of truth** for understanding the project's 
 ## Table of Contents
 
 - [Mental Model](#mental-model)
+- [The ops CLI](#the-ops-cli)
+  - [Command Structure](#command-structure)
+  - [Global Options](#global-options)
+  - [Quick Reference](#quick-reference)
 - [Quality Stack](#quality-stack)
   - [Pre-commit Hooks](#pre-commit-hooks)
   - [Python Quality](#python-quality)
   - [TypeScript/Angular Quality](#typescriptangular-quality)
   - [Protobuf Quality](#protobuf-quality)
 - [Build Systems](#build-systems)
-  - [Makefile](#makefile)
   - [Proto Generation](#proto-generation)
   - [Package Building](#package-building)
 - [Development Environment](#development-environment)
@@ -31,53 +34,159 @@ This document is the **single source of truth** for understanding the project's 
 - [Publishing](#publishing)
   - [Release Process](#release-process)
   - [OIDC Trusted Publishers](#oidc-trusted-publishers)
+  - [Testing Publish Locally](#testing-publish-locally)
 - [Common Commands](#common-commands)
-
----
+  - [Daily Development](#daily-development)
+  - [Before Committing](#before-committing)
+  - [Before Pushing](#before-pushing)
+  - [Releasing](#releasing)
+- [Infrastructure Files Reference](#infrastructure-files-reference)
 
 ## Mental Model
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        DEVELOPER WORKFLOW                            │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Local Development                    Quality Gates                  │
-│  ─────────────────                    ─────────────                  │
-│  make server         ──────────►      git commit                     │
-│  make frontend                           │                           │
-│  docker compose up                       ▼                           │
-│                                  .pre-commit-config.yaml             │
-│                                  (ruff, pyright, eslint, prettier)   │
-│                                          │                           │
-│                                          ▼                           │
-│                                      git push                        │
-│                                          │                           │
-│                                          ▼                           │
-│                                  pre-push hooks                      │
-│                                  (tests, angular build, check-gen)   │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  CI Pipeline (.github/workflows/ci.yaml)                             │
-│  ───────────────────────────────────────                             │
-│  Pull Request → devcontainer/ci → presubmit.sh → pre-commit --all    │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Release Pipeline                                                    │
-│  ────────────────                                                    │
-│  ./scripts/ship.sh {patch|minor|major}                               │
-│        │                                                             │
-│        ├──► Create release PR (version bumps)                        │
-│        ├──► Wait for CI                                              │
-│        ├──► Merge PR                                                 │
-│        └──► Create version tag ──► .github/workflows/publish.yaml    │
-│                                        │                             │
-│                                        ├──► PyPI (OIDC)              │
-│                                        └──► npm (OIDC)               │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
++----------------------------------------------------------------------+
+|                        DEVELOPER WORKFLOW                            |
++----------------------------------------------------------------------+
+|                                                                      |
+|  Local Development                    Quality Gates                  |
+|  -----------------                    -------------                  |
+|  ops dev server        ------------->      git commit                |
+|  ops dev frontend                           |                        |
+|  ops docker up                              v                        |
+|                                  .pre-commit-config.yaml             |
+|                                  (ruff, pyright, eslint, prettier)   |
+|                                          |                           |
+|                                          v                           |
+|                                      git push                        |
+|                                          |                           |
+|                                          v                           |
+|                                  pre-push hooks                      |
+|                                  (tests, angular build, check-gen)   |
+|                                                                      |
++----------------------------------------------------------------------+
+|                                                                      |
+|  CI Pipeline (.github/workflows/ci.yaml)                             |
+|  ---------------------------------------                             |
+|  Pull Request -> lightweight setup -> ops ci check -> pre-commit     |
+|                  (uv, node, buf)                                     |
+|                                                                      |
+|  Local Testing: ops ci test ci (uses act)                            |
+|                                                                      |
++----------------------------------------------------------------------+
+|                                                                      |
+|  Devcontainer Verification (runs only when .devcontainer/ changes)   |
+|  -----------------------------------------------------------------   |
+|  Uses dorny/paths-filter to detect changes, builds image to verify   |
+|                                                                      |
++----------------------------------------------------------------------+
+|                                                                      |
+|  Release Pipeline                                                    |
+|  ----------------                                                    |
+|  ops release patch|minor|major                                       |
+|        |                                                             |
+|        +--> Create release PR (version bumps)                        |
+|        +--> Wait for CI                                              |
+|        +--> Merge PR                                                 |
+|        +--> Create version tag ---> .github/workflows/publish.yaml   |
+|                                        |                             |
+|                                        +--> PyPI (OIDC)              |
+|                                        +--> npm (OIDC)               |
+|                                                                      |
+|  Local Testing: ops ci test publish (dry-run mode)                   |
+|                                                                      |
++----------------------------------------------------------------------+
+```
+
+---
+
+## The ops CLI
+
+The **ops CLI** is the unified developer interface for all build, test, quality, and release operations. It consolidates what was previously spread across Makefiles, shell scripts, and standalone Python scripts into a single, type-safe Python CLI.
+
+**Package**: `ops/` (workspace member, installed via `uv sync`)
+
+**Entry point**: `ops` (available after `uv sync`)
+
+For detailed implementation information, see the [ops CLI TDD](ops-cli/tdd.md).
+
+### Command Structure
+
+```
+ops
++-- build                    # Build artifacts
+|   +-- protos               # Generate proto code (Python + TypeScript)
+|   +-- frontend             # Build Angular production bundle
+|   +-- packages             # Build Python wheel/sdist
+|   +-- all                  # Full build (default)
++-- dev                      # Development servers
+|   +-- server               # Start backend gRPC server
+|   +-- frontend             # Start frontend dev server
++-- docker                   # Docker operations
+|   +-- up                   # Start containers
+|   +-- down                 # Stop containers
+|   +-- logs                 # View container logs
+|   +-- ps                   # List running containers
++-- quality                  # Quality checks
+|   +-- check                # Run all checks (default)
+|   +-- fix                  # Run with auto-fix
+|   +-- test                 # Run test suite
+|       +-- unit             # Unit tests only
+|       +-- integration      # Integration tests
+|       +-- e2e              # E2E tests (requires Docker)
++-- ci                       # CI pipeline commands
+|   +-- check                # Run full CI validation (default)
+|   +-- build                # Build release artifacts
+|   +-- verify               # Verify artifacts work
+|   +-- matrix               # Output CI matrix as JSON
+|   +-- test                 # Run workflows locally with act
++-- release                  # Release management
+|   +-- patch                # Bump patch version (x.y.Z)
+|   +-- minor                # Bump minor version (x.Y.0)
+|   +-- major                # Bump major version (X.0.0)
+|   +-- status               # Show current version info
+```
+
+### Global Options
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--help` | `-h` | Show help for command |
+| `--verbose` | `-v` | Show detailed output |
+| `--version` | | Show ops version |
+
+### Quick Reference
+
+```bash
+# Development
+ops dev server               # Start backend gRPC server
+ops dev frontend             # Start frontend dev server
+ops docker up                # Start via Docker Compose
+
+# Quality & Testing
+ops quality                  # Run quality checks (lint, format, type check)
+ops quality fix              # Auto-fix issues
+ops quality test             # Run all tests
+ops quality test unit        # Run unit tests only
+ops quality test e2e         # Run E2E tests
+
+# CI (same checks as GitHub Actions)
+ops ci check                 # Run full CI validation
+ops ci check --skip-e2e      # Skip slow E2E tests
+ops ci test ci               # Run ci.yaml locally with act
+ops ci test publish          # Run publish.yaml in dry-run mode
+
+# Building
+ops build                    # Build everything
+ops build protos             # Generate proto code only
+ops build frontend           # Build Angular bundle
+ops build --clean            # Clean then build
+
+# Releasing
+ops release status           # Show current version
+ops release patch            # Create patch release
+ops release minor            # Create minor release
+ops release patch --dry-run  # Preview release steps
 ```
 
 ---
@@ -102,8 +211,6 @@ Pre-commit is the **single source of truth** for all quality checks. It runs the
 
 E2E tests are skipped during `pre-push` when **only** documentation/config files are changed.
 
-**Script**: `scripts/should-run-e2e.sh`
-
 Skip patterns (files that cannot affect runtime):
 - `mddocs/` - Documentation
 - `.github/agents/` - Copilot agent definitions
@@ -112,19 +219,18 @@ Skip patterns (files that cannot affect runtime):
 - `.vscode/` - Editor configuration
 - `git-town.toml` - Git workflow config
 
-To add new skip patterns, edit the `SKIP_PATTERNS` array in the script.
-
 **Running Checks**:
 
 ```bash
 # Quick check (commit-stage hooks)
+ops quality check
+# or directly:
 uv run pre-commit run --all-files
 
 # Full check (all stages including tests)
+ops ci check
+# or directly:
 uv run pre-commit run --all-files --hook-stage manual
-
-# Via Makefile
-make quality  # Quick check
 ```
 
 ### Python Quality
@@ -177,27 +283,6 @@ make quality  # Quick check
 
 ## Build Systems
 
-### Makefile
-
-**File**: `Makefile`
-
-The Makefile provides developer-friendly commands that wrap underlying tools.
-
-**Key Targets**:
-
-| Target | Command | Description |
-|--------|---------|-------------|
-| `help` | `make help` | Show all available commands |
-| `generate` | `make generate` | Generate proto code |
-| `server` | `make server` | Start backend gRPC server |
-| `frontend` | `make frontend` | Start frontend dev server |
-| `quality` | `make quality` | Run pre-commit checks |
-| `test` | `make test` | Run unit + integration tests |
-| `test-e2e` | `make test-e2e` | Run E2E tests (requires Docker) |
-| `build` | `make build` | Full release build |
-| `bundle` | `make bundle` | Bundle frontend into server |
-| `clean` | `make clean` | Remove generated files |
-
 ### Proto Generation
 
 **Files**: `buf.yaml`, `buf.gen.yaml`
@@ -216,22 +301,19 @@ Proto generation uses **buf** to generate both Python (betterproto) and TypeScri
 **Commands**:
 
 ```bash
-make generate        # Generate with caching
-make clean generate  # Force regeneration
+ops build protos         # Generate with caching
+ops build protos --clean # Force regeneration
 ```
 
 ### Package Building
 
-**File**: `scripts/build.sh`
-
-Unified build script with granular control:
+The ops CLI provides unified build commands with dependency management:
 
 ```bash
-./scripts/build.sh protos    # Proto generation only
-./scripts/build.sh ts        # TypeScript packages only
-./scripts/build.sh frontend  # Frontend bundle only
-./scripts/build.sh packages  # Python packages only
-./scripts/build.sh all       # Full build
+ops build protos     # Proto generation only
+ops build frontend   # Frontend bundle (auto-generates protos)
+ops build packages   # Python packages (auto-generates protos + frontend)
+ops build            # Full build (all of the above)
 ```
 
 **Published Packages**:
@@ -294,6 +376,16 @@ The devcontainer provides a consistent development environment with all tools pr
 - Backend only with ephemeral SQLite database
 - Used by pytest-docker for E2E tests
 
+**Commands**:
+
+```bash
+ops docker up        # Start containers (foreground)
+ops docker up -d     # Start containers (background)
+ops docker down      # Stop containers
+ops docker logs      # View container logs
+ops docker ps        # List running containers
+```
+
 ---
 
 ## Testing
@@ -310,8 +402,9 @@ The devcontainer provides a consistent development environment with all tools pr
 **Commands**:
 
 ```bash
-make test       # Unit + integration (no Docker)
-make test-e2e   # E2E tests (requires Docker)
+ops quality test           # All tests
+ops quality test unit      # Unit + integration (no Docker)
+ops quality test e2e       # E2E tests (requires Docker)
 
 # Direct pytest
 uv run pytest server/tests/unit -v
@@ -366,19 +459,50 @@ npx playwright test -c playwright.config.ts
 
 **File**: `.github/workflows/ci.yaml`
 
-The CI pipeline runs in a cached devcontainer image:
+The CI pipeline uses a **lightweight setup** for fast startup (~30s vs ~5min with devcontainer):
 
-1. Checkout code
-2. Login to GHCR (for cached image)
-3. Run `./scripts/presubmit.sh` inside devcontainer
+1. Setup uv with `astral-sh/setup-uv@v7`
+2. Setup Node.js with `actions/setup-node@v4`
+3. Install buf CLI globally
+4. Install dependencies (`npm ci`, `uv sync`)
+5. Run `ops ci check`
 
-**Presubmit Script** (`scripts/presubmit.sh`):
+**Devcontainer Verification Job**:
+
+A separate job verifies the devcontainer still builds when relevant files change:
+- `.devcontainer/**`
+- `pyproject.toml`, `uv.lock`
+- `package.json`, `package-lock.json`
+
+This ensures devcontainer changes don't break builds while keeping the main CI fast.
+
+**CI Check Command** (`ops ci check`):
 
 1. Install dependencies (`npm install`, `uv sync`)
 2. Build TS packages (required for frontend)
 3. Run all pre-commit hooks with `--hook-stage manual`
+4. Run all test suites
 
 This ensures CI runs **exactly the same checks** as local pre-push hooks.
+
+**Local CI Reproduction**:
+
+```bash
+# Run the exact same checks that CI runs
+ops ci check
+
+# Skip slow E2E tests
+ops ci check --skip-e2e
+
+# Stop on first failure
+ops ci check --fail-fast
+
+# Run workflow locally with act (requires Docker)
+ops ci test ci
+
+# Test publish workflow in dry-run mode
+ops ci test publish
+```
 
 ---
 
@@ -386,14 +510,14 @@ This ensures CI runs **exactly the same checks** as local pre-push hooks.
 
 ### Release Process
 
-**File**: `scripts/ship.sh`
+**Command**: `ops release {patch|minor|major}`
 
 Automated release process:
 
 ```bash
-./scripts/ship.sh patch   # Bug fixes (0.1.0 → 0.1.1)
-./scripts/ship.sh minor   # New features (0.1.0 → 0.2.0)
-./scripts/ship.sh major   # Breaking changes (0.1.0 → 1.0.0)
+ops release patch   # Bug fixes (0.1.0 -> 0.1.1)
+ops release minor   # New features (0.1.0 -> 0.2.0)
+ops release major   # Breaking changes (0.1.0 -> 1.0.0)
 ```
 
 **Steps**:
@@ -404,15 +528,23 @@ Automated release process:
 5. Create and push version tag
 6. Tag push triggers publish workflow
 
+**Options**:
+
+| Flag | Description |
+|------|-------------|
+| `--yes`, `-y` | Auto-confirm prompts (fully automated) |
+| `--skip-ci` | Don't wait for CI checks |
+| `--dry-run`, `-n` | Show what would happen without executing |
+| `--verbose`, `-v` | Show detailed output |
+
 **Version Synchronization**:
-- `scripts/get_next_version.py`: Calculate next version
 - `scripts/sync_versions.py`: Update all package versions
 
-All packages are **version-locked** — they all bump to the same version.
+All packages are **version-locked** - they all bump to the same version.
 
 ### OIDC Trusted Publishers
 
-**No stored secrets** — publishing uses OIDC for authentication.
+**No stored secrets** - publishing uses OIDC for authentication.
 
 **PyPI**:
 - Configured in PyPI trusted publisher settings
@@ -423,6 +555,22 @@ All packages are **version-locked** — they all bump to the same version.
 - Uses OIDC provenance
 - Published with `--provenance` flag
 
+### Testing Publish Locally
+
+The publish workflow supports a **dry-run mode** for local testing:
+
+```bash
+# Run publish workflow locally (skips actual publishing)
+ops ci test publish
+```
+
+This sets `DRY_RUN=true` which:
+- Runs the full build and verification steps
+- Skips the `publish-pypi` and `publish-npm` jobs
+- Validates the workflow without risking accidental releases
+
+The workflow also supports manual dispatch via GitHub UI with an optional dry-run checkbox.
+
 ---
 
 ## Common Commands
@@ -431,37 +579,44 @@ All packages are **version-locked** — they all bump to the same version.
 
 ```bash
 # Start development servers
-make server      # Terminal 1: Backend
-make frontend    # Terminal 2: Frontend
+ops dev server       # Terminal 1: Backend
+ops dev frontend     # Terminal 2: Frontend
 
 # Or use Docker
-docker compose up
+ops docker up
 ```
 
 ### Before Committing
 
 ```bash
 # Quick quality check
-make quality
+ops quality check
 
-# Or directly
-uv run pre-commit run --all-files
+# Auto-fix issues
+ops quality fix
 ```
 
 ### Before Pushing
 
 ```bash
-# Full check including tests
-uv run pre-commit run --all-files --hook-stage manual
+# Full check including tests (same as CI)
+ops ci check
 
-# Or run presubmit (same thing)
-./scripts/presubmit.sh
+# Or run pre-commit directly
+uv run pre-commit run --all-files --hook-stage manual
 ```
 
 ### Releasing
 
 ```bash
-./scripts/ship.sh patch  # or minor/major
+# Show current version and status
+ops release status
+
+# Create a release
+ops release patch    # or minor/major
+
+# Preview without executing
+ops release patch --dry-run
 ```
 
 ---
@@ -470,8 +625,8 @@ uv run pre-commit run --all-files --hook-stage manual
 
 | File | Purpose |
 |------|---------|
+| `ops/` | Unified developer CLI (Python package) |
 | `.pre-commit-config.yaml` | Quality gates (single source of truth) |
-| `Makefile` | Developer commands |
 | `pyproject.toml` | Python workspace, ruff, pyright, pytest config |
 | `package.json` | npm workspace config |
 | `buf.yaml` | Protobuf linting rules |
@@ -482,6 +637,5 @@ uv run pre-commit run --all-files --hook-stage manual
 | `docker-compose.test.yaml` | Test stack |
 | `.github/workflows/ci.yaml` | CI pipeline |
 | `.github/workflows/publish.yaml` | Publishing pipeline |
-| `scripts/presubmit.sh` | Local CI equivalent |
-| `scripts/build.sh` | Unified build |
-| `scripts/ship.sh` | Release automation |
+| `scripts/sync_versions.py` | Version synchronization |
+| `mddocs/development/ops-cli/tdd.md` | ops CLI design document |

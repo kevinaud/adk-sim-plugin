@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass
+from typing import Self
 
 DEFAULT_SERVER_URL = "http://localhost:50051"
 
@@ -21,7 +22,7 @@ class PluginConfig:
   session_description: str | None = None
 
   @classmethod
-  def from_env(cls) -> PluginConfig:
+  def from_env(cls) -> Self:
     """Create a PluginConfig from environment variables.
 
     Environment variables:
@@ -53,8 +54,8 @@ class PluginConfig:
 
   @classmethod
   def merge(
-    cls, constructor_args: PluginConfig | None, env_config: PluginConfig
-  ) -> PluginConfig:
+    cls, constructor_args: "PluginConfig | None", env_config: "PluginConfig"
+  ) -> "PluginConfig":
     """Merge constructor arguments with environment configuration.
 
     Constructor args take precedence over env config. For each field,

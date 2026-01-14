@@ -5,16 +5,12 @@ queryable fields (event_id, session_id, timestamp, turn_id, payload_type)
 promoted to dedicated columns.
 """
 
-from typing import TYPE_CHECKING
-
 import betterproto
 from adk_sim_protos.adksim.v1 import SessionEvent
 from sqlalchemy import select
 
+from adk_sim_server.persistence.database import Database
 from adk_sim_server.persistence.schema import events
-
-if TYPE_CHECKING:
-  from adk_sim_server.persistence.database import Database
 
 
 class EventRepository:

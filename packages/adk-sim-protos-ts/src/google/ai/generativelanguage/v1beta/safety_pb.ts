@@ -16,20 +16,16 @@
 // @generated from file google/ai/generativelanguage/v1beta/safety.proto (package google.ai.generativelanguage.v1beta, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage } from '@bufbuild/protobuf/codegenv2';
-import { enumDesc, fileDesc, messageDesc } from '@bufbuild/protobuf/codegenv2';
-import { file_google_api_field_behavior } from '../../../api/field_behavior_pb';
-import type { Message } from '@bufbuild/protobuf';
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import { file_google_api_field_behavior } from "../../../api/field_behavior_pb";
+import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file google/ai/generativelanguage/v1beta/safety.proto.
  */
-export const file_google_ai_generativelanguage_v1beta_safety: GenFile =
-  /*@__PURE__*/
-  fileDesc(
-    'CjBnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9zYWZldHkucHJvdG8SI2dvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhIssBCg1Db250ZW50RmlsdGVyElAKBnJlYXNvbhgBIAEoDjJALmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvbnRlbnRGaWx0ZXIuQmxvY2tlZFJlYXNvbhIUCgdtZXNzYWdlGAIgASgJSACIAQEiRgoNQmxvY2tlZFJlYXNvbhIeChpCTE9DS0VEX1JFQVNPTl9VTlNQRUNJRklFRBAAEgoKBlNBRkVUWRABEgkKBU9USEVSEAJCCgoIX21lc3NhZ2UimAEKDlNhZmV0eUZlZWRiYWNrEkEKBnJhdGluZxgBIAEoCzIxLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLlNhZmV0eVJhdGluZxJDCgdzZXR0aW5nGAIgASgLMjIuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2FmZXR5U2V0dGluZyKqAgoMU2FmZXR5UmF0aW5nEkgKCGNhdGVnb3J5GAMgASgOMjEuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuSGFybUNhdGVnb3J5QgPgQQISWwoLcHJvYmFiaWxpdHkYBCABKA4yQS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5TYWZldHlSYXRpbmcuSGFybVByb2JhYmlsaXR5QgPgQQISDwoHYmxvY2tlZBgFIAEoCCJiCg9IYXJtUHJvYmFiaWxpdHkSIAocSEFSTV9QUk9CQUJJTElUWV9VTlNQRUNJRklFRBAAEg4KCk5FR0xJR0lCTEUQARIHCgNMT1cQAhIKCgZNRURJVU0QAxIICgRISUdIEAQi2AIKDVNhZmV0eVNldHRpbmcSSAoIY2F0ZWdvcnkYAyABKA4yMS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5IYXJtQ2F0ZWdvcnlCA+BBAhJdCgl0aHJlc2hvbGQYBCABKA4yRS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5TYWZldHlTZXR0aW5nLkhhcm1CbG9ja1RocmVzaG9sZEID4EECIp0BChJIYXJtQmxvY2tUaHJlc2hvbGQSJAogSEFSTV9CTE9DS19USFJFU0hPTERfVU5TUEVDSUZJRUQQABIXChNCTE9DS19MT1dfQU5EX0FCT1ZFEAESGgoWQkxPQ0tfTUVESVVNX0FORF9BQk9WRRACEhMKD0JMT0NLX09OTFlfSElHSBADEg4KCkJMT0NLX05PTkUQBBIHCgNPRkYQBSqDAwoMSGFybUNhdGVnb3J5Eh0KGUhBUk1fQ0FURUdPUllfVU5TUEVDSUZJRUQQABIcChhIQVJNX0NBVEVHT1JZX0RFUk9HQVRPUlkQARIaChZIQVJNX0NBVEVHT1JZX1RPWElDSVRZEAISGgoWSEFSTV9DQVRFR09SWV9WSU9MRU5DRRADEhgKFEhBUk1fQ0FURUdPUllfU0VYVUFMEAQSGQoVSEFSTV9DQVRFR09SWV9NRURJQ0FMEAUSGwoXSEFSTV9DQVRFR09SWV9EQU5HRVJPVVMQBhIcChhIQVJNX0NBVEVHT1JZX0hBUkFTU01FTlQQBxIdChlIQVJNX0NBVEVHT1JZX0hBVEVfU1BFRUNIEAgSIwofSEFSTV9DQVRFR09SWV9TRVhVQUxMWV9FWFBMSUNJVBAJEiMKH0hBUk1fQ0FURUdPUllfREFOR0VST1VTX0NPTlRFTlQQChIlCh1IQVJNX0NBVEVHT1JZX0NJVklDX0lOVEVHUklUWRALGgIIAUKXAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhQgtTYWZldHlQcm90b1ABWl1jbG91ZC5nb29nbGUuY29tL2dvL2FpL2dlbmVyYXRpdmVsYW5ndWFnZS9hcGl2MWJldGEvZ2VuZXJhdGl2ZWxhbmd1YWdlcGI7Z2VuZXJhdGl2ZWxhbmd1YWdlcGJiBnByb3RvMw',
-    [file_google_api_field_behavior],
-  );
+export const file_google_ai_generativelanguage_v1beta_safety: GenFile = /*@__PURE__*/
+  fileDesc("CjBnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9zYWZldHkucHJvdG8SI2dvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhIssBCg1Db250ZW50RmlsdGVyElAKBnJlYXNvbhgBIAEoDjJALmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvbnRlbnRGaWx0ZXIuQmxvY2tlZFJlYXNvbhIUCgdtZXNzYWdlGAIgASgJSACIAQEiRgoNQmxvY2tlZFJlYXNvbhIeChpCTE9DS0VEX1JFQVNPTl9VTlNQRUNJRklFRBAAEgoKBlNBRkVUWRABEgkKBU9USEVSEAJCCgoIX21lc3NhZ2UimAEKDlNhZmV0eUZlZWRiYWNrEkEKBnJhdGluZxgBIAEoCzIxLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLlNhZmV0eVJhdGluZxJDCgdzZXR0aW5nGAIgASgLMjIuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuU2FmZXR5U2V0dGluZyKqAgoMU2FmZXR5UmF0aW5nEkgKCGNhdGVnb3J5GAMgASgOMjEuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuSGFybUNhdGVnb3J5QgPgQQISWwoLcHJvYmFiaWxpdHkYBCABKA4yQS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5TYWZldHlSYXRpbmcuSGFybVByb2JhYmlsaXR5QgPgQQISDwoHYmxvY2tlZBgFIAEoCCJiCg9IYXJtUHJvYmFiaWxpdHkSIAocSEFSTV9QUk9CQUJJTElUWV9VTlNQRUNJRklFRBAAEg4KCk5FR0xJR0lCTEUQARIHCgNMT1cQAhIKCgZNRURJVU0QAxIICgRISUdIEAQi2AIKDVNhZmV0eVNldHRpbmcSSAoIY2F0ZWdvcnkYAyABKA4yMS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5IYXJtQ2F0ZWdvcnlCA+BBAhJdCgl0aHJlc2hvbGQYBCABKA4yRS5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5TYWZldHlTZXR0aW5nLkhhcm1CbG9ja1RocmVzaG9sZEID4EECIp0BChJIYXJtQmxvY2tUaHJlc2hvbGQSJAogSEFSTV9CTE9DS19USFJFU0hPTERfVU5TUEVDSUZJRUQQABIXChNCTE9DS19MT1dfQU5EX0FCT1ZFEAESGgoWQkxPQ0tfTUVESVVNX0FORF9BQk9WRRACEhMKD0JMT0NLX09OTFlfSElHSBADEg4KCkJMT0NLX05PTkUQBBIHCgNPRkYQBSqDAwoMSGFybUNhdGVnb3J5Eh0KGUhBUk1fQ0FURUdPUllfVU5TUEVDSUZJRUQQABIcChhIQVJNX0NBVEVHT1JZX0RFUk9HQVRPUlkQARIaChZIQVJNX0NBVEVHT1JZX1RPWElDSVRZEAISGgoWSEFSTV9DQVRFR09SWV9WSU9MRU5DRRADEhgKFEhBUk1fQ0FURUdPUllfU0VYVUFMEAQSGQoVSEFSTV9DQVRFR09SWV9NRURJQ0FMEAUSGwoXSEFSTV9DQVRFR09SWV9EQU5HRVJPVVMQBhIcChhIQVJNX0NBVEVHT1JZX0hBUkFTU01FTlQQBxIdChlIQVJNX0NBVEVHT1JZX0hBVEVfU1BFRUNIEAgSIwofSEFSTV9DQVRFR09SWV9TRVhVQUxMWV9FWFBMSUNJVBAJEiMKH0hBUk1fQ0FURUdPUllfREFOR0VST1VTX0NPTlRFTlQQChIlCh1IQVJNX0NBVEVHT1JZX0NJVklDX0lOVEVHUklUWRALGgIIAUKXAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhQgtTYWZldHlQcm90b1ABWl1jbG91ZC5nb29nbGUuY29tL2dvL2FpL2dlbmVyYXRpdmVsYW5ndWFnZS9hcGl2MWJldGEvZ2VuZXJhdGl2ZWxhbmd1YWdlcGI7Z2VuZXJhdGl2ZWxhbmd1YWdlcGJiBnByb3RvMw", [file_google_api_field_behavior]);
 
 /**
  * Content filtering metadata associated with processing a single request.
@@ -39,7 +35,7 @@ export const file_google_ai_generativelanguage_v1beta_safety: GenFile =
  *
  * @generated from message google.ai.generativelanguage.v1beta.ContentFilter
  */
-export type ContentFilter = Message<'google.ai.generativelanguage.v1beta.ContentFilter'> & {
+export type ContentFilter = Message<"google.ai.generativelanguage.v1beta.ContentFilter"> & {
   /**
    * The reason content was blocked during request processing.
    *
@@ -59,8 +55,7 @@ export type ContentFilter = Message<'google.ai.generativelanguage.v1beta.Content
  * Describes the message google.ai.generativelanguage.v1beta.ContentFilter.
  * Use `create(ContentFilterSchema)` to create a new message.
  */
-export const ContentFilterSchema: GenMessage<ContentFilter> =
-  /*@__PURE__*/
+export const ContentFilterSchema: GenMessage<ContentFilter> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_safety, 0);
 
 /**
@@ -94,8 +89,7 @@ export enum ContentFilter_BlockedReason {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.ContentFilter.BlockedReason.
  */
-export const ContentFilter_BlockedReasonSchema: GenEnum<ContentFilter_BlockedReason> =
-  /*@__PURE__*/
+export const ContentFilter_BlockedReasonSchema: GenEnum<ContentFilter_BlockedReason> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_safety, 0, 0);
 
 /**
@@ -109,7 +103,7 @@ export const ContentFilter_BlockedReasonSchema: GenEnum<ContentFilter_BlockedRea
  *
  * @generated from message google.ai.generativelanguage.v1beta.SafetyFeedback
  */
-export type SafetyFeedback = Message<'google.ai.generativelanguage.v1beta.SafetyFeedback'> & {
+export type SafetyFeedback = Message<"google.ai.generativelanguage.v1beta.SafetyFeedback"> & {
   /**
    * Safety rating evaluated from content.
    *
@@ -129,8 +123,7 @@ export type SafetyFeedback = Message<'google.ai.generativelanguage.v1beta.Safety
  * Describes the message google.ai.generativelanguage.v1beta.SafetyFeedback.
  * Use `create(SafetyFeedbackSchema)` to create a new message.
  */
-export const SafetyFeedbackSchema: GenMessage<SafetyFeedback> =
-  /*@__PURE__*/
+export const SafetyFeedbackSchema: GenMessage<SafetyFeedback> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_safety, 1);
 
 /**
@@ -144,7 +137,7 @@ export const SafetyFeedbackSchema: GenMessage<SafetyFeedback> =
  *
  * @generated from message google.ai.generativelanguage.v1beta.SafetyRating
  */
-export type SafetyRating = Message<'google.ai.generativelanguage.v1beta.SafetyRating'> & {
+export type SafetyRating = Message<"google.ai.generativelanguage.v1beta.SafetyRating"> & {
   /**
    * Required. The category for this rating.
    *
@@ -171,8 +164,7 @@ export type SafetyRating = Message<'google.ai.generativelanguage.v1beta.SafetyRa
  * Describes the message google.ai.generativelanguage.v1beta.SafetyRating.
  * Use `create(SafetyRatingSchema)` to create a new message.
  */
-export const SafetyRatingSchema: GenMessage<SafetyRating> =
-  /*@__PURE__*/
+export const SafetyRatingSchema: GenMessage<SafetyRating> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_safety, 2);
 
 /**
@@ -223,8 +215,7 @@ export enum SafetyRating_HarmProbability {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.SafetyRating.HarmProbability.
  */
-export const SafetyRating_HarmProbabilitySchema: GenEnum<SafetyRating_HarmProbability> =
-  /*@__PURE__*/
+export const SafetyRating_HarmProbabilitySchema: GenEnum<SafetyRating_HarmProbability> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_safety, 2, 0);
 
 /**
@@ -235,7 +226,7 @@ export const SafetyRating_HarmProbabilitySchema: GenEnum<SafetyRating_HarmProbab
  *
  * @generated from message google.ai.generativelanguage.v1beta.SafetySetting
  */
-export type SafetySetting = Message<'google.ai.generativelanguage.v1beta.SafetySetting'> & {
+export type SafetySetting = Message<"google.ai.generativelanguage.v1beta.SafetySetting"> & {
   /**
    * Required. The category for this setting.
    *
@@ -255,8 +246,7 @@ export type SafetySetting = Message<'google.ai.generativelanguage.v1beta.SafetyS
  * Describes the message google.ai.generativelanguage.v1beta.SafetySetting.
  * Use `create(SafetySettingSchema)` to create a new message.
  */
-export const SafetySettingSchema: GenMessage<SafetySetting> =
-  /*@__PURE__*/
+export const SafetySettingSchema: GenMessage<SafetySetting> = /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_safety, 3);
 
 /**
@@ -311,8 +301,7 @@ export enum SafetySetting_HarmBlockThreshold {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.SafetySetting.HarmBlockThreshold.
  */
-export const SafetySetting_HarmBlockThresholdSchema: GenEnum<SafetySetting_HarmBlockThreshold> =
-  /*@__PURE__*/
+export const SafetySetting_HarmBlockThresholdSchema: GenEnum<SafetySetting_HarmBlockThreshold> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_safety, 3, 0);
 
 /**
@@ -417,6 +406,5 @@ export enum HarmCategory {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.HarmCategory.
  */
-export const HarmCategorySchema: GenEnum<HarmCategory> =
-  /*@__PURE__*/
+export const HarmCategorySchema: GenEnum<HarmCategory> = /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_safety, 0);

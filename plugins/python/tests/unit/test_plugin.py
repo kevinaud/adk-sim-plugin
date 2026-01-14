@@ -4,17 +4,20 @@ import asyncio
 import contextlib
 import io
 import sys
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
 
 import pytest
 from adk_agent_sim.plugin import SimulatorPlugin
 from adk_sim_protos.adksim.v1 import (
+  CreateSessionRequest,
   CreateSessionResponse,
   SessionEvent,
   SimulatorSession,
+  SubmitRequestRequest,
   SubmitRequestResponse,
+  SubscribeRequest,
   SubscribeResponse,
 )
 from adk_sim_protos.google.ai.generativelanguage.v1beta import (
@@ -30,15 +33,6 @@ from hamcrest import (
   equal_to,
   is_,
 )
-
-if TYPE_CHECKING:
-  from collections.abc import AsyncIterator
-
-  from adk_sim_protos.adksim.v1 import (
-    CreateSessionRequest,
-    SubmitRequestRequest,
-    SubscribeRequest,
-  )
 
 
 class TestSimulatorPlugin:
@@ -1113,9 +1107,9 @@ class TestPluginReconnection:
       delay1 = retry_times[1] - retry_times[0]
       delay2 = retry_times[2] - retry_times[1]
       # Second delay should be approximately 2x the first
-      assert delay2 >= delay1 * 1.5, (
-        f"Backoff not increasing: {delay1:.3f} -> {delay2:.3f}"
-      )
+      assert (
+        delay2 >= delay1 * 1.5
+      ), f"Backoff not increasing: {delay1:.3f} -> {delay2:.3f}"
 
   @pytest.mark.asyncio
   async def test_reconnection_uses_existing_session_id(self) -> None:

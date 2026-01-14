@@ -5,18 +5,13 @@ queryable fields extracted into SQL columns for efficient filtering.
 """
 
 import base64
-from typing import TYPE_CHECKING
 
-from adk_sim_protos.adksim.v1 import SessionStatus
+from adk_sim_protos.adksim.v1 import SessionStatus, SimulatorSession
 from sqlalchemy import select
 
 from adk_sim_server.persistence.core import PaginatedSessions
+from adk_sim_server.persistence.database import Database
 from adk_sim_server.persistence.schema import sessions
-
-if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import SimulatorSession
-
-  from adk_sim_server.persistence.database import Database
 
 
 class SessionRepository:
