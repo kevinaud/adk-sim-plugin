@@ -21,6 +21,7 @@
   - [S3PR4: Extend SessionFacade with subscribe and validation methods](#s3pr4-extend-sessionfacade-with-subscribe-and-validation-methods)
   - [S3PR5: Create EventStreamComponent container](#s3pr5-create-eventstreamcomponent-container)
   - [S3PR6: Create EventBlockComponent](#s3pr6-create-eventblockcomponent)
+  - [S3PR7: Add E2E tests for session navigation and event rendering](#s3pr7-add-e2e-tests-for-session-navigation-and-event-rendering)
 - [Implementation Notes](#implementation-notes)
   - [Patterns to Follow](#patterns-to-follow)
   - [Gotchas to Avoid](#gotchas-to-avoid)
@@ -179,14 +180,14 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 - [Connection Lifecycle with Auto-Reconnect](../research/prototype-findings.md#connection-lifecycle-with-auto-reconnect) - Prototype pattern
 
 **Acceptance Criteria**:
-- [ ] `ReconnectConfig` interface with `maxAttempts`, `baseDelayMs`, `maxDelayMs`
-- [ ] `ReconnectStrategy.reset()` clears attempt counter
-- [ ] `ReconnectStrategy.canRetry()` returns true while under max attempts
-- [ ] `ReconnectStrategy.getNextDelay()` returns exponentially increasing delays capped at max
-- [ ] `ReconnectStrategy.currentAttempt` getter returns current attempt count
-- [ ] Default config: 5 attempts, 1000ms base, 30000ms max
-- [ ] Unit tests verify backoff calculations (1s, 2s, 4s, 8s, 16s→30s)
-- [ ] Presubmit passes
+- [x] `ReconnectConfig` interface with `maxAttempts`, `baseDelayMs`, `maxDelayMs`
+- [x] `ReconnectStrategy.reset()` clears attempt counter
+- [x] `ReconnectStrategy.canRetry()` returns true while under max attempts
+- [x] `ReconnectStrategy.getNextDelay()` returns exponentially increasing delays capped at max
+- [x] `ReconnectStrategy.currentAttempt` getter returns current attempt count
+- [x] Default config: 5 attempts, 1000ms base, 30000ms max
+- [x] Unit tests verify backoff calculations (1s, 2s, 4s, 8s, 16s→30s)
+- [x] Presubmit passes
 
 ---
 
@@ -283,6 +284,34 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 
 ---
 
+### S3PR7: Add E2E tests for session navigation and event rendering
+
+**Estimated Lines**: ~150 lines
+**Depends On**: S3PR2, S3PR6
+
+**Goal**: Add Playwright E2E tests covering session navigation (including guard validation) and event stream rendering added in Sprint 3.
+
+**Files to Create/Modify**:
+- `frontend/tests/e2e/session-navigation.spec.ts` - E2E tests for session route and guard
+- `frontend/tests/e2e/__snapshots__/session-navigation.spec.ts-snapshots/` - Screenshot baselines
+
+**Background Reading**:
+- [E2E Test Example](./research/playwright-testing-research.md#e2e-test-example) - Test structure pattern
+- [Docker Compose for E2E](./research/playwright-testing-research.md#docker-compose-for-e2e) - Test environment setup
+- [Session Validation on Navigation](./research/prototype-findings.md#session-validation-on-navigation) - Guard behavior to verify
+
+**Acceptance Criteria**:
+- [ ] Test navigates to valid session URL and verifies SessionComponent loads
+- [ ] Test navigates to invalid session ID and verifies redirect to `/` with `?error=Session+not+found`
+- [ ] Test navigates to session URL with missing ID and verifies appropriate error handling
+- [ ] Test verifies EventStreamComponent renders with empty state placeholder
+- [ ] Test verifies EventBlockComponent renders user, model, and tool block types with correct styling
+- [ ] Screenshot baselines captured for session view with event blocks
+- [ ] Tests run successfully in Docker Compose E2E environment
+- [ ] Presubmit passes
+
+---
+
 ## Implementation Notes
 
 ### Patterns to Follow
@@ -309,7 +338,7 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 
 ## Definition of Done
 
-- [ ] All 6 PRs merged to feature branch
+- [ ] All 7 PRs merged to feature branch
 - [ ] All acceptance criteria verified
 - [ ] TDD tasks checked off in frontend-tdd.md
 - [ ] No presubmit failures

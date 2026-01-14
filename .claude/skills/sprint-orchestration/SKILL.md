@@ -91,26 +91,59 @@ For each PR in scope (in dependency order):
 
 ### Phase 2: Branch Setup
 
+> ⚠️ **CRITICAL: ALWAYS USE `git town append` FOR SPRINT PRs**
+>
+> Within a sprint, **ALL branches after the first MUST use `git town append`** to maintain the stack.
+>
+> **WHY THIS MATTERS:**
+> - The sprint plan file (sprint3.md) exists on PR1's branch, NOT on main
+> - If you use `git town hack` for PR2+, you'll be on main and won't see the sprint plan
+> - Stacked branches ensure all sprint context propagates through the chain
+>
+> **THE ONLY TIME TO USE `git town hack`:**
+> - Creating the VERY FIRST PR of a sprint (PR1)
+> - That's it. Never for PR2, PR3, PR4, etc.
+
 1. **Sync all branches**:
    ```bash
    git town sync --all
    ```
    If conflicts: resolve, then `git town continue`
 
-2. **Determine parent branch**:
-   - First PR or no dependencies: parent is `main` → use `git town hack`
-   - Depends on previous PR: use `git town append`
+2. **Determine which command to use**:
 
-3. **Create branch**:
+   | Scenario | Command | Example |
+   |----------|---------|---------|
+   | **First PR of sprint** | `git town hack` | `git town hack sprint-3/pr1/gateway-methods` |
+   | **ANY subsequent PR** | `git town append` | `git town append sprint-3/pr2/route-guard` |
+
+   **NEVER use `git town hack` for PR2 or later, even if the sprint plan says "Depends On: -"**
+
+3. **Create branch** (from the correct parent):
    ```bash
-   # First PR (off main):
-   git town hack sprint-<N>/<pr-id>/<description>
+   # ONLY for the very first PR of a sprint:
+   git checkout main
+   git town hack sprint-<N>/pr1/<description>
 
-   # Subsequent PRs (stacked):
-   git town append sprint-<N>/<pr-id>/<description>
+   # For ALL other PRs (PR2, PR3, PR4, etc.):
+   # First ensure you're on the previous PR's branch!
+   git checkout sprint-<N>/pr<N-1>/<previous-description>
+   git town append sprint-<N>/pr<N>/<description>
    ```
 
-4. **Verify**: `git town branch`, `git branch --show-current`, `git status`
+4. **Verify the stack is correct**:
+   ```bash
+   git town branch
+   ```
+   Expected output for PR3:
+   ```
+     main
+       sprint-3/pr1/...
+         sprint-3/pr2/...
+   *       sprint-3/pr3/...   <-- Current branch, child of PR2
+   ```
+
+   **If your branch shows as a direct child of `main` when it should be stacked, DELETE IT and recreate with `git town append`.**
 
 See [references/git-town.md](references/git-town.md) for detailed Git Town commands.
 
@@ -259,6 +292,7 @@ Follow the merge process reference for each approved PR (oldest/parent first):
 
 ### PROHIBITED
 - MERGE ANY PR WITHOUT EXPLICIT USER APPROVAL (Critical)
+- **Use `git town hack` for any PR after PR1** (Critical - breaks sprint context)
 - Write or modify source code (delegate to implementer)
 - Run tests directly (implementer's job)
 - Use `gh run watch` (blocks agent)
@@ -268,6 +302,8 @@ Follow the merge process reference for each approved PR (oldest/parent first):
 ### REQUIRED
 - ALWAYS WAIT FOR EXPLICIT USER APPROVAL BEFORE MERGING
 - **READ [references/merge-process.md](references/merge-process.md) BEFORE ANY MERGE** (Critical)
+- **Use `git town append` for PR2+ (ALWAYS stack within a sprint)**
+- **Verify stack with `git town branch` after creating any branch**
 - Use `git town` commands for branch management
 - Pass background reading links to implementer
 - Create Draft PRs first, mark ready after CI passes
