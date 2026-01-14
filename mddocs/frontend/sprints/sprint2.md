@@ -373,12 +373,12 @@ The `GenerateContentConfig` interface contains `systemInstruction`, `temperature
 - [Round-trip Testing](../research/adk-typescript-research.md#testing-patterns) - Round-trip consistency checks
 
 **Acceptance Criteria**:
-- [ ] Round-trip test: `proto → LlmRequest → (simulate edits) → proto` preserves structure
-- [ ] `basicTextRequest` fixture with minimal request
-- [ ] `fullFeaturedRequest` fixture with all fields populated
-- [ ] Fixtures exported for use in frontend integration tests
-- [ ] Edge case tests: empty contents, undefined fields, unknown enums
-- [ ] Presubmit passes
+- [x] Round-trip test: `proto → LlmRequest → (simulate edits) → proto` preserves structure
+- [x] `basicTextRequest` fixture with minimal request
+- [x] `fullFeaturedRequest` fixture with all fields populated
+- [x] Fixtures exported for use in frontend integration tests
+- [x] Edge case tests: empty contents, undefined fields, unknown enums
+- [x] Presubmit passes
 
 ---
 
