@@ -62,4 +62,9 @@ echo "🔗 Installing pre-commit git hooks..."
 uv run pre-commit install
 uv run pre-commit install --hook-type pre-push
 
+# ------------------------------------------------------------
+# Install Claude Code
+# ------------------------------------------------------------
+curl -fsSL https://claude.ai/install.sh | bash
+
 echo "✅ Dev container initialization complete!"
