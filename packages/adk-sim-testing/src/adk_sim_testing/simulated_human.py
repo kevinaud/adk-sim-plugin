@@ -10,17 +10,17 @@ from typing import TYPE_CHECKING
 
 import betterproto
 from adk_sim_protos.adksim.v1 import (
+  SimulatorServiceStub,
   SubmitDecisionRequest,
   SubscribeRequest,
 )
+from adk_sim_protos.google.ai.generativelanguage.v1beta import (
+  GenerateContentResponse,
+)
 
 if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import (
-    SimulatorServiceStub,
-  )
   from adk_sim_protos.google.ai.generativelanguage.v1beta import (
     GenerateContentRequest,
-    GenerateContentResponse,
   )
 
 logger = logging.getLogger(__name__)

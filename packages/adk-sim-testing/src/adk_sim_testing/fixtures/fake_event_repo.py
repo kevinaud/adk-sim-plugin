@@ -5,10 +5,7 @@ for use in unit tests. This fake stores events in a list and
 implements the same async interface as the real repository.
 """
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import SessionEvent
+from adk_sim_protos.adksim.v1 import SessionEvent
 
 
 class FakeEventRepository:

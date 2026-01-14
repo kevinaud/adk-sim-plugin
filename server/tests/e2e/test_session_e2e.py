@@ -1,13 +1,12 @@
 """E2E tests for session management RPCs."""
 
-from typing import TYPE_CHECKING
-
 import pytest
 from adk_sim_protos.adksim.v1 import (
   CreateSessionRequest,
   ListSessionsRequest,
   SimulatorServiceStub,
 )
+from grpclib.client import Channel
 from hamcrest import (
   assert_that,
   greater_than,
@@ -16,9 +15,6 @@ from hamcrest import (
   is_not,
   none,
 )
-
-if TYPE_CHECKING:
-  from grpclib.client import Channel
 
 
 @pytest.mark.e2e

@@ -23,8 +23,6 @@ Requirements:
     pip install markdown-it-py pathspec
 """
 
-from __future__ import annotations
-
 import argparse
 import re
 import sys
@@ -368,7 +366,7 @@ def validate_corpus(docs_dir: Path) -> tuple[list[LinkError], list[Warning]]:
         continue
 
       # Skip non-markdown files (can't validate fragments)
-      if not target_path.suffix.lower() == ".md":
+      if target_path.suffix.lower() != ".md":
         continue
 
       # Check fragment if present

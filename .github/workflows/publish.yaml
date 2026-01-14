@@ -1,9 +1,29 @@
 name: Publish Packages
 
+# ============================================================
+# Publishing Workflow
+# ============================================================
+# Triggered by version tags (v*). Builds, verifies, and publishes
+# packages to PyPI and npm using OIDC trusted publishers.
+#
+# DRY_RUN mode (for local testing with act):
+#   - Uses workflow_dispatch with dry_run=true input
+#   - Runs build and verify steps but skips actual publishing
+#   - Used by: ops ci test publish
+# ============================================================
+
 on:
   push:
     tags:
       - 'v*'
+  # Allow manual dispatch for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (skip publishing)'
+        type: boolean
+        default: false
+
 
 permissions:
   contents: read
@@ -30,20 +50,20 @@ jobs:
           npm ci
 
       - name: Build all artifacts
-        run: ./scripts/build.sh all
+        run: uv run ops ci build
 
       - name: Verify installation
         run: |
           uv venv .verify-venv
           uv pip install --python .verify-venv adk-sim-server --find-links dist/ --prerelease=allow
-          .verify-venv/bin/python -c "import adk_sim_server; import adk_sim_protos; print('✅ Imports OK')"
+          .verify-venv/bin/python -c "import adk_sim_server; import adk_sim_protos; print('Imports OK')"
 
           # Verify frontend bundled
           .verify-venv/bin/adk-sim &
           sleep 3
           curl -s http://localhost:8080/ | grep -q "<app-root>" || exit 1
           kill %1
-          echo "✅ Frontend served correctly"
+          echo "Frontend served correctly"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -51,7 +71,18 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Dry-run summary
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "=== DRY RUN MODE ==="
+          echo "Build and verification completed successfully."
+          echo "Publishing steps will be skipped."
+          echo "Artifacts in dist/:"
+          ls -la dist/
+
   publish-pypi:
+    # Skip publishing in dry-run mode (handles both boolean and string 'true')
+    if: ${{ !inputs.dry_run }}
     needs: build-and-verify
     runs-on: ubuntu-latest
     environment: pypi
@@ -69,6 +100,8 @@ jobs:
           skip-existing: true
 
   publish-npm:
+    # Skip publishing in dry-run mode (handles both boolean and string 'true')
+    if: ${{ !inputs.dry_run }}
     needs: build-and-verify
     runs-on: ubuntu-latest
     permissions:

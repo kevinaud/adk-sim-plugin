@@ -7,10 +7,9 @@ sessions while maintaining sequential processing within each session.
 
 import asyncio
 from collections import defaultdict
-from typing import TYPE_CHECKING, TypeVar
+from typing import TypeVar
 
-if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import SessionEvent
+from adk_sim_protos.adksim.v1 import SessionEvent
 
 T = TypeVar("T")
 

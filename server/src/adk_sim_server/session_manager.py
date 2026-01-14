@@ -7,16 +7,14 @@ fast active session lookups.
 
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
 
 from adk_sim_protos.adksim.v1 import SimulatorSession
 
-if TYPE_CHECKING:
-  from adk_sim_server.persistence import (
-    PaginatedSessions,
-    SessionEventRepository,
-    SessionRepositoryProtocol,
-  )
+from adk_sim_server.persistence import (
+  PaginatedSessions,
+  SessionEventRepository,
+  SessionRepositoryProtocol,
+)
 
 
 class SessionManager:

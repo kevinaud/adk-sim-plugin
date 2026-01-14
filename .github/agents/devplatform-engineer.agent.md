@@ -147,6 +147,6 @@ Every infrastructure file should be well-commented:
 
 - **Always read `devplatform.md` first** — it's your knowledge base
 - **Always update `devplatform.md` after changes** — keep it current
-- **Verify locally before proposing CI changes** — use `make quality`
+- **Verify locally before proposing CI changes** — use `ops quality`
 - **Preserve backward compatibility** — don't break existing developer workflows
 - **Consider all environments** — local, CI, and production may differ

@@ -11,12 +11,9 @@ could be missed during the subscription process.
 
 import asyncio
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from collections.abc import AsyncIterator, Awaitable, Callable
 
-if TYPE_CHECKING:
-  from collections.abc import AsyncIterator, Awaitable, Callable
-
-  from adk_sim_protos.adksim.v1 import SessionEvent
+from adk_sim_protos.adksim.v1 import SessionEvent
 
 
 class EventBroadcaster:

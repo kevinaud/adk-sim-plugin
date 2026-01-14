@@ -9,6 +9,7 @@ members = [
     "adk-sim-server",
     "adk-sim-testing",
     "adk-sim-workspace",
+    "ops",
 ]
 
 [[package]]
@@ -177,6 +178,7 @@ dev = [
     { name = "betterproto", extra = ["compiler"] },
     { name = "grpcio-tools" },
     { name = "ipykernel" },
+    { name = "ops" },
     { name = "pre-commit" },
     { name = "pyhamcrest" },
     { name = "pyright" },
@@ -201,6 +203,7 @@ dev = [
     { name = "betterproto", extras = ["compiler"], specifier = ">=2.0.0b7" },
     { name = "grpcio-tools", specifier = ">=1.60.0" },
     { name = "ipykernel", specifier = ">=7.1.0" },
+    { name = "ops", editable = "ops" },
     { name = "pre-commit", specifier = ">=4.0.0" },
     { name = "pyhamcrest", specifier = ">=2.1.0" },
     { name = "pyright", specifier = ">=1.1.407" },
@@ -1921,6 +1924,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/1b/90701d91e6300d9f2fb352153fb1721ed99ed1f6ea14fa992c756016e63a/opentelemetry_semantic_conventions-0.58b0.tar.gz", hash = "sha256:6bd46f51264279c433755767bb44ad00f1c9e2367e1b42af563372c5a6fa0c25", size = 129867, upload-time = "2025-09-11T10:29:12.597Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/07/90/68152b7465f50285d3ce2481b3aec2f82822e3f52e5152eeeaf516bab841/opentelemetry_semantic_conventions-0.58b0-py3-none-any.whl", hash = "sha256:5564905ab1458b96684db1340232729fce3b5375a06e140e8904c78e4f815b28", size = 207954, upload-time = "2025-09-11T10:28:59.218Z" },
+]
+
+[[package]]
+name = "ops"
+version = "0.1.0"
+source = { editable = "ops" }
+dependencies = [
+    { name = "rich" },
+    { name = "typer" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "rich", specifier = ">=13.0.0" },
+    { name = "typer", specifier = ">=0.15.0" },
 ]
 
 [[package]]

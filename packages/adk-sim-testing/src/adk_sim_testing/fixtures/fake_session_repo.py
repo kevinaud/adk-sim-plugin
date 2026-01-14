@@ -5,13 +5,10 @@ for use in unit tests. This fake stores sessions in a dictionary and
 implements the same async interface as the real repository.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from adk_sim_protos.adksim.v1 import SessionStatus
+from adk_sim_protos.adksim.v1 import SessionStatus, SimulatorSession
 from adk_sim_server.persistence.core import PaginatedSessions
-
-if TYPE_CHECKING:
-  from adk_sim_protos.adksim.v1 import SimulatorSession
 
 
 class FakeSessionRepository:

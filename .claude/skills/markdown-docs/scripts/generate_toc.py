@@ -18,8 +18,6 @@ Requirements:
     pip install markdown-it-py
 """
 
-from __future__ import annotations
-
 import argparse
 import re
 import sys
@@ -160,10 +158,7 @@ def generate_toc_content(headings: list[Heading], min_level: int = 2) -> str:
     indent = "  " * (h.level - base_level)
 
     # Determine anchor - use full path if ambiguous
-    if slug_counts[h.slug] > 1:
-      anchor = build_heading_path(h, headings)
-    else:
-      anchor = h.slug
+    anchor = build_heading_path(h, headings) if slug_counts[h.slug] > 1 else h.slug
 
     lines.append(f"{indent}- [{h.text}](#{anchor})")
 
@@ -301,14 +296,14 @@ def update_toc(content: str, dry_run: bool = False) -> tuple[str, bool]:
       return raw_content, False
 
     # Replace existing ToC
-    new_lines = lines[:start] + [toc_section, ""] + lines[end:]
+    new_lines = [*lines[:start], toc_section, "", *lines[end:]]
     return "\n".join(new_lines), True
 
   # Insert new ToC
   insert_at = find_insertion_point(lines, headings, frontmatter_lines)
 
   # Add blank line before and after ToC
-  new_lines = lines[:insert_at] + ["", toc_section, ""] + lines[insert_at:]
+  new_lines = [*lines[:insert_at], "", toc_section, "", *lines[insert_at:]]
 
   # Clean up excessive blank lines
   result = "\n".join(new_lines)
@@ -385,7 +380,7 @@ Examples:
     sys.exit(1)
 
   if path.is_file():
-    if not path.suffix.lower() == ".md":
+    if path.suffix.lower() != ".md":
       print(f"Warning: File does not have .md extension: {path}", file=sys.stderr)
     process_file(path, args.dry_run)
   else:

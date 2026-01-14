@@ -35,25 +35,25 @@ docker/                 # Dockerfiles
 
 ## Commands
 
-Use the Makefile for all common operations:
+Use the `ops` CLI for all common operations:
 
 ```bash
-make help           # Show all available commands
-make generate       # Generate proto code (Python + TypeScript)
-make server         # Start backend gRPC server
-make frontend       # Start Angular dev server
-make test           # Run all tests
-make test-unit      # Run unit tests only
-make test-int       # Run integration tests only
-make quality        # Run quality checks (lint/format via pre-commit)
-make docker-up      # Start services via Docker Compose
+ops --help              # Show all available commands
+ops build protos        # Generate proto code (Python + TypeScript)
+ops dev server          # Start backend gRPC server
+ops dev frontend        # Start Angular dev server
+ops quality test        # Run all tests
+ops quality test unit   # Run unit tests only
+ops quality test integration  # Run integration tests only
+ops quality             # Run quality checks (lint/format via pre-commit)
+ops docker up           # Start services via Docker Compose
 ```
 
 Quality gates are defined in `.pre-commit-config.yaml` (single source of truth):
 
 ```bash
-./scripts/presubmit.sh                                 # Full quality + tests (must pass before push)
-uv run pre-commit run --all-files                      # Quick quality check (commit-stage hooks)
+ops ci check                                           # Full quality + tests (must pass before push)
+ops quality                                            # Quick quality check (commit-stage hooks)
 uv run pre-commit run --all-files --hook-stage manual  # All hooks including full test suite
 ```
 

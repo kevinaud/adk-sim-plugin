@@ -40,18 +40,15 @@ Quality gates are defined in `.pre-commit-config.yaml` (single source of truth).
 
 Run quality checks:
 ```bash
-uv run pre-commit run --all-files    # Quick check (lint/format)
-./scripts/presubmit.sh               # Full check including tests (must pass before push)
+ops quality              # Quick check (lint/format)
+ops ci check             # Full check including tests (must pass before push)
 ```
 
 ### Testing
 
 Run tests:
 ```bash
-uv run pytest
-```
-
-Run integration tests:
-```bash
-uv run pytest --run-integration
+ops quality test         # All tests
+ops quality test unit    # Unit tests only
+ops quality test e2e     # E2E tests (requires Docker)
 ```

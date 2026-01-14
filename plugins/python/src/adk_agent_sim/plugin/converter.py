@@ -19,15 +19,12 @@ Usage:
     llm_response = ADKProtoConverter.proto_to_llm_response(proto_response)
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import adk_sim_protos.google.ai.generativelanguage.v1beta as glm
-from google.genai import types as genai_types
-
-if TYPE_CHECKING:
-  from google.adk.models.llm_request import LlmRequest
-
+from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
+from google.genai import types as genai_types
 
 
 class ADKProtoConverter:
