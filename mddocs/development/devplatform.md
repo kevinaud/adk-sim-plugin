@@ -98,6 +98,22 @@ Pre-commit is the **single source of truth** for all quality checks. It runs the
 | `pre-push` | Every `git push` | Full suite: tests, Angular build, generated code check |
 | `manual` | Explicit invocation | Same as pre-push |
 
+**E2E Test Optimization**:
+
+E2E tests are skipped during `pre-push` when **only** documentation/config files are changed.
+
+**Script**: `scripts/should-run-e2e.sh`
+
+Skip patterns (files that cannot affect runtime):
+- `mddocs/` - Documentation
+- `.github/agents/` - Copilot agent definitions
+- `.claude/` - Claude configuration
+- `README.md`, `CLAUDE.md` - Root documentation
+- `.vscode/` - Editor configuration
+- `git-town.toml` - Git workflow config
+
+To add new skip patterns, edit the `SKIP_PATTERNS` array in the script.
+
 **Running Checks**:
 
 ```bash

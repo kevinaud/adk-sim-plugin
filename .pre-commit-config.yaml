@@ -134,7 +134,7 @@ repos:
 
       - id: test-frontend-e2e
         name: frontend e2e tests (playwright)
-        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright.config.ts'
+        entry: bash -c 'scripts/should-run-e2e.sh || exit 0; cd frontend && npm exec playwright test -- -c playwright.config.ts'
         language: system
         pass_filenames: false
         always_run: true
@@ -142,7 +142,7 @@ repos:
 
       - id: test-e2e
         name: e2e tests (requires docker)
-        entry: uv run pytest server/tests/e2e --run-e2e -v
+        entry: bash -c 'scripts/should-run-e2e.sh || exit 0; uv run pytest server/tests/e2e --run-e2e -v'
         language: system
         pass_filenames: false
         always_run: true
