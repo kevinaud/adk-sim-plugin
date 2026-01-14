@@ -26,22 +26,16 @@ fi
 uv sync
 
 # ------------------------------------------------------------
-# Create .claude/agents Symlink
+# Sync Claude Code Agents from .github/agents
 # ------------------------------------------------------------
-# Creates a symlink so .github/agents/ appears at .claude/agents/
-# Idempotent - safe to run multiple times
+# Claude Code expects .claude/agents/*.md with 'name' field
+# Source of truth: .github/agents/ (for GitHub Copilot compatibility)
 # ------------------------------------------------------------
 
-mkdir -p .claude
-
-if [ ! -L .claude/agents ]; then
-    ln -sf ../.github/agents .claude/agents
-    echo "✅  Created symlink: .claude/agents -> .github/agents"
-elif [ ! -e .claude/agents ]; then
-    # Symlink exists but target is missing
-    echo "⚠️  Symlink exists but target .github/agents is missing"
+if [ -x .github/sync-claude-agents.sh ]; then
+    .github/sync-claude-agents.sh
 else
-    echo "✅  Symlink .claude/agents already exists. Skipping."
+    echo "⚠️  .github/sync-claude-agents.sh not found or not executable"
 fi
 
 # ------------------------------------------------------------

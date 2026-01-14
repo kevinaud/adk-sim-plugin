@@ -1,4 +1,5 @@
 ---
+name: sprint-implement
 description: Implement a single PR from a sprint plan with full context from background reading. Does NOT manage git.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: create-agent
 description: Create a new project-specific GitHub Copilot agent following documented best practices, which can be found at docs/developer/copilot_custom_agents.md
 ---
 

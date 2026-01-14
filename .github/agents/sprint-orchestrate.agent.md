@@ -1,4 +1,5 @@
 ---
+name: sprint-orchestrate
 description: Orchestrate sprint implementation by managing Git branches, PRs, and CI while delegating coding to the implementation agent.
 handoffs:
   - label: Delegate Implementation

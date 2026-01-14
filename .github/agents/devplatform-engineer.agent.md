@@ -1,4 +1,5 @@
 ---
+name: devplatform-engineer
 description: Expert in project infrastructure - build systems, CI/CD, testing, linting, formatting, type-checking, publishing, and dev environment configuration.
 ---
 
