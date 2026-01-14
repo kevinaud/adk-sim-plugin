@@ -26,6 +26,25 @@ fi
 uv sync
 
 # ------------------------------------------------------------
+# Create .claude/agents Symlink
+# ------------------------------------------------------------
+# Creates a symlink so .github/agents/ appears at .claude/agents/
+# Idempotent - safe to run multiple times
+# ------------------------------------------------------------
+
+mkdir -p .claude
+
+if [ ! -L .claude/agents ]; then
+    ln -sf ../.github/agents .claude/agents
+    echo "✅  Created symlink: .claude/agents -> .github/agents"
+elif [ ! -e .claude/agents ]; then
+    # Symlink exists but target is missing
+    echo "⚠️  Symlink exists but target .github/agents is missing"
+else
+    echo "✅  Symlink .claude/agents already exists. Skipping."
+fi
+
+# ------------------------------------------------------------
 # Clone Repositories (Idempotent) - Skipped in CI
 # ------------------------------------------------------------
 # Only clones if the directory does not already exist in /workspaces
