@@ -8,14 +8,15 @@
  * @see mddocs/frontend/research/prototype-findings.md#grpc-web-streaming-with-connect-es
  */
 
-import { SimulatorService } from '@adk-sim/protos';
+import { SimulatorService, SubscribeRequestSchema } from '@adk-sim/protos';
 import { Injectable } from '@angular/core';
+import { create } from '@bufbuild/protobuf';
 import type { Client, Transport } from '@connectrpc/connect';
 import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
 
 import { ENVIRONMENT } from '../../../environments/environment';
-import type { Session } from './session.gateway';
+import type { Session, SessionEvent } from './session.gateway';
 import { SessionGateway } from './session.gateway';
 
 /**
@@ -49,6 +50,7 @@ function resolveBaseUrl(): string {
 export class GrpcSessionGateway extends SessionGateway {
   private readonly transport: Transport;
   private readonly client: Client<typeof SimulatorService>;
+  private abortController: AbortController | null = null;
 
   constructor() {
     super();
@@ -69,5 +71,67 @@ export class GrpcSessionGateway extends SessionGateway {
   override async listSessions(): Promise<Session[]> {
     const response = await this.client.listSessions({});
     return response.sessions;
+  }
+
+  /**
+   * Retrieves a specific session by ID.
+   *
+   * Since the backend doesn't have a GetSession RPC, this implementation
+   * fetches all sessions and filters for the requested ID.
+   *
+   * @param sessionId - The unique identifier of the session
+   * @returns Promise resolving to the session
+   * @throws Error if session is not found
+   */
+  override async getSession(sessionId: string): Promise<Session> {
+    const sessions = await this.listSessions();
+    const session = sessions.find((s) => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+    return session;
+  }
+
+  /**
+   * Subscribes to real-time events for a session.
+   *
+   * Uses an async generator to yield events from the gRPC server stream.
+   * The subscription can be cancelled via `cancelSubscription()`.
+   *
+   * @param sessionId - The session to subscribe to
+   * @returns AsyncIterable yielding SessionEvent objects
+   */
+  override async *subscribe(sessionId: string): AsyncIterable<SessionEvent> {
+    // Cancel any existing subscription before starting a new one
+    this.cancelSubscription();
+    this.abortController = new AbortController();
+
+    const request = create(SubscribeRequestSchema, {
+      sessionId,
+      clientId: crypto.randomUUID(),
+    });
+
+    try {
+      for await (const response of this.client.subscribe(request, {
+        signal: this.abortController.signal,
+      })) {
+        if (response.event) {
+          yield response.event;
+        }
+      }
+    } finally {
+      this.abortController = null;
+    }
+  }
+
+  /**
+   * Cancels any active subscription.
+   *
+   * Aborts the current AbortController, causing the subscription stream
+   * to terminate. Safe to call even if no subscription is active.
+   */
+  override cancelSubscription(): void {
+    this.abortController?.abort();
+    this.abortController = null;
   }
 }

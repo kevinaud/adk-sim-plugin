@@ -10,7 +10,7 @@
 
 import { Injectable, signal } from '@angular/core';
 
-import type { Session } from './session.gateway';
+import type { Session, SessionEvent } from './session.gateway';
 import { SessionGateway } from './session.gateway';
 
 /**
@@ -36,6 +36,12 @@ export class MockSessionGateway extends SessionGateway {
   /** Internal signal holding mock session data */
   private readonly sessions = signal<Session[]>([]);
 
+  /** Internal signal holding queued events for subscription */
+  private readonly eventQueue = signal<SessionEvent[]>([]);
+
+  /** Flag indicating if a subscription is currently active */
+  private subscriptionActive = false;
+
   /** Optional delay to simulate network latency (in milliseconds) */
   private simulatedDelayMs = 0;
 
@@ -58,6 +64,15 @@ export class MockSessionGateway extends SessionGateway {
    */
   addSession(session: Session): void {
     this.sessions.update((existing) => [...existing, session]);
+  }
+
+  /**
+   * Alias for addSession to match TDD naming convention.
+   *
+   * @param session - Session to add
+   */
+  pushSession(session: Session): void {
+    this.addSession(session);
   }
 
   /**
@@ -105,6 +120,115 @@ export class MockSessionGateway extends SessionGateway {
 
     // Return a copy to prevent external mutation
     return [...this.sessions()];
+  }
+
+  /**
+   * Retrieves a specific session by ID from the mock data.
+   *
+   * @param sessionId - The unique identifier of the session
+   * @returns Promise resolving to the session
+   * @throws Error if session is not found
+   */
+  override async getSession(sessionId: string): Promise<Session> {
+    // Apply simulated delay if configured
+    if (this.simulatedDelayMs > 0) {
+      await this.delay(this.simulatedDelayMs);
+    }
+
+    // Throw error if configured (and clear it)
+    if (this.errorToThrow) {
+      const error = this.errorToThrow;
+      this.errorToThrow = null;
+      throw error;
+    }
+
+    const session = this.sessions().find((s) => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+    return session;
+  }
+
+  /**
+   * Subscribes to events from the mock event queue.
+   *
+   * Events are yielded as they are added via `pushEvent()`.
+   * The subscription continues until `cancelSubscription()` is called.
+   *
+   * @param sessionId - The session to subscribe to (unused in mock)
+   * @returns AsyncIterable yielding SessionEvent objects
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  override async *subscribe(sessionId: string): AsyncIterable<SessionEvent> {
+    this.subscriptionActive = true;
+
+    // Use isActive() method to prevent lint issue with direct property check
+    while (this.isActive()) {
+      const eventToYield = this.popNextEvent();
+      if (eventToYield !== null) {
+        yield eventToYield;
+      }
+      // Small delay to prevent busy loop
+      await this.delay(10);
+    }
+  }
+
+  /**
+   * Internal check for subscription state.
+   * Separated to avoid lint issues with while loop conditions.
+   */
+  private isActive(): boolean {
+    return this.subscriptionActive;
+  }
+
+  /**
+   * Cancels any active subscription.
+   *
+   * Sets the subscription flag to false, causing the async generator
+   * to terminate on its next iteration.
+   */
+  override cancelSubscription(): void {
+    this.subscriptionActive = false;
+  }
+
+  /**
+   * Pushes an event to the mock event queue.
+   *
+   * Events pushed here will be yielded by an active subscription.
+   *
+   * @param event - The event to add to the queue
+   */
+  pushEvent(event: SessionEvent): void {
+    this.eventQueue.update((existing) => [...existing, event]);
+  }
+
+  /**
+   * Clears all events from the mock event queue.
+   */
+  clearEvents(): void {
+    this.eventQueue.set([]);
+  }
+
+  /**
+   * Returns whether a subscription is currently active.
+   */
+  isSubscriptionActive(): boolean {
+    return this.subscriptionActive;
+  }
+
+  /**
+   * Pops the next event from the queue if available.
+   *
+   * @returns The next event or null if queue is empty
+   */
+  private popNextEvent(): SessionEvent | null {
+    const events = this.eventQueue();
+    const first = events[0];
+    if (first === undefined) {
+      return null;
+    }
+    this.eventQueue.set(events.slice(1));
+    return first;
   }
 
   /**
