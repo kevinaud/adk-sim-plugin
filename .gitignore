@@ -38,6 +38,9 @@ frontend/src/app/generated/
 # Logs (keep directory structure via logs/.gitkeep)
 logs/*.log
 
+# Local GitHub Actions testing (act)
+.artifacts/
+
 # Angular / Frontend
 .angular/cache
 .sass-cache/

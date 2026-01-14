@@ -7,7 +7,7 @@ name: Publish Packages
 # packages to PyPI and npm using OIDC trusted publishers.
 #
 # DRY_RUN mode (for local testing with act):
-#   - Set DRY_RUN=true environment variable
+#   - Uses workflow_dispatch with dry_run=true input
 #   - Runs build and verify steps but skips actual publishing
 #   - Used by: ops ci test publish
 # ============================================================
@@ -72,7 +72,7 @@ jobs:
           path: dist/
 
       - name: Dry-run summary
-        if: ${{ inputs.dry_run == true }}
+        if: ${{ inputs.dry_run }}
         run: |
           echo "=== DRY RUN MODE ==="
           echo "Build and verification completed successfully."
@@ -81,8 +81,8 @@ jobs:
           ls -la dist/
 
   publish-pypi:
-    # Skip publishing in dry-run mode
-    if: ${{ inputs.dry_run != true }}
+    # Skip publishing in dry-run mode (handles both boolean and string 'true')
+    if: ${{ !inputs.dry_run }}
     needs: build-and-verify
     runs-on: ubuntu-latest
     environment: pypi
@@ -100,8 +100,8 @@ jobs:
           skip-existing: true
 
   publish-npm:
-    # Skip publishing in dry-run mode
-    if: ${{ inputs.dry_run != true }}
+    # Skip publishing in dry-run mode (handles both boolean and string 'true')
+    if: ${{ !inputs.dry_run }}
     needs: build-and-verify
     runs-on: ubuntu-latest
     permissions:

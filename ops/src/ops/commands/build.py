@@ -205,7 +205,7 @@ def build_all(force: bool = False, verbose: bool = False) -> bool:
 
 
 def clean_generated(verbose: bool = False) -> None:
-  """Remove all generated files."""
+  """Remove all generated files, preserving .gitkeep files."""
   import shutil
 
   targets = [
@@ -224,7 +224,15 @@ def clean_generated(verbose: bool = False) -> None:
       if verbose:
         console.print(f"[dim]Removing {target}[/dim]")
       if target.is_dir():
+        # Preserve .gitkeep files
+        gitkeep = target / ".gitkeep"
+        gitkeep_content = None
+        if gitkeep.exists():
+          gitkeep_content = gitkeep.read_text()
         shutil.rmtree(target)
+        if gitkeep_content is not None:
+          target.mkdir(parents=True, exist_ok=True)
+          gitkeep.write_text(gitkeep_content)
       else:
         target.unlink()
 

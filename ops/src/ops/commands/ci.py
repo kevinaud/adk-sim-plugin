@@ -457,9 +457,15 @@ def test_cmd(
     "linux/amd64",
   ]
 
-  # For publish workflow, use workflow_dispatch with dry_run input
+  # Enable artifact server for workflows that upload/download artifacts
+  artifacts_dir = REPO_ROOT / ".artifacts"
+  artifacts_dir.mkdir(exist_ok=True)
+  cmd.extend(["--artifact-server-path", str(artifacts_dir)])
+
+  # For publish workflow, use workflow_dispatch event with dry_run input
   if workflow == "publish":
-    # Trigger workflow_dispatch event with dry_run=true
+    # Must explicitly trigger workflow_dispatch event to access inputs
+    cmd.insert(1, "workflow_dispatch")
     cmd.extend(["--input", "dry_run=true"])
     console.print("[dim]Using workflow_dispatch with dry_run=true[/dim]")
 
@@ -498,6 +504,22 @@ def check_generated_cmd(
   # Clean and regenerate
   clean_generated(verbose=verbose)
   build_protos(force=True, verbose=verbose)
+
+  # Run formatters on generated code to match committed formatting
+  # Get actual file paths for pre-commit (it doesn't support globs)
+  py_files = list((REPO_ROOT / "packages/adk-sim-protos/src").rglob("*.py"))
+  ts_files = list((REPO_ROOT / "packages/adk-sim-protos-ts/src").rglob("*.ts"))
+  all_files = [str(f) for f in py_files + ts_files]
+
+  if all_files:
+    # Run pre-commit twice - first run may fix files, second ensures they're clean
+    for _ in range(2):
+      run(
+        ["uv", "run", "pre-commit", "run", "--files", *all_files],
+        cwd=REPO_ROOT,
+        verbose=verbose,
+        check=False,  # Pre-commit may report "files were modified" which is expected
+      )
 
   # Check for changes
   result = subprocess.run(

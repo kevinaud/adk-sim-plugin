@@ -2,33 +2,26 @@
 // @generated from file adksim/v1/simulator_service.proto (package adksim.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from '@bufbuild/protobuf/codegenv2';
-import { fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf/codegenv2';
-import type { SessionEvent, SimulatorSession } from './simulator_session_pb';
-import { file_adksim_v1_simulator_session } from './simulator_session_pb';
-import type {
-  GenerateContentRequest,
-  GenerateContentResponse,
-} from '../../google/ai/generativelanguage/v1beta/generative_service_pb';
-import { file_google_ai_generativelanguage_v1beta_generative_service } from '../../google/ai/generativelanguage/v1beta/generative_service_pb';
-import type { Message } from '@bufbuild/protobuf';
+import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { SessionEvent, SimulatorSession } from "./simulator_session_pb";
+import { file_adksim_v1_simulator_session } from "./simulator_session_pb";
+import type { GenerateContentRequest, GenerateContentResponse } from "../../google/ai/generativelanguage/v1beta/generative_service_pb";
+import { file_google_ai_generativelanguage_v1beta_generative_service } from "../../google/ai/generativelanguage/v1beta/generative_service_pb";
+import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file adksim/v1/simulator_service.proto.
  */
-export const file_adksim_v1_simulator_service: GenFile =
-  /*@__PURE__*/
-  fileDesc(
-    'CiFhZGtzaW0vdjEvc2ltdWxhdG9yX3NlcnZpY2UucHJvdG8SCWFka3NpbS52MSIrChRDcmVhdGVTZXNzaW9uUmVxdWVzdBITCgtkZXNjcmlwdGlvbhgBIAEoCSJFChVDcmVhdGVTZXNzaW9uUmVzcG9uc2USLAoHc2Vzc2lvbhgBIAEoCzIbLmFka3NpbS52MS5TaW11bGF0b3JTZXNzaW9uIjkKEFN1YnNjcmliZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIRCgljbGllbnRfaWQYAiABKAkiOwoRU3Vic2NyaWJlUmVzcG9uc2USJgoFZXZlbnQYASABKAsyFy5hZGtzaW0udjEuU2Vzc2lvbkV2ZW50Ip0BChRTdWJtaXRSZXF1ZXN0UmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg8KB3R1cm5faWQYAiABKAkSEgoKYWdlbnRfbmFtZRgDIAEoCRJMCgdyZXF1ZXN0GAQgASgLMjsuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuR2VuZXJhdGVDb250ZW50UmVxdWVzdCIpChVTdWJtaXRSZXF1ZXN0UmVzcG9uc2USEAoIZXZlbnRfaWQYASABKAkijAEKFVN1Ym1pdERlY2lzaW9uUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg8KB3R1cm5faWQYAiABKAkSTgoIcmVzcG9uc2UYAyABKAsyPC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5HZW5lcmF0ZUNvbnRlbnRSZXNwb25zZSIqChZTdWJtaXREZWNpc2lvblJlc3BvbnNlEhAKCGV2ZW50X2lkGAEgASgJIjwKE0xpc3RTZXNzaW9uc1JlcXVlc3QSEQoJcGFnZV9zaXplGAEgASgFEhIKCnBhZ2VfdG9rZW4YAiABKAkiXgoUTGlzdFNlc3Npb25zUmVzcG9uc2USLQoIc2Vzc2lvbnMYASADKAsyGy5hZGtzaW0udjEuU2ltdWxhdG9yU2Vzc2lvbhIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkyrAMKEFNpbXVsYXRvclNlcnZpY2USUgoNQ3JlYXRlU2Vzc2lvbhIfLmFka3NpbS52MS5DcmVhdGVTZXNzaW9uUmVxdWVzdBogLmFka3NpbS52MS5DcmVhdGVTZXNzaW9uUmVzcG9uc2USSAoJU3Vic2NyaWJlEhsuYWRrc2ltLnYxLlN1YnNjcmliZVJlcXVlc3QaHC5hZGtzaW0udjEuU3Vic2NyaWJlUmVzcG9uc2UwARJSCg1TdWJtaXRSZXF1ZXN0Eh8uYWRrc2ltLnYxLlN1Ym1pdFJlcXVlc3RSZXF1ZXN0GiAuYWRrc2ltLnYxLlN1Ym1pdFJlcXVlc3RSZXNwb25zZRJVCg5TdWJtaXREZWNpc2lvbhIgLmFka3NpbS52MS5TdWJtaXREZWNpc2lvblJlcXVlc3QaIS5hZGtzaW0udjEuU3VibWl0RGVjaXNpb25SZXNwb25zZRJPCgxMaXN0U2Vzc2lvbnMSHi5hZGtzaW0udjEuTGlzdFNlc3Npb25zUmVxdWVzdBofLmFka3NpbS52MS5MaXN0U2Vzc2lvbnNSZXNwb25zZWIGcHJvdG8z',
-    [file_adksim_v1_simulator_session, file_google_ai_generativelanguage_v1beta_generative_service],
-  );
+export const file_adksim_v1_simulator_service: GenFile = /*@__PURE__*/
+  fileDesc("CiFhZGtzaW0vdjEvc2ltdWxhdG9yX3NlcnZpY2UucHJvdG8SCWFka3NpbS52MSIrChRDcmVhdGVTZXNzaW9uUmVxdWVzdBITCgtkZXNjcmlwdGlvbhgBIAEoCSJFChVDcmVhdGVTZXNzaW9uUmVzcG9uc2USLAoHc2Vzc2lvbhgBIAEoCzIbLmFka3NpbS52MS5TaW11bGF0b3JTZXNzaW9uIjkKEFN1YnNjcmliZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIRCgljbGllbnRfaWQYAiABKAkiOwoRU3Vic2NyaWJlUmVzcG9uc2USJgoFZXZlbnQYASABKAsyFy5hZGtzaW0udjEuU2Vzc2lvbkV2ZW50Ip0BChRTdWJtaXRSZXF1ZXN0UmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg8KB3R1cm5faWQYAiABKAkSEgoKYWdlbnRfbmFtZRgDIAEoCRJMCgdyZXF1ZXN0GAQgASgLMjsuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuR2VuZXJhdGVDb250ZW50UmVxdWVzdCIpChVTdWJtaXRSZXF1ZXN0UmVzcG9uc2USEAoIZXZlbnRfaWQYASABKAkijAEKFVN1Ym1pdERlY2lzaW9uUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg8KB3R1cm5faWQYAiABKAkSTgoIcmVzcG9uc2UYAyABKAsyPC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5HZW5lcmF0ZUNvbnRlbnRSZXNwb25zZSIqChZTdWJtaXREZWNpc2lvblJlc3BvbnNlEhAKCGV2ZW50X2lkGAEgASgJIjwKE0xpc3RTZXNzaW9uc1JlcXVlc3QSEQoJcGFnZV9zaXplGAEgASgFEhIKCnBhZ2VfdG9rZW4YAiABKAkiXgoUTGlzdFNlc3Npb25zUmVzcG9uc2USLQoIc2Vzc2lvbnMYASADKAsyGy5hZGtzaW0udjEuU2ltdWxhdG9yU2Vzc2lvbhIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkyrAMKEFNpbXVsYXRvclNlcnZpY2USUgoNQ3JlYXRlU2Vzc2lvbhIfLmFka3NpbS52MS5DcmVhdGVTZXNzaW9uUmVxdWVzdBogLmFka3NpbS52MS5DcmVhdGVTZXNzaW9uUmVzcG9uc2USSAoJU3Vic2NyaWJlEhsuYWRrc2ltLnYxLlN1YnNjcmliZVJlcXVlc3QaHC5hZGtzaW0udjEuU3Vic2NyaWJlUmVzcG9uc2UwARJSCg1TdWJtaXRSZXF1ZXN0Eh8uYWRrc2ltLnYxLlN1Ym1pdFJlcXVlc3RSZXF1ZXN0GiAuYWRrc2ltLnYxLlN1Ym1pdFJlcXVlc3RSZXNwb25zZRJVCg5TdWJtaXREZWNpc2lvbhIgLmFka3NpbS52MS5TdWJtaXREZWNpc2lvblJlcXVlc3QaIS5hZGtzaW0udjEuU3VibWl0RGVjaXNpb25SZXNwb25zZRJPCgxMaXN0U2Vzc2lvbnMSHi5hZGtzaW0udjEuTGlzdFNlc3Npb25zUmVxdWVzdBofLmFka3NpbS52MS5MaXN0U2Vzc2lvbnNSZXNwb25zZWIGcHJvdG8z", [file_adksim_v1_simulator_session, file_google_ai_generativelanguage_v1beta_generative_service]);
 
 /**
  * CreateSessionRequest is sent by the Plugin to register a new session.
  *
  * @generated from message adksim.v1.CreateSessionRequest
  */
-export type CreateSessionRequest = Message<'adksim.v1.CreateSessionRequest'> & {
+export type CreateSessionRequest = Message<"adksim.v1.CreateSessionRequest"> & {
   /**
    * Optional description for the session.
    *
@@ -41,8 +34,7 @@ export type CreateSessionRequest = Message<'adksim.v1.CreateSessionRequest'> & {
  * Describes the message adksim.v1.CreateSessionRequest.
  * Use `create(CreateSessionRequestSchema)` to create a new message.
  */
-export const CreateSessionRequestSchema: GenMessage<CreateSessionRequest> =
-  /*@__PURE__*/
+export const CreateSessionRequestSchema: GenMessage<CreateSessionRequest> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 0);
 
 /**
@@ -50,7 +42,7 @@ export const CreateSessionRequestSchema: GenMessage<CreateSessionRequest> =
  *
  * @generated from message adksim.v1.CreateSessionResponse
  */
-export type CreateSessionResponse = Message<'adksim.v1.CreateSessionResponse'> & {
+export type CreateSessionResponse = Message<"adksim.v1.CreateSessionResponse"> & {
   /**
    * The session that was created or retrieved.
    *
@@ -63,8 +55,7 @@ export type CreateSessionResponse = Message<'adksim.v1.CreateSessionResponse'> &
  * Describes the message adksim.v1.CreateSessionResponse.
  * Use `create(CreateSessionResponseSchema)` to create a new message.
  */
-export const CreateSessionResponseSchema: GenMessage<CreateSessionResponse> =
-  /*@__PURE__*/
+export const CreateSessionResponseSchema: GenMessage<CreateSessionResponse> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 1);
 
 /**
@@ -72,7 +63,7 @@ export const CreateSessionResponseSchema: GenMessage<CreateSessionResponse> =
  *
  * @generated from message adksim.v1.SubscribeRequest
  */
-export type SubscribeRequest = Message<'adksim.v1.SubscribeRequest'> & {
+export type SubscribeRequest = Message<"adksim.v1.SubscribeRequest"> & {
   /**
    * The session ID to subscribe to.
    *
@@ -92,8 +83,7 @@ export type SubscribeRequest = Message<'adksim.v1.SubscribeRequest'> & {
  * Describes the message adksim.v1.SubscribeRequest.
  * Use `create(SubscribeRequestSchema)` to create a new message.
  */
-export const SubscribeRequestSchema: GenMessage<SubscribeRequest> =
-  /*@__PURE__*/
+export const SubscribeRequestSchema: GenMessage<SubscribeRequest> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 2);
 
 /**
@@ -101,7 +91,7 @@ export const SubscribeRequestSchema: GenMessage<SubscribeRequest> =
  *
  * @generated from message adksim.v1.SubscribeResponse
  */
-export type SubscribeResponse = Message<'adksim.v1.SubscribeResponse'> & {
+export type SubscribeResponse = Message<"adksim.v1.SubscribeResponse"> & {
   /**
    * The event being streamed.
    *
@@ -114,8 +104,7 @@ export type SubscribeResponse = Message<'adksim.v1.SubscribeResponse'> & {
  * Describes the message adksim.v1.SubscribeResponse.
  * Use `create(SubscribeResponseSchema)` to create a new message.
  */
-export const SubscribeResponseSchema: GenMessage<SubscribeResponse> =
-  /*@__PURE__*/
+export const SubscribeResponseSchema: GenMessage<SubscribeResponse> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 3);
 
 /**
@@ -123,7 +112,7 @@ export const SubscribeResponseSchema: GenMessage<SubscribeResponse> =
  *
  * @generated from message adksim.v1.SubmitRequestRequest
  */
-export type SubmitRequestRequest = Message<'adksim.v1.SubmitRequestRequest'> & {
+export type SubmitRequestRequest = Message<"adksim.v1.SubmitRequestRequest"> & {
   /**
    * The session to publish to.
    *
@@ -157,8 +146,7 @@ export type SubmitRequestRequest = Message<'adksim.v1.SubmitRequestRequest'> & {
  * Describes the message adksim.v1.SubmitRequestRequest.
  * Use `create(SubmitRequestRequestSchema)` to create a new message.
  */
-export const SubmitRequestRequestSchema: GenMessage<SubmitRequestRequest> =
-  /*@__PURE__*/
+export const SubmitRequestRequestSchema: GenMessage<SubmitRequestRequest> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 4);
 
 /**
@@ -166,7 +154,7 @@ export const SubmitRequestRequestSchema: GenMessage<SubmitRequestRequest> =
  *
  * @generated from message adksim.v1.SubmitRequestResponse
  */
-export type SubmitRequestResponse = Message<'adksim.v1.SubmitRequestResponse'> & {
+export type SubmitRequestResponse = Message<"adksim.v1.SubmitRequestResponse"> & {
   /**
    * The event ID assigned to this request.
    *
@@ -179,8 +167,7 @@ export type SubmitRequestResponse = Message<'adksim.v1.SubmitRequestResponse'> &
  * Describes the message adksim.v1.SubmitRequestResponse.
  * Use `create(SubmitRequestResponseSchema)` to create a new message.
  */
-export const SubmitRequestResponseSchema: GenMessage<SubmitRequestResponse> =
-  /*@__PURE__*/
+export const SubmitRequestResponseSchema: GenMessage<SubmitRequestResponse> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 5);
 
 /**
@@ -188,7 +175,7 @@ export const SubmitRequestResponseSchema: GenMessage<SubmitRequestResponse> =
  *
  * @generated from message adksim.v1.SubmitDecisionRequest
  */
-export type SubmitDecisionRequest = Message<'adksim.v1.SubmitDecisionRequest'> & {
+export type SubmitDecisionRequest = Message<"adksim.v1.SubmitDecisionRequest"> & {
   /**
    * The session this decision belongs to.
    *
@@ -215,8 +202,7 @@ export type SubmitDecisionRequest = Message<'adksim.v1.SubmitDecisionRequest'> &
  * Describes the message adksim.v1.SubmitDecisionRequest.
  * Use `create(SubmitDecisionRequestSchema)` to create a new message.
  */
-export const SubmitDecisionRequestSchema: GenMessage<SubmitDecisionRequest> =
-  /*@__PURE__*/
+export const SubmitDecisionRequestSchema: GenMessage<SubmitDecisionRequest> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 6);
 
 /**
@@ -224,7 +210,7 @@ export const SubmitDecisionRequestSchema: GenMessage<SubmitDecisionRequest> =
  *
  * @generated from message adksim.v1.SubmitDecisionResponse
  */
-export type SubmitDecisionResponse = Message<'adksim.v1.SubmitDecisionResponse'> & {
+export type SubmitDecisionResponse = Message<"adksim.v1.SubmitDecisionResponse"> & {
   /**
    * The event ID assigned to this decision.
    *
@@ -237,8 +223,7 @@ export type SubmitDecisionResponse = Message<'adksim.v1.SubmitDecisionResponse'>
  * Describes the message adksim.v1.SubmitDecisionResponse.
  * Use `create(SubmitDecisionResponseSchema)` to create a new message.
  */
-export const SubmitDecisionResponseSchema: GenMessage<SubmitDecisionResponse> =
-  /*@__PURE__*/
+export const SubmitDecisionResponseSchema: GenMessage<SubmitDecisionResponse> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 7);
 
 /**
@@ -246,7 +231,7 @@ export const SubmitDecisionResponseSchema: GenMessage<SubmitDecisionResponse> =
  *
  * @generated from message adksim.v1.ListSessionsRequest
  */
-export type ListSessionsRequest = Message<'adksim.v1.ListSessionsRequest'> & {
+export type ListSessionsRequest = Message<"adksim.v1.ListSessionsRequest"> & {
   /**
    * Maximum number of sessions to return.
    *
@@ -266,8 +251,7 @@ export type ListSessionsRequest = Message<'adksim.v1.ListSessionsRequest'> & {
  * Describes the message adksim.v1.ListSessionsRequest.
  * Use `create(ListSessionsRequestSchema)` to create a new message.
  */
-export const ListSessionsRequestSchema: GenMessage<ListSessionsRequest> =
-  /*@__PURE__*/
+export const ListSessionsRequestSchema: GenMessage<ListSessionsRequest> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 8);
 
 /**
@@ -275,7 +259,7 @@ export const ListSessionsRequestSchema: GenMessage<ListSessionsRequest> =
  *
  * @generated from message adksim.v1.ListSessionsResponse
  */
-export type ListSessionsResponse = Message<'adksim.v1.ListSessionsResponse'> & {
+export type ListSessionsResponse = Message<"adksim.v1.ListSessionsResponse"> & {
   /**
    * The sessions matching the query.
    *
@@ -295,8 +279,7 @@ export type ListSessionsResponse = Message<'adksim.v1.ListSessionsResponse'> & {
  * Describes the message adksim.v1.ListSessionsResponse.
  * Use `create(ListSessionsResponseSchema)` to create a new message.
  */
-export const ListSessionsResponseSchema: GenMessage<ListSessionsResponse> =
-  /*@__PURE__*/
+export const ListSessionsResponseSchema: GenMessage<ListSessionsResponse> = /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_service, 9);
 
 /**
@@ -314,10 +297,10 @@ export const SimulatorService: GenService<{
    * @generated from rpc adksim.v1.SimulatorService.CreateSession
    */
   createSession: {
-    methodKind: 'unary';
+    methodKind: "unary";
     input: typeof CreateSessionRequestSchema;
     output: typeof CreateSessionResponseSchema;
-  };
+  },
   /**
    * Subscribe opens a bidirectional event stream for a session.
    * Server MUST replay all historical events before streaming live ones.
@@ -326,10 +309,10 @@ export const SimulatorService: GenService<{
    * @generated from rpc adksim.v1.SimulatorService.Subscribe
    */
   subscribe: {
-    methodKind: 'server_streaming';
+    methodKind: "server_streaming";
     input: typeof SubscribeRequestSchema;
     output: typeof SubscribeResponseSchema;
-  };
+  },
   /**
    * SubmitRequest publishes an intercepted LLM request to the session.
    * Called by the Plugin when an agent triggers a model call.
@@ -337,10 +320,10 @@ export const SimulatorService: GenService<{
    * @generated from rpc adksim.v1.SimulatorService.SubmitRequest
    */
   submitRequest: {
-    methodKind: 'unary';
+    methodKind: "unary";
     input: typeof SubmitRequestRequestSchema;
     output: typeof SubmitRequestResponseSchema;
-  };
+  },
   /**
    * SubmitDecision publishes a human decision (response) to the session.
    * Called by the UI when the user completes their response.
@@ -348,18 +331,19 @@ export const SimulatorService: GenService<{
    * @generated from rpc adksim.v1.SimulatorService.SubmitDecision
    */
   submitDecision: {
-    methodKind: 'unary';
+    methodKind: "unary";
     input: typeof SubmitDecisionRequestSchema;
     output: typeof SubmitDecisionResponseSchema;
-  };
+  },
   /**
    * ListSessions returns all historical sessions for the landing page.
    *
    * @generated from rpc adksim.v1.SimulatorService.ListSessions
    */
   listSessions: {
-    methodKind: 'unary';
+    methodKind: "unary";
     input: typeof ListSessionsRequestSchema;
     output: typeof ListSessionsResponseSchema;
-  };
-}> = /*@__PURE__*/ serviceDesc(file_adksim_v1_simulator_service, 0);
+  },
+}> = /*@__PURE__*/
+  serviceDesc(file_adksim_v1_simulator_service, 0);
