@@ -7,6 +7,12 @@
  * Component tests live in tests/component/ and test isolated UI components
  * without requiring the full application to be running.
  *
+ * Theme Support:
+ * Tests automatically run in both light and dark modes via separate projects.
+ * The theme fixture (tests/component/fixtures/theme.fixture.ts) applies the
+ * appropriate theme class based on project metadata. Snapshots are organized
+ * into separate directories: __snapshots__/light/ and __snapshots__/dark/.
+ *
  * @see mddocs/frontend/research/playwright-testing-research.md
  */
 
@@ -14,9 +20,20 @@ import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, devices } from '@sand4rt/experimental-ct-angular';
 import { resolve } from 'path';
 
+/**
+ * Shared configuration for browser normalization.
+ * These launch options ensure consistent rendering across environments.
+ */
+const browserNormalizationArgs = [
+  '--disable-lcd-text', // Force grayscale antialiasing (no subpixel)
+  '--disable-font-subpixel-positioning', // Align glyphs to pixel grid
+  '--font-render-hinting=none', // Disable system font hinting
+  '--disable-gpu', // Force software rasterization for consistency
+];
+
 export default defineConfig({
   testDir: 'tests/component',
-  snapshotDir: 'tests/component/__snapshots__',
+  // Note: snapshotDir is set per-project to organize by theme
 
   // CI-specific settings
   forbidOnly: !!process.env['CI'],
@@ -35,18 +52,6 @@ export default defineConfig({
 
   use: {
     trace: 'on-first-retry',
-
-    // Browser normalization for consistent rendering across environments
-    // Fixes visual regression differences between Debian (devcontainer) and Ubuntu (CI)
-    // See: mddocs/frontend/research/deep-research/visual-regression-ci-investigation-report.md
-    launchOptions: {
-      args: [
-        '--disable-lcd-text', // Force grayscale antialiasing (no subpixel)
-        '--disable-font-subpixel-positioning', // Align glyphs to pixel grid
-        '--font-render-hinting=none', // Disable system font hinting
-        '--disable-gpu', // Force software rasterization for consistency
-      ],
-    },
 
     ctViteConfig: {
       plugins: [
@@ -85,12 +90,32 @@ export default defineConfig({
   },
 
   projects: [
+    // Light theme project (default)
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'chromium-light',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: browserNormalizationArgs,
+        },
+      },
+      metadata: { theme: 'light' },
+      snapshotDir: 'tests/component/__snapshots__/light',
     },
-    // Add more browsers as needed for cross-browser testing:
-    // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // Dark theme project
+    {
+      name: 'chromium-dark',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: browserNormalizationArgs,
+        },
+      },
+      metadata: { theme: 'dark' },
+      snapshotDir: 'tests/component/__snapshots__/dark',
+    },
+    // Add more browser/theme combinations as needed:
+    // { name: 'firefox-light', use: { ...devices['Desktop Firefox'] }, metadata: { theme: 'light' }, snapshotDir: '...' },
+    // { name: 'firefox-dark', use: { ...devices['Desktop Firefox'] }, metadata: { theme: 'dark' }, snapshotDir: '...' },
   ],
 });

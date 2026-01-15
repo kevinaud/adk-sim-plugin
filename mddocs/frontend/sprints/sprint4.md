@@ -258,15 +258,15 @@ The session-list component currently mixes both responsibilities, with ~105 line
 - `frontend/tests/component/connection-status.spec.ts` - Existing component test with snapshots
 
 **Acceptance Criteria**:
-- [ ] Playwright config defines two projects: `chromium-light` and `chromium-dark`
-- [ ] Dark project applies `.dark-theme` class to document body before each test via fixture
-- [ ] Light project ensures no `.dark-theme` class is present (clean state)
-- [ ] Running `npm run test:component` executes all tests in both themes automatically
-- [ ] Screenshot names include theme variant (e.g., `connection-status-connected-chromium-light.png`, `connection-status-connected-chromium-dark.png`)
-- [ ] Snapshot directory structure organizes by theme: `__snapshots__/light/` and `__snapshots__/dark/`
-- [ ] Existing connection-status tests pass and generate both light and dark snapshots
-- [ ] No changes required to individual test files - theme switching is automatic
-- [ ] Presubmit passes
+- [x] Playwright config defines two projects: `chromium-light` and `chromium-dark`
+- [x] Dark project applies `.dark-theme` class to document body before each test via fixture
+- [x] Light project ensures no `.dark-theme` class is present (clean state)
+- [x] Running `npm run test:component` executes all tests in both themes automatically
+- [x] Screenshot names include theme variant (e.g., `connection-status-connected-chromium-light.png`, `connection-status-connected-chromium-dark.png`)
+- [x] Snapshot directory structure organizes by theme: `__snapshots__/light/` and `__snapshots__/dark/`
+- [x] Existing connection-status tests pass and generate both light and dark snapshots
+- [x] No changes required to individual test files - theme switching is automatic
+- [x] Presubmit passes
 
 ---
 
