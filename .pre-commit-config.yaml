@@ -126,8 +126,7 @@ repos:
 
       - id: test-frontend-component
         name: frontend component tests (playwright)
-        # Skip visual regression tests in pre-commit (platform-specific font rendering)
-        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright-ct.config.ts --grep-invert "visual"'
+        entry: bash -c 'cd frontend && npm exec playwright test -- -c playwright-ct.config.ts'
         language: system
         pass_filenames: false
         always_run: true
@@ -135,8 +134,7 @@ repos:
 
       - id: test-frontend-e2e
         name: frontend e2e tests (playwright)
-        # Skip visual regression tests in pre-commit (platform-specific font rendering)
-        entry: bash -c 'ops ci should-run-e2e || exit 0; cd frontend && npm exec playwright test -- -c playwright.config.ts --grep-invert "visual"'
+        entry: bash -c 'ops ci should-run-e2e || exit 0; cd frontend && npm exec playwright test -- -c playwright.config.ts'
         language: system
         pass_filenames: false
         always_run: true
