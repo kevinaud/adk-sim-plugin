@@ -61,6 +61,7 @@
     "@angular/cli": "^21.0.4",
     "@angular/compiler-cli": "^21.0.0",
     "@bufbuild/protoc-gen-es": "^2.10.2",
+    "@connectrpc/connect-node": "^2.1.1",
     "@playwright/test": "^1.52.0",
     "@sand4rt/experimental-ct-angular": "^1.52.0",
     "@softarc/eslint-plugin-sheriff": "^0.19.6",

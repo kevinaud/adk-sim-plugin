@@ -395,7 +395,8 @@ The devcontainer provides a consistent development environment with all tools pr
 | File | Purpose |
 |------|---------|
 | `docker-compose.yaml` | Full dev stack (backend + frontend with hot reload) |
-| `docker-compose.test.yaml` | Backend-only for E2E tests |
+| `docker-compose.test.yaml` | Backend-only for Python E2E tests |
+| `docker-compose.e2e.yaml` | Multi-backend stack for Playwright E2E tests |
 
 **Full Stack** (`docker-compose.yaml`):
 - Backend: Python server with volume mounts for hot reload
@@ -404,7 +405,37 @@ The devcontainer provides a consistent development environment with all tools pr
 
 **Test Stack** (`docker-compose.test.yaml`):
 - Backend only with ephemeral SQLite database
-- Used by pytest-docker for E2E tests
+- Used by pytest-docker for Python E2E tests
+
+**Multi-Backend E2E Stack** (`docker-compose.e2e.yaml`):
+
+Three backend instances for different testing scenarios:
+
+| Instance | HTTP Port | gRPC Port | Purpose |
+|----------|-----------|-----------|---------|
+| `no-sessions` | 8081 | 50052 | Always empty - for empty state tests |
+| `populated` | 8082 | 50053 | Pre-seeded with sessions - for stable visual tests |
+| `shared` | 8080 | 50054 | Allows session creation - for session-specific tests |
+
+**Why multiple backends?**
+- **Test isolation**: Tests targeting `no-sessions` are guaranteed an empty database
+- **Stable screenshots**: Tests using `populated` get consistent seeded data
+- **Parallel safety**: Tests creating sessions use `shared` with unique IDs
+
+**Manual usage**:
+```bash
+# Start all backends
+docker compose -f docker-compose.e2e.yaml up -d --wait
+
+# Seed the populated backend
+cd frontend && npx tsx tests/e2e/utils/seed-populated-backend.ts
+
+# Run E2E tests
+npx playwright test -c playwright.config.ts
+
+# Stop all backends
+docker compose -f docker-compose.e2e.yaml down
+```
 
 **Commands**:
 
@@ -470,6 +501,44 @@ npx playwright test -c playwright-ct.config.ts
 npx playwright test -c playwright.config.ts
 ```
 
+**Multi-Backend E2E Test Fixtures**:
+
+E2E tests can target different backend instances using the `test.use()` API:
+
+```typescript
+import { expect, test } from './utils';
+
+// Default: uses 'shared' backend (allows session creation)
+test('creates a session', async ({ page, createSession }) => {
+  const session = await createSession('Test Session');
+  // ...
+});
+
+// Empty state tests: use 'no-sessions' backend (guaranteed empty)
+test.describe('Empty State', () => {
+  test.use({ backend: 'no-sessions' });
+
+  test('shows empty list', async ({ page, gotoAndWaitForAngular }) => {
+    await gotoAndWaitForAngular('/');
+    // Backend is guaranteed to be empty
+  });
+});
+
+// Visual regression: use 'populated' backend (pre-seeded data)
+test.describe('Visual Tests', () => {
+  test.use({ backend: 'populated' });
+
+  test('session list screenshot', async ({ page }) => {
+    // Backend has stable seeded sessions for consistent screenshots
+  });
+});
+```
+
+**Key files**:
+- `frontend/tests/e2e/utils/backend-config.ts`: Backend port definitions
+- `frontend/tests/e2e/utils/multi-backend-fixtures.ts`: Playwright fixtures
+- `frontend/tests/e2e/utils/seed-populated-backend.ts`: Seeding script
+
 ---
 
 ## CI/CD
@@ -496,7 +565,10 @@ The CI pipeline uses a **lightweight setup** for fast startup (~30s vs ~5min wit
 3. Install buf CLI globally
 4. Install dependencies (`npm ci`, `uv sync`)
 5. Cache and install Playwright browsers
-6. Run `ops ci check`
+6. Start multi-backend Docker Compose (`docker-compose.e2e.yaml`)
+7. Seed the `populated` backend with test data
+8. Run `ops ci check`
+9. Stop Docker Compose (always, even on failure)
 
 **CI Caching Strategy**:
 
@@ -677,9 +749,13 @@ ops release patch --dry-run
 | `docker/backend.Dockerfile` | Backend container (optimized with BuildKit cache) |
 | `docker/frontend.Dockerfile` | Frontend container |
 | `docker-compose.yaml` | Full dev stack |
-| `docker-compose.test.yaml` | Test stack |
-| `.github/workflows/ci.yaml` | CI pipeline (with uv and Playwright caching) |
+| `docker-compose.test.yaml` | Python E2E test stack |
+| `docker-compose.e2e.yaml` | Multi-backend E2E stack (3 backends) |
+| `.github/workflows/ci.yaml` | CI pipeline (with multi-backend E2E support) |
 | `.github/workflows/publish.yaml` | Publishing pipeline |
 | `scripts/sync_versions.py` | Version synchronization |
+| `frontend/tests/e2e/utils/backend-config.ts` | Multi-backend port configuration |
+| `frontend/tests/e2e/utils/multi-backend-fixtures.ts` | Playwright backend fixtures |
+| `frontend/tests/e2e/utils/seed-populated-backend.ts` | Seeding script for populated backend |
 | `mddocs/development/ops-cli/tdd.md` | ops CLI design document |
 | `mddocs/development/research/playwright-optimization.md` | Research: Playwright/Docker/CI optimization strategies |

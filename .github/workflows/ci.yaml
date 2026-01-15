@@ -95,8 +95,28 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: cd frontend && npx playwright install-deps chromium
 
+      # ============================================================
+      # Multi-Backend Docker Compose for E2E Tests
+      # ============================================================
+      # Start multiple backend instances for E2E testing:
+      # - no-sessions (8081): Always empty for empty state tests
+      # - populated (8082): Pre-seeded with sessions for visual tests
+      # - shared (8080): Allows session creation for test isolation
+      #
+      # The --wait flag ensures all healthchecks pass before continuing.
+      # ============================================================
+      - name: Start multi-backend Docker Compose
+        run: docker compose -f docker-compose.e2e.yaml up -d --wait
+
+      - name: Seed populated backend
+        run: cd frontend && npx tsx tests/e2e/utils/seed-populated-backend.ts
+
       - name: Run CI checks
         run: uv run ops ci check
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose -f docker-compose.e2e.yaml down
 
   # ============================================================
   # Devcontainer Build Verification

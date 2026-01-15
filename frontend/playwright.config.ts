@@ -3,12 +3,35 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright E2E test configuration
  *
- * This config is for end-to-end tests that run against the real backend.
- * For local development, the global setup/teardown scripts handle Docker.
- * In CI, Docker is managed separately by the workflow.
+ * This config is for end-to-end tests that run against multiple backend instances.
+ * Docker must be started manually before running E2E tests.
+ *
+ * ## Quick Start (Local Development)
+ *
+ * ```bash
+ * # 1. Start all backends
+ * docker compose -f docker-compose.e2e.yaml up -d --wait
+ *
+ * # 2. Seed the populated backend
+ * npx tsx tests/e2e/utils/seed-populated-backend.ts
+ *
+ * # 3. Run E2E tests
+ * npx playwright test -c playwright.config.ts
+ *
+ * # 4. Stop backends
+ * docker compose -f docker-compose.e2e.yaml down
+ * ```
+ *
+ * Backend Instances (docker-compose.e2e.yaml):
+ * - no-sessions (8081): Always empty, for empty state tests
+ * - populated (8082): Pre-seeded with sessions, for stable visual tests
+ * - shared (8080): Allows session creation, for session-specific tests (default)
  *
  * The frontend runs via `ng serve` on port 4200, which proxies API calls
- * to the backend on port 8080 via proxy.conf.json.
+ * to the 'shared' backend on port 8080 via proxy.conf.json.
+ *
+ * Tests can configure which backend to use:
+ *   test.use({ backend: 'no-sessions' });
  */
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -41,10 +64,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-
-  // Global setup/teardown for Docker (only for local development)
-  globalSetup: process.env['CI'] ? undefined : './tests/e2e/global-setup.ts',
-  globalTeardown: process.env['CI'] ? undefined : './tests/e2e/global-teardown.ts',
 
   // Start Angular dev server for E2E tests
   // Key fixes for containerized environments:

@@ -92,12 +92,15 @@ class SessionRepository:
     """List sessions with cursor-based pagination.
 
     Args:
-        page_size: Maximum number of sessions to return.
+        page_size: Maximum number of sessions to return (0 uses default of 10).
         page_token: Base64-encoded timestamp cursor for pagination.
 
     Returns:
         PaginatedSessions containing the sessions and optional next page token.
     """
+    # Use default page_size if 0 (protobuf default value)
+    page_size = page_size or 10
+
     # Import here to deserialize proto
     from adk_sim_protos.adksim.v1 import SimulatorSession
 
