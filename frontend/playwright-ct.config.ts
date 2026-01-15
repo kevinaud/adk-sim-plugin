@@ -63,6 +63,15 @@ export default defineConfig({
       build: {
         sourcemap: false,
       },
+      // Configure SCSS processing for theme styles
+      css: {
+        preprocessorOptions: {
+          scss: {
+            // Include paths for @use directives
+            includePaths: [resolve('./src'), resolve('./node_modules')],
+          },
+        },
+      },
       resolve: {
         alias: {
           '@': resolve('./src'),
