@@ -383,19 +383,19 @@ The session-list component currently mixes both responsibilities, with ~105 line
 - `frontend/src/app/features/session-list/session-list.component.scss` (lines 107-171) - Current session item styles
 
 **Acceptance Criteria**:
-- [ ] Component accepts `session` input of type `Session`
-- [ ] Component emits `selected` output with session ID when clicked
-- [ ] Displays truncated session ID (first 8 chars) with full ID in title attribute
-- [ ] Displays session description if available
-- [ ] Displays formatted creation time using `DatePipe`
-- [ ] Displays status indicator (active/inactive)
-- [ ] Uses `mat-list-item` with Material list directives
-- [ ] Interactive: keyboard accessible (Enter key triggers selection)
-- [ ] Layout uses Tailwind utilities for gaps, spacing
-- [ ] Unit tests verify all data displays correctly and click emits event
-- [ ] Snapshot test captures visual appearance
-- [ ] Minimal custom SCSS (only what Tailwind cannot handle)
-- [ ] Presubmit passes
+- [x] Component accepts `session` input of type `Session`
+- [x] Component emits `selected` output with session ID when clicked
+- [x] Displays truncated session ID (first 8 chars) with full ID in title attribute
+- [x] Displays session description if available
+- [x] Displays formatted creation time using `DatePipe`
+- [x] Displays status indicator (active/inactive)
+- [x] Uses `mat-list-item` with Material list directives
+- [x] Interactive: keyboard accessible (Enter key triggers selection)
+- [x] Layout uses Tailwind utilities for gaps, spacing
+- [x] Unit tests verify all data displays correctly and click emits event
+- [x] Snapshot test captures visual appearance
+- [x] Minimal custom SCSS (only what Tailwind cannot handle)
+- [x] Presubmit passes
 
 ---
 

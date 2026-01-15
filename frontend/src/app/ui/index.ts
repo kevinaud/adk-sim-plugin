@@ -16,4 +16,4 @@
  */
 
 // Domain type for reference
-export type UiDomain = 'event-stream' | 'control-panel' | 'shared';
+export type UiDomain = 'event-stream' | 'control-panel' | 'session' | 'shared';
