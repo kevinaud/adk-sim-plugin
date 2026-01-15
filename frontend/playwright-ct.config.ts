@@ -18,6 +18,7 @@
 
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, devices } from '@sand4rt/experimental-ct-angular';
+import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 
 /**
@@ -55,6 +56,7 @@ export default defineConfig({
 
     ctViteConfig: {
       plugins: [
+        tailwindcss(),
         angular({
           tsconfig: resolve('./tsconfig.spec.json'),
         }),

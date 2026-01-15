@@ -9,8 +9,8 @@
  * @see mddocs/frontend/research/playwright-testing-research.md
  */
 
-// Theme CSS variables are provided inline in playwright/index.html
-// for both light and dark mode support in component tests.
+// Note: Tailwind CSS is loaded via <link> tag in index.html
+// This ensures Vite processes it correctly with @tailwindcss/vite
 
 // Import testing modules to ensure they're bundled
 import '@angular/core/testing';
