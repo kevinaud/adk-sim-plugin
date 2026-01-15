@@ -10,6 +10,11 @@
 
 export { type ConnectionStatus, ConnectionStatusComponent } from './connection-status';
 export { ErrorBannerComponent } from './error-banner';
+export { LoadingStateComponent } from './loading-state';
 
 // Type for reference - components that will be added
-export type SharedUiComponent = 'connection-status' | 'error-banner' | 'split-pane';
+export type SharedUiComponent =
+  | 'connection-status'
+  | 'error-banner'
+  | 'loading-state'
+  | 'split-pane';
