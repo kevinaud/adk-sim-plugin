@@ -2,6 +2,16 @@
 <!-- Implements FR-002 (Session List) and FR-003 (Session Metadata) -->
 
 <div class="session-list-container">
+  <!-- Route Error Banner (shown when redirected from invalid session) -->
+  @if (hasRouteError()) {
+    <app-error-banner
+      class="route-error-banner"
+      data-testid="route-error-banner"
+      [message]="routeError()!"
+      (dismissed)="dismissRouteError()"
+    />
+  }
+
   <mat-card class="session-list-card">
     <mat-card-header>
       <mat-card-title>

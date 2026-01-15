@@ -6,10 +6,18 @@
 
 .session-list-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding: 24px;
   min-height: calc(100vh - 64px);
   background-color: var(--mat-app-background-color, #fafafa);
+}
+
+// Route error banner wrapper (layout only - styling is in ErrorBannerComponent)
+.route-error-banner {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 16px;
 }
 
 .session-list-card {

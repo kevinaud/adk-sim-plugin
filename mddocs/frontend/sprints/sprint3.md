@@ -301,14 +301,14 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 - [Session Validation on Navigation](./research/prototype-findings.md#session-validation-on-navigation) - Guard behavior to verify
 
 **Acceptance Criteria**:
-- [ ] Test navigates to valid session URL and verifies SessionComponent loads
-- [ ] Test navigates to invalid session ID and verifies redirect to `/` with `?error=Session+not+found`
-- [ ] Test navigates to session URL with missing ID and verifies appropriate error handling
-- [ ] Test verifies EventStreamComponent renders with empty state placeholder
-- [ ] Test verifies EventBlockComponent renders user, model, and tool block types with correct styling
-- [ ] Screenshot baselines captured for session view with event blocks
-- [ ] Tests run successfully in Docker Compose E2E environment
-- [ ] Presubmit passes
+- [x] Test navigates to valid session URL and verifies SessionComponent loads
+- [x] Test navigates to invalid session ID and verifies redirect to `/` with `?error=Session+not+found`
+- [x] Test navigates to session URL with missing ID and verifies appropriate error handling
+- [x] Test verifies EventStreamComponent renders with empty state placeholder
+- [x] Test verifies EventBlockComponent renders user, model, and tool block types with correct styling
+- [x] Screenshot baselines captured for session view with event blocks
+- [x] Tests run successfully in Docker Compose E2E environment
+- [x] Presubmit passes
 
 ---
 

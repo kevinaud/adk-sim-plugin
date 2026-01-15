@@ -13,10 +13,11 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { create } from '@bufbuild/protobuf';
 import { timestampFromDate, type Timestamp } from '@bufbuild/protobuf/wkt';
+import { BehaviorSubject } from 'rxjs';
 
 import { SimulatorSessionSchema } from '@adk-sim/protos';
 
@@ -345,6 +346,38 @@ describe('SessionListComponent', () => {
     });
   });
 
+  describe('route error display', () => {
+    it('should not display route error banner when no error param', async () => {
+      mockGateway.setMockSessions([]);
+
+      fixture.detectChanges();
+      await waitForAsync();
+
+      expect(component.hasRouteError()).toBe(false);
+      const errorBanner = fixture.nativeElement.querySelector('[data-testid="route-error-banner"]');
+      expect(errorBanner).toBeFalsy();
+    });
+
+    it('should have dismissRouteError method', async () => {
+      mockGateway.setMockSessions([]);
+
+      fixture.detectChanges();
+      await waitForAsync();
+
+      // Method should exist and not throw
+      expect(typeof component.dismissRouteError).toBe('function');
+      expect(() => component.dismissRouteError()).not.toThrow();
+    });
+
+    it('should have routeError and hasRouteError signals', () => {
+      // Verify the signals exist and have correct initial state
+      expect(typeof component.routeError).toBe('function');
+      expect(typeof component.hasRouteError).toBe('function');
+      expect(component.routeError()).toBeNull();
+      expect(component.hasRouteError()).toBe(false);
+    });
+  });
+
   describe('helper methods', () => {
     beforeEach(async () => {
       mockGateway.setMockSessions([]);
@@ -382,5 +415,128 @@ describe('SessionListComponent', () => {
         expect(result).toBeNull();
       });
     });
+  });
+});
+
+/**
+ * Integration tests for route error display with query params.
+ * Uses a mock ActivatedRoute to simulate navigation with error query param.
+ */
+describe('SessionListComponent with route error query param', () => {
+  let component: SessionListComponent;
+  let fixture: ComponentFixture<SessionListComponent>;
+  let mockGateway: MockSessionGateway;
+  let queryParamsSubject: BehaviorSubject<Record<string, string>>;
+
+  // Helper to create mock sessions
+  const createMockSession = (id: string): Session => {
+    return create(SimulatorSessionSchema, { id, description: '' });
+  };
+
+  // Helper to allow microtasks and promises to resolve
+  const flushPromises = (): Promise<void> =>
+    new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+
+  // Helper to wait for async operations and update view
+  const waitForAsync = async (): Promise<void> => {
+    await flushPromises();
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    mockGateway = new MockSessionGateway();
+    queryParamsSubject = new BehaviorSubject<Record<string, string>>({
+      error: 'Session not found',
+    });
+
+    await TestBed.configureTestingModule({
+      imports: [SessionListComponent],
+      providers: [
+        provideRouter([]),
+        provideNoopAnimations(),
+        SessionFacade,
+        SessionStateService,
+        { provide: SessionGateway, useValue: mockGateway },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            queryParams: queryParamsSubject.asObservable(),
+          },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SessionListComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('should display route error from query params', async () => {
+    mockGateway.setMockSessions([createMockSession('session-1')]);
+
+    fixture.detectChanges();
+    await waitForAsync();
+
+    expect(component.hasRouteError()).toBe(true);
+    expect(component.routeError()).toBe('Session not found');
+
+    const errorBanner = fixture.nativeElement.querySelector('[data-testid="route-error-banner"]');
+    expect(errorBanner).toBeTruthy();
+
+    const errorMessage = fixture.nativeElement.querySelector(
+      '[data-testid="error-banner-message"]',
+    );
+    expect(errorMessage?.textContent).toContain('Session not found');
+  });
+
+  it('should display dismissible error banner with warning icon', async () => {
+    mockGateway.setMockSessions([]);
+
+    fixture.detectChanges();
+    await waitForAsync();
+
+    const warningIcon = fixture.nativeElement.querySelector('.error-icon');
+    expect(warningIcon).toBeTruthy();
+
+    const dismissButton = fixture.nativeElement.querySelector('.error-dismiss');
+    expect(dismissButton).toBeTruthy();
+  });
+
+  it('should clear error when queryParams change to no error', async () => {
+    mockGateway.setMockSessions([]);
+
+    fixture.detectChanges();
+    await waitForAsync();
+
+    expect(component.hasRouteError()).toBe(true);
+
+    // Simulate navigation without error param
+    queryParamsSubject.next({});
+    fixture.detectChanges();
+    await waitForAsync();
+
+    expect(component.hasRouteError()).toBe(false);
+    const errorBanner = fixture.nativeElement.querySelector('[data-testid="route-error-banner"]');
+    expect(errorBanner).toBeFalsy();
+  });
+
+  it('should dismiss error when dismiss button is clicked', async () => {
+    mockGateway.setMockSessions([]);
+
+    fixture.detectChanges();
+    await waitForAsync();
+
+    expect(component.hasRouteError()).toBe(true);
+
+    // Click dismiss
+    const dismissButton = fixture.nativeElement.querySelector(
+      '.error-dismiss',
+    ) as HTMLButtonElement;
+    expect(dismissButton).toBeTruthy();
+    dismissButton.click();
+    fixture.detectChanges();
+
+    expect(component.hasRouteError()).toBe(false);
   });
 });

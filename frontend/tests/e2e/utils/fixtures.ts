@@ -5,13 +5,21 @@
  * and Angular-specific utilities. Use this instead of the base `test`
  * import for Angular E2E tests.
  *
+ * ## Test Isolation
+ *
+ * Tests use the multi-backend approach for isolation. Different backend
+ * instances are available for different test scenarios:
+ * - `no-sessions`: Always empty, for empty state tests
+ * - `populated`: Pre-seeded with sessions, for stable visual tests
+ * - `shared`: Allows session creation, default for session-specific tests
+ *
  * @example
  * ```typescript
+ * // Standard test (uses unique identifiers for isolation)
  * import { expect, test } from './utils/fixtures';
  *
  * test('loads the app', async ({ page, browserLogs }) => {
  *   await page.goto('/');
- *   // browserLogs is automatically set up and checked in afterEach
  *   await expect(page.locator('app-root')).toBeVisible();
  * });
  * ```

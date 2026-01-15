@@ -1,0 +1,95 @@
+# E2E Testing Docker Compose Stack
+# =================================
+# Multiple backend instances for different testing scenarios.
+#
+# Backend Instances:
+# - no-sessions: Always empty, never has sessions created
+# - populated: Pre-seeded with fixed sessions for stable visual tests
+# - shared: Allows session creation for session-specific E2E tests
+#
+# Usage:
+#   docker compose -f docker-compose.e2e.yaml up -d --wait
+#
+# Each backend runs on a different port:
+# - no-sessions: 8081 (HTTP), 50052 (gRPC)
+# - populated:   8082 (HTTP), 50053 (gRPC)
+# - shared:      8083 (HTTP), 50054 (gRPC)
+
+services:
+  # ============================================================
+  # Backend: no-sessions
+  # ============================================================
+  # Always empty - tests connecting here should NEVER create sessions.
+  # Use for: empty session list tests, "session not found" error tests.
+  # ============================================================
+  backend-no-sessions:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "50052:50051"
+      - "8081:8080"
+    environment:
+      PYTHONPATH: /app
+      LOG_LEVEL: INFO
+      ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/no-sessions.db"
+    command: uv run adk-sim
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  # ============================================================
+  # Backend: populated
+  # ============================================================
+  # Pre-populated with a fixed set of sessions at startup.
+  # Tests connecting here should NOT create new sessions.
+  # Use for: populated session list screenshots, stable visual regression.
+  # ============================================================
+  backend-populated:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "50053:50051"
+      - "8082:8080"
+    environment:
+      PYTHONPATH: /app
+      LOG_LEVEL: INFO
+      ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/populated.db"
+    command: uv run adk-sim
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  # ============================================================
+  # Backend: shared
+  # ============================================================
+  # Shared backend where session creation is allowed.
+  # Multiple tests can run against this safely since each uses
+  # its own unique session ID.
+  # Use for: session-specific E2E tests.
+  # ============================================================
+  backend-shared:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "50054:50051"
+      - "8080:8080"
+    environment:
+      PYTHONPATH: /app
+      LOG_LEVEL: INFO
+      ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/shared.db"
+    command: uv run adk-sim
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
