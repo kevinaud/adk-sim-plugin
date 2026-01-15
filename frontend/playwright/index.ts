@@ -9,12 +9,8 @@
  * @see mddocs/frontend/research/playwright-testing-research.md
  */
 
-// Import pre-compiled theme CSS variables for light/dark mode support
-// Note: We use a pre-compiled CSS file because Vite can't process Angular
-// Material's SCSS mixins during component testing. This file contains the
-// essential CSS custom properties that components rely on.
-// See: tests/component/fixtures/theme-variables.css
-import '../tests/component/fixtures/theme-variables.css';
+// Theme CSS variables are provided inline in playwright/index.html
+// for both light and dark mode support in component tests.
 
 // Import testing modules to ensure they're bundled
 import '@angular/core/testing';

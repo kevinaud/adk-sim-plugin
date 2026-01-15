@@ -85,9 +85,6 @@ export class SessionListComponent implements OnInit {
   /** Whether there's a route error */
   readonly hasRouteError = computed(() => this._routeError() !== null);
 
-  /** Connection status from the facade */
-  readonly connectionStatus = this.facade.connectionStatus;
-
   /** Error message from the facade */
   readonly error = this.facade.error;
 
