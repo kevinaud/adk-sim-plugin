@@ -1373,10 +1373,10 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 
 | Done | Task | FR | Deliverable |
 |:----:|------|-----|-------------|
-| [ ] | `GrpcSessionGateway` | FR-020 | Connect-ES adapter |
+| [x] | `GrpcSessionGateway` | FR-020 | Connect-ES adapter |
 | [x] | `@adk-sim/converters` package | - | Proto ↔ ADK conversion |
 | [x] | `LlmRequestConverter` | - | Frontend-specific wrappers |
-| [ ] | Auto-reconnect logic | FR-022, FR-023 | `ReconnectStrategy` |
+| [x] | Auto-reconnect logic | FR-022, FR-023 | `ReconnectStrategy` |
 | [x] | Connection status UI | FR-023 | `ConnectionStatusComponent` |
 
 ### Phase 3: Event Stream (Week 3)

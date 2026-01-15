@@ -209,13 +209,13 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 - [Connection Lifecycle with Auto-Reconnect](../research/prototype-findings.md#connection-lifecycle-with-auto-reconnect) - Usage pattern
 
 **Acceptance Criteria**:
-- [ ] `validateSession(sessionId)` calls `gateway.getSession()` and throws on failure
-- [ ] `subscribeToSession(sessionId)` yields converted `LlmRequest` events
-- [ ] `subscribeToSession()` updates connection status during lifecycle
-- [ ] `cancelSubscription()` method delegates to gateway
-- [ ] State service updated with session ID on subscription start
-- [ ] Unit tests cover validation success/failure and subscription lifecycle
-- [ ] Presubmit passes
+- [x] `validateSession(sessionId)` calls `gateway.getSession()` and throws on failure
+- [x] `subscribeToSession(sessionId)` yields converted `LlmRequest` events
+- [x] `subscribeToSession()` updates connection status during lifecycle
+- [x] `cancelSubscription()` method delegates to gateway
+- [x] State service updated with session ID on subscription start
+- [x] Unit tests cover validation success/failure and subscription lifecycle
+- [x] Presubmit passes
 
 ---
 
