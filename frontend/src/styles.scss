@@ -1,12 +1,16 @@
-/* Angular Material Theme */
+/* ==========================================================================
+   Angular Material Theme Configuration
+   SCSS @use rules must come first
+   ========================================================================== */
+
 @use '@angular/material' as mat;
 
 /* Self-hosted fonts loaded via angular.json styles array */
 
-// Include the common styles for Angular Material
+/* Include the common styles for Angular Material */
 @include mat.core();
 
-// Define the theme using Angular Material's predefined palettes
+/* Define the theme using Angular Material's predefined palettes */
 $primary: mat.m2-define-palette(mat.$m2-indigo-palette);
 $accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
 $warn: mat.m2-define-palette(mat.$m2-red-palette);
@@ -23,13 +27,62 @@ $theme: mat.m2-define-light-theme(
   )
 );
 
-// Apply the theme to all Angular Material components
+/* Apply the theme to all Angular Material components */
 @include mat.all-component-themes($theme);
 
-/* Global styles */
-* {
-  box-sizing: border-box;
+/* ==========================================================================
+   Tailwind CSS + Angular Material Integration
+   Using granular imports to avoid Preflight conflicts with Material
+   ========================================================================== */
+
+/* A. Define CSS Layers for proper cascade ordering */
+@layer theme, base, components, utilities;
+
+/* B. Import Tailwind Core Modules (Skipping Preflight) */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* C. Configure Sources for Monorepo */
+@source './app';
+@source '../../packages';
+
+/* ==========================================================================
+   Material-Safe Reset (Base Layer)
+   Only includes essential resets that don't conflict with Angular Material
+   ========================================================================== */
+
+@layer base {
+  /* 1. Essential Box Sizing (Required for all modern layouts) */
+  *,
+  ::after,
+  ::before {
+    box-sizing: border-box;
+  }
+
+  /* 2. Restore Standard HTML Behavior */
+  /* Material handles most of this, but this keeps non-material elements sane */
+  html {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+  }
+
+  /* 3. Explicitly preserve heading styles for Dialogs/Cards */
+  /* Prevents Preflight-like heading reset that would break mat-card-title, etc. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: revert;
+    font-weight: revert;
+  }
 }
+
+/* ==========================================================================
+   Global Styles
+   ========================================================================== */
 
 html,
 body {
