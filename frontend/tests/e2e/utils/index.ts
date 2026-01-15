@@ -44,9 +44,6 @@ export {
   type SimulatorClient,
 } from './multi-backend-fixtures';
 
-// Legacy fixtures (for backward compatibility with existing tests)
-export { isolatedTest } from './fixtures';
-
 // Angular-specific helpers
 export { waitForAngularApp, waitForAngularStable } from './angular-helpers';
 
@@ -59,9 +56,6 @@ export {
 
 // gRPC client factory for test setup
 export { createTestClient } from './grpc-client';
-
-// Database reset utilities for test isolation
-export { isBackendRunning, resetDatabase } from './db-reset';
 
 // Backend configuration (for advanced use cases)
 export {

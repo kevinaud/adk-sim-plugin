@@ -7,13 +7,11 @@
  *
  * ## Test Isolation
  *
- * Tests share a single Docker backend for performance. Isolation strategies:
- *
- * 1. **`test`** (default): Browser isolation only. Tests share backend state.
- *    Use unique identifiers (timestamps) to avoid collisions.
- *
- * 2. **`isolatedTest`**: Resets the database before each test. Use for tests
- *    that require a completely clean state (slower due to DB reset overhead).
+ * Tests use the multi-backend approach for isolation. Different backend
+ * instances are available for different test scenarios:
+ * - `no-sessions`: Always empty, for empty state tests
+ * - `populated`: Pre-seeded with sessions, for stable visual tests
+ * - `shared`: Allows session creation, default for session-specific tests
  *
  * @example
  * ```typescript
@@ -23,13 +21,6 @@
  * test('loads the app', async ({ page, browserLogs }) => {
  *   await page.goto('/');
  *   await expect(page.locator('app-root')).toBeVisible();
- * });
- *
- * // Isolated test (database reset before each test)
- * import { expect, isolatedTest } from './utils/fixtures';
- *
- * isolatedTest('starts with empty session list', async ({ page }) => {
- *   // Database was cleared before this test
  * });
  * ```
  */
@@ -42,7 +33,6 @@ import {
   type BrowserLogs,
   setupBrowserErrorCapture,
 } from './browser-errors';
-import { resetDatabase } from './db-reset';
 
 /**
  * Extended test fixtures for Angular E2E tests.
@@ -93,38 +83,6 @@ export const test = base.extend<AngularTestFixtures>({
     };
 
     await use(navigate);
-  },
-});
-
-/**
- * Extended test fixture with database isolation.
- *
- * Resets the database before each test to ensure a clean state.
- * Use this for tests that require no pre-existing data.
- *
- * Note: This adds ~100-200ms overhead per test. For most tests,
- * using unique identifiers with the standard `test` fixture is faster.
- *
- * @example
- * ```typescript
- * import { expect, isolatedTest } from './utils/fixtures';
- *
- * isolatedTest('empty state shows no sessions', async ({ page, gotoAndWaitForAngular }) => {
- *   await gotoAndWaitForAngular('/');
- *   // Database was cleared - session list should be empty
- * });
- * ```
- */
-export const isolatedTest = test.extend<Record<string, never>>({
-  // Auto-fixture that runs before each test
-  page: async ({ page }, use) => {
-    // Reset database before the test (synchronous operation)
-    resetDatabase();
-
-    // Small delay to ensure backend sees the clean state
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    await use(page);
   },
 });
 

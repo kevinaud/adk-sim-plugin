@@ -72,7 +72,7 @@ test.describe('Session Navigation', () => {
       const errorBanner = page.locator('[data-testid="route-error-banner"]');
       await expect(errorBanner).toBeVisible({ timeout: 5000 });
 
-      const errorMessage = page.locator('[data-testid="route-error-message"]');
+      const errorMessage = page.locator('[data-testid="error-banner-message"]');
       await expect(errorMessage).toContainText('Session not found');
     });
   });
@@ -489,7 +489,7 @@ test.describe('Visual Regression', () => {
       const errorBanner = page.locator('[data-testid="route-error-banner"]');
       await expect(errorBanner).toBeVisible({ timeout: 5000 });
 
-      const errorMessage = page.locator('[data-testid="route-error-message"]');
+      const errorMessage = page.locator('[data-testid="error-banner-message"]');
       await expect(errorMessage).toContainText('Session not found');
 
       // Capture screenshot showing the error banner
@@ -513,7 +513,7 @@ test.describe('Visual Regression', () => {
       await expect(errorBanner).toBeVisible({ timeout: 5000 });
 
       // Click dismiss button
-      const dismissButton = page.locator('.route-error-dismiss');
+      const dismissButton = page.locator('[data-testid="error-banner-dismiss"]');
       await dismissButton.click();
 
       // Error banner should be hidden
