@@ -56,7 +56,7 @@ describe('ConnectionStatusComponent', () => {
     });
 
     it('should display "Connected" label', () => {
-      const label = fixture.nativeElement.querySelector('.status-label');
+      const label = fixture.nativeElement.querySelector('[data-testid="connection-status-label"]');
       expect(label.textContent).toBe('Connected');
     });
 
@@ -66,8 +66,10 @@ describe('ConnectionStatusComponent', () => {
     });
 
     it('should have connected CSS class', () => {
-      const container = fixture.nativeElement.querySelector('.connection-status');
-      expect(container.classList.contains('status-connected')).toBe(true);
+      const container = fixture.nativeElement.querySelector(
+        '[data-testid="connection-status-connected"]',
+      );
+      expect(container).toBeTruthy();
     });
 
     it('should not have spinning animation', () => {
@@ -83,7 +85,7 @@ describe('ConnectionStatusComponent', () => {
     });
 
     it('should display "Connecting" label', () => {
-      const label = fixture.nativeElement.querySelector('.status-label');
+      const label = fixture.nativeElement.querySelector('[data-testid="connection-status-label"]');
       expect(label.textContent).toBe('Connecting');
     });
 
@@ -93,8 +95,10 @@ describe('ConnectionStatusComponent', () => {
     });
 
     it('should have connecting CSS class', () => {
-      const container = fixture.nativeElement.querySelector('.connection-status');
-      expect(container.classList.contains('status-connecting')).toBe(true);
+      const container = fixture.nativeElement.querySelector(
+        '[data-testid="connection-status-connecting"]',
+      );
+      expect(container).toBeTruthy();
     });
 
     it('should have spinning animation', () => {
@@ -110,7 +114,7 @@ describe('ConnectionStatusComponent', () => {
     });
 
     it('should display "Disconnected" label', () => {
-      const label = fixture.nativeElement.querySelector('.status-label');
+      const label = fixture.nativeElement.querySelector('[data-testid="connection-status-label"]');
       expect(label.textContent).toBe('Disconnected');
     });
 
@@ -120,8 +124,10 @@ describe('ConnectionStatusComponent', () => {
     });
 
     it('should have disconnected CSS class', () => {
-      const container = fixture.nativeElement.querySelector('.connection-status');
-      expect(container.classList.contains('status-disconnected')).toBe(true);
+      const container = fixture.nativeElement.querySelector(
+        '[data-testid="connection-status-disconnected"]',
+      );
+      expect(container).toBeTruthy();
     });
 
     it('should not have spinning animation', () => {
@@ -132,20 +138,22 @@ describe('ConnectionStatusComponent', () => {
 
   describe('state transitions', () => {
     it('should update when connection status changes', () => {
+      const labelSelector = '[data-testid="connection-status-label"]';
+
       // Start disconnected
       hostComponent.status.set('disconnected');
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('.status-label').textContent).toBe('Disconnected');
+      expect(fixture.nativeElement.querySelector(labelSelector).textContent).toBe('Disconnected');
 
       // Transition to connecting
       hostComponent.status.set('connecting');
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('.status-label').textContent).toBe('Connecting');
+      expect(fixture.nativeElement.querySelector(labelSelector).textContent).toBe('Connecting');
 
       // Transition to connected
       hostComponent.status.set('connected');
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('.status-label').textContent).toBe('Connected');
+      expect(fixture.nativeElement.querySelector(labelSelector).textContent).toBe('Connected');
     });
   });
 });

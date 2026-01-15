@@ -37,12 +37,19 @@ import { MatIconModule } from '@angular/material/icon';
   standalone: true,
   imports: [MatButtonModule, MatIconModule],
   template: `
-    <div class="error-banner" data-testid="error-banner">
-      <mat-icon class="error-icon">{{ icon() }}</mat-icon>
-      <span class="error-message" data-testid="error-banner-message">{{ message() }}</span>
+    <div
+      class="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-warning border-l-4 bg-warning/10"
+      data-testid="error-banner"
+    >
+      <mat-icon class="text-warning shrink-0" data-testid="error-banner-icon">{{
+        icon()
+      }}</mat-icon>
+      <span class="flex-1 text-warning font-medium" data-testid="error-banner-message">{{
+        message()
+      }}</span>
       <button
         mat-icon-button
-        class="error-dismiss"
+        class="shrink-0 text-on-surface-variant hover:text-on-surface"
         (click)="dismissed.emit()"
         aria-label="Dismiss error"
         data-testid="error-banner-dismiss"
@@ -51,40 +58,7 @@ import { MatIconModule } from '@angular/material/icon';
       </button>
     </div>
   `,
-  styles: `
-    .error-banner {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 12px 16px;
-      background-color: #fff3e0;
-      border: 1px solid #ff9800;
-      border-radius: 8px;
-      border-left: 4px solid #ff9800;
-      box-sizing: border-box;
-    }
-
-    .error-icon {
-      color: #ff9800;
-      flex-shrink: 0;
-    }
-
-    .error-message {
-      flex: 1;
-      color: #e65100;
-      font-weight: 500;
-    }
-
-    .error-dismiss {
-      flex-shrink: 0;
-      color: rgba(0, 0, 0, 0.54);
-
-      &:hover {
-        color: rgba(0, 0, 0, 0.87);
-      }
-    }
-  `,
+  styles: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorBannerComponent {

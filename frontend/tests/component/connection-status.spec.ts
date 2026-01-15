@@ -35,9 +35,9 @@ test.describe('ConnectionStatusComponent', () => {
       const icon = page.locator('mat-icon');
       await expect(icon).toContainText('check_circle');
 
-      // Verify the CSS class is applied
-      const statusElement = page.locator('.connection-status');
-      await expect(statusElement).toHaveClass(/status-connected/);
+      // Verify the data-testid indicates connected status
+      const statusElement = page.locator('[data-testid="connection-status-connected"]');
+      await expect(statusElement).toBeVisible();
     });
 
     test('displays connecting state with orange sync icon', async ({ mount, page }) => {
@@ -54,9 +54,9 @@ test.describe('ConnectionStatusComponent', () => {
       const icon = page.locator('mat-icon');
       await expect(icon).toContainText('sync');
 
-      // Verify the CSS class is applied
-      const statusElement = page.locator('.connection-status');
-      await expect(statusElement).toHaveClass(/status-connecting/);
+      // Verify the data-testid indicates connecting status
+      const statusElement = page.locator('[data-testid="connection-status-connecting"]');
+      await expect(statusElement).toBeVisible();
     });
 
     test('displays disconnected state with red error icon', async ({ mount, page }) => {
@@ -73,9 +73,9 @@ test.describe('ConnectionStatusComponent', () => {
       const icon = page.locator('mat-icon');
       await expect(icon).toContainText('error');
 
-      // Verify the CSS class is applied
-      const statusElement = page.locator('.connection-status');
-      await expect(statusElement).toHaveClass(/status-disconnected/);
+      // Verify the data-testid indicates disconnected status
+      const statusElement = page.locator('[data-testid="connection-status-disconnected"]');
+      await expect(statusElement).toBeVisible();
     });
   });
 

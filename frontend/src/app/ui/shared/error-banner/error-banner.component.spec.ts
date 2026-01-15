@@ -71,7 +71,7 @@ describe('ErrorBannerComponent', () => {
 
   describe('icon display', () => {
     it('should display the default warning icon', () => {
-      const icon = fixture.nativeElement.querySelector('.error-icon');
+      const icon = fixture.nativeElement.querySelector('[data-testid="error-banner-icon"]');
       expect(icon.textContent).toContain('warning');
     });
 
@@ -79,7 +79,7 @@ describe('ErrorBannerComponent', () => {
       hostComponent.icon.set('error');
       fixture.detectChanges();
 
-      const icon = fixture.nativeElement.querySelector('.error-icon');
+      const icon = fixture.nativeElement.querySelector('[data-testid="error-banner-icon"]');
       expect(icon.textContent).toContain('error');
     });
 
@@ -87,7 +87,7 @@ describe('ErrorBannerComponent', () => {
       hostComponent.icon.set('info');
       fixture.detectChanges();
 
-      const icon = fixture.nativeElement.querySelector('.error-icon');
+      const icon = fixture.nativeElement.querySelector('[data-testid="error-banner-icon"]');
       expect(icon.textContent).toContain('info');
     });
   });
@@ -131,9 +131,9 @@ describe('ErrorBannerComponent', () => {
   });
 
   describe('styling', () => {
-    it('should have error-banner class on container', () => {
+    it('should have error-banner data-testid on container', () => {
       const container = fixture.nativeElement.querySelector('[data-testid="error-banner"]');
-      expect(container.classList.contains('error-banner')).toBe(true);
+      expect(container).toBeTruthy();
     });
 
     it('should have close icon in dismiss button', () => {
