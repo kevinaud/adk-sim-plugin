@@ -271,26 +271,7 @@ test.describe('Session Creation Tests', () => {
   });
 });
 
-/**
- * Visual Regression Tests
- *
- * These tests capture screenshots for visual regression.
- * Uses the default shared backend.
- */
-test.describe('Visual Regression', () => {
-  test('visual regression - session list view', async ({ page, gotoAndWaitForAngular }) => {
-    await gotoAndWaitForAngular('/');
-
-    // Wait for the session list to fully render
-    const cardTitle = page.getByText(/available sessions/i);
-    await expect(cardTitle).toBeVisible({ timeout: 30000 });
-
-    // Give Angular Material animations time to complete
-    await page.waitForTimeout(500);
-
-    // Capture visual regression screenshot (stored in __snapshots__/)
-    await expect(page).toHaveScreenshot('session-list-view.png', {
-      fullPage: true,
-    });
-  });
-});
+// NOTE: Visual regression tests are in the backend-specific test.describe blocks:
+// - "Empty State Tests" contains session-list-empty.png (no-sessions backend)
+// - "Populated Backend Tests" contains session-list-populated.png (populated backend)
+// This ensures deterministic screenshots by using backends with known, stable state.

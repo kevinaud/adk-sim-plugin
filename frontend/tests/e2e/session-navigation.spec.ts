@@ -428,10 +428,8 @@ test.describe('Session List with Created Sessions', () => {
     // Verify the session description is displayed
     await expect(page.getByText(session.description)).toBeVisible();
 
-    // Take a screenshot showing the session list WITH sessions
-    await expect(page).toHaveScreenshot('session-list-with-sessions.png', {
-      fullPage: true,
-    });
+    // NOTE: Visual regression for populated session list is in session-list.spec.ts
+    // using the 'populated' backend for deterministic screenshots
   });
 
   test('can navigate to a session created via API', async ({
