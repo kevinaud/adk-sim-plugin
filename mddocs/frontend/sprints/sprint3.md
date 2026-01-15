@@ -239,13 +239,13 @@ Event blocks render conversation turns with distinct styling for User Input, Age
 - [FR-007](../frontend-spec.md#fr-context-inspection) - Conversation history as structured blocks
 
 **Acceptance Criteria**:
-- [ ] Component accepts `events` input signal of `Content[]` (conversation contents)
-- [ ] Component renders placeholder text when events array is empty
-- [ ] Component iterates events using `@for` with tracking
-- [ ] Component slot for rendering child EventBlockComponents (or direct render in next PR)
-- [ ] Uses `ChangeDetectionStrategy.OnPush` and signals
-- [ ] Unit tests verify empty state and event iteration
-- [ ] Presubmit passes
+- [x] Component accepts `events` input signal of `Content[]` (conversation contents)
+- [x] Component renders placeholder text when events array is empty
+- [x] Component iterates events using `@for` with tracking
+- [x] Component slot for rendering child EventBlockComponents (or direct render in next PR)
+- [x] Uses `ChangeDetectionStrategy.OnPush` and signals
+- [x] Unit tests verify empty state and event iteration
+- [x] Presubmit passes
 
 ---
 
