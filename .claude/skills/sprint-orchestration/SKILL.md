@@ -130,6 +130,67 @@ See [references/git-town.md](references/git-town.md) for detailed Git Town comma
 
 3. **Verify implementation**: Check `git status`, verify changes align with PR goal
 
+### Phase 3b: Code Simplification
+
+After the implementation agent completes, invoke the code-simplifier to review and potentially simplify the changes.
+
+1. **Determine parent branch** (CRITICAL for correct diff scope):
+   ```bash
+   # Get the parent branch from git town's configuration
+   git config --get git-town-branch.$(git branch --show-current).parent
+   ```
+   - If no parent is configured, fall back to `main`
+   - **NEVER diff against `main` if this is a stacked branch** - doing so would include changes from parent PRs in the diff scope
+
+2. **Invoke `code-simplifier` agent** using the Task tool:
+   ```
+   Task tool with subagent_type="code-simplifier:code-simplifier"
+   ```
+
+   **CRITICAL INSTRUCTIONS TO PASS TO CODE-SIMPLIFIER:**
+
+   ```markdown
+   ## Scope Constraint (MANDATORY)
+
+   You MUST only review and modify code that is part of THIS PR's changes.
+
+   **Determine the diff scope:**
+   - Parent branch: `<parent-branch-from-step-1>`
+   - Run: `git diff <parent-branch>...HEAD --name-only` to see files in scope
+   - Run: `git diff <parent-branch>...HEAD` to see the actual changes
+
+   **STRICTLY FORBIDDEN:**
+   - DO NOT modify any code outside the files listed in the diff
+   - DO NOT modify any lines within those files that weren't changed by this PR
+   - DO NOT "improve" code in other areas of the codebase, even if you see obvious improvements
+   - DO NOT touch code from parent PRs in the stack
+
+   **Your scope is ONLY:**
+   - Code added or modified in this PR (diff against parent branch)
+   - Simplifications that maintain the same functionality
+   - Clarity improvements within the PR's changed code
+
+   ## What to Look For
+
+   Within the PR scope, look for opportunities to:
+   - Reduce code complexity without changing behavior
+   - Improve readability and clarity
+   - Remove unnecessary abstractions or indirection
+   - Consolidate duplicate logic introduced in this PR
+   - Simplify conditional logic
+   - Use more idiomatic patterns for the language/framework
+
+   ## Output
+
+   If no meaningful simplifications are found, report that the code is already clean.
+   If simplifications are made, briefly list what was changed and why.
+   ```
+
+3. **Verify simplifications** (if any were made):
+   - Run `git diff` to review the simplifier's changes
+   - Ensure changes are within the PR scope (diff against parent branch)
+   - If changes are out of scope, revert them: `git checkout -- <file>`
+
 ### Phase 4: Commit and Push
 
 1. **Review changes**: `git diff --stat` (target ~200 lines max)
@@ -264,12 +325,16 @@ Follow the merge process reference for each approved PR (oldest/parent first):
 - Use `gh run watch` (blocks agent)
 - Use raw `git checkout -b` (use Git Town)
 - Pause between PRs unnecessarily
+- Allow code-simplifier to modify code outside the current PR scope
+- Diff against `main` for stacked branches (use parent branch from git town config)
 
 ### REQUIRED
 - ALWAYS WAIT FOR EXPLICIT USER APPROVAL BEFORE MERGING
 - **READ [references/merge-process.md](references/merge-process.md) BEFORE ANY MERGE** (Critical)
 - Use `git town` commands for branch management
 - Pass background reading links to implementer
+- **Invoke code-simplifier after implementation** with strict scope constraints
+- **Determine parent branch from git town config** before code simplification
 - Create Draft PRs first, mark ready after CI passes
 - Process PRs in dependency order
 - Sync after merging to propagate to stacked branches
