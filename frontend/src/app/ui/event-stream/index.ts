@@ -8,4 +8,6 @@
  * @see mddocs/frontend/frontend-tdd.md#event-stream-components
  */
 
+export type { BlockType } from './event-block';
+export { EventBlockComponent } from './event-block';
 export { EventStreamComponent } from './event-stream.component';

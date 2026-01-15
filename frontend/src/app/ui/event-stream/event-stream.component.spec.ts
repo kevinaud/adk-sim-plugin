@@ -3,9 +3,9 @@
  *
  * Tests verify that the component correctly:
  * - Displays empty state when no events are provided
- * - Renders event placeholders when events are provided
+ * - Renders EventBlockComponent for each event
  * - Uses @for iteration with proper tracking
- * - Shows correct role information for each event
+ * - Integrates correctly with EventBlockComponent
  *
  * @see mddocs/frontend/frontend-spec.md#fr-context-inspection - FR-007
  */
@@ -15,6 +15,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Content } from '@adk-sim/converters';
 
 import { EventStreamComponent } from './event-stream.component';
+import { EventBlockComponent } from './event-block';
 
 /**
  * Create a test Content object with specified role and parts count.
@@ -50,7 +51,7 @@ describe('EventStreamComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TestHostComponent, EventStreamComponent],
+      imports: [TestHostComponent, EventStreamComponent, EventBlockComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);
@@ -119,31 +120,29 @@ describe('EventStreamComponent', () => {
       expect(eventBlocks.length).toBe(3);
     });
 
-    it('should display role for each event', () => {
-      hostComponent.events.set([createTestContent('user'), createTestContent('model')]);
-      fixture.detectChanges();
-
-      const roleBadges = fixture.nativeElement.querySelectorAll('.role-badge');
-      expect(roleBadges[0].textContent).toBe('user');
-      expect(roleBadges[1].textContent).toBe('model');
-    });
-
-    it('should set data-role attribute on event blocks', () => {
-      hostComponent.events.set([createTestContent('user'), createTestContent('model')]);
+    it('should render EventBlockComponent with correct block type for user', () => {
+      hostComponent.events.set([createTestContent('user')]);
       fixture.detectChanges();
 
       const eventBlocks = fixture.nativeElement.querySelectorAll('[data-testid="event-block"]');
-      expect(eventBlocks[0].getAttribute('data-role')).toBe('user');
-      expect(eventBlocks[1].getAttribute('data-role')).toBe('model');
+      expect(eventBlocks[0].getAttribute('data-type')).toBe('user');
     });
 
-    it('should display correct parts count for each event', () => {
-      hostComponent.events.set([createTestContent('user', 1), createTestContent('model', 3)]);
+    it('should render EventBlockComponent with correct block type for model', () => {
+      hostComponent.events.set([createTestContent('model')]);
       fixture.detectChanges();
 
-      const partsCounts = fixture.nativeElement.querySelectorAll('.parts-count');
-      expect(partsCounts[0].textContent).toContain('1 part(s)');
-      expect(partsCounts[1].textContent).toContain('3 part(s)');
+      const eventBlocks = fixture.nativeElement.querySelectorAll('[data-testid="event-block"]');
+      expect(eventBlocks[0].getAttribute('data-type')).toBe('model');
+    });
+
+    it('should render block labels for each event type', () => {
+      hostComponent.events.set([createTestContent('user'), createTestContent('model')]);
+      fixture.detectChanges();
+
+      const labels = fixture.nativeElement.querySelectorAll('.block-label');
+      expect(labels[0].textContent).toBe('User Input');
+      expect(labels[1].textContent).toBe('Agent Response');
     });
 
     it('should handle content with undefined parts', () => {
@@ -151,8 +150,9 @@ describe('EventStreamComponent', () => {
       hostComponent.events.set([contentWithUndefinedParts]);
       fixture.detectChanges();
 
-      const partsCount = fixture.nativeElement.querySelector('.parts-count');
-      expect(partsCount.textContent).toContain('0 part(s)');
+      // Should still render without errors
+      const eventBlocks = fixture.nativeElement.querySelectorAll('[data-testid="event-block"]');
+      expect(eventBlocks.length).toBe(1);
     });
   });
 
@@ -183,11 +183,11 @@ describe('EventStreamComponent', () => {
       hostComponent.events.set(events);
       fixture.detectChanges();
 
-      const roleBadges = fixture.nativeElement.querySelectorAll('.role-badge');
-      expect(roleBadges[0].textContent).toBe('user');
-      expect(roleBadges[1].textContent).toBe('model');
-      expect(roleBadges[2].textContent).toBe('user');
-      expect(roleBadges[3].textContent).toBe('model');
+      const eventBlocks = fixture.nativeElement.querySelectorAll('[data-testid="event-block"]');
+      expect(eventBlocks[0].getAttribute('data-type')).toBe('user');
+      expect(eventBlocks[1].getAttribute('data-type')).toBe('model');
+      expect(eventBlocks[2].getAttribute('data-type')).toBe('user');
+      expect(eventBlocks[3].getAttribute('data-type')).toBe('model');
     });
 
     it('should handle transition from events to empty', () => {
