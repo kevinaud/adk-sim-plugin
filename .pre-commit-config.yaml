@@ -140,6 +140,20 @@ repos:
         always_run: true
         stages: [pre-push, manual]
 
+      # ============================================================
+      # Snapshot Consistency Check
+      # ============================================================
+      # Ensures all visual regression snapshots are committed.
+      # If tests updated snapshots, they must be staged before push.
+      # ============================================================
+      - id: check-snapshots
+        name: check snapshots are committed
+        entry: bash -c 'UNSTAGED=$(git diff --name-only -- "frontend/tests/**/__snapshots__/**/*.png" 2>/dev/null); if [ -n "$UNSTAGED" ]; then echo ""; echo "ERROR - Visual regression snapshots were modified but not staged!"; echo ""; echo "Modified files -"; echo "$UNSTAGED" | sed "s/^/  /"; echo ""; echo "Run git add frontend/tests/**/__snapshots__ then commit again"; echo ""; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+
       - id: test-e2e
         name: e2e tests (requires docker)
         entry: bash -c 'ops ci should-run-e2e || exit 0; uv run pytest server/tests/e2e --run-e2e -v'
