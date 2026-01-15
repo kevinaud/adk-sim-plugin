@@ -1,42 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ThemeService, type ThemePreference } from './theme.service';
+import { ThemeService } from './theme.service';
 
 describe('ThemeService', () => {
   let service: ThemeService;
-  let localStorageStore: Record<string, string>;
   let mediaQueryListeners: Array<(event: { matches: boolean }) => void>;
   let matchMediaMatches: boolean;
 
-  // Store original implementations
-  const originalLocalStorage = globalThis.localStorage;
+  // Store original matchMedia (localStorage is provided by Vitest)
   const originalMatchMedia = globalThis.matchMedia;
 
   beforeEach(() => {
-    // Reset storage mock
-    localStorageStore = {};
-
-    // Create localStorage mock
-    const localStorageMock = {
-      getItem: vi.fn((key: string) => localStorageStore[key] ?? null),
-      setItem: vi.fn((key: string, value: string) => {
-        localStorageStore[key] = value;
-      }),
-      removeItem: vi.fn((key: string) => {
-        delete localStorageStore[key];
-      }),
-      clear: vi.fn(() => {
-        localStorageStore = {};
-      }),
-      length: 0,
-      key: vi.fn(() => null),
-    };
-
-    Object.defineProperty(globalThis, 'localStorage', {
-      value: localStorageMock,
-      writable: true,
-      configurable: true,
-    });
+    // Clear localStorage (Vitest provides a real implementation)
+    localStorage.clear();
 
     // Reset matchMedia mock
     mediaQueryListeners = [];
@@ -73,12 +49,7 @@ describe('ThemeService', () => {
   });
 
   afterEach(() => {
-    // Restore original implementations
-    Object.defineProperty(globalThis, 'localStorage', {
-      value: originalLocalStorage,
-      writable: true,
-      configurable: true,
-    });
+    // Restore original matchMedia
     Object.defineProperty(globalThis, 'matchMedia', {
       value: originalMatchMedia,
       writable: true,
@@ -110,13 +81,13 @@ describe('ThemeService', () => {
     });
 
     it('should read stored preference from localStorage', () => {
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
       expect(service.preference()).toBe('dark');
     });
 
     it('should handle invalid localStorage values by defaulting to system', () => {
-      localStorageStore['theme-preference'] = 'invalid-value';
+      localStorage.setItem('theme-preference', 'invalid-value');
       service = createService();
       expect(service.preference()).toBe('system');
     });
@@ -124,13 +95,13 @@ describe('ThemeService', () => {
 
   describe('isDarkMode computed signal', () => {
     it('should return true when preference is dark', () => {
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
       expect(service.isDarkMode()).toBe(true);
     });
 
     it('should return false when preference is light', () => {
-      localStorageStore['theme-preference'] = 'light';
+      localStorage.setItem('theme-preference', 'light');
       service = createService();
       expect(service.isDarkMode()).toBe(false);
     });
@@ -175,19 +146,19 @@ describe('ThemeService', () => {
 
     it('should persist preference to localStorage', () => {
       service.setTheme('dark');
-      expect(localStorageStore['theme-preference']).toBe('dark');
+      expect(localStorage.getItem('theme-preference')).toBe('dark');
 
       service.setTheme('light');
-      expect(localStorageStore['theme-preference']).toBe('light');
+      expect(localStorage.getItem('theme-preference')).toBe('light');
 
       service.setTheme('system');
-      expect(localStorageStore['theme-preference']).toBe('system');
+      expect(localStorage.getItem('theme-preference')).toBe('system');
     });
   });
 
   describe('toggleTheme', () => {
     it('should toggle from light to dark', () => {
-      localStorageStore['theme-preference'] = 'light';
+      localStorage.setItem('theme-preference', 'light');
       service = createService();
 
       service.toggleTheme();
@@ -197,7 +168,7 @@ describe('ThemeService', () => {
     });
 
     it('should toggle from dark to light', () => {
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
 
       service.toggleTheme();
@@ -235,7 +206,7 @@ describe('ThemeService', () => {
 
   describe('document.body class management', () => {
     it('should add dark-theme class when dark mode is active', () => {
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
 
       // Run effects
@@ -245,7 +216,7 @@ describe('ThemeService', () => {
     });
 
     it('should not add dark-theme class when light mode is active', () => {
-      localStorageStore['theme-preference'] = 'light';
+      localStorage.setItem('theme-preference', 'light');
       service = createService();
 
       // Run effects
@@ -255,7 +226,7 @@ describe('ThemeService', () => {
     });
 
     it('should remove dark-theme class when switching from dark to light', () => {
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
       TestBed.flushEffects();
 
@@ -268,7 +239,7 @@ describe('ThemeService', () => {
     });
 
     it('should add dark-theme class when switching from light to dark', () => {
-      localStorageStore['theme-preference'] = 'light';
+      localStorage.setItem('theme-preference', 'light');
       service = createService();
       TestBed.flushEffects();
 
@@ -312,7 +283,7 @@ describe('ThemeService', () => {
 
     it('should not affect isDarkMode when explicit preference is set', () => {
       matchMediaMatches = false;
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
 
       expect(service.isDarkMode()).toBe(true);
@@ -332,17 +303,16 @@ describe('ThemeService', () => {
       service = createService();
 
       service.setTheme('dark');
-      expect(localStorage.setItem).toHaveBeenCalledWith('theme-preference', 'dark');
+      expect(localStorage.getItem('theme-preference')).toBe('dark');
 
       service.setTheme('light');
-      expect(localStorage.setItem).toHaveBeenCalledWith('theme-preference', 'light');
+      expect(localStorage.getItem('theme-preference')).toBe('light');
     });
 
     it('should load saved preference on service creation', () => {
-      localStorageStore['theme-preference'] = 'dark';
+      localStorage.setItem('theme-preference', 'dark');
       service = createService();
 
-      expect(localStorage.getItem).toHaveBeenCalledWith('theme-preference');
       expect(service.preference()).toBe('dark');
     });
   });
@@ -368,7 +338,7 @@ describe('ThemeService', () => {
       service.setTheme('dark');
 
       expect(service.preference()).toBe('dark');
-      expect(localStorageStore['theme-preference']).toBe('dark');
+      expect(localStorage.getItem('theme-preference')).toBe('dark');
     });
   });
 });
