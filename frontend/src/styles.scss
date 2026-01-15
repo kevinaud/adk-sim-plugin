@@ -1,34 +1,9 @@
 /* ==========================================================================
    Angular Material Theme Configuration
-   SCSS @use rules must come first
+   SCSS @use rules must come first (before any @layer or @import)
    ========================================================================== */
 
-@use '@angular/material' as mat;
-
-/* Self-hosted fonts loaded via angular.json styles array */
-
-/* Include the common styles for Angular Material */
-@include mat.core();
-
-/* Define the theme using Angular Material's predefined palettes */
-$primary: mat.m2-define-palette(mat.$m2-indigo-palette);
-$accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
-$warn: mat.m2-define-palette(mat.$m2-red-palette);
-
-$theme: mat.m2-define-light-theme(
-  (
-    color: (
-      primary: $primary,
-      accent: $accent,
-      warn: $warn,
-    ),
-    typography: mat.m2-define-typography-config(),
-    density: 0,
-  )
-);
-
-/* Apply the theme to all Angular Material components */
-@include mat.all-component-themes($theme);
+@use './theme';
 
 /* ==========================================================================
    Tailwind CSS + Angular Material Integration
@@ -45,6 +20,61 @@ $theme: mat.m2-define-light-theme(
 /* C. Configure Sources for Monorepo */
 @source './app';
 @source '../../packages';
+
+/* ==========================================================================
+   Theme Bridge: Map Material System Variables to Tailwind
+   This makes Angular Material the single source of truth for design tokens
+   ========================================================================== */
+
+@theme {
+  /* Primary colors */
+  --color-primary: var(--sys-primary);
+  --color-on-primary: var(--sys-on-primary);
+  --color-primary-container: var(--sys-primary-container);
+  --color-on-primary-container: var(--sys-on-primary-container);
+
+  /* Secondary colors */
+  --color-secondary: var(--sys-secondary);
+  --color-on-secondary: var(--sys-on-secondary);
+  --color-secondary-container: var(--sys-secondary-container);
+  --color-on-secondary-container: var(--sys-on-secondary-container);
+
+  /* Tertiary colors */
+  --color-tertiary: var(--sys-tertiary);
+  --color-on-tertiary: var(--sys-on-tertiary);
+  --color-tertiary-container: var(--sys-tertiary-container);
+  --color-on-tertiary-container: var(--sys-on-tertiary-container);
+
+  /* Surface colors */
+  --color-surface: var(--sys-surface);
+  --color-on-surface: var(--sys-on-surface);
+  --color-surface-variant: var(--sys-surface-variant);
+  --color-on-surface-variant: var(--sys-on-surface-variant);
+  --color-surface-container: var(--sys-surface-container);
+  --color-surface-container-low: var(--sys-surface-container-low);
+  --color-surface-container-high: var(--sys-surface-container-high);
+  --color-surface-container-highest: var(--sys-surface-container-highest);
+
+  /* Background and inverse */
+  --color-background: var(--sys-background);
+  --color-on-background: var(--sys-on-background);
+  --color-inverse-surface: var(--sys-inverse-surface);
+  --color-inverse-on-surface: var(--sys-inverse-on-surface);
+  --color-inverse-primary: var(--sys-inverse-primary);
+
+  /* Error colors */
+  --color-error: var(--sys-error);
+  --color-on-error: var(--sys-on-error);
+  --color-error-container: var(--sys-error-container);
+  --color-on-error-container: var(--sys-on-error-container);
+
+  /* Outline */
+  --color-outline: var(--sys-outline);
+  --color-outline-variant: var(--sys-outline-variant);
+
+  /* Typography */
+  --font-sans: Roboto, 'Helvetica Neue', sans-serif;
+}
 
 /* ==========================================================================
    Material-Safe Reset (Base Layer)
@@ -92,5 +122,7 @@ body {
 }
 
 body {
-  background-color: #fafafa;
+  /* Use theme bridge surface color - auto-updates with dark mode */
+  background-color: var(--sys-surface, #fafafa);
+  color: var(--sys-on-surface, #1f1f1f);
 }
