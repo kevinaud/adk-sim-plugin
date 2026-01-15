@@ -9,7 +9,6 @@
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
  */
 
-import { DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -24,12 +23,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
-import { timestampDate } from '@bufbuild/protobuf/wkt';
 
 import { type Session, SessionFacade } from '../../data-access/session';
-import { ErrorBannerComponent } from '../../ui/shared';
+import { SessionCardComponent } from '../../ui/session';
+import {
+  EmptyStateComponent,
+  ErrorBannerComponent,
+  ErrorStateComponent,
+  LoadingStateComponent,
+} from '../../ui/shared';
 
 /**
  * Session list component that displays all available simulation sessions.
@@ -49,13 +52,15 @@ import { ErrorBannerComponent } from '../../ui/shared';
   selector: 'app-session-list',
   standalone: true,
   imports: [
-    DatePipe,
+    EmptyStateComponent,
     ErrorBannerComponent,
+    ErrorStateComponent,
+    LoadingStateComponent,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
     MatListModule,
-    MatProgressSpinnerModule,
+    SessionCardComponent,
   ],
   templateUrl: './session-list.component.html',
   styleUrl: './session-list.component.scss',
@@ -113,11 +118,7 @@ export class SessionListComponent implements OnInit {
   private subscribeToRouteErrors(): void {
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const errorParam = params['error'] as string | undefined;
-      if (errorParam) {
-        this._routeError.set(errorParam);
-      } else {
-        this._routeError.set(null);
-      }
+      this._routeError.set(errorParam ?? null);
     });
   }
 
@@ -160,30 +161,5 @@ export class SessionListComponent implements OnInit {
    */
   navigateToSession(sessionId: string): void {
     void this.router.navigate(['/session', sessionId]);
-  }
-
-  /**
-   * Formats the session creation time for display.
-   * Returns a human-readable date string or 'Unknown' if not available.
-   *
-   * @param session - Session to get creation time from
-   * @returns Formatted date string
-   */
-  getCreationTime(session: Session): Date | null {
-    if (!session.createdAt) {
-      return null;
-    }
-    return timestampDate(session.createdAt);
-  }
-
-  /**
-   * Gets a truncated session ID for display.
-   * Shows first 8 characters of UUID for brevity.
-   *
-   * @param sessionId - Full session ID
-   * @returns Truncated ID
-   */
-  getTruncatedId(sessionId: string): string {
-    return sessionId.length > 8 ? `${sessionId.slice(0, 8)}...` : sessionId;
   }
 }

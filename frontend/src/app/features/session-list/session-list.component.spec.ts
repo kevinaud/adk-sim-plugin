@@ -28,35 +28,41 @@ import { SessionStateService } from '../../data-access/session/session-state.ser
 
 import { SessionListComponent } from './session-list.component';
 
+/** Helper to create mock sessions for testing */
+function createMockSession(id: string, description?: string, createdAt?: Date): Session {
+  const init: { id: string; description: string; createdAt?: Timestamp } = {
+    id,
+    description: description ?? '',
+  };
+  if (createdAt) {
+    init.createdAt = timestampFromDate(createdAt);
+  }
+  return create(SimulatorSessionSchema, init);
+}
+
+/** Helper to allow microtasks and promises to resolve */
+function flushPromises(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+/** Helper to wait for async operations and update view */
+function createWaitForAsync(
+  getFixture: () => ComponentFixture<SessionListComponent>,
+): () => Promise<void> {
+  return async () => {
+    await flushPromises();
+    getFixture().detectChanges();
+  };
+}
+
 describe('SessionListComponent', () => {
   let component: SessionListComponent;
   let fixture: ComponentFixture<SessionListComponent>;
   let mockGateway: MockSessionGateway;
   let router: Router;
-
-  // Helper to create mock sessions
-  const createMockSession = (id: string, description?: string, createdAt?: Date): Session => {
-    const init: { id: string; description: string; createdAt?: Timestamp } = {
-      id,
-      description: description ?? '',
-    };
-    if (createdAt) {
-      init.createdAt = timestampFromDate(createdAt);
-    }
-    return create(SimulatorSessionSchema, init);
-  };
-
-  // Helper to allow microtasks and promises to resolve
-  const flushPromises = (): Promise<void> =>
-    new Promise((resolve) => {
-      setTimeout(resolve, 0);
-    });
-
-  // Helper to wait for async operations and update view
-  const waitForAsync = async (): Promise<void> => {
-    await flushPromises();
-    fixture.detectChanges();
-  };
+  let waitForAsync: () => Promise<void>;
 
   beforeEach(async () => {
     mockGateway = new MockSessionGateway();
@@ -77,6 +83,7 @@ describe('SessionListComponent', () => {
 
     fixture = TestBed.createComponent(SessionListComponent);
     component = fixture.componentInstance;
+    waitForAsync = createWaitForAsync(() => fixture);
   });
 
   describe('initialization', () => {
@@ -105,15 +112,15 @@ describe('SessionListComponent', () => {
   });
 
   describe('loading state', () => {
-    it('should display loading spinner initially', () => {
+    it('should display loading component initially', () => {
       mockGateway.setMockSessions([]);
 
       fixture.detectChanges();
 
       // Should be loading right after init before async completes
       expect(component.isLoading()).toBe(true);
-      const spinner = fixture.nativeElement.querySelector('mat-spinner');
-      expect(spinner).toBeTruthy();
+      const loadingState = fixture.nativeElement.querySelector('app-loading-state');
+      expect(loadingState).toBeTruthy();
     });
 
     it('should display loading text when loading', () => {
@@ -121,42 +128,21 @@ describe('SessionListComponent', () => {
 
       fixture.detectChanges();
 
-      const loadingText = fixture.nativeElement.querySelector('.loading-text');
-      expect(loadingText?.textContent).toContain('Loading sessions');
+      const loadingState = fixture.nativeElement.querySelector('app-loading-state');
+      expect(loadingState?.textContent).toContain('Loading sessions');
     });
   });
 
   describe('error state', () => {
-    it('should display error message when fetch fails', async () => {
+    it('should display error component when fetch fails', async () => {
       mockGateway.setErrorToThrow(new Error('Connection failed'));
 
       fixture.detectChanges();
       await waitForAsync();
 
-      const errorMessage = fixture.nativeElement.querySelector('.error-message');
-      expect(errorMessage).toBeTruthy();
-      expect(errorMessage.textContent).toContain('Connection failed');
-    });
-
-    it('should display error icon when fetch fails', async () => {
-      mockGateway.setErrorToThrow(new Error('Connection failed'));
-
-      fixture.detectChanges();
-      await waitForAsync();
-
-      const errorIcon = fixture.nativeElement.querySelector('.error-icon');
-      expect(errorIcon).toBeTruthy();
-    });
-
-    it('should display retry button when fetch fails', async () => {
-      mockGateway.setErrorToThrow(new Error('Connection failed'));
-
-      fixture.detectChanges();
-      await waitForAsync();
-
-      const retryButton = fixture.nativeElement.querySelector('.error-container button');
-      expect(retryButton).toBeTruthy();
-      expect(retryButton.textContent).toContain('Retry');
+      const errorState = fixture.nativeElement.querySelector('app-error-state');
+      expect(errorState).toBeTruthy();
+      expect(errorState.textContent).toContain('Connection failed');
     });
 
     it('should retry loading sessions when retry button is clicked', async () => {
@@ -171,9 +157,9 @@ describe('SessionListComponent', () => {
       const mockSessions = [createMockSession('session-1')];
       mockGateway.setMockSessions(mockSessions);
 
-      // Click retry
+      // Click retry button inside error-state component
       const retryButton = fixture.nativeElement.querySelector(
-        '.error-container button',
+        'app-error-state button',
       ) as HTMLButtonElement;
       expect(retryButton).toBeTruthy();
       retryButton.click();
@@ -185,15 +171,15 @@ describe('SessionListComponent', () => {
   });
 
   describe('empty state', () => {
-    it('should display empty state when no sessions exist', async () => {
+    it('should display empty component when no sessions exist', async () => {
       mockGateway.setMockSessions([]);
 
       fixture.detectChanges();
       await waitForAsync();
 
-      const emptyMessage = fixture.nativeElement.querySelector('.empty-message');
-      expect(emptyMessage).toBeTruthy();
-      expect(emptyMessage.textContent).toContain('No sessions available');
+      const emptyState = fixture.nativeElement.querySelector('app-empty-state');
+      expect(emptyState).toBeTruthy();
+      expect(emptyState.textContent).toContain('No sessions available');
     });
 
     it('should display empty hint message', async () => {
@@ -202,9 +188,9 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const emptyHint = fixture.nativeElement.querySelector('.empty-hint');
-      expect(emptyHint).toBeTruthy();
-      expect(emptyHint.textContent).toContain('Sessions will appear here');
+      const emptyState = fixture.nativeElement.querySelector('app-empty-state');
+      expect(emptyState).toBeTruthy();
+      expect(emptyState.textContent).toContain('Sessions will appear here');
     });
   });
 
@@ -217,7 +203,7 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const sessionId = fixture.nativeElement.querySelector('.session-id');
+      const sessionId = fixture.nativeElement.querySelector('[data-testid="session-id"]');
       expect(sessionId).toBeTruthy();
       expect(sessionId.textContent).toContain('abc12345');
     });
@@ -228,7 +214,9 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const description = fixture.nativeElement.querySelector('.session-description');
+      const description = fixture.nativeElement.querySelector(
+        '[data-testid="session-description"]',
+      );
       expect(description).toBeTruthy();
       expect(description.textContent).toContain('Test Description');
     });
@@ -239,7 +227,7 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const createdAt = fixture.nativeElement.querySelector('.session-created');
+      const createdAt = fixture.nativeElement.querySelector('[data-testid="session-created"]');
       expect(createdAt).toBeTruthy();
       // Should contain some date representation
       expect(createdAt.textContent).toBeTruthy();
@@ -252,7 +240,7 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const createdAt = fixture.nativeElement.querySelector('.session-created');
+      const createdAt = fixture.nativeElement.querySelector('[data-testid="session-created"]');
       expect(createdAt).toBeTruthy();
       expect(createdAt.textContent).toContain('Unknown');
     });
@@ -263,7 +251,7 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const status = fixture.nativeElement.querySelector('.session-status');
+      const status = fixture.nativeElement.querySelector('[data-testid="session-status"]');
       expect(status).toBeTruthy();
       expect(status.textContent).toContain('Active');
     });
@@ -278,35 +266,40 @@ describe('SessionListComponent', () => {
       fixture.detectChanges();
       await waitForAsync();
 
-      const sessionItems = fixture.nativeElement.querySelectorAll('.session-item');
-      expect(sessionItems.length).toBe(3);
+      const sessionCards = fixture.nativeElement.querySelectorAll('app-session-card');
+      expect(sessionCards.length).toBe(3);
     });
   });
 
   describe('navigation', () => {
-    it('should navigate to session when clicking a session item', async () => {
+    it('should navigate to session when clicking a session card', async () => {
       mockGateway.setMockSessions([createMockSession('session-123')]);
 
       fixture.detectChanges();
       await waitForAsync();
 
-      const sessionItem = fixture.nativeElement.querySelector('.session-item') as HTMLElement;
-      expect(sessionItem).toBeTruthy();
-      sessionItem.click();
+      // Click the mat-list-item inside the session card
+      const listItem = fixture.nativeElement.querySelector(
+        'app-session-card mat-list-item',
+      ) as HTMLElement;
+      expect(listItem).toBeTruthy();
+      listItem.click();
 
       expect(router.navigate).toHaveBeenCalledWith(['/session', 'session-123']);
     });
 
-    it('should navigate to session when pressing Enter on a session item', async () => {
+    it('should navigate to session when pressing Enter on a session card', async () => {
       mockGateway.setMockSessions([createMockSession('session-456')]);
 
       fixture.detectChanges();
       await waitForAsync();
 
-      const sessionItem = fixture.nativeElement.querySelector('.session-item') as HTMLElement;
-      expect(sessionItem).toBeTruthy();
+      const listItem = fixture.nativeElement.querySelector(
+        'app-session-card mat-list-item',
+      ) as HTMLElement;
+      expect(listItem).toBeTruthy();
       const event = new KeyboardEvent('keydown', { key: 'Enter' });
-      sessionItem.dispatchEvent(event);
+      listItem.dispatchEvent(event);
 
       expect(router.navigate).toHaveBeenCalledWith(['/session', 'session-456']);
     });
@@ -377,45 +370,6 @@ describe('SessionListComponent', () => {
       expect(component.hasRouteError()).toBe(false);
     });
   });
-
-  describe('helper methods', () => {
-    beforeEach(async () => {
-      mockGateway.setMockSessions([]);
-      fixture.detectChanges();
-      await waitForAsync();
-    });
-
-    describe('getTruncatedId', () => {
-      it('should truncate long IDs', () => {
-        const result = component.getTruncatedId('abc12345-6789-0def-ghij-klmnopqrstuv');
-        expect(result).toBe('abc12345...');
-      });
-
-      it('should not truncate short IDs', () => {
-        const result = component.getTruncatedId('short');
-        expect(result).toBe('short');
-      });
-    });
-
-    describe('getCreationTime', () => {
-      it('should return Date when createdAt is present', () => {
-        const testDate = new Date('2026-01-10T12:00:00Z');
-        const session = createMockSession('session-1', '', testDate);
-
-        const result = component.getCreationTime(session);
-
-        expect(result).toBeInstanceOf(Date);
-      });
-
-      it('should return null when createdAt is not present', () => {
-        const session = createMockSession('session-1');
-
-        const result = component.getCreationTime(session);
-
-        expect(result).toBeNull();
-      });
-    });
-  });
 });
 
 /**
@@ -427,23 +381,7 @@ describe('SessionListComponent with route error query param', () => {
   let fixture: ComponentFixture<SessionListComponent>;
   let mockGateway: MockSessionGateway;
   let queryParamsSubject: BehaviorSubject<Record<string, string>>;
-
-  // Helper to create mock sessions
-  const createMockSession = (id: string): Session => {
-    return create(SimulatorSessionSchema, { id, description: '' });
-  };
-
-  // Helper to allow microtasks and promises to resolve
-  const flushPromises = (): Promise<void> =>
-    new Promise((resolve) => {
-      setTimeout(resolve, 0);
-    });
-
-  // Helper to wait for async operations and update view
-  const waitForAsync = async (): Promise<void> => {
-    await flushPromises();
-    fixture.detectChanges();
-  };
+  let waitForAsync: () => Promise<void>;
 
   beforeEach(async () => {
     mockGateway = new MockSessionGateway();
@@ -470,6 +408,7 @@ describe('SessionListComponent with route error query param', () => {
 
     fixture = TestBed.createComponent(SessionListComponent);
     component = fixture.componentInstance;
+    waitForAsync = createWaitForAsync(() => fixture);
   });
 
   it('should display route error from query params', async () => {
