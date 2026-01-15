@@ -1,49 +1,8 @@
 /**
  * Session List Component Styles
  *
- * Styles for the session list page including loading, error, and empty states.
+ * Minimal SCSS file - most styling is handled via Tailwind utility classes in the template.
+ * Only essential overrides that Tailwind cannot handle should go here.
  */
 
-.session-list-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px;
-  min-height: calc(100vh - 64px);
-  background-color: var(--mat-app-background-color, #fafafa);
-}
-
-// Route error banner wrapper (layout only - styling is in ErrorBannerComponent)
-.route-error-banner {
-  width: 100%;
-  max-width: 800px;
-  margin-bottom: 16px;
-}
-
-.session-list-card {
-  width: 100%;
-  max-width: 800px;
-
-  mat-card-header {
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      mat-icon {
-        color: var(--mat-primary-color, #3f51b5);
-      }
-    }
-  }
-}
-
-// Session list - minimal styles, most styling is in SessionCardComponent
-.session-list {
-  padding: 0;
-}
-
-mat-card-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px 16px;
-}
+// Currently empty - all styling migrated to Tailwind utility classes
