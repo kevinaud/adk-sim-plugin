@@ -9,12 +9,14 @@
  */
 
 export { type ConnectionStatus, ConnectionStatusComponent } from './connection-status';
+export { EmptyStateComponent } from './empty-state';
 export { ErrorBannerComponent } from './error-banner';
 export { LoadingStateComponent } from './loading-state';
 
 // Type for reference - components that will be added
 export type SharedUiComponent =
   | 'connection-status'
+  | 'empty-state'
   | 'error-banner'
   | 'loading-state'
   | 'split-pane';
