@@ -4,9 +4,17 @@
  * Utility modules are leaf dependencies with no external imports.
  * They contain pure functions, constants, and helper utilities.
  *
+ * Import directly from submodules due to Sheriff module boundaries:
+ * - Reconnect: `./util/reconnect`
+ * - JSON Detection: `./util/json-detection` (planned)
+ * - MD Detection: `./util/md-detection` (planned)
+ *
  * @module util
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
  */
 
-// Placeholder - utility exports will be added as utilities are implemented
+/**
+ * Libraries available in the util layer.
+ * Each library has its own index.ts barrel file for exports.
+ */
 export type UtilLibrary = 'json-detection' | 'md-detection' | 'reconnect';
