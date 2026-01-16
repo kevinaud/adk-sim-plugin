@@ -130,7 +130,7 @@ test.describe('Populated Backend Tests', () => {
     await expect(page.locator('app-session-list')).toBeVisible({ timeout: 30000 });
 
     // Should have session items (pre-seeded)
-    const sessionItems = page.locator('.session-item');
+    const sessionItems = page.locator('app-session-card');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     // Count sessions - should have at least the seeded ones
@@ -169,7 +169,7 @@ test.describe('Populated Backend Tests', () => {
     await page.waitForTimeout(2000);
 
     // Verify sessions are loaded
-    const sessionItems = page.locator('.session-item');
+    const sessionItems = page.locator('app-session-card');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     // Take screenshot of populated session list (stable due to seeded data)
@@ -209,8 +209,8 @@ test.describe('Session Creation Tests', () => {
     // Verify the created session appears in the list
     // Sessions display truncated IDs, so we check for partial match
     const sessionIdPrefix = session.id.substring(0, 8);
-    const sessionItem = page.locator('.session-item').filter({
-      has: page.locator('.session-id', { hasText: sessionIdPrefix }),
+    const sessionItem = page.locator('app-session-card').filter({
+      has: page.locator('[data-testid="session-id"]', { hasText: sessionIdPrefix }),
     });
 
     await expect(sessionItem).toBeVisible({ timeout: 10000 });
@@ -255,8 +255,8 @@ test.describe('Session Creation Tests', () => {
 
     // Find and click on the created session
     const sessionIdPrefix = session.id.substring(0, 8);
-    const sessionItem = page.locator('.session-item').filter({
-      has: page.locator('.session-id', { hasText: sessionIdPrefix }),
+    const sessionItem = page.locator('app-session-card').filter({
+      has: page.locator('[data-testid="session-id"]', { hasText: sessionIdPrefix }),
     });
 
     await sessionItem.click();

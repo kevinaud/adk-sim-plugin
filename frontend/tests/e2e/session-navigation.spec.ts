@@ -89,7 +89,7 @@ test.describe('Session Navigation', () => {
       await page.waitForTimeout(2000); // Allow API call to complete
 
       // Populated backend should have sessions
-      const sessionItems = page.locator('mat-list-item.session-item');
+      const sessionItems = page.locator('app-session-card mat-list-item');
       await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
       // Click on the first session
@@ -115,11 +115,11 @@ test.describe('Session Navigation', () => {
       await gotoAndWaitForAngular('/');
       await page.waitForTimeout(2000);
 
-      const sessionItems = page.locator('mat-list-item.session-item');
+      const sessionItems = page.locator('app-session-card mat-list-item');
       await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
       // Get the session ID from the list item title attribute
-      const firstSessionIdSpan = page.locator('.session-id').first();
+      const firstSessionIdSpan = page.locator('[data-testid="session-id"]').first();
       const truncatedId = await firstSessionIdSpan.textContent();
 
       // Click to navigate
@@ -133,7 +133,7 @@ test.describe('Session Navigation', () => {
 
       // Session ID should be displayed in the component
       if (fullSessionId) {
-        // The session-id span should contain the full ID
+        // The session-id span on the session detail page has class .session-id (not data-testid)
         const sessionIdDisplay = page.locator('.session-id');
         await expect(sessionIdDisplay.first()).toBeVisible();
 
@@ -158,7 +158,7 @@ test.describe('Event Stream Component', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     // Navigate to a session
@@ -203,7 +203,7 @@ test.describe('Event Stream Component', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     await sessionItems.first().click();
@@ -233,7 +233,7 @@ test.describe('Event Block Component Styling', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     await sessionItems.first().click();
@@ -265,7 +265,7 @@ test.describe('Event Block Component Styling', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     await sessionItems.first().click();
@@ -295,7 +295,7 @@ test.describe('Event Block Component Styling', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     await sessionItems.first().click();
@@ -325,7 +325,7 @@ test.describe('Event Block Component Styling', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     await sessionItems.first().click();
@@ -358,7 +358,7 @@ test.describe('Event Block Component Styling', () => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
-    const sessionItems = page.locator('mat-list-item.session-item');
+    const sessionItems = page.locator('app-session-card mat-list-item');
     await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
     await sessionItems.first().click();
@@ -419,8 +419,8 @@ test.describe('Session List with Created Sessions', () => {
     // Verify the created session appears in the list
     // Sessions display truncated IDs, so we check for partial match
     const sessionIdPrefix = session.id.substring(0, 8);
-    const sessionItem = page.locator('.session-item').filter({
-      has: page.locator('.session-id', { hasText: sessionIdPrefix }),
+    const sessionItem = page.locator('app-session-card').filter({
+      has: page.locator('[data-testid="session-id"]', { hasText: sessionIdPrefix }),
     });
 
     await expect(sessionItem).toBeVisible({ timeout: 10000 });
@@ -446,8 +446,8 @@ test.describe('Session List with Created Sessions', () => {
 
     // Find and click on the created session
     const sessionIdPrefix = session.id.substring(0, 8);
-    const sessionItem = page.locator('.session-item').filter({
-      has: page.locator('.session-id', { hasText: sessionIdPrefix }),
+    const sessionItem = page.locator('app-session-card').filter({
+      has: page.locator('[data-testid="session-id"]', { hasText: sessionIdPrefix }),
     });
 
     await sessionItem.click();
@@ -536,7 +536,7 @@ test.describe('Visual Regression', () => {
       await gotoAndWaitForAngular('/');
       await page.waitForTimeout(2000);
 
-      const sessionItems = page.locator('mat-list-item.session-item');
+      const sessionItems = page.locator('app-session-card mat-list-item');
       await expect(sessionItems.first()).toBeVisible({ timeout: 10000 });
 
       // Navigate to first session

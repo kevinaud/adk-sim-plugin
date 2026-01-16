@@ -24,71 +24,27 @@
     <mat-card-content>
       <!-- Loading State -->
       @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner diameter="48" />
-          <p class="loading-text">Loading sessions...</p>
-        </div>
+        <app-loading-state message="Loading sessions..." />
       }
 
       <!-- Error State -->
       @if (hasError() && !isLoading()) {
-        <div class="error-container">
-          <mat-icon class="error-icon">error_outline</mat-icon>
-          <p class="error-message">{{ error() }}</p>
-          <button mat-raised-button color="primary" (click)="loadSessions()">
-            <mat-icon>refresh</mat-icon>
-            Retry
-          </button>
-        </div>
+        <app-error-state [message]="error()!" (retry)="loadSessions()" />
       }
 
       <!-- Empty State -->
       @if (showEmptyState()) {
-        <div class="empty-container">
-          <mat-icon class="empty-icon">inbox</mat-icon>
-          <p class="empty-message">No sessions available</p>
-          <p class="empty-hint">Sessions will appear here when created by an ADK agent.</p>
-        </div>
+        <app-empty-state
+          message="No sessions available"
+          hint="Sessions will appear here when created by an ADK agent."
+        />
       }
 
       <!-- Session List -->
       @if (hasSessions() && !isLoading()) {
         <mat-list class="session-list">
           @for (session of sessions(); track session.id) {
-            <mat-list-item
-              class="session-item"
-              (click)="navigateToSession(session.id)"
-              (keydown.enter)="navigateToSession(session.id)"
-              tabindex="0"
-            >
-              <mat-icon matListItemIcon>folder_open</mat-icon>
-
-              <div matListItemTitle class="session-title">
-                <span class="session-id" [title]="session.id">{{
-                  getTruncatedId(session.id)
-                }}</span>
-                @if (session.description) {
-                  <span class="session-description">{{ session.description }}</span>
-                }
-              </div>
-
-              <div matListItemLine class="session-meta">
-                <span class="session-created">
-                  <mat-icon class="meta-icon">schedule</mat-icon>
-                  @if (getCreationTime(session); as createdAt) {
-                    {{ createdAt | date: 'medium' }}
-                  } @else {
-                    Unknown
-                  }
-                </span>
-                <span class="session-status">
-                  <mat-icon class="meta-icon status-active">circle</mat-icon>
-                  Active
-                </span>
-              </div>
-
-              <mat-icon matListItemMeta>chevron_right</mat-icon>
-            </mat-list-item>
+            <app-session-card [session]="session" (selected)="navigateToSession($event)" />
           }
         </mat-list>
       }
