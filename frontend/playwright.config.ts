@@ -56,6 +56,18 @@ export default defineConfig({
     baseURL: process.env['BASE_URL'] ?? 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
     screenshot: 'on', // Capture screenshots for all tests to visualize UI state
+
+    // Browser normalization for consistent rendering across environments
+    // Fixes visual regression differences between Debian (devcontainer) and Ubuntu (CI)
+    // See: mddocs/frontend/research/deep-research/visual-regression-ci-investigation-report.md
+    launchOptions: {
+      args: [
+        '--disable-lcd-text', // Force grayscale antialiasing (no subpixel)
+        '--disable-font-subpixel-positioning', // Align glyphs to pixel grid
+        '--font-render-hinting=none', // Disable system font hinting
+        '--disable-gpu', // Force software rasterization for consistency
+      ],
+    },
   },
 
   projects: [

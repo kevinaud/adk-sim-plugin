@@ -1,0 +1,67 @@
+/* ==========================================================================
+   Angular Material 3 Theme Configuration
+   Single source of truth for design tokens, emitted as CSS variables
+   ========================================================================== */
+
+@use '@angular/material' as mat;
+
+/* --------------------------------------------------------------------------
+   Palette Configuration
+   Using Material's built-in palettes for consistency
+   -------------------------------------------------------------------------- */
+$primary-palette: mat.$azure-palette;
+$tertiary-palette: mat.$blue-palette;
+
+/* --------------------------------------------------------------------------
+   Light Theme Definition
+   Applied by default (no class on body)
+   -------------------------------------------------------------------------- */
+$light-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: $primary-palette,
+      tertiary: $tertiary-palette,
+      use-system-variables: true,
+    ),
+    typography: (
+      use-system-variables: true,
+    ),
+  )
+);
+
+/* --------------------------------------------------------------------------
+   Dark Theme Definition
+   Applied when body has .dark-theme class
+   -------------------------------------------------------------------------- */
+$dark-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: $primary-palette,
+      tertiary: $tertiary-palette,
+      use-system-variables: true,
+    ),
+    typography: (
+      use-system-variables: true,
+    ),
+  )
+);
+
+/* --------------------------------------------------------------------------
+   Apply Themes
+   Light theme on :root, dark theme when .dark-theme class is present
+   -------------------------------------------------------------------------- */
+
+/* Light theme (default) */
+:root {
+  @include mat.all-component-themes($light-theme);
+  @include mat.system-level-colors($light-theme);
+  @include mat.system-level-typography($light-theme);
+}
+
+/* Dark theme (activated by .dark-theme class on body) */
+body.dark-theme {
+  @include mat.all-component-colors($dark-theme);
+  @include mat.system-level-colors($dark-theme);
+}
