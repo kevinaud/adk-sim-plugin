@@ -10,6 +10,7 @@
 
 export { type ConnectionStatus, ConnectionStatusComponent } from './connection-status';
 export { DarkModeToggleComponent } from './dark-mode-toggle';
+export { EmptyStateComponent } from './empty-state';
 export { ErrorBannerComponent } from './error-banner';
 export { LoadingStateComponent } from './loading-state';
 
@@ -17,6 +18,7 @@ export { LoadingStateComponent } from './loading-state';
 export type SharedUiComponent =
   | 'connection-status'
   | 'dark-mode-toggle'
+  | 'empty-state'
   | 'error-banner'
   | 'loading-state'
   | 'split-pane';

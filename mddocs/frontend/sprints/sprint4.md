@@ -317,18 +317,18 @@ The session-list component currently mixes both responsibilities, with ~105 line
 - `frontend/src/app/features/session-list/session-list.component.html` (lines 45-52) - Current empty state implementation
 
 **Acceptance Criteria**:
-- [ ] Component accepts `icon` input (default: 'inbox')
-- [ ] Component accepts `message` input (required)
-- [ ] Component accepts optional `hint` input for secondary text
-- [ ] Uses `mat-icon` for the icon
-- [ ] Layout uses Tailwind utilities: `flex flex-col items-center justify-center gap-2 p-12`
-- [ ] Icon styling: large size (64px), muted color via Tailwind
-- [ ] Message styling: `text-lg text-secondary`
-- [ ] Hint styling: `text-sm text-disabled`
-- [ ] Unit tests verify all inputs render correctly
-- [ ] Snapshot test captures visual appearance
-- [ ] No custom SCSS file
-- [ ] Presubmit passes
+- [x] Component accepts `icon` input (default: 'inbox')
+- [x] Component accepts `message` input (required)
+- [x] Component accepts optional `hint` input for secondary text
+- [x] Uses `mat-icon` for the icon
+- [x] Layout uses Tailwind utilities: `flex flex-col items-center justify-center gap-2 p-12`
+- [x] Icon styling: large size (64px), muted color via Tailwind
+- [x] Message styling: `text-lg text-on-surface-variant`
+- [x] Hint styling: `text-sm text-on-surface-variant/70`
+- [x] Unit tests verify all inputs render correctly
+- [x] Snapshot test captures visual appearance
+- [x] No custom SCSS file
+- [x] Presubmit passes
 
 ---
 
