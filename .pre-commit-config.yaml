@@ -193,3 +193,4 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=500]
+        exclude: (fomc_trace\.vertex\.json|vertex_debug\.json)$
