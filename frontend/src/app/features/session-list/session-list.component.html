@@ -1,21 +1,21 @@
 <!-- Session List Component Template -->
 <!-- Implements FR-002 (Session List) and FR-003 (Session Metadata) -->
 
-<div class="session-list-container">
+<div class="flex flex-col items-center p-6 min-h-screen bg-surface">
   <!-- Route Error Banner (shown when redirected from invalid session) -->
   @if (hasRouteError()) {
     <app-error-banner
-      class="route-error-banner"
+      class="w-full max-w-3xl mb-4"
       data-testid="route-error-banner"
       [message]="routeError()!"
       (dismissed)="dismissRouteError()"
     />
   }
 
-  <mat-card class="session-list-card">
+  <mat-card class="w-full max-w-3xl">
     <mat-card-header>
-      <mat-card-title>
-        <mat-icon>list</mat-icon>
+      <mat-card-title class="flex items-center gap-2">
+        <mat-icon class="text-primary">list</mat-icon>
         Available Sessions
       </mat-card-title>
       <mat-card-subtitle> Browse and select a simulation session </mat-card-subtitle>
@@ -42,7 +42,7 @@
 
       <!-- Session List -->
       @if (hasSessions() && !isLoading()) {
-        <mat-list class="session-list">
+        <mat-list class="p-0">
           @for (session of sessions(); track session.id) {
             <app-session-card [session]="session" (selected)="navigateToSession($event)" />
           }
@@ -50,7 +50,7 @@
       }
     </mat-card-content>
 
-    <mat-card-actions>
+    <mat-card-actions class="flex justify-end px-4 py-2">
       <button mat-button (click)="loadSessions()" [disabled]="isLoading()">
         <mat-icon>refresh</mat-icon>
         Refresh
