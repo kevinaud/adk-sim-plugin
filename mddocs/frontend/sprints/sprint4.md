@@ -288,15 +288,15 @@ The session-list component currently mixes both responsibilities, with ~105 line
 - [UI-Boring Philosophy](../research/deep-research/material-tailwind-research.md#the-ui-boring-philosophy) - Keep it simple
 
 **Acceptance Criteria**:
-- [ ] Component accepts `message` input signal with default "Loading..."
-- [ ] Component accepts optional `diameter` input for spinner size (default 48)
-- [ ] Uses `mat-spinner` for the spinner (Material component)
-- [ ] Layout uses Tailwind utilities: `flex flex-col items-center justify-center gap-4 p-12`
-- [ ] Text styling uses Tailwind: `text-secondary` (or similar from theme bridge)
-- [ ] Unit tests verify message display and spinner presence
-- [ ] Snapshot test captures visual appearance
-- [ ] No custom SCSS file - all styling via Tailwind classes
-- [ ] Presubmit passes
+- [x] Component accepts `message` input signal with default "Loading..."
+- [x] Component accepts optional `diameter` input for spinner size (default 48)
+- [x] Uses `mat-spinner` for the spinner (Material component)
+- [x] Layout uses Tailwind utilities: `flex flex-col items-center justify-center gap-4 p-12`
+- [x] Text styling uses Tailwind: `text-on-surface-variant` (from theme bridge)
+- [x] Unit tests verify message display and spinner presence
+- [x] Snapshot test captures visual appearance (both light and dark mode)
+- [x] No custom SCSS file - all styling via Tailwind classes
+- [x] Presubmit passes
 
 ---
 
