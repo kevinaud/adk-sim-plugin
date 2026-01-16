@@ -289,14 +289,14 @@ See `mocks/session-complete.png`.
 - [JSONForms Tool Invocation Implementation](../research/jsonforms-research.md#implementation) - Service pattern
 
 **Acceptance Criteria**:
-- [ ] `ToolFormService` is `providedIn: 'root'`
-- [ ] `createFormConfig(tool: FunctionDeclaration): ToolFormConfig` implemented
-- [ ] Handles `parametersJsonSchema` field directly (no conversion needed)
-- [ ] Converts `parameters` field via genaiSchemaToJsonSchema when present
-- [ ] Falls back to empty object schema when no parameters
-- [ ] Uses `generateDefaultUISchema()` for UI schema generation
-- [ ] Unit tests cover all three parameter scenarios
-- [ ] Presubmit passes
+- [x] `ToolFormService` is `providedIn: 'root'`
+- [x] `createFormConfig(tool: FunctionDeclaration): ToolFormConfig` implemented
+- [x] Handles `parametersJsonSchema` field directly (no conversion needed)
+- [x] Converts `parameters` field via genaiSchemaToJsonSchema when present
+- [x] Falls back to empty object schema when no parameters
+- [x] Uses `generateDefaultUISchema()` for UI schema generation
+- [x] Unit tests cover all three parameter scenarios
+- [x] Presubmit passes
 
 ---
 
