@@ -38,6 +38,9 @@ export {
   genaiHarmBlockThresholdToProto,
 } from './safety-converter.js';
 
+// JSON Schema conversion (for JSONForms)
+export { genaiSchemaToJsonSchema, type JsonSchema7 } from './json-schema-converter.js';
+
 // High-level converters
 export {
   protoToLlmRequest,
