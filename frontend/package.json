@@ -50,6 +50,7 @@
     "@connectrpc/connect": "^2.1.1",
     "@connectrpc/connect-web": "^2.1.1",
     "@fontsource/roboto": "^5.2.9",
+    "@ngrx/signals": "^21.0.1",
     "material-icons": "^1.13.14",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

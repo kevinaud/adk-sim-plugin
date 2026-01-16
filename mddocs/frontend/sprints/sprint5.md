@@ -319,14 +319,14 @@ See `mocks/session-complete.png`.
 - [Signal-Based State Management](../research/prototype-findings.md#signal-based-state-management) - Signal patterns
 
 **Acceptance Criteria**:
-- [ ] Store implements `SimulationState` interface with `currentRequest`, `requestQueue`, `selectedTool`
-- [ ] `receiveRequest(request)` queues request if busy, sets current if idle
-- [ ] `advanceQueue()` moves to next request in FIFO order
-- [ ] `selectTool(tool)` and `clearSelection()` manage tool selection
-- [ ] Computed `hasRequest`, `queueLength`, `availableTools`, `contents`, `systemInstruction` implemented
-- [ ] `availableTools` flattens `functionDeclarations` from all tools
-- [ ] Unit tests cover queue behavior (add when idle, add when busy, advance)
-- [ ] Presubmit passes
+- [x] Store implements `SimulationState` interface with `currentRequest`, `requestQueue`, `selectedTool`
+- [x] `receiveRequest(request)` queues request if busy, sets current if idle
+- [x] `advanceQueue()` moves to next request in FIFO order
+- [x] `selectTool(tool)` and `clearSelection()` manage tool selection
+- [x] Computed `hasRequest`, `queueLength`, `availableTools`, `contents`, `systemInstruction` implemented
+- [x] `availableTools` flattens `functionDeclarations` from all tools
+- [x] Unit tests cover queue behavior (add when idle, add when busy, advance)
+- [x] Presubmit passes
 
 ---
 
