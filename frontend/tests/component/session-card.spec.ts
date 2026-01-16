@@ -15,12 +15,10 @@
 import { create } from '@bufbuild/protobuf';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 
+import { SimulatorSessionSchema, type SimulatorSession } from '@adk-sim/protos';
+
 import { expect, test } from './fixtures/theme.fixture';
 import { SessionCardComponent } from '../../src/app/ui/session/session-card/session-card.component';
-import {
-  SimulatorSessionSchema,
-  type SimulatorSession,
-} from '../../src/app/generated/adksim/v1/simulator_session_pb';
 
 /**
  * Creates a test session with the given overrides.
