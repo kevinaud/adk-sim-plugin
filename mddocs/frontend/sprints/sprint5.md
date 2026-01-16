@@ -385,30 +385,30 @@ See `mocks/session-complete.png`.
 - [FR-016 Tool Display](../frontend-spec.md#fr-response-construction) - Catalog view requirements
 
 **Acceptance Criteria**:
-- [ ] Component accepts `tools` input signal of `FunctionDeclaration[]`
-- [ ] Component accepts optional `selectedTool` input for highlighting
-- [ ] Component emits `selectTool` output with selected `FunctionDeclaration`
-- [ ] Displays header: "Tools ({count})" with collapse toggle
-- [ ] Each tool card shows: tool icon, name (blue), radio button, description
-- [ ] Collapsible "Parameters" section per tool (collapsed by default)
-- [ ] Parameters display: `propertyName*: TYPE_BADGE` format with description below
-- [ ] Type badges: STRING, INTEGER, OBJECT as colored chips (blue background)
-- [ ] Asterisk (*) suffix for required parameters
-- [ ] "* required" footer text when required parameters exist
-- [ ] Selected tool has visual highlight (radio button selected)
-- [ ] "SELECT TOOL" button at bottom (disabled if no selection)
-- [ ] Uses Tailwind for layout, Material for radio buttons
-- [ ] Unit tests verify tool rendering, selection, and parameter expansion
-- [ ] **Playwright component tests** in `frontend/tests/component/tool-catalog.spec.ts`:
-  - [ ] Screenshot: empty state (no tools)
-  - [ ] Screenshot: single tool with parameters collapsed
-  - [ ] Screenshot: single tool with parameters expanded
-  - [ ] Screenshot: multiple tools with one selected
-  - [ ] Screenshot: tool with many parameters (scrolling behavior)
-  - [ ] Screenshot: tool with long name/description (text wrapping)
-  - [ ] Screenshot: all parameter types displayed (STRING, INTEGER, OBJECT badges)
-  - [ ] All screenshots captured in both light and dark themes
-- [ ] Presubmit passes
+- [x] Component accepts `tools` input signal of `FunctionDeclaration[]`
+- [x] Component accepts optional `selectedTool` input for highlighting
+- [x] Component emits `selectTool` output with selected `FunctionDeclaration`
+- [x] Displays header: "Tools ({count})" with collapse toggle
+- [x] Each tool card shows: tool icon, name (blue), radio button, description
+- [x] Collapsible "Parameters" section per tool (collapsed by default)
+- [x] Parameters display: `propertyName*: TYPE_BADGE` format with description below
+- [x] Type badges: STRING, INTEGER, OBJECT as colored chips (blue background)
+- [x] Asterisk (*) suffix for required parameters
+- [x] "* required" footer text when required parameters exist
+- [x] Selected tool has visual highlight (radio button selected)
+- [x] "SELECT TOOL" button at bottom (disabled if no selection)
+- [x] Uses Tailwind for layout, Material for radio buttons
+- [x] Unit tests verify tool rendering, selection, and parameter expansion
+- [x] **Playwright component tests** in `frontend/tests/component/tool-catalog.spec.ts`:
+  - [x] Screenshot: empty state (no tools)
+  - [x] Screenshot: single tool with parameters collapsed
+  - [x] Screenshot: single tool with parameters expanded
+  - [x] Screenshot: multiple tools with one selected
+  - [x] Screenshot: tool with many parameters (scrolling behavior)
+  - [x] Screenshot: tool with long name/description (text wrapping)
+  - [x] Screenshot: all parameter types displayed (STRING, INTEGER, OBJECT badges)
+  - [x] All screenshots captured in both light and dark themes
+- [x] Presubmit passes
 
 ---
 

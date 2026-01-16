@@ -11,5 +11,6 @@
  */
 
 export { jsonFormsRenderers } from './jsonforms.config';
+export { ToolCatalogComponent } from './tool-catalog';
 export type { ToolFormConfig, ToolInvokeEvent } from './tool-form';
 export { ToolFormComponent } from './tool-form';
