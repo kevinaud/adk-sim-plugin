@@ -14,6 +14,7 @@ export { EmptyStateComponent } from './empty-state';
 export { ErrorBannerComponent } from './error-banner';
 export { ErrorStateComponent } from './error-state';
 export { LoadingStateComponent } from './loading-state';
+export { SplitPaneComponent } from './split-pane';
 
 // Type for reference - components that will be added
 export type SharedUiComponent =
