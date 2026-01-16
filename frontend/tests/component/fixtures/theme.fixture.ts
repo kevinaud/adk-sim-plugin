@@ -33,23 +33,41 @@ export const test = base.extend({
     // Get theme from project metadata (defaults to 'light')
     const theme = (testInfo.project.metadata as { theme?: string })?.theme ?? 'light';
 
-    // Apply theme class before test runs
+    // Apply theme class immediately when page loads using addInitScript
+    // This ensures the class is present before any component rendering
     await page.addInitScript((themeValue: string) => {
-      // Wait for DOM to be ready, then apply theme
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          applyTheme(themeValue);
-        });
-      } else {
-        applyTheme(themeValue);
-      }
-
-      function applyTheme(theme: string) {
-        if (theme === 'dark') {
+      // Apply theme as soon as possible
+      const applyTheme = () => {
+        if (themeValue === 'dark') {
           document.body.classList.add('dark-theme');
         } else {
           document.body.classList.remove('dark-theme');
         }
+      };
+
+      // Apply immediately if body exists, otherwise wait
+      if (document.body) {
+        applyTheme();
+      }
+
+      // Also apply on DOMContentLoaded to ensure it's set
+      document.addEventListener('DOMContentLoaded', applyTheme);
+
+      // Use MutationObserver to ensure class persists even if body is replaced
+      const observer = new MutationObserver(() => {
+        if (document.body && !document.body.classList.contains('dark-theme') && themeValue === 'dark') {
+          document.body.classList.add('dark-theme');
+        }
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    }, theme);
+
+    // Also apply via page.evaluate as a fallback (after page navigation in CT)
+    await page.evaluate((themeValue) => {
+      if (themeValue === 'dark') {
+        document.body.classList.add('dark-theme');
+      } else {
+        document.body.classList.remove('dark-theme');
       }
     }, theme);
 

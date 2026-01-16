@@ -349,18 +349,18 @@ The session-list component currently mixes both responsibilities, with ~105 line
 - `frontend/src/app/features/session-list/session-list.component.html` (lines 33-43) - Current error state implementation
 
 **Acceptance Criteria**:
-- [ ] Component accepts `message` input (required)
-- [ ] Component accepts `icon` input (default: 'error_outline')
-- [ ] Component emits `retry` output event when retry button clicked
-- [ ] Component accepts optional `retryLabel` input (default: 'Retry')
-- [ ] Uses `mat-icon` and `mat-raised-button` (Material components)
-- [ ] Layout uses Tailwind utilities: `flex flex-col items-center justify-center gap-4 p-12`
-- [ ] Error icon styling: large (48px), error color via theme bridge
-- [ ] Error message styling: `text-error text-center`
-- [ ] Unit tests verify message display, icon, and retry event emission
-- [ ] Snapshot test captures visual appearance
-- [ ] No custom SCSS file
-- [ ] Presubmit passes
+- [x] Component accepts `message` input (required)
+- [x] Component accepts `icon` input (default: 'error_outline')
+- [x] Component emits `retry` output event when retry button clicked
+- [x] Component accepts optional `retryLabel` input (default: 'Retry')
+- [x] Uses `mat-icon` and `mat-raised-button` (Material components)
+- [x] Layout uses Tailwind utilities: `flex flex-col items-center justify-center gap-4 p-12`
+- [x] Error icon styling: large (48px), error color via theme bridge
+- [x] Error message styling: `text-error text-center`
+- [x] Unit tests verify message display, icon, and retry event emission
+- [x] Snapshot test captures visual appearance
+- [x] No custom SCSS file
+- [x] Presubmit passes
 
 ---
 

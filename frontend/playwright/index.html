@@ -11,10 +11,81 @@
       rel="stylesheet"
     />
     <style>
+      /* Material Design 3 Theme Variables for Light/Dark Mode */
+      /* Light theme (default) */
+      :root {
+        --sys-primary: #005cbb;
+        --sys-on-primary: #ffffff;
+        --sys-primary-container: #d6e3ff;
+        --sys-on-primary-container: #001b3f;
+        --sys-secondary: #555f71;
+        --sys-on-secondary: #ffffff;
+        --sys-secondary-container: #d9e3f8;
+        --sys-on-secondary-container: #121c2b;
+        --sys-tertiary: #006399;
+        --sys-on-tertiary: #ffffff;
+        --sys-tertiary-container: #cee5ff;
+        --sys-on-tertiary-container: #001d32;
+        --sys-surface: #f9f9ff;
+        --sys-on-surface: #1a1c1e;
+        --sys-surface-variant: #e0e2ec;
+        --sys-on-surface-variant: #43474e;
+        --sys-surface-container: #eeeef4;
+        --sys-surface-container-low: #f4f4fa;
+        --sys-surface-container-high: #e8e8ee;
+        --sys-surface-container-highest: #e2e2e8;
+        --sys-background: #f9f9ff;
+        --sys-on-background: #1a1c1e;
+        --sys-error: #ba1a1a;
+        --sys-on-error: #ffffff;
+        --sys-error-container: #ffdad6;
+        --sys-on-error-container: #410002;
+        --sys-outline: #73777f;
+        --sys-outline-variant: #c3c6cf;
+        --sys-inverse-surface: #2f3033;
+        --sys-inverse-on-surface: #f0f0f6;
+        --sys-inverse-primary: #a9c7ff;
+      }
+      /* Dark theme */
+      body.dark-theme {
+        --sys-primary: #a9c7ff;
+        --sys-on-primary: #003065;
+        --sys-primary-container: #00468f;
+        --sys-on-primary-container: #d6e3ff;
+        --sys-secondary: #bdc7dc;
+        --sys-on-secondary: #273141;
+        --sys-secondary-container: #3e4758;
+        --sys-on-secondary-container: #d9e3f8;
+        --sys-tertiary: #97cbff;
+        --sys-on-tertiary: #003352;
+        --sys-tertiary-container: #004a74;
+        --sys-on-tertiary-container: #cee5ff;
+        --sys-surface: #121316;
+        --sys-on-surface: #e2e2e8;
+        --sys-surface-variant: #43474e;
+        --sys-on-surface-variant: #c3c6cf;
+        --sys-surface-container: #1e2022;
+        --sys-surface-container-low: #1a1c1e;
+        --sys-surface-container-high: #282a2d;
+        --sys-surface-container-highest: #333538;
+        --sys-background: #121316;
+        --sys-on-background: #e2e2e8;
+        --sys-error: #ffb4ab;
+        --sys-on-error: #690005;
+        --sys-error-container: #93000a;
+        --sys-on-error-container: #ffdad6;
+        --sys-outline: #8d9199;
+        --sys-outline-variant: #43474e;
+        --sys-inverse-surface: #e2e2e8;
+        --sys-inverse-on-surface: #2f3033;
+        --sys-inverse-primary: #005cbb;
+      }
       body {
         font-family: 'Roboto', sans-serif;
         margin: 0;
         padding: 16px;
+        background-color: var(--sys-surface);
+        color: var(--sys-on-surface);
       }
     </style>
   </head>
