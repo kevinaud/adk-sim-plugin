@@ -1,0 +1,11 @@
+/**
+ * App root component styles.
+ *
+ * Minimal custom styles - layout handled by Tailwind utilities.
+ */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
