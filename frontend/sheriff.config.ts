@@ -82,6 +82,7 @@ export const config: SheriffConfig = {
     // Domain isolation for UI components: can access same domain or untagged
     'domain:event-stream': [sameTag, 'noTag'],
     'domain:control-panel': [sameTag, 'noTag'],
+    'domain:session': [sameTag, 'noTag'],
     'domain:shared': [sameTag, 'noTag'],
   },
 };

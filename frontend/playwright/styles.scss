@@ -1,9 +1,18 @@
 /**
  * Playwright Component Testing Styles
  *
- * Imports Tailwind CSS for component tests.
- * Uses granular imports matching the main app's styles.scss
+ * Imports Angular Material theme and Tailwind CSS for component tests.
+ * Mirrors the main app's styles.scss structure.
  */
+
+/* ==========================================================================
+   Angular Material Theme Configuration
+   SCSS @use rules must come first (before any @layer or @import)
+   ========================================================================== */
+
+@use '../src/theme';
+
+/* Note: Fonts are loaded from Google CDN in index.html */
 
 /* A. Define CSS Layers for proper cascade ordering */
 @layer theme, base, components, utilities;
@@ -42,6 +51,3 @@
   /* Typography */
   --font-sans: Roboto, "Helvetica Neue", sans-serif;
 }
-
-/* Test marker to verify CSS is being loaded */
-.test-marker { color: red; }

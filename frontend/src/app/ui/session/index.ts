@@ -9,3 +9,4 @@
  */
 
 export { SessionCardComponent } from './session-card';
+export { SessionCardListComponent } from './session-card-list';
