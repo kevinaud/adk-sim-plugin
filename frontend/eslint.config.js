@@ -17,6 +17,7 @@ module.exports = tseslint.config(
       'src/app/generated/**',
       '**/*.spec.ts',
       'sheriff.config.ts',
+      'playwright/.cache',
     ],
   },
   // Playwright E2E tests - separate config without Angular-specific rules

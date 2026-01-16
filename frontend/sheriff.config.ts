@@ -47,9 +47,10 @@ export const config: SheriffConfig = {
 
   // Dependency rules - enforce layered architecture
   depRules: {
-    // Root (main.ts, app.config.ts, app.routes.ts) can access features, shared, and data-access
+    // Root (main.ts, app.config.ts, app.routes.ts, app.ts) can access features, shared, data-access, and ui
     // Note: root needs data-access to configure DI providers (composition root pattern)
-    root: ['type:feature', 'type:shared', 'type:data-access', 'type:config', 'noTag'],
+    // Note: root needs ui for app shell layout components (toolbar items like dark-mode-toggle)
+    root: ['type:feature', 'type:shared', 'type:data-access', 'type:ui', 'type:config', 'noTag'],
 
     // Features can access UI, data-access, util, and shared
     'type:feature': [
@@ -82,6 +83,7 @@ export const config: SheriffConfig = {
     // Domain isolation for UI components: can access same domain or untagged
     'domain:event-stream': [sameTag, 'noTag'],
     'domain:control-panel': [sameTag, 'noTag'],
-    'domain:shared': [sameTag, 'noTag'],
+    // domain:shared can also access util for components that need services (e.g., dark-mode-toggle)
+    'domain:shared': [sameTag, 'noTag', 'type:util'],
   },
 };
