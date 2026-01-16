@@ -1,0 +1,53 @@
+/**
+ * Playwright Component Testing Styles
+ *
+ * Imports Angular Material theme and Tailwind CSS for component tests.
+ * Mirrors the main app's styles.scss structure.
+ */
+
+/* ==========================================================================
+   Angular Material Theme Configuration
+   SCSS @use rules must come first (before any @layer or @import)
+   ========================================================================== */
+
+@use '../src/theme';
+
+/* Note: Fonts are loaded from Google CDN in index.html */
+
+/* A. Define CSS Layers for proper cascade ordering */
+@layer theme, base, components, utilities;
+
+/* B. Import Tailwind Core Modules (Skipping Preflight to match Material) */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* C. Configure Sources - scan component source files */
+@source "../src/app";
+
+/* ==========================================================================
+   Theme Bridge: Map Material System Variables to Tailwind
+   This makes Angular Material the single source of truth for design tokens
+   ========================================================================== */
+
+@theme {
+  /* Primary colors */
+  --color-primary: var(--sys-primary);
+  --color-on-primary: var(--sys-on-primary);
+
+  /* Surface colors */
+  --color-surface: var(--sys-surface);
+  --color-on-surface: var(--sys-on-surface);
+  --color-surface-variant: var(--sys-surface-variant);
+  --color-on-surface-variant: var(--sys-on-surface-variant);
+
+  /* Error colors */
+  --color-error: var(--sys-error);
+  --color-on-error: var(--sys-on-error);
+
+  /* Semantic status colors */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+
+  /* Typography */
+  --font-sans: Roboto, "Helvetica Neue", sans-serif;
+}

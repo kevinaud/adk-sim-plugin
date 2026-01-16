@@ -67,26 +67,63 @@ import { timestampDate } from '@bufbuild/protobuf/wkt';
         }
       </div>
 
-      <div matListItemLine class="flex items-center gap-6 text-xs text-on-surface-variant">
-        <span class="flex items-center gap-1" data-testid="session-created">
-          <mat-icon class="!text-sm !w-3.5 !h-3.5">schedule</mat-icon>
+      <div class="session-meta">
+        <mat-icon class="meta-icon">schedule</mat-icon>
+        <span data-testid="session-created">
           @if (createdAt(); as date) {
             {{ date | date: 'medium' }}
           } @else {
             Unknown
           }
         </span>
-        <span class="flex items-center gap-1" data-testid="session-status">
-          <mat-icon class="!text-[8px] !w-2 !h-2 text-success">circle</mat-icon>
-          Active
-        </span>
+        <span class="separator">·</span>
+        <mat-icon class="status-icon">circle</mat-icon>
+        <span data-testid="session-status">Active</span>
       </div>
 
       <mat-icon matListItemMeta>chevron_right</mat-icon>
     </mat-list-item>
   `,
   styles: `
-    /* Focus styles that Tailwind cannot fully handle */
+    :host {
+      display: block;
+    }
+
+    mat-list-item {
+      height: auto !important;
+      min-height: 72px;
+    }
+
+    /* Session metadata line (timestamp + status) */
+    .session-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: var(--sys-on-surface-variant);
+      margin-top: 4px;
+    }
+
+    .meta-icon {
+      font-size: 14px !important;
+      width: 14px !important;
+      height: 14px !important;
+      line-height: 1 !important;
+    }
+
+    .separator {
+      margin: 0 0.75rem;
+    }
+
+    .status-icon {
+      font-size: 8px !important;
+      width: 8px !important;
+      height: 8px !important;
+      line-height: 1 !important;
+      color: #22c55e;
+    }
+
+    /* Focus styles */
     mat-list-item:focus {
       outline: 2px solid var(--sys-primary);
       outline-offset: 2px;

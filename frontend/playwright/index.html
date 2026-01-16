@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Playwright Component Testing</title>
-    <!-- Material Icons -->
+    <!-- Fonts from Google CDN (Vite doesn't bundle font files correctly) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Angular Material + Tailwind CSS (processed by Vite) -->
+    <link rel="stylesheet" href="./styles.scss" />
     <style>
       /* Material Design 3 Theme Variables for Light/Dark Mode */
       /* Light theme (default) */
@@ -45,6 +46,9 @@
         --sys-inverse-surface: #2f3033;
         --sys-inverse-on-surface: #f0f0f6;
         --sys-inverse-primary: #a9c7ff;
+        /* Semantic status colors */
+        --color-success: #22c55e;
+        --color-warning: #f59e0b;
       }
       /* Dark theme */
       body.dark-theme {
@@ -79,6 +83,9 @@
         --sys-inverse-surface: #e2e2e8;
         --sys-inverse-on-surface: #2f3033;
         --sys-inverse-primary: #005cbb;
+        /* Semantic status colors (same in dark mode - contrast maintained) */
+        --color-success: #22c55e;
+        --color-warning: #f59e0b;
       }
       body {
         font-family: 'Roboto', sans-serif;

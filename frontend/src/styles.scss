@@ -68,6 +68,11 @@
   --color-error-container: var(--sys-error-container);
   --color-on-error-container: var(--sys-on-error-container);
 
+  /* Semantic status colors for UI indicators */
+  /* These extend Material's color system with common status semantics */
+  --color-success: #22c55e; /* Green 500 - for positive/success states */
+  --color-warning: #f59e0b; /* Amber 500 - for warning/attention states */
+
   /* Outline */
   --color-outline: var(--sys-outline);
   --color-outline-variant: var(--sys-outline-variant);

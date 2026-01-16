@@ -42,11 +42,10 @@
 
       <!-- Session List -->
       @if (hasSessions() && !isLoading()) {
-        <mat-list class="p-0">
-          @for (session of sessions(); track session.id) {
-            <app-session-card [session]="session" (selected)="navigateToSession($event)" />
-          }
-        </mat-list>
+        <app-session-card-list
+          [sessions]="sessions()"
+          (sessionSelected)="navigateToSession($event)"
+        />
       }
     </mat-card-content>
 

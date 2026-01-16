@@ -58,7 +58,6 @@ import { MatIconModule } from '@angular/material/icon';
       </button>
     </div>
   `,
-  styles: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorBannerComponent {

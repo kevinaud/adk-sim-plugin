@@ -1,26 +1,24 @@
 /**
  * @fileoverview Component tests for SessionCardComponent.
  *
- * Tests the visual appearance of the session card in various configurations:
- * - With and without description
- * - With and without creation time
- * - In light and dark modes (automatic via theme fixture)
+ * Tests the behavior of the session card component:
+ * - Displays session ID, description, creation time, status
+ * - Keyboard accessibility
  *
- * Uses visual regression testing with screenshots to verify the
- * component renders correctly with proper layout and styling.
+ * Note: Visual regression tests are in session-card-list.spec.ts since
+ * mat-list-item requires a mat-list parent for proper Material styling.
  *
  * @see frontend/src/app/ui/session/session-card/session-card.component.ts
+ * @see frontend/tests/component/session-card-list.spec.ts for visual tests
  */
 
 import { create } from '@bufbuild/protobuf';
 import { timestampFromDate } from '@bufbuild/protobuf/wkt';
 
+import { SimulatorSessionSchema, type SimulatorSession } from '@adk-sim/protos';
+
 import { expect, test } from './fixtures/theme.fixture';
 import { SessionCardComponent } from '../../src/app/ui/session/session-card/session-card.component';
-import {
-  SimulatorSessionSchema,
-  type SimulatorSession,
-} from '../../src/app/generated/adksim/v1/simulator_session_pb';
 
 /**
  * Creates a test session with the given overrides.
@@ -110,7 +108,7 @@ test.describe('SessionCardComponent', () => {
       await expect(statusElement).toContainText('Active');
     });
 
-    test('displays folder_open icon', async ({ mount, page }) => {
+    test('displays chat icon', async ({ mount, page }) => {
       const session = createTestSession();
       await mount(SessionCardComponent, {
         props: { session },
@@ -139,54 +137,6 @@ test.describe('SessionCardComponent', () => {
 
       const listItem = page.locator('mat-list-item');
       await expect(listItem).toHaveAttribute('tabindex', '0');
-    });
-  });
-
-  test.describe('visual regression', () => {
-    test('basic session card visual appearance', async ({ mount }) => {
-      const session = createTestSession({
-        createdAt: timestampFromDate(new Date('2024-06-15T10:30:00Z')),
-      });
-      const component = await mount(SessionCardComponent, {
-        props: { session },
-      });
-
-      await expect(component).toHaveScreenshot('session-card-basic.png');
-    });
-
-    test('session card with description visual appearance', async ({ mount }) => {
-      const session = createTestSession({
-        description: 'Test simulation with custom agent',
-        createdAt: timestampFromDate(new Date('2024-06-15T10:30:00Z')),
-      });
-      const component = await mount(SessionCardComponent, {
-        props: { session },
-      });
-
-      await expect(component).toHaveScreenshot('session-card-with-description.png');
-    });
-
-    test('session card without creation time visual appearance', async ({ mount }) => {
-      const session = createTestSession({
-        description: 'Session without timestamp',
-      });
-      const component = await mount(SessionCardComponent, {
-        props: { session },
-      });
-
-      await expect(component).toHaveScreenshot('session-card-no-timestamp.png');
-    });
-
-    test('session card with long description visual appearance', async ({ mount }) => {
-      const session = createTestSession({
-        description: 'This is a very long description that might wrap to multiple lines',
-        createdAt: timestampFromDate(new Date('2024-06-15T10:30:00Z')),
-      });
-      const component = await mount(SessionCardComponent, {
-        props: { session },
-      });
-
-      await expect(component).toHaveScreenshot('session-card-long-description.png');
     });
   });
 });

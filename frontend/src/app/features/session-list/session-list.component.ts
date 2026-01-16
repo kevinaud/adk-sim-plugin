@@ -22,11 +22,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { type Session, SessionFacade } from '../../data-access/session';
-import { SessionCardComponent } from '../../ui/session';
+import { SessionCardListComponent } from '../../ui/session';
 import {
   EmptyStateComponent,
   ErrorBannerComponent,
@@ -59,8 +58,7 @@ import {
     MatButtonModule,
     MatCardModule,
     MatIconModule,
-    MatListModule,
-    SessionCardComponent,
+    SessionCardListComponent,
   ],
   templateUrl: './session-list.component.html',
   styleUrl: './session-list.component.scss',
@@ -84,9 +82,6 @@ export class SessionListComponent implements OnInit {
 
   /** Whether there's a route error */
   readonly hasRouteError = computed(() => this._routeError() !== null);
-
-  /** Connection status from the facade */
-  readonly connectionStatus = this.facade.connectionStatus;
 
   /** Error message from the facade */
   readonly error = this.facade.error;

@@ -150,8 +150,7 @@ describe('SessionCardComponent', () => {
     });
 
     it('should display schedule icon', () => {
-      const created = fixture.nativeElement.querySelector('[data-testid="session-created"]');
-      const icon = created.querySelector('mat-icon');
+      const icon = fixture.nativeElement.querySelector('.session-meta .meta-icon');
       expect(icon.textContent.trim()).toBe('schedule');
     });
   });
@@ -163,8 +162,7 @@ describe('SessionCardComponent', () => {
     });
 
     it('should display circle icon for status', () => {
-      const status = fixture.nativeElement.querySelector('[data-testid="session-status"]');
-      const icon = status.querySelector('mat-icon');
+      const icon = fixture.nativeElement.querySelector('.session-meta .status-icon');
       expect(icon.textContent.trim()).toBe('circle');
     });
   });
