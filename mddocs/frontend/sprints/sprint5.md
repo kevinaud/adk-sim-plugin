@@ -399,6 +399,15 @@ See `mocks/session-complete.png`.
 - [ ] "SELECT TOOL" button at bottom (disabled if no selection)
 - [ ] Uses Tailwind for layout, Material for radio buttons
 - [ ] Unit tests verify tool rendering, selection, and parameter expansion
+- [ ] **Playwright component tests** in `frontend/tests/component/tool-catalog.spec.ts`:
+  - [ ] Screenshot: empty state (no tools)
+  - [ ] Screenshot: single tool with parameters collapsed
+  - [ ] Screenshot: single tool with parameters expanded
+  - [ ] Screenshot: multiple tools with one selected
+  - [ ] Screenshot: tool with many parameters (scrolling behavior)
+  - [ ] Screenshot: tool with long name/description (text wrapping)
+  - [ ] Screenshot: all parameter types displayed (STRING, INTEGER, OBJECT badges)
+  - [ ] All screenshots captured in both light and dark themes
 - [ ] Presubmit passes
 
 ---
@@ -441,6 +450,19 @@ See `mocks/session-complete.png`.
 - [ ] "EXECUTE" button: filled blue with play icon, disabled when validation errors
 - [ ] Timer shows elapsed time since form opened (format: "0.00s")
 - [ ] Unit tests verify form rendering, back navigation, and submission
+- [ ] **Playwright component tests** in `frontend/tests/component/tool-form.spec.ts`:
+  - [ ] Screenshot: default/empty state
+  - [ ] Screenshot: filled state with valid data
+  - [ ] Screenshot: validation errors (required fields empty)
+  - [ ] Screenshot: all primitive types (string, number, integer, boolean)
+  - [ ] Screenshot: enum fields with selection
+  - [ ] Screenshot: array fields (empty and with items)
+  - [ ] Screenshot: nested object fields
+  - [ ] Screenshot: long tool name (header wrapping)
+  - [ ] Screenshot: no tool description
+  - [ ] Screenshot: many fields (scrolling behavior)
+  - [ ] Screenshot: complex real-world schema (e.g., http_request)
+  - [ ] All screenshots captured in both light and dark themes
 - [ ] Presubmit passes
 
 ---
@@ -479,6 +501,14 @@ See `mocks/session-complete.png`.
 - [ ] Free-text mode: button enabled when textarea is non-empty
 - [ ] Schema mode: button disabled when validation errors exist
 - [ ] Unit tests cover both modes and submission
+- [ ] **Playwright component tests** in `frontend/tests/component/final-response.spec.ts`:
+  - [ ] Screenshot: free-text mode empty state
+  - [ ] Screenshot: free-text mode with text entered
+  - [ ] Screenshot: schema mode empty state
+  - [ ] Screenshot: schema mode with valid data
+  - [ ] Screenshot: schema mode with validation errors
+  - [ ] Screenshot: long response text (textarea behavior)
+  - [ ] All screenshots captured in both light and dark themes
 - [ ] Presubmit passes
 
 ---
@@ -527,6 +557,14 @@ See `mocks/session-complete.png`.
 - [ ] Manages internal state: `activeTab`, `selectedTool`
 - [ ] Uses Tailwind for layout, Material for tabs
 - [ ] Unit tests verify tab switching, tool selection flow, and event emission
+- [ ] **Playwright component tests** in `frontend/tests/component/control-panel.spec.ts`:
+  - [ ] Screenshot: CALL TOOL tab active with tool catalog
+  - [ ] Screenshot: FINAL RESPONSE tab active
+  - [ ] Screenshot: tool selected, showing tool form
+  - [ ] Screenshot: session completed state (checkmark, export button)
+  - [ ] Screenshot: no tools available state
+  - [ ] Screenshot: tab switching animation/states
+  - [ ] All screenshots captured in both light and dark themes
 - [ ] Presubmit passes
 
 ---
@@ -566,6 +604,14 @@ See `mocks/session-complete.png`.
 - [ ] Tool invocation and final response events logged to console (actual submission in future PR)
 - [ ] Layout renders correctly at 1280px width
 - [ ] Unit tests verify component composition
+- [ ] **Playwright e2e tests** in `frontend/tests/e2e/session.spec.ts`:
+  - [ ] Screenshot: initial state with "Awaiting Query" status
+  - [ ] Screenshot: active state with split-pane layout visible
+  - [ ] Screenshot: tool selection flow (catalog -> form -> execution)
+  - [ ] Screenshot: final response submission flow
+  - [ ] Screenshot: session completed state
+  - [ ] Screenshot: system instructions collapsed/expanded
+  - [ ] All screenshots captured in both light and dark themes
 - [ ] Presubmit passes
 
 ---
@@ -585,6 +631,23 @@ See `mocks/session-complete.png`.
 5. **JSONForms Renderer Reuse**: Import renderers from the centralized `jsonforms.config.ts` to ensure consistency.
 
 6. **Mock-Driven Implementation**: Each PR includes mock references - use these as the source of truth for visual design. The mocks are located in `mddocs/frontend/sprints/mocks/` with component-level mocks in `mocks/components/`.
+
+7. **UI Component Testing (src/app/ui/)**: All UI components MUST have comprehensive Playwright component tests with screenshot coverage of all interesting UI variations:
+   - **Test location**: `frontend/tests/component/{component-name}.spec.ts`
+   - **Snapshot location**: `frontend/tests/component/__snapshots__/{theme}/{test-file}-snapshots/`
+   - **Theme variants**: All screenshots must be captured in both light and dark themes using the theme fixture
+   - **Required screenshot coverage**:
+     - Empty/default state
+     - Filled/populated state
+     - Validation error states (when applicable)
+     - Edge cases: long text, many items, missing optional data
+     - Different schema/input types (for dynamic forms)
+   - **Reference implementation**: See `frontend/tests/component/tool-form.spec.ts` for comprehensive test patterns
+
+8. **Feature Component Testing (src/app/features/)**: All feature components MUST have Playwright e2e tests with screenshot coverage:
+   - **Test location**: `frontend/tests/e2e/{feature-name}.spec.ts`
+   - **Screenshot coverage**: Key user flows and integration states
+   - **Theme variants**: Light and dark mode screenshots where applicable
 
 ### Gotchas to Avoid
 
@@ -617,6 +680,25 @@ See `mocks/session-complete.png`.
 - [ ] Presubmit passes on all PRs
 - [ ] Manual smoke test: navigate to session, view tool catalog, expand parameters, switch tabs
 - [ ] Visual comparison: UI matches mocks in `mddocs/frontend/sprints/mocks/`
+
+### Testing Requirements
+
+- [ ] **All UI components** (`src/app/ui/`) have Playwright component tests:
+  - [ ] `ToolCatalogComponent` - component tests with comprehensive screenshot coverage
+  - [ ] `ToolFormComponent` - component tests with comprehensive screenshot coverage
+  - [ ] `FinalResponseComponent` - component tests with comprehensive screenshot coverage
+  - [ ] `ControlPanelComponent` - component tests with comprehensive screenshot coverage
+- [ ] **All feature components** (`src/app/features/`) have Playwright e2e tests:
+  - [ ] `SessionComponent` integration - e2e tests with screenshot coverage
+- [ ] **Screenshot coverage includes**:
+  - [ ] All potentially interesting UI variations (empty, filled, error states)
+  - [ ] Edge cases (long names, many items, different schema types)
+  - [ ] Both light and dark theme variants for all screenshots
+- [ ] **Test infrastructure**:
+  - [ ] Component tests located in `frontend/tests/component/`
+  - [ ] E2E tests located in `frontend/tests/e2e/`
+  - [ ] Snapshots use `__snapshots__/{theme}/` directory structure
+  - [ ] Theme fixture applied consistently across all visual tests
 
 ---
 
