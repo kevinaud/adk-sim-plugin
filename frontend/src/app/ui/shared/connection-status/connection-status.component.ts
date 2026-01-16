@@ -34,24 +34,25 @@ interface StatusConfig {
 
 /**
  * Map of connection status to display configuration.
+ * Uses Tailwind utility classes for styling via theme bridge colors.
  */
 const STATUS_CONFIG: Record<ConnectionStatus, StatusConfig> = {
   connected: {
     icon: 'check_circle',
     label: 'Connected',
-    cssClass: 'status-connected',
+    cssClass: 'text-success bg-success/10',
     tooltip: 'Connected to server',
   },
   connecting: {
     icon: 'sync',
     label: 'Connecting',
-    cssClass: 'status-connecting',
+    cssClass: 'text-warning bg-warning/10',
     tooltip: 'Connecting to server...',
   },
   disconnected: {
     icon: 'error',
     label: 'Disconnected',
-    cssClass: 'status-disconnected',
+    cssClass: 'text-error bg-error/10',
     tooltip: 'Disconnected from server',
   },
 };
@@ -74,50 +75,22 @@ const STATUS_CONFIG: Record<ConnectionStatus, StatusConfig> = {
   imports: [MatIconModule, MatTooltipModule],
   template: `
     <div
-      class="connection-status"
+      class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
       [class]="statusConfig().cssClass"
       [matTooltip]="statusConfig().tooltip"
+      [attr.data-testid]="'connection-status-' + status()"
+      data-testid="connection-status"
     >
-      <mat-icon [class.spinning]="isConnecting()">{{ statusConfig().icon }}</mat-icon>
-      <span class="status-label">{{ statusConfig().label }}</span>
+      <mat-icon class="!text-base !w-4 !h-4" [class.spinning]="isConnecting()">{{
+        statusConfig().icon
+      }}</mat-icon>
+      <span class="whitespace-nowrap" data-testid="connection-status-label">{{
+        statusConfig().label
+      }}</span>
     </div>
   `,
   styles: `
-    .connection-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .status-label {
-      white-space: nowrap;
-    }
-
-    mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    .status-connected {
-      color: #2e7d32;
-      background-color: rgba(46, 125, 50, 0.1);
-    }
-
-    .status-connecting {
-      color: #ed6c02;
-      background-color: rgba(237, 108, 2, 0.1);
-    }
-
-    .status-disconnected {
-      color: #d32f2f;
-      background-color: rgba(211, 47, 47, 0.1);
-    }
-
+    /* Spinning animation - Tailwind cannot replace this */
     .spinning {
       animation: spin 1s linear infinite;
     }

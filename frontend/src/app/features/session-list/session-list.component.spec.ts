@@ -435,10 +435,12 @@ describe('SessionListComponent with route error query param', () => {
     fixture.detectChanges();
     await waitForAsync();
 
-    const warningIcon = fixture.nativeElement.querySelector('.error-icon');
+    const warningIcon = fixture.nativeElement.querySelector('[data-testid="error-banner-icon"]');
     expect(warningIcon).toBeTruthy();
 
-    const dismissButton = fixture.nativeElement.querySelector('.error-dismiss');
+    const dismissButton = fixture.nativeElement.querySelector(
+      '[data-testid="error-banner-dismiss"]',
+    );
     expect(dismissButton).toBeTruthy();
   });
 
@@ -470,7 +472,7 @@ describe('SessionListComponent with route error query param', () => {
 
     // Click dismiss
     const dismissButton = fixture.nativeElement.querySelector(
-      '.error-dismiss',
+      '[data-testid="error-banner-dismiss"]',
     ) as HTMLButtonElement;
     expect(dismissButton).toBeTruthy();
     dismissButton.click();
