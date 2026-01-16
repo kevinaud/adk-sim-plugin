@@ -50,6 +50,7 @@ if [ "$CI" != "true" ]; then
         "https://github.com/google/adk-java"
         "https://github.com/google/adk-js"
         "https://github.com/google/adk-docs"
+        "https://github.com/google/adk-samples"
     )
 
     # 1. Create the directory as root (required for /workspaces sometimes)

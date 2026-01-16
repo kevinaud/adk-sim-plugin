@@ -28,7 +28,9 @@
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
       "packages": "jq,procps,snapd,vim,cloc"
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/bartventer/arch-devcontainer-features/gcloud-cli:1": {},
+    "ghcr.io/joshuanianji/devcontainer-features/gcloud-cli-persistence:1": {}
   },
 
   "customizations": {

@@ -21,3 +21,23 @@ export {
   safetyBlockedResponse,
   multiPartResponse,
 } from './responses.js';
+
+// Vertex AI debug adapter (for loading raw API request/response JSON)
+export {
+  extractVertexSteps,
+  getVertexTraceMetadata,
+  getUniqueTools,
+  type VertexDebugTrace,
+  type VertexDebugEntry,
+  type VertexRequestJson,
+  type VertexResponseJson,
+  type VertexLlmStep,
+  type VertexContent,
+  type VertexPart,
+  type VertexTool,
+  type VertexFunctionDeclaration,
+  type VertexSchema,
+} from './vertex-adapter.js';
+
+// Vertex JSON to Proto converter
+export { vertexRequestToProto, vertexResponseToProto } from './vertex-to-proto.js';

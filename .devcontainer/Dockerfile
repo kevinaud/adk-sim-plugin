@@ -28,8 +28,7 @@ RUN npm install -g @angular/cli
 RUN npm install -g @bufbuild/buf
 
 # Install Claude Code CLI globally
-# RUN npm install -g @anthropic-ai/claude-code
-# RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # Create backup directory for node_modules
 RUN mkdir -p /opt/backup
@@ -77,3 +76,5 @@ RUN npm install && \
     if [ -d frontend/node_modules ]; then \
       cp -r frontend/node_modules/* /opt/backup/frontend_node_modules/; \
     fi
+
+# Install gcloud SDK
