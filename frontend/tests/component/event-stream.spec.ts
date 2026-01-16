@@ -7,11 +7,14 @@
  * Uses visual regression testing with screenshots to verify the
  * component renders correctly with proper layout and styling.
  *
+ * Uses the theme fixture to automatically run tests in both light and dark modes,
+ * generating separate snapshots for each theme variant.
+ *
  * @see frontend/src/app/ui/event-stream/event-stream.component.ts
  */
 
 import type { Content } from '@adk-sim/converters';
-import { expect, test } from '@sand4rt/experimental-ct-angular';
+import { expect, test } from './fixtures/theme.fixture';
 
 import { EventStreamComponent } from '../../src/app/ui/event-stream/event-stream.component';
 
