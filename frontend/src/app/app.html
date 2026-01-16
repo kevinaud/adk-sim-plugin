@@ -1,1 +1,12 @@
-<router-outlet />
+<mat-toolbar color="primary" class="flex items-center justify-between">
+  <span class="flex items-center gap-2">
+    <mat-icon>smart_toy</mat-icon>
+    <span>{{ title() }}</span>
+  </span>
+  <div class="flex items-center">
+    <app-dark-mode-toggle />
+  </div>
+</mat-toolbar>
+<main class="flex-1">
+  <router-outlet />
+</main>

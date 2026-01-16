@@ -6,6 +6,7 @@
  *
  * Import directly from submodules due to Sheriff module boundaries:
  * - Reconnect: `./util/reconnect`
+ * - Theme: `./util/theme`
  * - JSON Detection: `./util/json-detection` (planned)
  * - MD Detection: `./util/md-detection` (planned)
  *
@@ -17,4 +18,4 @@
  * Libraries available in the util layer.
  * Each library has its own index.ts barrel file for exports.
  */
-export type UtilLibrary = 'json-detection' | 'md-detection' | 'reconnect';
+export type UtilLibrary = 'json-detection' | 'md-detection' | 'reconnect' | 'theme';
