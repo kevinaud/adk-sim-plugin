@@ -9,6 +9,7 @@
  */
 
 export { type ConnectionStatus, ConnectionStatusComponent } from './connection-status';
+export { DarkModeToggleComponent } from './dark-mode-toggle';
 export { EmptyStateComponent } from './empty-state';
 export { ErrorBannerComponent } from './error-banner';
 export { ErrorStateComponent } from './error-state';
@@ -17,6 +18,7 @@ export { LoadingStateComponent } from './loading-state';
 // Type for reference - components that will be added
 export type SharedUiComponent =
   | 'connection-status'
+  | 'dark-mode-toggle'
   | 'empty-state'
   | 'error-banner'
   | 'error-state'
