@@ -492,24 +492,24 @@ See `mocks/session-complete.png`.
 - [FR-018 and FR-019](../frontend-spec.md#fr-response-construction) - Schema vs text requirements
 
 **Acceptance Criteria**:
-- [ ] Component accepts optional `outputSchema` input (JSON Schema or null)
-- [ ] When `outputSchema` is null: renders Material textarea with "Final Response" label
-- [ ] When `outputSchema` is defined: renders JSONForms with schema
-- [ ] Component emits `submitText` output for free-text responses
-- [ ] Component emits `submitStructured` output for schema-validated responses
-- [ ] "Submit Response" button present for both modes (styled like EXECUTE button)
-- [ ] Free-text mode: button enabled when textarea is non-empty
-- [ ] Schema mode: button disabled when validation errors exist
-- [ ] Unit tests cover both modes and submission
-- [ ] **Playwright component tests** in `frontend/tests/component/final-response.spec.ts`:
-  - [ ] Screenshot: free-text mode empty state
-  - [ ] Screenshot: free-text mode with text entered
-  - [ ] Screenshot: schema mode empty state
-  - [ ] Screenshot: schema mode with valid data
-  - [ ] Screenshot: schema mode with validation errors
-  - [ ] Screenshot: long response text (textarea behavior)
-  - [ ] All screenshots captured in both light and dark themes
-- [ ] Presubmit passes
+- [x] Component accepts optional `outputSchema` input (JSON Schema or null)
+- [x] When `outputSchema` is null: renders Material textarea with "Final Response" label
+- [x] When `outputSchema` is defined: renders JSONForms with schema
+- [x] Component emits `submitText` output for free-text responses
+- [x] Component emits `submitStructured` output for schema-validated responses
+- [x] "Submit Response" button present for both modes (styled like EXECUTE button)
+- [x] Free-text mode: button enabled when textarea is non-empty
+- [x] Schema mode: button disabled when validation errors exist
+- [x] Unit tests cover both modes and submission
+- [x] **Playwright component tests** in `frontend/tests/component/final-response.spec.ts`:
+  - [x] Screenshot: free-text mode empty state
+  - [x] Screenshot: free-text mode with text entered
+  - [x] Screenshot: schema mode empty state
+  - [x] Screenshot: schema mode with valid data
+  - [x] Screenshot: schema mode with validation errors
+  - [x] Screenshot: long response text (textarea behavior)
+  - [x] All screenshots captured in both light and dark themes
+- [x] Presubmit passes
 
 ---
 

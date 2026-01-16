@@ -1402,7 +1402,7 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 | [x] | `ToolCatalogComponent` | FR-016 | Tool listing |
 | [ ] | `ToolFormComponent` + JSONForms | FR-017 | Schema-driven tool forms |
 | [x] | `ToolFormService` | FR-017 | Schema conversion (proto → JSON Schema) |
-| [ ] | `FinalResponseComponent` | FR-018-019 | Text area or schema form |
+| [x] | `FinalResponseComponent` | FR-018-019 | Text area or schema form |
 | [x] | `SimulationStore` | FR-024 | Request queue management |
 | [x] | Split-pane layout | FR-005 | Layout primitive |
 

@@ -20,12 +20,14 @@ import '@angular/platform-browser-dynamic/testing';
 // Rollup tree-shakes these out because JSONForms declares "sideEffects": false.
 // By explicitly importing and referencing them, we create a side effect Rollup must respect.
 // @see mddocs/frontend/research/deep-research/json-forms-ct-testing-findings-2.md
+import { FinalResponseComponent } from '../src/app/ui/control-panel/final-response/final-response.component';
 import { ToolFormComponent } from '../src/app/ui/control-panel/tool-form/tool-form.component';
 import { JsonFormsModule } from '@jsonforms/angular';
 import { angularMaterialRenderers } from '@jsonforms/angular-material';
 
 // Console.log creates a side effect that forces Rollup to include the imports
 console.log('[Playwright CT] Pre-loading JSONForms components:', {
+  FinalResponseComponent,
   ToolFormComponent,
   JsonFormsModule,
   renderersCount: angularMaterialRenderers.length,
