@@ -61,8 +61,9 @@ export default defineConfig({
           tsconfig: resolve('./tsconfig.spec.json'),
         }),
       ],
-      // Disable sourcemaps to suppress analogjs plugin warnings
+      // Build configuration for Playwright CT
       build: {
+        // Disable sourcemaps to suppress analogjs plugin warnings
         sourcemap: false,
       },
       // Configure SCSS processing for theme styles
@@ -80,9 +81,29 @@ export default defineConfig({
           '@app': resolve('./src/app'),
         },
       },
-      // Optimize Angular dependencies for Vite (zoneless Angular 21+)
+      // Polyfill Node.js globals required by Ajv (used by JSONForms)
+      // Without this, Ajv throws "ReferenceError: global is not defined"
+      // @see mddocs/frontend/research/deep-research/json-forms-ct-testing-findings.md
+      define: {
+        global: {},
+      },
+      // SSR/SSG configuration for external module handling
+      ssr: {
+        // Force these modules to be bundled instead of externalized
+        // This helps with Playwright CT's component resolution
+        noExternal: [
+          '@jsonforms/core',
+          '@jsonforms/angular',
+          '@jsonforms/angular-material',
+          /tool-form/,  // Ensure tool-form component is bundled
+        ],
+      },
+      // Optimize Angular and JSONForms dependencies for Vite
       optimizeDeps: {
+        // Force pre-bundling of these modules
+        force: true,
         include: [
+          // Angular core modules
           '@angular/core',
           '@angular/common',
           '@angular/compiler',
@@ -95,6 +116,15 @@ export default defineConfig({
           '@angular/platform-browser/animations/async',
           '@angular/material/icon',
           '@angular/material/tooltip',
+          // JSONForms dependencies (force CJS-to-ESM conversion)
+          '@jsonforms/core',
+          '@jsonforms/angular',
+          '@jsonforms/angular-material',
+          'ajv',
+          'ajv-formats',
+          // JSONForms Angular Material implicit dependencies
+          'hammerjs',
+          'lodash',
         ],
       },
     },

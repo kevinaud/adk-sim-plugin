@@ -647,6 +647,27 @@ USER FEEDBACK:
 ---
 
 # S5PR7
+
+## Open Questions
+
+### additionalProperties Rendering
+
+JSONForms Angular Material doesn't have a built-in renderer for `additionalProperties` key-value editing. When a schema includes `additionalProperties: { type: 'string' }`, the form renders an empty box with no way to add key-value pairs.
+
+**Options to resolve:**
+
+1. **Create a custom renderer** — Build a key-value pair editor component that registers with JSONForms for `additionalProperties` schemas
+2. **Change schema pattern** — Use `array` of `{key: string, value: string}` objects instead (workaround that changes the data structure)
+3. **Accept limitation** — Document as known limitation and defer to a future sprint
+
+**Status**: Awaiting decision
+
+### Field Descriptions Behavior
+
+Field descriptions (via `showUnfocusedDescription: true`) only display when the field is **valid**. When a field has validation errors, the `mat-error` element replaces the `mat-hint` where descriptions appear. This is expected Material Design behavior but may be surprising to users.
+
+**Status**: Documented, no action needed
+
 ---
 
 # S5PR8
