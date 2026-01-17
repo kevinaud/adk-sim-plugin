@@ -87,7 +87,7 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
     FinalResponseComponent,
   ],
   template: `
-    <div class="control-panel" data-testid="control-panel">
+    <div class="control-panel">
       @if (isSessionCompleted()) {
         <!-- Session Completed State -->
         <div class="completed-state" data-testid="completed-state">
