@@ -16,19 +16,23 @@
 // @generated from file google/ai/generativelanguage/v1beta/retriever.proto (package google.ai.generativelanguage.v1beta, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import { file_google_api_field_behavior } from "../../../api/field_behavior_pb";
-import { file_google_api_resource } from "../../../api/resource_pb";
-import type { Timestamp } from "@bufbuild/protobuf/wkt";
-import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
-import type { Message } from "@bufbuild/protobuf";
+import type { GenEnum, GenFile, GenMessage } from '@bufbuild/protobuf/codegenv2';
+import { enumDesc, fileDesc, messageDesc } from '@bufbuild/protobuf/codegenv2';
+import { file_google_api_field_behavior } from '../../../api/field_behavior_pb';
+import { file_google_api_resource } from '../../../api/resource_pb';
+import type { Timestamp } from '@bufbuild/protobuf/wkt';
+import { file_google_protobuf_timestamp } from '@bufbuild/protobuf/wkt';
+import type { Message } from '@bufbuild/protobuf';
 
 /**
  * Describes the file google/ai/generativelanguage/v1beta/retriever.proto.
  */
-export const file_google_ai_generativelanguage_v1beta_retriever: GenFile = /*@__PURE__*/
-  fileDesc("CjNnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9yZXRyaWV2ZXIucHJvdG8SI2dvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhIvcBCgZDb3JwdXMSFAoEbmFtZRgBIAEoCUIG4EEI4EEFEhkKDGRpc3BsYXlfbmFtZRgCIAEoCUID4EEBEjQKC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDEjQKC3VwZGF0ZV90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDOlDqQU0KKGdlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS9Db3JwdXMSEGNvcnBvcmEve2NvcnB1c30qB2NvcnBvcmEyBmNvcnB1cyLnAgoIRG9jdW1lbnQSFAoEbmFtZRgBIAEoCUIG4EEI4EEFEhkKDGRpc3BsYXlfbmFtZRgCIAEoCUID4EEBElEKD2N1c3RvbV9tZXRhZGF0YRgDIAMoCzIzLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkN1c3RvbU1ldGFkYXRhQgPgQQESNAoLdXBkYXRlX3RpbWUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgPgQQMSNAoLY3JlYXRlX3RpbWUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgPgQQM6a+pBaAoqZ2VuZXJhdGl2ZWxhbmd1YWdlLmdvb2dsZWFwaXMuY29tL0RvY3VtZW50EiVjb3Jwb3JhL3tjb3JwdXN9L2RvY3VtZW50cy97ZG9jdW1lbnR9Kglkb2N1bWVudHMyCGRvY3VtZW50IhwKClN0cmluZ0xpc3QSDgoGdmFsdWVzGAEgAygJIqoBCg5DdXN0b21NZXRhZGF0YRIWCgxzdHJpbmdfdmFsdWUYAiABKAlIABJMChFzdHJpbmdfbGlzdF92YWx1ZRgGIAEoCzIvLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLlN0cmluZ0xpc3RIABIXCg1udW1lcmljX3ZhbHVlGAcgASgCSAASEAoDa2V5GAEgASgJQgPgQQJCBwoFdmFsdWUiawoOTWV0YWRhdGFGaWx0ZXISEAoDa2V5GAEgASgJQgPgQQISRwoKY29uZGl0aW9ucxgCIAMoCzIuLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvbmRpdGlvbkID4EECIq0CCglDb25kaXRpb24SFgoMc3RyaW5nX3ZhbHVlGAEgASgJSAASFwoNbnVtZXJpY192YWx1ZRgGIAEoAkgAEk8KCW9wZXJhdGlvbhgFIAEoDjI3Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvbmRpdGlvbi5PcGVyYXRvckID4EECIpQBCghPcGVyYXRvchIYChRPUEVSQVRPUl9VTlNQRUNJRklFRBAAEggKBExFU1MQARIOCgpMRVNTX0VRVUFMEAISCQoFRVFVQUwQAxIRCg1HUkVBVEVSX0VRVUFMEAQSCwoHR1JFQVRFUhAFEg0KCU5PVF9FUVVBTBAGEgwKCElOQ0xVREVTEAcSDAoIRVhDTFVERVMQCEIHCgV2YWx1ZSK6BAoFQ2h1bmsSFAoEbmFtZRgBIAEoCUIG4EEI4EEFEkEKBGRhdGEYAiABKAsyLi5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5DaHVua0RhdGFCA+BBAhJRCg9jdXN0b21fbWV0YWRhdGEYAyADKAsyMy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5DdXN0b21NZXRhZGF0YUID4EEBEjQKC2NyZWF0ZV90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDEjQKC3VwZGF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDEkQKBXN0YXRlGAYgASgOMjAuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ2h1bmsuU3RhdGVCA+BBAyJgCgVTdGF0ZRIVChFTVEFURV9VTlNQRUNJRklFRBAAEhwKGFNUQVRFX1BFTkRJTkdfUFJPQ0VTU0lORxABEhAKDFNUQVRFX0FDVElWRRACEhAKDFNUQVRFX0ZBSUxFRBAKOnHqQW4KJ2dlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS9DaHVuaxI0Y29ycG9yYS97Y29ycHVzfS9kb2N1bWVudHMve2RvY3VtZW50fS9jaHVua3Mve2NodW5rfSoGY2h1bmtzMgVjaHVuayIrCglDaHVua0RhdGESFgoMc3RyaW5nX3ZhbHVlGAEgASgJSABCBgoEZGF0YUKaAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhQg5SZXRyaWV2ZXJQcm90b1ABWl1jbG91ZC5nb29nbGUuY29tL2dvL2FpL2dlbmVyYXRpdmVsYW5ndWFnZS9hcGl2MWJldGEvZ2VuZXJhdGl2ZWxhbmd1YWdlcGI7Z2VuZXJhdGl2ZWxhbmd1YWdlcGJiBnByb3RvMw", [file_google_api_field_behavior, file_google_api_resource, file_google_protobuf_timestamp]);
+export const file_google_ai_generativelanguage_v1beta_retriever: GenFile =
+  /*@__PURE__*/
+  fileDesc(
+    'CjNnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9yZXRyaWV2ZXIucHJvdG8SI2dvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhIvcBCgZDb3JwdXMSFAoEbmFtZRgBIAEoCUIG4EEI4EEFEhkKDGRpc3BsYXlfbmFtZRgCIAEoCUID4EEBEjQKC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDEjQKC3VwZGF0ZV90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDOlDqQU0KKGdlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS9Db3JwdXMSEGNvcnBvcmEve2NvcnB1c30qB2NvcnBvcmEyBmNvcnB1cyLnAgoIRG9jdW1lbnQSFAoEbmFtZRgBIAEoCUIG4EEI4EEFEhkKDGRpc3BsYXlfbmFtZRgCIAEoCUID4EEBElEKD2N1c3RvbV9tZXRhZGF0YRgDIAMoCzIzLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkN1c3RvbU1ldGFkYXRhQgPgQQESNAoLdXBkYXRlX3RpbWUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgPgQQMSNAoLY3JlYXRlX3RpbWUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgPgQQM6a+pBaAoqZ2VuZXJhdGl2ZWxhbmd1YWdlLmdvb2dsZWFwaXMuY29tL0RvY3VtZW50EiVjb3Jwb3JhL3tjb3JwdXN9L2RvY3VtZW50cy97ZG9jdW1lbnR9Kglkb2N1bWVudHMyCGRvY3VtZW50IhwKClN0cmluZ0xpc3QSDgoGdmFsdWVzGAEgAygJIqoBCg5DdXN0b21NZXRhZGF0YRIWCgxzdHJpbmdfdmFsdWUYAiABKAlIABJMChFzdHJpbmdfbGlzdF92YWx1ZRgGIAEoCzIvLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLlN0cmluZ0xpc3RIABIXCg1udW1lcmljX3ZhbHVlGAcgASgCSAASEAoDa2V5GAEgASgJQgPgQQJCBwoFdmFsdWUiawoOTWV0YWRhdGFGaWx0ZXISEAoDa2V5GAEgASgJQgPgQQISRwoKY29uZGl0aW9ucxgCIAMoCzIuLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvbmRpdGlvbkID4EECIq0CCglDb25kaXRpb24SFgoMc3RyaW5nX3ZhbHVlGAEgASgJSAASFwoNbnVtZXJpY192YWx1ZRgGIAEoAkgAEk8KCW9wZXJhdGlvbhgFIAEoDjI3Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkNvbmRpdGlvbi5PcGVyYXRvckID4EECIpQBCghPcGVyYXRvchIYChRPUEVSQVRPUl9VTlNQRUNJRklFRBAAEggKBExFU1MQARIOCgpMRVNTX0VRVUFMEAISCQoFRVFVQUwQAxIRCg1HUkVBVEVSX0VRVUFMEAQSCwoHR1JFQVRFUhAFEg0KCU5PVF9FUVVBTBAGEgwKCElOQ0xVREVTEAcSDAoIRVhDTFVERVMQCEIHCgV2YWx1ZSK6BAoFQ2h1bmsSFAoEbmFtZRgBIAEoCUIG4EEI4EEFEkEKBGRhdGEYAiABKAsyLi5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5DaHVua0RhdGFCA+BBAhJRCg9jdXN0b21fbWV0YWRhdGEYAyADKAsyMy5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5DdXN0b21NZXRhZGF0YUID4EEBEjQKC2NyZWF0ZV90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDEjQKC3VwZGF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEID4EEDEkQKBXN0YXRlGAYgASgOMjAuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ2h1bmsuU3RhdGVCA+BBAyJgCgVTdGF0ZRIVChFTVEFURV9VTlNQRUNJRklFRBAAEhwKGFNUQVRFX1BFTkRJTkdfUFJPQ0VTU0lORxABEhAKDFNUQVRFX0FDVElWRRACEhAKDFNUQVRFX0ZBSUxFRBAKOnHqQW4KJ2dlbmVyYXRpdmVsYW5ndWFnZS5nb29nbGVhcGlzLmNvbS9DaHVuaxI0Y29ycG9yYS97Y29ycHVzfS9kb2N1bWVudHMve2RvY3VtZW50fS9jaHVua3Mve2NodW5rfSoGY2h1bmtzMgVjaHVuayIrCglDaHVua0RhdGESFgoMc3RyaW5nX3ZhbHVlGAEgASgJSABCBgoEZGF0YUKaAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhQg5SZXRyaWV2ZXJQcm90b1ABWl1jbG91ZC5nb29nbGUuY29tL2dvL2FpL2dlbmVyYXRpdmVsYW5ndWFnZS9hcGl2MWJldGEvZ2VuZXJhdGl2ZWxhbmd1YWdlcGI7Z2VuZXJhdGl2ZWxhbmd1YWdlcGJiBnByb3RvMw',
+    [file_google_api_field_behavior, file_google_api_resource, file_google_protobuf_timestamp],
+  );
 
 /**
  * A `Corpus` is a collection of `Document`s.
@@ -36,7 +40,7 @@ export const file_google_ai_generativelanguage_v1beta_retriever: GenFile = /*@__
  *
  * @generated from message google.ai.generativelanguage.v1beta.Corpus
  */
-export type Corpus = Message<"google.ai.generativelanguage.v1beta.Corpus"> & {
+export type Corpus = Message<'google.ai.generativelanguage.v1beta.Corpus'> & {
   /**
    * Immutable. Identifier. The `Corpus` resource name. The ID (name excluding
    * the "corpora/" prefix) can contain up to 40 characters that are lowercase
@@ -78,7 +82,8 @@ export type Corpus = Message<"google.ai.generativelanguage.v1beta.Corpus"> & {
  * Describes the message google.ai.generativelanguage.v1beta.Corpus.
  * Use `create(CorpusSchema)` to create a new message.
  */
-export const CorpusSchema: GenMessage<Corpus> = /*@__PURE__*/
+export const CorpusSchema: GenMessage<Corpus> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 0);
 
 /**
@@ -87,7 +92,7 @@ export const CorpusSchema: GenMessage<Corpus> = /*@__PURE__*/
  *
  * @generated from message google.ai.generativelanguage.v1beta.Document
  */
-export type Document = Message<"google.ai.generativelanguage.v1beta.Document"> & {
+export type Document = Message<'google.ai.generativelanguage.v1beta.Document'> & {
   /**
    * Immutable. Identifier. The `Document` resource name. The ID (name excluding
    * the "corpora/*\/documents/" prefix) can contain up to 40 characters that are
@@ -136,7 +141,8 @@ export type Document = Message<"google.ai.generativelanguage.v1beta.Document"> &
  * Describes the message google.ai.generativelanguage.v1beta.Document.
  * Use `create(DocumentSchema)` to create a new message.
  */
-export const DocumentSchema: GenMessage<Document> = /*@__PURE__*/
+export const DocumentSchema: GenMessage<Document> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 1);
 
 /**
@@ -144,7 +150,7 @@ export const DocumentSchema: GenMessage<Document> = /*@__PURE__*/
  *
  * @generated from message google.ai.generativelanguage.v1beta.StringList
  */
-export type StringList = Message<"google.ai.generativelanguage.v1beta.StringList"> & {
+export type StringList = Message<'google.ai.generativelanguage.v1beta.StringList'> & {
   /**
    * The string values of the metadata to store.
    *
@@ -157,7 +163,8 @@ export type StringList = Message<"google.ai.generativelanguage.v1beta.StringList
  * Describes the message google.ai.generativelanguage.v1beta.StringList.
  * Use `create(StringListSchema)` to create a new message.
  */
-export const StringListSchema: GenMessage<StringList> = /*@__PURE__*/
+export const StringListSchema: GenMessage<StringList> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 2);
 
 /**
@@ -165,35 +172,39 @@ export const StringListSchema: GenMessage<StringList> = /*@__PURE__*/
  *
  * @generated from message google.ai.generativelanguage.v1beta.CustomMetadata
  */
-export type CustomMetadata = Message<"google.ai.generativelanguage.v1beta.CustomMetadata"> & {
+export type CustomMetadata = Message<'google.ai.generativelanguage.v1beta.CustomMetadata'> & {
   /**
    * @generated from oneof google.ai.generativelanguage.v1beta.CustomMetadata.value
    */
-  value: {
-    /**
-     * The string value of the metadata to store.
-     *
-     * @generated from field: string string_value = 2;
-     */
-    value: string;
-    case: "stringValue";
-  } | {
-    /**
-     * The StringList value of the metadata to store.
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.StringList string_list_value = 6;
-     */
-    value: StringList;
-    case: "stringListValue";
-  } | {
-    /**
-     * The numeric value of the metadata to store.
-     *
-     * @generated from field: float numeric_value = 7;
-     */
-    value: number;
-    case: "numericValue";
-  } | { case: undefined; value?: undefined };
+  value:
+    | {
+        /**
+         * The string value of the metadata to store.
+         *
+         * @generated from field: string string_value = 2;
+         */
+        value: string;
+        case: 'stringValue';
+      }
+    | {
+        /**
+         * The StringList value of the metadata to store.
+         *
+         * @generated from field: google.ai.generativelanguage.v1beta.StringList string_list_value = 6;
+         */
+        value: StringList;
+        case: 'stringListValue';
+      }
+    | {
+        /**
+         * The numeric value of the metadata to store.
+         *
+         * @generated from field: float numeric_value = 7;
+         */
+        value: number;
+        case: 'numericValue';
+      }
+    | { case: undefined; value?: undefined };
 
   /**
    * Required. The key of the metadata to store.
@@ -207,7 +218,8 @@ export type CustomMetadata = Message<"google.ai.generativelanguage.v1beta.Custom
  * Describes the message google.ai.generativelanguage.v1beta.CustomMetadata.
  * Use `create(CustomMetadataSchema)` to create a new message.
  */
-export const CustomMetadataSchema: GenMessage<CustomMetadata> = /*@__PURE__*/
+export const CustomMetadataSchema: GenMessage<CustomMetadata> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 3);
 
 /**
@@ -220,7 +232,7 @@ export const CustomMetadataSchema: GenMessage<CustomMetadata> = /*@__PURE__*/
  *
  * @generated from message google.ai.generativelanguage.v1beta.MetadataFilter
  */
-export type MetadataFilter = Message<"google.ai.generativelanguage.v1beta.MetadataFilter"> & {
+export type MetadataFilter = Message<'google.ai.generativelanguage.v1beta.MetadataFilter'> & {
   /**
    * Required. The key of the metadata to filter on.
    *
@@ -241,7 +253,8 @@ export type MetadataFilter = Message<"google.ai.generativelanguage.v1beta.Metada
  * Describes the message google.ai.generativelanguage.v1beta.MetadataFilter.
  * Use `create(MetadataFilterSchema)` to create a new message.
  */
-export const MetadataFilterSchema: GenMessage<MetadataFilter> = /*@__PURE__*/
+export const MetadataFilterSchema: GenMessage<MetadataFilter> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 4);
 
 /**
@@ -249,7 +262,7 @@ export const MetadataFilterSchema: GenMessage<MetadataFilter> = /*@__PURE__*/
  *
  * @generated from message google.ai.generativelanguage.v1beta.Condition
  */
-export type Condition = Message<"google.ai.generativelanguage.v1beta.Condition"> & {
+export type Condition = Message<'google.ai.generativelanguage.v1beta.Condition'> & {
   /**
    * The value type must be consistent with the value type defined in the field
    * for the corresponding key. If the value types are not consistent, the
@@ -260,23 +273,26 @@ export type Condition = Message<"google.ai.generativelanguage.v1beta.Condition">
    *
    * @generated from oneof google.ai.generativelanguage.v1beta.Condition.value
    */
-  value: {
-    /**
-     * The string value to filter the metadata on.
-     *
-     * @generated from field: string string_value = 1;
-     */
-    value: string;
-    case: "stringValue";
-  } | {
-    /**
-     * The numeric value to filter the metadata on.
-     *
-     * @generated from field: float numeric_value = 6;
-     */
-    value: number;
-    case: "numericValue";
-  } | { case: undefined; value?: undefined };
+  value:
+    | {
+        /**
+         * The string value to filter the metadata on.
+         *
+         * @generated from field: string string_value = 1;
+         */
+        value: string;
+        case: 'stringValue';
+      }
+    | {
+        /**
+         * The numeric value to filter the metadata on.
+         *
+         * @generated from field: float numeric_value = 6;
+         */
+        value: number;
+        case: 'numericValue';
+      }
+    | { case: undefined; value?: undefined };
 
   /**
    * Required. Operator applied to the given key-value pair to trigger the
@@ -291,7 +307,8 @@ export type Condition = Message<"google.ai.generativelanguage.v1beta.Condition">
  * Describes the message google.ai.generativelanguage.v1beta.Condition.
  * Use `create(ConditionSchema)` to create a new message.
  */
-export const ConditionSchema: GenMessage<Condition> = /*@__PURE__*/
+export const ConditionSchema: GenMessage<Condition> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 5);
 
 /**
@@ -369,7 +386,8 @@ export enum Condition_Operator {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.Condition.Operator.
  */
-export const Condition_OperatorSchema: GenEnum<Condition_Operator> = /*@__PURE__*/
+export const Condition_OperatorSchema: GenEnum<Condition_Operator> =
+  /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_retriever, 5, 0);
 
 /**
@@ -379,7 +397,7 @@ export const Condition_OperatorSchema: GenEnum<Condition_Operator> = /*@__PURE__
  *
  * @generated from message google.ai.generativelanguage.v1beta.Chunk
  */
-export type Chunk = Message<"google.ai.generativelanguage.v1beta.Chunk"> & {
+export type Chunk = Message<'google.ai.generativelanguage.v1beta.Chunk'> & {
   /**
    * Immutable. Identifier. The `Chunk` resource name. The ID (name excluding
    * the "corpora/*\/documents/*\/chunks/" prefix) can contain up to 40 characters
@@ -434,7 +452,8 @@ export type Chunk = Message<"google.ai.generativelanguage.v1beta.Chunk"> & {
  * Describes the message google.ai.generativelanguage.v1beta.Chunk.
  * Use `create(ChunkSchema)` to create a new message.
  */
-export const ChunkSchema: GenMessage<Chunk> = /*@__PURE__*/
+export const ChunkSchema: GenMessage<Chunk> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 6);
 
 /**
@@ -475,7 +494,8 @@ export enum Chunk_State {
 /**
  * Describes the enum google.ai.generativelanguage.v1beta.Chunk.State.
  */
-export const Chunk_StateSchema: GenEnum<Chunk_State> = /*@__PURE__*/
+export const Chunk_StateSchema: GenEnum<Chunk_State> =
+  /*@__PURE__*/
   enumDesc(file_google_ai_generativelanguage_v1beta_retriever, 6, 0);
 
 /**
@@ -483,25 +503,28 @@ export const Chunk_StateSchema: GenEnum<Chunk_State> = /*@__PURE__*/
  *
  * @generated from message google.ai.generativelanguage.v1beta.ChunkData
  */
-export type ChunkData = Message<"google.ai.generativelanguage.v1beta.ChunkData"> & {
+export type ChunkData = Message<'google.ai.generativelanguage.v1beta.ChunkData'> & {
   /**
    * @generated from oneof google.ai.generativelanguage.v1beta.ChunkData.data
    */
-  data: {
-    /**
-     * The `Chunk` content as a string.
-     * The maximum number of tokens per chunk is 2043.
-     *
-     * @generated from field: string string_value = 1;
-     */
-    value: string;
-    case: "stringValue";
-  } | { case: undefined; value?: undefined };
+  data:
+    | {
+        /**
+         * The `Chunk` content as a string.
+         * The maximum number of tokens per chunk is 2043.
+         *
+         * @generated from field: string string_value = 1;
+         */
+        value: string;
+        case: 'stringValue';
+      }
+    | { case: undefined; value?: undefined };
 };
 
 /**
  * Describes the message google.ai.generativelanguage.v1beta.ChunkData.
  * Use `create(ChunkDataSchema)` to create a new message.
  */
-export const ChunkDataSchema: GenMessage<ChunkData> = /*@__PURE__*/
+export const ChunkDataSchema: GenMessage<ChunkData> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_retriever, 7);
