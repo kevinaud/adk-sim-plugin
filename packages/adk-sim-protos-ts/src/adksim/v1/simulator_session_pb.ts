@@ -2,19 +2,26 @@
 // @generated from file adksim/v1/simulator_session.proto (package adksim.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import type { GenerateContentRequest, GenerateContentResponse } from "../../google/ai/generativelanguage/v1beta/generative_service_pb";
-import { file_google_ai_generativelanguage_v1beta_generative_service } from "../../google/ai/generativelanguage/v1beta/generative_service_pb";
-import type { Timestamp } from "@bufbuild/protobuf/wkt";
-import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
-import type { Message } from "@bufbuild/protobuf";
+import type { GenEnum, GenFile, GenMessage } from '@bufbuild/protobuf/codegenv2';
+import { enumDesc, fileDesc, messageDesc } from '@bufbuild/protobuf/codegenv2';
+import type {
+  GenerateContentRequest,
+  GenerateContentResponse,
+} from '../../google/ai/generativelanguage/v1beta/generative_service_pb';
+import { file_google_ai_generativelanguage_v1beta_generative_service } from '../../google/ai/generativelanguage/v1beta/generative_service_pb';
+import type { Timestamp } from '@bufbuild/protobuf/wkt';
+import { file_google_protobuf_timestamp } from '@bufbuild/protobuf/wkt';
+import type { Message } from '@bufbuild/protobuf';
 
 /**
  * Describes the file adksim/v1/simulator_session.proto.
  */
-export const file_adksim_v1_simulator_session: GenFile = /*@__PURE__*/
-  fileDesc("CiFhZGtzaW0vdjEvc2ltdWxhdG9yX3Nlc3Npb24ucHJvdG8SCWFka3NpbS52MSJjChBTaW11bGF0b3JTZXNzaW9uEgoKAmlkGAEgASgJEi4KCmNyZWF0ZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2Rlc2NyaXB0aW9uGAMgASgJIr0CCgxTZXNzaW9uRXZlbnQSEAoIZXZlbnRfaWQYASABKAkSEgoKc2Vzc2lvbl9pZBgCIAEoCRItCgl0aW1lc3RhbXAYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg8KB3R1cm5faWQYBCABKAkSEgoKYWdlbnRfbmFtZRgFIAEoCRJSCgtsbG1fcmVxdWVzdBgKIAEoCzI7Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkdlbmVyYXRlQ29udGVudFJlcXVlc3RIABJUCgxsbG1fcmVzcG9uc2UYCyABKAsyPC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5HZW5lcmF0ZUNvbnRlbnRSZXNwb25zZUgAQgkKB3BheWxvYWQqhgEKDVNlc3Npb25TdGF0dXMSHgoaU0VTU0lPTl9TVEFUVVNfVU5TUEVDSUZJRUQQABIZChVTRVNTSU9OX1NUQVRVU19BQ1RJVkUQARIcChhTRVNTSU9OX1NUQVRVU19DT01QTEVURUQQAhIcChhTRVNTSU9OX1NUQVRVU19DQU5DRUxMRUQQA2IGcHJvdG8z", [file_google_ai_generativelanguage_v1beta_generative_service, file_google_protobuf_timestamp]);
+export const file_adksim_v1_simulator_session: GenFile =
+  /*@__PURE__*/
+  fileDesc(
+    'CiFhZGtzaW0vdjEvc2ltdWxhdG9yX3Nlc3Npb24ucHJvdG8SCWFka3NpbS52MSJjChBTaW11bGF0b3JTZXNzaW9uEgoKAmlkGAEgASgJEi4KCmNyZWF0ZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2Rlc2NyaXB0aW9uGAMgASgJIr0CCgxTZXNzaW9uRXZlbnQSEAoIZXZlbnRfaWQYASABKAkSEgoKc2Vzc2lvbl9pZBgCIAEoCRItCgl0aW1lc3RhbXAYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg8KB3R1cm5faWQYBCABKAkSEgoKYWdlbnRfbmFtZRgFIAEoCRJSCgtsbG1fcmVxdWVzdBgKIAEoCzI7Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkdlbmVyYXRlQ29udGVudFJlcXVlc3RIABJUCgxsbG1fcmVzcG9uc2UYCyABKAsyPC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5HZW5lcmF0ZUNvbnRlbnRSZXNwb25zZUgAQgkKB3BheWxvYWQqhgEKDVNlc3Npb25TdGF0dXMSHgoaU0VTU0lPTl9TVEFUVVNfVU5TUEVDSUZJRUQQABIZChVTRVNTSU9OX1NUQVRVU19BQ1RJVkUQARIcChhTRVNTSU9OX1NUQVRVU19DT01QTEVURUQQAhIcChhTRVNTSU9OX1NUQVRVU19DQU5DRUxMRUQQA2IGcHJvdG8z',
+    [file_google_ai_generativelanguage_v1beta_generative_service, file_google_protobuf_timestamp],
+  );
 
 /**
  * SimulatorSession represents a simulation session's metadata.
@@ -22,7 +29,7 @@ export const file_adksim_v1_simulator_session: GenFile = /*@__PURE__*/
  *
  * @generated from message adksim.v1.SimulatorSession
  */
-export type SimulatorSession = Message<"adksim.v1.SimulatorSession"> & {
+export type SimulatorSession = Message<'adksim.v1.SimulatorSession'> & {
   /**
    * Unique identifier for the session (UUID).
    *
@@ -49,7 +56,8 @@ export type SimulatorSession = Message<"adksim.v1.SimulatorSession"> & {
  * Describes the message adksim.v1.SimulatorSession.
  * Use `create(SimulatorSessionSchema)` to create a new message.
  */
-export const SimulatorSessionSchema: GenMessage<SimulatorSession> = /*@__PURE__*/
+export const SimulatorSessionSchema: GenMessage<SimulatorSession> =
+  /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_session, 0);
 
 /**
@@ -58,7 +66,7 @@ export const SimulatorSessionSchema: GenMessage<SimulatorSession> = /*@__PURE__*
  *
  * @generated from message adksim.v1.SessionEvent
  */
-export type SessionEvent = Message<"adksim.v1.SessionEvent"> & {
+export type SessionEvent = Message<'adksim.v1.SessionEvent'> & {
   /**
    * Unique identifier for this event.
    *
@@ -99,30 +107,34 @@ export type SessionEvent = Message<"adksim.v1.SessionEvent"> & {
    *
    * @generated from oneof adksim.v1.SessionEvent.payload
    */
-  payload: {
-    /**
-     * LLM request intercepted from an agent (Plugin -> UI).
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.GenerateContentRequest llm_request = 10;
-     */
-    value: GenerateContentRequest;
-    case: "llmRequest";
-  } | {
-    /**
-     * Human decision/response (UI -> Plugin).
-     *
-     * @generated from field: google.ai.generativelanguage.v1beta.GenerateContentResponse llm_response = 11;
-     */
-    value: GenerateContentResponse;
-    case: "llmResponse";
-  } | { case: undefined; value?: undefined };
+  payload:
+    | {
+        /**
+         * LLM request intercepted from an agent (Plugin -> UI).
+         *
+         * @generated from field: google.ai.generativelanguage.v1beta.GenerateContentRequest llm_request = 10;
+         */
+        value: GenerateContentRequest;
+        case: 'llmRequest';
+      }
+    | {
+        /**
+         * Human decision/response (UI -> Plugin).
+         *
+         * @generated from field: google.ai.generativelanguage.v1beta.GenerateContentResponse llm_response = 11;
+         */
+        value: GenerateContentResponse;
+        case: 'llmResponse';
+      }
+    | { case: undefined; value?: undefined };
 };
 
 /**
  * Describes the message adksim.v1.SessionEvent.
  * Use `create(SessionEventSchema)` to create a new message.
  */
-export const SessionEventSchema: GenMessage<SessionEvent> = /*@__PURE__*/
+export const SessionEventSchema: GenMessage<SessionEvent> =
+  /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_session, 1);
 
 /**
@@ -163,5 +175,6 @@ export enum SessionStatus {
 /**
  * Describes the enum adksim.v1.SessionStatus.
  */
-export const SessionStatusSchema: GenEnum<SessionStatus> = /*@__PURE__*/
+export const SessionStatusSchema: GenEnum<SessionStatus> =
+  /*@__PURE__*/
   enumDesc(file_adksim_v1_simulator_session, 0);
