@@ -36,12 +36,14 @@ uv run adk-sim --help
 
 ### Quality Checks
 
-Quality gates are defined in `.pre-commit-config.yaml` (single source of truth).
+Quality gates are defined in `.jj/repo/config.toml` (jj-native quality gates).
 
 Run quality checks:
 ```bash
-ops quality              # Quick check (lint/format)
-ops ci check             # Full check including tests (must pass before push)
+jj fix                   # Auto-format modified files
+jj quality               # Quick check (format + lint + type-check)
+jj secure-push           # Full verify + push (must pass before push)
+ops ci check             # CI-style full check (equivalent to jj secure-push without push)
 ```
 
 ### Testing

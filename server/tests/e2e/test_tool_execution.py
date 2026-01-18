@@ -135,9 +135,9 @@ async def test_human_directed_tool_execution(
   # Verify we received at least 2 requests:
   # 1. Initial user question
   # 2. Tool result after executing add(50, 50)
-  assert (
-    len(human.requests_received) >= 2
-  ), f"Expected at least 2 requests, got {len(human.requests_received)}"
+  assert len(human.requests_received) >= 2, (
+    f"Expected at least 2 requests, got {len(human.requests_received)}"
+  )
 
   # The agent should have produced at least one response
   assert len(responses) > 0, "Agent should have produced at least one event"

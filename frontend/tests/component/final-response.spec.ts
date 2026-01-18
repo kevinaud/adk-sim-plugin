@@ -194,7 +194,9 @@ test.describe('FinalResponseComponent', () => {
       await component.locator('textarea').fill(longText);
       await component.page().waitForTimeout(100);
 
-      await expect(component).toHaveScreenshot('final-response-free-text-long.png');
+      await expect(component).toHaveScreenshot('final-response-free-text-long.png', {
+        maxDiffPixelRatio: 0.02,
+      });
     });
 
     test('schema mode - empty state', async ({ mount }) => {

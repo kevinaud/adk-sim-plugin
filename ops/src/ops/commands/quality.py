@@ -30,22 +30,28 @@ def check(
   """
   Run quality checks (lint, format, type check).
 
-  This runs pre-commit hooks on all files (commit stage only).
+  This runs linters, formatters, and type checkers on the codebase.
   Use 'ops quality test' to also run tests.
 
   Examples:
     ops quality check    Run quality checks
     ops quality          Same as above (default)
   """
-  require_tools("uv")
+  require_tools("uv", "buf")
 
   console.print("Running quality checks...")
 
-  run(
-    ["uv", "run", "pre-commit", "run", "--all-files"],
-    cwd=REPO_ROOT,
-    verbose=verbose,
-  )
+  # Python linting and formatting
+  run(["uv", "run", "ruff", "check", "."], cwd=REPO_ROOT, verbose=verbose)
+  run(["uv", "run", "ruff", "format", "--check", "."], cwd=REPO_ROOT, verbose=verbose)
+  run(["uv", "run", "pyright"], cwd=REPO_ROOT, verbose=verbose)
+
+  # Proto linting
+  run(["buf", "lint"], cwd=REPO_ROOT / "protos", verbose=verbose)
+
+  # Frontend linting
+  run(["npm", "run", "lint"], cwd=FRONTEND_DIR, verbose=verbose)
+  run(["npm", "run", "format:check"], cwd=FRONTEND_DIR, verbose=verbose)
 
   console.print("\n[green]![/green] Quality checks passed")
 
