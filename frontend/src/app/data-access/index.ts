@@ -7,6 +7,7 @@
  * Import directly from submodules due to Sheriff module boundaries:
  * - Session: `./data-access/session`
  * - LLM Request: `./data-access/llm-request`
+ * - Tool Form: `./data-access/tool-form`
  *
  * @module data-access
  * @see mddocs/frontend/frontend-tdd.md#folder-layout
@@ -16,4 +17,4 @@
  * Domains available in the data-access layer.
  * Each domain has its own index.ts barrel file for exports.
  */
-export type DataAccessDomain = 'session' | 'llm-request';
+export type DataAccessDomain = 'session' | 'llm-request' | 'tool-form';
