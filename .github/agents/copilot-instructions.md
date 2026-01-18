@@ -45,16 +45,17 @@ ops dev frontend        # Start Angular dev server
 ops quality test        # Run all tests
 ops quality test unit   # Run unit tests only
 ops quality test integration  # Run integration tests only
-ops quality             # Run quality checks (lint/format via pre-commit)
+ops quality             # Run quality checks (via jj quality)
 ops docker up           # Start services via Docker Compose
 ```
 
-Quality gates are defined in `.pre-commit-config.yaml` (single source of truth):
+Quality gates are defined in `.jj/repo/config.toml` (jj-native quality gates):
 
 ```bash
-ops ci check                                           # Full quality + tests (must pass before push)
-ops quality                                            # Quick quality check (commit-stage hooks)
-uv run pre-commit run --all-files --hook-stage manual  # All hooks including full test suite
+jj fix                  # Auto-format modified files
+jj quality              # Quick quality check (format + lint + type-check)
+jj secure-push          # Full verification pipeline + push (must pass before push)
+ops ci check            # CI-style full validation (equivalent to jj secure-push without push)
 ```
 
 Direct commands (when needed):

@@ -95,7 +95,7 @@ export default defineConfig({
           '@jsonforms/core',
           '@jsonforms/angular',
           '@jsonforms/angular-material',
-          /tool-form/,  // Ensure tool-form component is bundled
+          /tool-form/, // Ensure tool-form component is bundled
         ],
       },
       // Optimize Angular and JSONForms dependencies for Vite
@@ -125,6 +125,11 @@ export default defineConfig({
           // JSONForms Angular Material implicit dependencies
           'hammerjs',
           'lodash',
+          // Workspace packages
+          '@adk-sim/protos',
+          '@adk-sim/converters',
+          '@bufbuild/protobuf',
+          '@google/genai',
         ],
       },
     },

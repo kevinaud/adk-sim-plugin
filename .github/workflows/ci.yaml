@@ -51,7 +51,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install buf CLI
@@ -63,19 +63,22 @@ jobs:
           npm ci
 
       # ============================================================
-      # Playwright Browser Caching
+      # Playwright Docker Image
       # ============================================================
-      # Playwright browser binaries are ~500MB+. Caching them
-      # transforms E2E setup from minutes to seconds.
+      # Pull the official Playwright Docker image to ensure consistent
+      # visual regression testing across all environments.
       #
-      # Cache key includes:
-      #   - runner.os: Browser binaries are OS-specific
-      #   - hashFiles('frontend/package-lock.json'): Browser version
-      #     is tied to the Playwright package version
+      # Using Docker for component tests ensures pixel-perfect consistency
+      # between local development and CI, eliminating font rendering
+      # differences between Debian (devcontainer) and Ubuntu (CI).
       #
-      # PLAYWRIGHT_BROWSERS_PATH: Controls where browsers are stored.
-      #   Set before cache restore so the path matches.
+      # @see mddocs/frontend/research/deep-research/visual-regression-ci-investigation-report.md
       # ============================================================
+      - name: Pull Playwright Docker image
+        run: docker pull mcr.microsoft.com/playwright:v1.57.0-noble
+
+      # For E2E tests (not component tests), install Playwright locally
+      # since E2E tests need to access Docker Compose services
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(cd frontend && npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT

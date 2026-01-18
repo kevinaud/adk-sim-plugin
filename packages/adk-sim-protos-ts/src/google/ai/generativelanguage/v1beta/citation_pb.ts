@@ -16,23 +16,27 @@
 // @generated from file google/ai/generativelanguage/v1beta/citation.proto (package google.ai.generativelanguage.v1beta, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import { file_google_api_field_behavior } from "../../../api/field_behavior_pb";
-import type { Message } from "@bufbuild/protobuf";
+import type { GenFile, GenMessage } from '@bufbuild/protobuf/codegenv2';
+import { fileDesc, messageDesc } from '@bufbuild/protobuf/codegenv2';
+import { file_google_api_field_behavior } from '../../../api/field_behavior_pb';
+import type { Message } from '@bufbuild/protobuf';
 
 /**
  * Describes the file google/ai/generativelanguage/v1beta/citation.proto.
  */
-export const file_google_ai_generativelanguage_v1beta_citation: GenFile = /*@__PURE__*/
-  fileDesc("CjJnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9jaXRhdGlvbi5wcm90bxIjZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEiYQoQQ2l0YXRpb25NZXRhZGF0YRJNChBjaXRhdGlvbl9zb3VyY2VzGAEgAygLMjMuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ2l0YXRpb25Tb3VyY2UisAEKDkNpdGF0aW9uU291cmNlEh0KC3N0YXJ0X2luZGV4GAEgASgFQgPgQQFIAIgBARIbCgllbmRfaW5kZXgYAiABKAVCA+BBAUgBiAEBEhUKA3VyaRgDIAEoCUID4EEBSAKIAQESGQoHbGljZW5zZRgEIAEoCUID4EEBSAOIAQFCDgoMX3N0YXJ0X2luZGV4QgwKCl9lbmRfaW5kZXhCBgoEX3VyaUIKCghfbGljZW5zZUKZAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhQg1DaXRhdGlvblByb3RvUAFaXWNsb3VkLmdvb2dsZS5jb20vZ28vYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL2FwaXYxYmV0YS9nZW5lcmF0aXZlbGFuZ3VhZ2VwYjtnZW5lcmF0aXZlbGFuZ3VhZ2VwYmIGcHJvdG8z", [file_google_api_field_behavior]);
+export const file_google_ai_generativelanguage_v1beta_citation: GenFile =
+  /*@__PURE__*/
+  fileDesc(
+    'CjJnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxYmV0YS9jaXRhdGlvbi5wcm90bxIjZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEiYQoQQ2l0YXRpb25NZXRhZGF0YRJNChBjaXRhdGlvbl9zb3VyY2VzGAEgAygLMjMuZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MWJldGEuQ2l0YXRpb25Tb3VyY2UisAEKDkNpdGF0aW9uU291cmNlEh0KC3N0YXJ0X2luZGV4GAEgASgFQgPgQQFIAIgBARIbCgllbmRfaW5kZXgYAiABKAVCA+BBAUgBiAEBEhUKA3VyaRgDIAEoCUID4EEBSAKIAQESGQoHbGljZW5zZRgEIAEoCUID4EEBSAOIAQFCDgoMX3N0YXJ0X2luZGV4QgwKCl9lbmRfaW5kZXhCBgoEX3VyaUIKCghfbGljZW5zZUKZAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhQg1DaXRhdGlvblByb3RvUAFaXWNsb3VkLmdvb2dsZS5jb20vZ28vYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL2FwaXYxYmV0YS9nZW5lcmF0aXZlbGFuZ3VhZ2VwYjtnZW5lcmF0aXZlbGFuZ3VhZ2VwYmIGcHJvdG8z',
+    [file_google_api_field_behavior],
+  );
 
 /**
  * A collection of source attributions for a piece of content.
  *
  * @generated from message google.ai.generativelanguage.v1beta.CitationMetadata
  */
-export type CitationMetadata = Message<"google.ai.generativelanguage.v1beta.CitationMetadata"> & {
+export type CitationMetadata = Message<'google.ai.generativelanguage.v1beta.CitationMetadata'> & {
   /**
    * Citations to sources for a specific response.
    *
@@ -45,7 +49,8 @@ export type CitationMetadata = Message<"google.ai.generativelanguage.v1beta.Cita
  * Describes the message google.ai.generativelanguage.v1beta.CitationMetadata.
  * Use `create(CitationMetadataSchema)` to create a new message.
  */
-export const CitationMetadataSchema: GenMessage<CitationMetadata> = /*@__PURE__*/
+export const CitationMetadataSchema: GenMessage<CitationMetadata> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_citation, 0);
 
 /**
@@ -53,7 +58,7 @@ export const CitationMetadataSchema: GenMessage<CitationMetadata> = /*@__PURE__*
  *
  * @generated from message google.ai.generativelanguage.v1beta.CitationSource
  */
-export type CitationSource = Message<"google.ai.generativelanguage.v1beta.CitationSource"> & {
+export type CitationSource = Message<'google.ai.generativelanguage.v1beta.CitationSource'> & {
   /**
    * Optional. Start of segment of the response that is attributed to this
    * source.
@@ -93,5 +98,6 @@ export type CitationSource = Message<"google.ai.generativelanguage.v1beta.Citati
  * Describes the message google.ai.generativelanguage.v1beta.CitationSource.
  * Use `create(CitationSourceSchema)` to create a new message.
  */
-export const CitationSourceSchema: GenMessage<CitationSource> = /*@__PURE__*/
+export const CitationSourceSchema: GenMessage<CitationSource> =
+  /*@__PURE__*/
   messageDesc(file_google_ai_generativelanguage_v1beta_citation, 1);

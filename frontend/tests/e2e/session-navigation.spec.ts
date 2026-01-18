@@ -55,9 +55,9 @@ test.describe('Session Navigation', () => {
       expect(url.includes('127.0.0.1') || url.includes('localhost')).toBe(true);
 
       // Should show the session list component
-      await expect(page.locator('app-session-list').or(page.locator('mat-card')).first()).toBeVisible(
-        { timeout: 30000 },
-      );
+      await expect(
+        page.locator('app-session-list').or(page.locator('mat-card')).first(),
+      ).toBeVisible({ timeout: 30000 });
     });
 
     test('displays error message from query params', async ({ page, gotoAndWaitForAngular }) => {
@@ -144,10 +144,7 @@ test.describe('Event Stream Component', () => {
   // Use populated backend which has sessions (but may not have events)
   test.use({ backend: 'populated' });
 
-  test('displays empty state placeholder when no events', async ({
-    page,
-    gotoAndWaitForAngular,
-  }) => {
+  test('displays empty state when no events', async ({ page, gotoAndWaitForAngular }) => {
     // Navigate to session list first
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
@@ -162,31 +159,22 @@ test.describe('Event Stream Component', () => {
     // Wait for component to fully load
     await page.waitForTimeout(1000);
 
-    // Check if event stream component exists with empty state
-    const eventStream = page.locator('[data-testid="event-stream"]');
-    const eventStreamExists = (await eventStream.count()) > 0;
-
-    // Check for event stream pane with placeholder content
+    // Check for event stream pane
     const eventStreamPane = page.locator('[data-testid="event-stream-pane"]');
-    const eventStreamContent = page.locator('[data-testid="event-stream-content"]');
+    await expect(eventStreamPane).toBeVisible();
 
-    if ((await eventStreamPane.count()) > 0) {
-      // The new component has an event stream pane with placeholder
-      await expect(eventStreamPane).toBeVisible();
-      await expect(eventStreamContent).toBeVisible();
+    // Check EventStreamComponent's empty state or events (scoped to event-stream)
+    const eventStream = page.locator('[data-testid="event-stream"]');
+    await expect(eventStream).toBeVisible();
 
-      // Check for placeholder text
-      await expect(page.getByText(/no events yet/i).first()).toBeVisible({ timeout: 5000 });
-    } else if (eventStreamExists) {
-      // Old style event stream with empty state or events
-      const emptyState = page.locator('[data-testid="empty-state"]');
-      const eventBlocks = page.locator('[data-testid="event-block"]');
+    const emptyState = eventStream.locator('[data-testid="empty-state"]');
+    const eventBlocks = eventStream.locator('[data-testid="event-block"]');
 
-      const emptyStateVisible = await emptyState.isVisible().catch(() => false);
-      const eventBlocksCount = await eventBlocks.count();
+    const emptyStateVisible = await emptyState.isVisible().catch(() => false);
+    const eventBlocksCount = await eventBlocks.count();
 
-      expect(emptyStateVisible || eventBlocksCount > 0).toBe(true);
-    }
+    // Either empty state or event blocks should be visible
+    expect(emptyStateVisible || eventBlocksCount > 0).toBe(true);
   });
 
   test('renders event stream placeholder text correctly', async ({
@@ -204,7 +192,9 @@ test.describe('Event Stream Component', () => {
 
     // Check for the event stream placeholder text (new or old patterns)
     const newPlaceholder = page.getByText(/events will appear here as the simulation progresses/i);
-    const oldEmptyState = page.getByText(/events will appear here when the session receives an llm request/i);
+    const oldEmptyState = page.getByText(
+      /events will appear here when the session receives an llm request/i,
+    );
     const scaffoldText = page.getByText(/session content will be implemented/i);
     const simpleNoEvents = page.getByText(/no events yet/i);
 
@@ -400,7 +390,9 @@ test.describe('Session List with Created Sessions', () => {
   }) => {
     // Create a session via the backend API before navigating to the UI
     const timestamp = Date.now();
-    const { session } = await client.createSession({ description: `E2E Test Session ${timestamp}` });
+    const { session } = await client.createSession({
+      description: `E2E Test Session ${timestamp}`,
+    });
 
     // Navigate to the session list
     await gotoAndWaitForAngular('/');

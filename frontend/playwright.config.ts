@@ -3,39 +3,37 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright E2E test configuration
  *
- * This config is for end-to-end tests that run against multiple backend instances.
- * Docker must be started manually before running E2E tests.
+ * E2E tests run against full-stack Docker containers that serve both the
+ * Angular frontend and gRPC API (mimicking production deployment).
  *
- * ## Quick Start (Local Development)
+ * ## Architecture
  *
- * ```bash
- * # 1. Start all backends
- * docker compose -f docker-compose.e2e.yaml up -d --wait
+ * Each E2E backend instance serves:
+ * - Angular SPA at the root path (/)
+ * - gRPC-Web API at /adksim.v1.SimulatorService/*
  *
- * # 2. Seed the populated backend
- * npx tsx tests/e2e/utils/seed-populated-backend.ts
+ * This matches production where the Python server serves everything on one port.
  *
- * # 3. Run E2E tests
- * npx playwright test -c playwright.config.ts
+ * ## Backend Instances (docker-compose.e2e.yaml)
  *
- * # 4. Stop backends
- * docker compose -f docker-compose.e2e.yaml down
- * ```
+ * - no-sessions (8091): Always empty, for empty state tests
+ * - populated (8092): Pre-seeded with sessions, for stable visual tests
+ * - shared (8093): Allows session creation, for session-specific tests (default)
  *
- * Backend Instances (docker-compose.e2e.yaml):
- * - no-sessions (8081): Always empty, for empty state tests
- * - populated (8082): Pre-seeded with sessions, for stable visual tests
- * - shared (8080): Allows session creation, for session-specific tests (default)
+ * These ports (809x range) are intentionally different from the main docker-compose
+ * (8080) to allow E2E tests to run alongside local development.
  *
- * The frontend runs via `ng serve` on port 4200, which proxies API calls
- * to the 'shared' backend on port 8080 via proxy.conf.json.
+ * ## Usage
  *
- * Tests can configure which backend to use:
+ * Tests specify which backend to use via fixtures:
  *   test.use({ backend: 'no-sessions' });
+ *
+ * The `ops test frontend e2e` command handles Docker lifecycle automatically.
  */
 export default defineConfig({
   testDir: 'tests/e2e',
   snapshotDir: 'tests/e2e/__snapshots__', // Version-controlled visual regression baselines
+  outputDir: 'test-results', // Traces, screenshots, and other artifacts (gitignored)
   fullyParallel: true, // Parallel tests get separate browser contexts (avoids HMR state issues)
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
@@ -52,9 +50,15 @@ export default defineConfig({
   },
 
   use: {
-    // Base URL for tests - Use explicit IPv4 to avoid Node 20 IPv6 resolution issues
-    baseURL: process.env['BASE_URL'] ?? 'http://127.0.0.1:4200',
-    trace: 'on-first-retry',
+    // Base URL for tests - points to 'shared' backend by default
+    // Tests can override by using test.use({ backend: 'no-sessions' }) etc.
+    // The multi-backend-fixtures handle navigation to the correct backend URL.
+    baseURL: process.env['BASE_URL'] ?? 'http://127.0.0.1:8093',
+
+    // Trace mode: 'retain-on-failure' keeps traces only for failed tests (default)
+    // Override at runtime: npx playwright test --trace on
+    // View traces with: npx playwright show-trace test-results/<test-name>/trace.zip
+    trace: 'retain-on-failure',
     screenshot: 'on', // Capture screenshots for all tests to visualize UI state
 
     // Browser normalization for consistent rendering across environments
@@ -77,21 +81,7 @@ export default defineConfig({
     },
   ],
 
-  // Start Angular dev server for E2E tests
-  // Key fixes for containerized environments:
-  // 1. Use npx ng serve directly (better signal propagation than npm run)
-  // 2. Bind to 127.0.0.1 explicitly (avoids Node 20 IPv6/IPv4 mismatch)
-  // 3. --allowed-hosts=all allows container networking (Angular 21 Vite-based)
-  // 4. NG_CLI_ANALYTICS=false prevents stdin blocking prompt
-  // 5. stdout/stderr: 'pipe' makes errors visible
-  // 6. --live-reload=false disables HMR WebSocket (prevents sequential test failures)
-  webServer: {
-    command:
-      'NG_CLI_ANALYTICS=false npx ng serve --host 127.0.0.1 --port 4200 --allowed-hosts=all --live-reload=false',
-    url: 'http://127.0.0.1:4200',
-    reuseExistingServer: !process.env['CI'],
-    timeout: 120000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  // No webServer config - E2E tests run against Docker containers
+  // that serve both frontend and API. Use `ops test frontend e2e` which
+  // handles the Docker lifecycle automatically.
 });

@@ -30,6 +30,7 @@ services:
       - ./frontend:/app/frontend:cached
       - /app/frontend/node_modules
       - ./packages/adk-sim-protos-ts:/app/packages/adk-sim-protos-ts:cached
+      - ./packages/adk-converters-ts:/app/packages/adk-converters-ts:cached
     working_dir: /app/frontend
     command: npx ng serve --host 0.0.0.0 --poll 2000 --proxy-config proxy.conf.docker.json
 

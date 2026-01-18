@@ -15,7 +15,8 @@ This document is the **single source of truth** for understanding the project's 
   - [Global Options](#global-options)
   - [Quick Reference](#quick-reference)
 - [Quality Stack](#quality-stack)
-  - [Pre-commit Hooks](#pre-commit-hooks)
+  - [Jujutsu Quality Gates](#jujutsu-quality-gates)
+  - [Pre-commit Hooks (Legacy)](#pre-commit-hooks-legacy)
   - [Python Quality](#python-quality)
   - [TypeScript/Angular Quality](#typescriptangular-quality)
   - [Protobuf Quality](#protobuf-quality)
@@ -49,20 +50,22 @@ This document is the **single source of truth** for understanding the project's 
 |                        DEVELOPER WORKFLOW                            |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  Local Development                    Quality Gates                  |
-|  -----------------                    -------------                  |
-|  ops dev server        ------------->      git commit                |
-|  ops dev frontend                           |                        |
-|  ops docker up                              v                        |
-|                                  .pre-commit-config.yaml             |
-|                                  (ruff, pyright, eslint, prettier)   |
-|                                          |                           |
-|                                          v                           |
-|                                      git push                        |
-|                                          |                           |
-|                                          v                           |
-|                                  pre-push hooks                      |
-|                                  (tests, angular build, check-gen)   |
+|  Local Development                    Quality Gates (jj native)      |
+|  -----------------                    -------------------------      |
+|  ops dev server        ------------->  jj fix (any time)             |
+|  ops dev frontend                      (ruff, prettier, buf format)  |
+|  ops docker up                              |                        |
+|                                             v                        |
+|                                       jj secure-push                 |
+|                                             |                        |
+|                                             v                        |
+|                                   Phase 1: jj fix (formatters)       |
+|                                   Phase 2: Fast checks (30s)         |
+|                                   Phase 3: Angular build (60s)       |
+|                                   Phase 4: Test suite (5min)         |
+|                                   Phase 5: Generated code check      |
+|                                   Phase 6: Snapshot check            |
+|                                   Phase 7: jj git push               |
 |                                                                      |
 +----------------------------------------------------------------------+
 |                                                                      |
@@ -193,11 +196,76 @@ ops release patch --dry-run  # Preview release steps
 
 ## Quality Stack
 
-### Pre-commit Hooks
+### Jujutsu Quality Gates
+
+**File**: `.jj/repo/config.toml`
+
+This project uses Jujutsu (`jj`) for version control with native quality gates. The philosophy is **"fix and verify"** rather than **"prevent commit"**.
+
+**Two-Category System**:
+
+| Category | Purpose | When to Run | Command |
+|----------|---------|-------------|---------|
+| **Formatters** | Auto-fix code style | Any time | `jj fix` |
+| **Verifiers** | Check correctness | Before push | `jj secure-push` |
+
+**Category A: Formatters (`jj fix`)**
+
+Deterministic tools that modify code via stdin/stdout:
+
+| Tool | Patterns | Purpose |
+|------|----------|---------|
+| `ruff-format` | `server/**/*.py`, `plugins/**/*.py`, etc. | Python formatting |
+| `ruff-fix` | Same as above | Python auto-fixes (isort, pyupgrade) |
+| `prettier-ts` | `frontend/**/*.{ts,html,scss}` | TypeScript/HTML/SCSS formatting |
+| `buf-format` | `protos/**/*.proto` | Protobuf formatting |
+
+```bash
+# Format modified files in working copy
+jj fix
+
+# Format entire repository
+jj fix --include-unchanged
+# or
+jj fix-all
+```
+
+**Category B: Verifiers (`jj secure-push`)**
+
+The `secure-push` alias runs all quality checks before pushing:
+
+1. **Phase 1**: Apply formatters (`jj fix`)
+2. **Phase 2**: Fast checks (~30s) - buf lint, pyright, eslint, prettier check
+3. **Phase 3**: Build verification (~60s) - Angular AOT build
+4. **Phase 4**: Test suite (~5min) - all unit, component, and E2E tests
+5. **Phase 5**: Generated code consistency check
+6. **Phase 6**: Snapshot consistency check
+7. **Phase 7**: Push to remote
+
+```bash
+# Verify and push current bookmark
+jj secure-push
+
+# Verify and push specific bookmark
+jj secure-push --bookmark my-feature
+
+# Verify and push all bookmarks
+jj secure-push --all
+```
+
+**Quick Quality Check**:
+
+For fast feedback without running tests:
+
+```bash
+jj quality  # Runs formatters + linters only (~30s)
+```
+
+### Pre-commit Hooks (Legacy)
 
 **File**: `.pre-commit-config.yaml`
 
-Pre-commit is the **single source of truth** for all quality checks. It runs the same checks locally and in CI.
+Pre-commit hooks are retained for CI compatibility and as a fallback. They run the same checks as `jj secure-push`.
 
 **Stages**:
 
@@ -699,17 +767,33 @@ ops dev frontend     # Terminal 2: Frontend
 ops docker up
 ```
 
-### Before Committing
+### While Coding (jj workflow)
 
 ```bash
-# Quick quality check
-ops quality check
+# Auto-format modified files
+jj fix
 
-# Auto-fix issues
-ops quality fix
+# Quick quality check (no tests)
+jj quality
+
+# Check status
+jj status --no-pager
 ```
 
-### Before Pushing
+### Before Pushing (jj workflow)
+
+```bash
+# Full verification + push (recommended)
+jj secure-push
+
+# Push specific bookmark
+jj secure-push --bookmark my-feature
+
+# Push all bookmarks
+jj secure-push --all
+```
+
+### Before Pushing (ops CLI alternative)
 
 ```bash
 # Full check including tests (same as CI)
@@ -739,7 +823,8 @@ ops release patch --dry-run
 | File | Purpose |
 |------|---------|
 | `ops/` | Unified developer CLI (Python package) |
-| `.pre-commit-config.yaml` | Quality gates (single source of truth) |
+| `.jj/repo/config.toml` | Jujutsu quality gates (jj fix, secure-push) |
+| `.pre-commit-config.yaml` | Quality gates (CI fallback) |
 | `pyproject.toml` | Python workspace, ruff, pyright, pytest config |
 | `package.json` | npm workspace config |
 | `buf.yaml` | Protobuf linting rules |

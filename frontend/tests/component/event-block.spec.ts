@@ -197,7 +197,10 @@ test.describe('EventBlockComponent', () => {
         props: { content },
       });
 
-      await expect(component).toHaveScreenshot('event-block-function-call.png');
+      // Higher threshold due to font rendering differences between local Docker and CI Docker
+      await expect(component).toHaveScreenshot('event-block-function-call.png', {
+        maxDiffPixelRatio: 0.10,
+      });
     });
 
     test('function response visual appearance', async ({ mount }) => {
@@ -217,7 +220,10 @@ test.describe('EventBlockComponent', () => {
         props: { content },
       });
 
-      await expect(component).toHaveScreenshot('event-block-function-response.png');
+      // Higher threshold due to font rendering differences between local Docker and CI Docker
+      await expect(component).toHaveScreenshot('event-block-function-response.png', {
+        maxDiffPixelRatio: 0.10,
+      });
     });
 
     test('long text content visual appearance', async ({ mount }) => {

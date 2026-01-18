@@ -19,7 +19,11 @@
  * @see mddocs/frontend/research/angular-architecture-analysis.md#abstract-ports-for-infrastructure-testing
  */
 
-import type { SessionEvent as ProtoSessionEvent, SimulatorSession } from '@adk-sim/protos';
+import type {
+  GenerateContentResponse,
+  SessionEvent as ProtoSessionEvent,
+  SimulatorSession,
+} from '@adk-sim/protos';
 
 /**
  * Session type alias for use throughout the application.
@@ -94,4 +98,18 @@ export abstract class SessionGateway {
    * is active.
    */
   abstract cancelSubscription(): void;
+
+  /**
+   * Submits a human decision (response) to the session.
+   *
+   * @param sessionId - The session to submit to
+   * @param turnId - The turn ID correlating this response to its request
+   * @param response - The GenerateContentResponse to submit
+   * @returns Promise resolving when the decision is submitted
+   */
+  abstract submitDecision(
+    sessionId: string,
+    turnId: string,
+    response: GenerateContentResponse,
+  ): Promise<void>;
 }

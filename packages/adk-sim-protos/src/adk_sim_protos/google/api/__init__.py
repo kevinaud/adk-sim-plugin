@@ -84,10 +84,10 @@ class FieldBehavior(betterproto.Enum):
      google.api.resource) is used in the resource name to uniquely identify the
      resource. For AIP-compliant APIs, this should only be applied to the
      `name` field on the resource.
-
+    
      This behavior should not be applied to references to other resources within
      the message.
-
+    
      The identifier field of resources often have different field behavior
      depending on the request it is embedded in (e.g. for Create methods name
      is optional and unused, while for Update methods it is required). Instead
@@ -129,11 +129,11 @@ class ResourceDescriptorStyle(betterproto.Enum):
   DECLARATIVE_FRIENDLY = 1
   """
     This resource is intended to be "declarative-friendly".
-
+    
      Declarative-friendly resources must be more strictly consistent, and
      setting this to true communicates to tools that this resource should
      adhere to declarative-friendly expectations.
-
+    
      Note: This is used by the API linter (linter.aip.dev) to enable
      additional checks.
     """
@@ -312,9 +312,9 @@ class ResourceDescriptor(betterproto.Message):
     The resource type. It must be in the format of
      {service_name}/{resource_type_kind}. The `resource_type_kind` must be
      singular and must not include version numbers.
-
+    
      Example: `storage.googleapis.com/Bucket`
-
+    
      The value of the resource_type_kind must follow the regular expression
      /[A-Za-z][a-zA-Z0-9]+/. It should start with an upper case character and
      should use PascalCase (UpperCamelCase). The maximum number of
@@ -325,19 +325,19 @@ class ResourceDescriptor(betterproto.Message):
   """
     Optional. The relative resource name pattern associated with this resource
      type. The DNS prefix of the full resource name shouldn't be specified here.
-
+    
      The path pattern must follow the syntax, which aligns with HTTP binding
      syntax:
-
+    
          Template = Segment { "/" Segment } ;
          Segment = LITERAL | Variable ;
          Variable = "{" LITERAL "}" ;
-
+    
      Examples:
-
+    
          - "projects/{project}/topics/{topic}"
          - "projects/{project}/knowledgeBases/{knowledge_base}"
-
+    
      The components in braces correspond to the IDs for each resource in the
      hierarchy. It is expected that, if multiple patterns are provided,
      the same component name (e.g. "project") refers to IDs of the same
@@ -353,9 +353,9 @@ class ResourceDescriptor(betterproto.Message):
   history: "ResourceDescriptorHistory" = betterproto.enum_field(4)
   """
     Optional. The historical or future-looking state of the resource pattern.
-
+    
      Example:
-
+    
          // The InspectTemplate message originally only supported resource
          // names with organization, and project was added later.
          message InspectTemplate {
@@ -378,10 +378,10 @@ class ResourceDescriptor(betterproto.Message):
      in [AIP-122](https://google.aip.dev/122#nested-collections), where the
      collection ID in the resource name pattern does not necessarily directly
      match the `plural` value.
-
+    
      It is the same concept of the `plural` field in k8s CRD spec
      https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/
-
+    
      Note: The plural form is required even for singleton resources. See
      https://aip.dev/156
     """
@@ -411,20 +411,20 @@ class ResourceReference(betterproto.Message):
   type: str = betterproto.string_field(1)
   """
     The resource type that the annotated field references.
-
+    
      Example:
-
+    
          message Subscription {
            string topic = 2 [(google.api.resource_reference) = {
              type: "pubsub.googleapis.com/Topic"
            }];
          }
-
+    
      Occasionally, a field may reference an arbitrary resource. In this case,
      APIs use the special value * in their resource reference.
-
+    
      Example:
-
+    
          message GetIamPolicyRequest {
            string resource = 2 [(google.api.resource_reference) = {
              type: "*"
@@ -437,9 +437,9 @@ class ResourceReference(betterproto.Message):
     The resource type of a child collection that the annotated field
      references. This is useful for annotating the `parent` field that
      doesn't have a fixed resource type.
-
+    
      Example:
-
+    
          message ListLogEntriesRequest {
            string parent = 1 [(google.api.resource_reference) = {
              child_type: "logging.googleapis.com/LogEntry"
@@ -459,7 +459,7 @@ class Http(betterproto.Message):
   rules: List["HttpRule"] = betterproto.message_field(1)
   """
     A list of HTTP configuration rules that apply to individual API methods.
-
+    
      **NOTE:** All service configuration rules follow "last one wins" order.
     """
 
@@ -468,7 +468,7 @@ class Http(betterproto.Message):
     When set to true, URL path parameters will be fully URI-decoded except in
      cases of single segment matches in reserved expansion, where "%2F" will be
      left encoded.
-
+    
      The default behavior is to not decode RFC 6570 reserved characters in multi
      segment matches.
     """
@@ -746,7 +746,7 @@ class HttpRule(betterproto.Message):
   selector: str = betterproto.string_field(1)
   """
     Selects a method to which this rule applies.
-
+    
      Refer to [selector][google.api.DocumentationRule.selector] for syntax
      details.
     """
@@ -784,7 +784,7 @@ class HttpRule(betterproto.Message):
     The name of the request field whose value is mapped to the HTTP request
      body, or `*` for mapping all request fields not captured by the path
      pattern to the HTTP body, or omitted for not having any HTTP request body.
-
+    
      NOTE: the referred field must be present at the top-level of the request
      message type.
     """
@@ -794,7 +794,7 @@ class HttpRule(betterproto.Message):
     Optional. The name of the response field whose value is mapped to the HTTP
      response body. When omitted, the entire response message will be used
      as the HTTP response body.
-
+    
      NOTE: The referred field must be present at the top-level of the response
      message type.
     """
@@ -976,9 +976,9 @@ class JavaSettings(betterproto.Message):
      who have already set the language_settings.java.package_name" field
      in gapic.yaml. API teams should use the protobuf java_package option
      where possible.
-
+    
      Example of a YAML configuration::
-
+    
       publishing:
         java_settings:
           library_package: com.google.cloud.pubsub.v1
@@ -994,9 +994,9 @@ class JavaSettings(betterproto.Message):
      the language_settings.java.interface_names" field in gapic.yaml. API
      teams should otherwise use the service name as it appears in the
      protobuf.
-
+    
      Example of a YAML configuration::
-
+    
       publishing:
         java_settings:
           service_class_names:
@@ -1154,7 +1154,7 @@ class GoSettings(betterproto.Message):
     Map of service names to renamed services. Keys are the package relative
      service names and values are the name to be used for the service client
      and call options.
-
+    
      publishing:
        go_settings:
          renamed_services:
@@ -1170,9 +1170,9 @@ class MethodSettings(betterproto.Message):
   """
     The fully qualified name of the method, for which the options below apply.
      This is used to find the method to apply the options.
-
+    
      Example:
-
+    
         publishing:
           method_settings:
           - selector: google.storage.control.v2.StorageControl.CreateFolder
@@ -1184,9 +1184,9 @@ class MethodSettings(betterproto.Message):
     Describes settings to use for long-running operations when generating
      API methods for RPCs. Complements RPCs that use the annotations in
      google/longrunning/operations.proto.
-
+    
      Example of a YAML configuration::
-
+    
         publishing:
           method_settings:
           - selector: google.cloud.speech.v2.Speech.BatchRecognize
@@ -1202,9 +1202,9 @@ class MethodSettings(betterproto.Message):
     List of top-level fields of the request message, that should be
      automatically populated by the client libraries based on their
      (google.api.field_info).format. Currently supported format: UUID4.
-
+    
      Example of a YAML configuration:
-
+    
         publishing:
           method_settings:
           - selector: google.example.v1.ExampleService.CreateExample

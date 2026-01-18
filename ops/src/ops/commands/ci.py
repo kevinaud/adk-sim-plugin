@@ -18,9 +18,17 @@ from typing import TYPE_CHECKING
 import typer
 from rich.panel import Panel
 
+from ops.commands.test import (
+  run_frontend_component,
+  run_frontend_e2e,
+  run_frontend_unit,
+  run_plugin_python,
+  run_server_e2e,
+  run_server_unit,
+)
 from ops.core.console import console
 from ops.core.git import get_changed_files, get_upstream_branch
-from ops.core.paths import FRONTEND_DIR, REPO_ROOT
+from ops.core.paths import REPO_ROOT
 from ops.core.process import require_tools, run
 
 if TYPE_CHECKING:
@@ -39,7 +47,6 @@ SKIP_E2E_PATTERNS = [
   r"^README\.md$",
   r"^CLAUDE\.md$",
   r"^\.vscode/",
-  r"^git-town\.toml$",
 ]
 
 
@@ -82,52 +89,10 @@ def _build_ts() -> None:
 
 
 def _run_quality() -> None:
-  """Run pre-commit quality checks."""
-  run(
-    ["uv", "run", "pre-commit", "run", "--all-files", "--hook-stage", "manual"],
-    cwd=REPO_ROOT,
-  )
+  """Run quality checks via ops quality."""
+  from ops.commands.quality import check as quality_check
 
-
-def _run_backend_tests() -> None:
-  """Run Python unit and integration tests."""
-  run(
-    ["uv", "run", "pytest", "server/tests/unit", "plugins/python/tests", "-v"],
-    cwd=REPO_ROOT,
-  )
-
-
-def _run_frontend_tests() -> None:
-  """Run frontend Vitest tests."""
-  run(
-    ["npm", "run", "ng", "--", "test", "--watch=false"],
-    cwd=FRONTEND_DIR,
-    env={"CI": "true"},
-  )
-
-
-def _run_component_tests() -> None:
-  """Run Playwright component tests."""
-  run(
-    ["npm", "exec", "playwright", "test", "--", "-c", "playwright-ct.config.ts"],
-    cwd=FRONTEND_DIR,
-  )
-
-
-def _run_frontend_e2e() -> None:
-  """Run Playwright E2E tests."""
-  run(
-    ["npm", "exec", "playwright", "test", "--", "-c", "playwright.config.ts"],
-    cwd=FRONTEND_DIR,
-  )
-
-
-def _run_backend_e2e() -> None:
-  """Run backend E2E tests (requires Docker)."""
-  run(
-    ["uv", "run", "pytest", "server/tests/e2e", "--run-e2e", "-v"],
-    cwd=REPO_ROOT,
-  )
+  quality_check(verbose=False)
 
 
 @app.callback(invoke_without_command=True)
@@ -163,7 +128,7 @@ def check(
   This is equivalent to what runs on every PR:
   1. Ensure dependencies are installed
   2. Build TypeScript packages
-  3. Run all pre-commit hooks
+  3. Run quality checks (jj quality)
   4. Run all test suites
 
   Examples:
@@ -175,21 +140,26 @@ def check(
 
   console.print(Panel("CI Validation Suite", style="blue"))
 
+  # Build test functions that run server + plugin unit tests together
+  def _run_backend_tests() -> None:
+    run_server_unit()
+    run_plugin_python()
+
   steps: list[tuple[str, Callable[[], None]]] = [
     ("Installing dependencies", _install_deps),
     ("Building TypeScript packages", _build_ts),
     ("Running quality checks", _run_quality),
     ("Running backend tests", _run_backend_tests),
-    ("Running frontend tests", _run_frontend_tests),
-    ("Running component tests", _run_component_tests),
+    ("Running frontend tests", run_frontend_unit),
+    ("Running component tests", run_frontend_component),
   ]
 
   run_e2e = not skip_e2e and _should_run_e2e()
   if run_e2e:
     steps.extend(
       [
-        ("Running frontend E2E tests", _run_frontend_e2e),
-        ("Running backend E2E tests", _run_backend_e2e),
+        ("Running frontend E2E tests", run_frontend_e2e),
+        ("Running backend E2E tests", run_server_e2e),
       ]
     )
   elif not skip_e2e:
@@ -214,6 +184,185 @@ def check(
     console.print(f"[red]! CI failed:[/red] {', '.join(failed)}")
     raise typer.Exit(1)
   console.print("[green]! All CI checks passed![/green]")
+
+
+@app.command("push")
+def push_cmd(
+  bookmark: str | None = typer.Option(
+    None, "--bookmark", "-b", help="Push specific bookmark"
+  ),
+  all_bookmarks: bool = typer.Option(False, "--all", help="Push all bookmarks"),
+  skip_e2e: bool = typer.Option(False, "--skip-e2e", help="Skip E2E tests (faster)"),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+) -> None:
+  """
+  Run full quality gate pipeline and push if all checks pass.
+
+  This is the secure push workflow that ensures code quality before pushing:
+  1. Apply formatters (jj fix)
+  2. Run fast checks (lint, type-check)
+  3. Build verification (Angular AOT)
+  4. Run all test suites
+  5. Regenerate proto code
+  6. Push to remote
+
+  Examples:
+    ops ci push                    Full validation + push
+    ops ci push --bookmark my-pr   Push specific bookmark
+    ops ci push --all              Push all bookmarks
+    ops ci push --skip-e2e         Skip E2E tests (faster)
+  """
+  import time
+
+  from ops.commands.build import build_protos, clean_generated
+
+  require_tools("npm", "uv", "jj")
+
+  start_time = time.time()
+
+  console.print(Panel("Secure Push - Quality Gate Pipeline", style="blue"))
+
+  # ============================================================
+  # Phase 1: Apply Formatters
+  # ============================================================
+  console.print("\n[bold]Phase 1: Applying formatters...[/bold]")
+  run(["jj", "fix"], cwd=REPO_ROOT, check=False, verbose=verbose)
+  console.print("[green]✓[/green] Formatters applied")
+
+  # ============================================================
+  # Phase 2: Fast Checks (Lint + Type Check)
+  # ============================================================
+  console.print("\n[bold]Phase 2: Running fast checks...[/bold]")
+
+  fast_checks: list[tuple[str, list[str]]] = [
+    ("Buf lint", ["buf", "lint", "--config", "buf.yaml", "protos"]),
+    ("Pyright", ["uv", "run", "pyright"]),
+    ("ESLint", ["npm", "run", "lint", "--workspace=frontend"]),
+    ("Prettier", ["npm", "run", "format:check", "--workspace=frontend"]),
+  ]
+
+  for name, cmd in fast_checks:
+    try:
+      run(cmd, cwd=REPO_ROOT, verbose=verbose)
+      console.print(f"[green]✓[/green] {name}")
+    except Exception as e:
+      console.print(f"[red]✗[/red] {name}: {e}")
+      console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+      raise typer.Exit(1)
+
+  # ============================================================
+  # Phase 3: Build Verification
+  # ============================================================
+  console.print("\n[bold]Phase 3: Build verification...[/bold]")
+
+  try:
+    run(
+      ["npm", "run", "build", "--", "--configuration", "production", "--no-progress"],
+      cwd=REPO_ROOT / "frontend",
+      env={"CI": "true"},
+      verbose=verbose,
+    )
+    console.print("[green]✓[/green] Angular build")
+  except Exception as e:
+    console.print(f"[red]✗[/red] Angular build: {e}")
+    console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+    raise typer.Exit(1)
+
+  # ============================================================
+  # Phase 4: Test Suite
+  # ============================================================
+  console.print("\n[bold]Phase 4: Running tests...[/bold]")
+
+  # Backend tests
+  try:
+    run_server_unit(verbose)
+    run_plugin_python(verbose)
+    console.print("[green]✓[/green] Backend tests")
+  except Exception as e:
+    console.print(f"[red]✗[/red] Backend tests: {e}")
+    console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+    raise typer.Exit(1)
+
+  # TypeScript package tests
+  try:
+    run(
+      ["npm", "test"], cwd=REPO_ROOT / "packages" / "adk-converters-ts", verbose=verbose
+    )
+    console.print("[green]✓[/green] adk-converters-ts tests")
+  except Exception as e:
+    console.print(f"[red]✗[/red] adk-converters-ts tests: {e}")
+    console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+    raise typer.Exit(1)
+
+  # Frontend unit tests
+  try:
+    run_frontend_unit(verbose)
+    console.print("[green]✓[/green] Frontend unit tests")
+  except Exception as e:
+    console.print(f"[red]✗[/red] Frontend unit tests: {e}")
+    console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+    raise typer.Exit(1)
+
+  # E2E tests (conditional)
+  run_e2e = not skip_e2e and _should_run_e2e()
+  if run_e2e:
+    try:
+      run_frontend_e2e(verbose)
+      console.print("[green]✓[/green] Frontend E2E tests (includes component tests)")
+    except Exception as e:
+      console.print(f"[red]✗[/red] Frontend E2E tests: {e}")
+      console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+      raise typer.Exit(1)
+
+    try:
+      run_server_e2e(verbose)
+      console.print("[green]✓[/green] Backend E2E tests")
+    except Exception as e:
+      console.print(f"[red]✗[/red] Backend E2E tests: {e}")
+      console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+      raise typer.Exit(1)
+  elif skip_e2e:
+    console.print("[dim]Skipping E2E tests (--skip-e2e)[/dim]")
+  else:
+    console.print("[dim]Skipping E2E tests (only docs changed)[/dim]")
+
+  # ============================================================
+  # Phase 5: Regenerate Proto Code
+  # ============================================================
+  console.print("\n[bold]Phase 5: Regenerating proto code...[/bold]")
+
+  try:
+    clean_generated(verbose=verbose)
+    build_protos(force=True, verbose=verbose)
+    run(["jj", "fix"], cwd=REPO_ROOT, check=False, verbose=verbose)
+    console.print("[green]✓[/green] Proto code regenerated")
+  except Exception as e:
+    console.print(f"[red]✗[/red] Proto regeneration: {e}")
+    console.print("\n[red]Push aborted. Fix the issues and try again.[/red]")
+    raise typer.Exit(1)
+
+  # ============================================================
+  # Phase 6: Push
+  # ============================================================
+  duration = int(time.time() - start_time)
+  console.print()
+  console.print(Panel(f"All checks passed in {duration}s!", style="green"))
+  console.print()
+
+  console.print("[bold]Pushing to remote...[/bold]")
+
+  push_cmd_args = ["jj", "git", "push"]
+  if bookmark:
+    push_cmd_args.extend(["--bookmark", bookmark])
+  elif all_bookmarks:
+    push_cmd_args.append("--all")
+
+  try:
+    run(push_cmd_args, cwd=REPO_ROOT, verbose=verbose)
+    console.print("\n[green]Push complete![/green]")
+  except Exception as e:
+    console.print(f"[red]✗[/red] Push failed: {e}")
+    raise typer.Exit(1)
 
 
 @app.command("build")
@@ -401,7 +550,7 @@ def should_run_e2e_cmd() -> None:
   Check if E2E tests should run based on changed files.
 
   Exits 0 if E2E tests should run, exits 1 if they can be skipped.
-  Used by pre-commit hooks to conditionally skip E2E tests.
+  Used by jj secure-push to conditionally skip E2E tests.
 
   Example:
     ops ci should-run-e2e && pytest --run-e2e
@@ -487,79 +636,29 @@ def check_generated_cmd(
   verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
-  Check that generated code is up-to-date.
+  Ensure generated code is up-to-date.
 
-  Regenerates proto code and verifies there are no uncommitted changes.
-  Used by pre-commit hooks to ensure generated code is committed.
+  Regenerates proto code and formats it. With Jujutsu, the working copy
+  is always part of the current change, so we simply regenerate to ensure
+  the generated code matches the proto definitions.
 
   Example:
     ops ci check-generated
   """
-  import subprocess
-
   from ops.commands.build import build_protos, clean_generated
 
-  console.print("Checking generated code consistency...")
+  console.print("Regenerating proto code...")
 
   # Clean and regenerate
   clean_generated(verbose=verbose)
   build_protos(force=True, verbose=verbose)
 
-  # Run formatters on generated code to match committed formatting
-  # Get actual file paths for pre-commit (it doesn't support globs)
-  py_files = list((REPO_ROOT / "packages/adk-sim-protos/src").rglob("*.py"))
-  ts_files = list((REPO_ROOT / "packages/adk-sim-protos-ts/src").rglob("*.ts"))
-  all_files = [str(f) for f in py_files + ts_files]
-
-  if all_files:
-    # Run pre-commit twice - first run may fix files, second ensures they're clean
-    for _ in range(2):
-      run(
-        ["uv", "run", "pre-commit", "run", "--files", *all_files],
-        cwd=REPO_ROOT,
-        verbose=verbose,
-        check=False,  # Pre-commit may report "files were modified" which is expected
-      )
-
-  # Check for changes
-  result = subprocess.run(
-    [
-      "git",
-      "diff",
-      "--quiet",
-      "--",
-      "packages/adk-sim-protos",
-      "packages/adk-sim-protos-ts",
-    ],
+  # Format the generated code
+  run(
+    ["jj", "fix"],
     cwd=REPO_ROOT,
-    capture_output=True,
-    check=False,
+    verbose=verbose,
+    check=False,  # jj fix may exit non-zero if no changes needed
   )
-
-  if result.returncode != 0:
-    console.print("\n[red]Error:[/red] Generated code is out of date!")
-    console.print("\nThe following files differ from what 'ops build protos' produces:")
-
-    # Show which files changed
-    diff_result = subprocess.run(
-      [
-        "git",
-        "diff",
-        "--name-only",
-        "--",
-        "packages/adk-sim-protos",
-        "packages/adk-sim-protos-ts",
-      ],
-      cwd=REPO_ROOT,
-      capture_output=True,
-      text=True,
-      check=False,
-    )
-    if diff_result.stdout:
-      for line in diff_result.stdout.strip().split("\n"):
-        console.print(f"  {line}")
-
-    console.print("\nPlease run 'ops build protos' and commit the changes.")
-    raise typer.Exit(1)
 
   console.print("[green]![/green] Generated code is up-to-date!")

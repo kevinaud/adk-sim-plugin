@@ -177,11 +177,18 @@ export function genaiSchemaToJsonSchema(genaiSchema: Schema): JsonSchema7 {
   }
 
   // Recursive: properties (for objects)
-  if (genaiSchema.properties && Object.keys(genaiSchema.properties).length > 0) {
+  const hasProperties = genaiSchema.properties && Object.keys(genaiSchema.properties).length > 0;
+
+  if (hasProperties) {
     result.properties = {};
-    for (const [key, value] of Object.entries(genaiSchema.properties)) {
+    for (const [key, value] of Object.entries(genaiSchema.properties!)) {
       result.properties[key] = genaiSchemaToJsonSchema(value);
     }
+  } else if (result.type === 'object') {
+    // "Open object" pattern: OBJECT type with no defined properties
+    // This represents Dict[str, Any] or similar in Python.
+    // Set additionalProperties: true to indicate arbitrary key-value pairs are allowed.
+    result.additionalProperties = true;
   }
 
   // Recursive: anyOf

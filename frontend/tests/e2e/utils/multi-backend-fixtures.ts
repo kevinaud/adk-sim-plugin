@@ -12,9 +12,14 @@
  *
  * ## How Multi-Backend Works
  *
- * The Angular dev server proxies all gRPC API calls to port 8080 (shared backend).
- * To support multiple backends, this fixture uses Playwright's route interception
- * to redirect API calls from the frontend to the configured backend.
+ * E2E tests run against full-stack Docker containers that serve both the
+ * Angular frontend and gRPC API on the same port (mimicking production).
+ *
+ * Each backend runs on a different port (8091-8093) to avoid conflicts with
+ * the main docker-compose (port 8080) used for local development.
+ *
+ * Tests navigate directly to the backend URL for their configured backend.
+ * No route interception or proxying is needed.
  *
  * ## Usage Examples
  *
@@ -22,9 +27,9 @@
  * import { expect, test } from './utils/multi-backend-fixtures';
  *
  * // Test using the default 'shared' backend - use client directly
- * test('can create session', async ({ page, client }) => {
+ * test('can create session', async ({ page, client, gotoAndWaitForAngular }) => {
  *   const { session } = await client.createSession({ description: 'Test' });
- *   await page.goto(`/session/${session!.id}`);
+ *   await gotoAndWaitForAngular(`/session/${session!.id}`);
  * });
  *
  * // Test using 'no-sessions' backend for empty state
@@ -41,7 +46,8 @@
  * test.describe('Visual Regression', () => {
  *   test.use({ backend: 'populated' });
  *
- *   test('session list with sessions', async ({ page }) => {
+ *   test('session list with sessions', async ({ page, gotoAndWaitForAngular }) => {
+ *     await gotoAndWaitForAngular('/');
  *     // Backend has pre-seeded sessions for stable visual tests
  *   });
  * });
@@ -79,8 +85,6 @@ interface MultiBackendFixtures {
   backendUrl: string;
   /** gRPC client for the configured backend - use directly for test setup */
   client: SimulatorClient;
-  /** Internal: ensures route interception is set up (auto-used by gotoAndWaitForAngular) */
-  _routeSetup: undefined;
 }
 
 /**
@@ -116,43 +120,13 @@ export const test = base.extend<MultiBackendFixtures & MultiBackendOptions>({
     assertNoBrowserErrors(logs);
   },
 
-  // Fixture: set up route interception for non-shared backends
-  // This fixture is auto-used by gotoAndWaitForAngular
-  _routeSetup: [
-    async ({ page, backend, backendUrl }, use) => {
-      // Intercept gRPC API calls and route to the correct backend
-      // The Angular dev server proxies to port 8080, but we want to target
-      // the specific backend for this test.
-      if (backend !== 'shared') {
-        await page.route('**/adksim.v1.SimulatorService/**', async (route) => {
-          const request = route.request();
-          const url = new URL(request.url());
-          // Redirect to the correct backend
-          const targetUrl = `${backendUrl}${url.pathname}${url.search}`;
-
-          try {
-            // Forward the request to the correct backend
-            const response = await route.fetch({
-              url: targetUrl,
-            });
-            await route.fulfill({ response });
-          } catch (error) {
-            // If the fetch fails (e.g., backend not running), continue to original target
-            console.error(`Route interception failed for ${targetUrl}:`, error);
-            await route.continue();
-          }
-        });
-      }
-      await use();
-    },
-    { auto: true },
-  ],
-
   // Fixture: navigate and wait for Angular
-  // Route interception is handled by _routeSetup (auto fixture)
-  gotoAndWaitForAngular: async ({ page }, use) => {
+  // Navigates to the correct backend URL based on the configured backend
+  gotoAndWaitForAngular: async ({ page, backendUrl }, use) => {
     const navigate = async (path: string) => {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      // Build full URL to the correct backend
+      const url = `${backendUrl}${path}`;
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
       await waitForAngularApp(page);
     };
     await use(navigate);

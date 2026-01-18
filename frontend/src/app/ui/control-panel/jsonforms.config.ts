@@ -5,23 +5,9 @@
  * with Angular Material renderers, ensuring consistent form rendering
  * across the control panel components.
  *
- * Usage:
- * ```typescript
- * import { jsonFormsRenderers } from '@app/ui/control-panel/jsonforms.config';
- *
- * @Component({
- *   template: `
- *     <jsonforms
- *       [schema]="schema"
- *       [renderers]="renderers"
- *       ...
- *     />
- *   `
- * })
- * export class MyFormComponent {
- *   readonly renderers = jsonFormsRenderers;
- * }
- * ```
+ * NOTE: This file re-exports base renderers for use by feature modules.
+ * Child UI modules (tool-form, final-response) define their own renderers
+ * inline to comply with Sheriff module boundary rules.
  *
  * @see https://jsonforms.io/docs/integrations/angular
  * @see mddocs/frontend/research/jsonforms-research.md
@@ -38,14 +24,8 @@
  * - Nested object forms (object)
  * - Dynamic array lists (array)
  *
- * Can be extended with custom renderers by spreading:
- * ```typescript
- * import { jsonFormsRenderers } from '@app/ui/control-panel';
- *
- * const customRenderers = [
- *   ...jsonFormsRenderers,
- *   { tester: customTester, renderer: CustomRendererComponent },
- * ];
- * ```
+ * For components that need custom renderers (like AnyObjectRenderer),
+ * they should define their own renderer array inline to comply with
+ * Sheriff module boundaries.
  */
 export { angularMaterialRenderers as jsonFormsRenderers } from '@jsonforms/angular-material';

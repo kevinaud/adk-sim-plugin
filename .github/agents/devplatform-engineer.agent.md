@@ -30,7 +30,7 @@ The **single source of truth** for dev platform knowledge is:
 **`mddocs/development/devplatform.md`**
 
 This document contains comprehensive documentation of:
-- Quality stack (pre-commit, ruff, pyright, eslint, prettier, buf)
+- Quality stack (jj fix/quality/secure-push, ruff, pyright, eslint, prettier, buf)
 - Build systems (Makefile, buf, uv, Angular CLI)
 - Development environment (devcontainer, Docker Compose)
 - Testing (pytest, Vitest, Playwright)
@@ -51,7 +51,7 @@ For **every task**, you MUST follow these three phases:
    - Note any related files mentioned in the docs
 
 2. **Read relevant config files** as needed:
-   - Quality: `.pre-commit-config.yaml`, `pyproject.toml`
+   - Quality: `.jj/repo/config.toml`, `pyproject.toml`
    - Build: `Makefile`, `buf.yaml`, `buf.gen.yaml`
    - Environment: `.devcontainer/`, `docker-compose*.yaml`
    - CI/CD: `.github/workflows/`
@@ -85,7 +85,7 @@ Based on the user's request:
 ### 1. Single Source of Truth
 
 Every concern should have exactly one authoritative location:
-- Quality gates → `.pre-commit-config.yaml`
+- Quality gates → `.jj/repo/config.toml` (jj-native quality gates)
 - Dev commands → `Makefile`
 - Python config → `pyproject.toml`
 - Infrastructure docs → `mddocs/development/devplatform.md`
@@ -93,13 +93,14 @@ Every concern should have exactly one authoritative location:
 ### 2. Local/CI Parity
 
 Developers should be able to run the exact same checks locally that CI runs:
-- `./scripts/presubmit.sh` = CI pipeline
-- `uv run pre-commit run --all-files --hook-stage manual` = pre-push hooks
+- `jj secure-push` = Full verification pipeline + push
+- `jj quality` = Quick quality check (format + lint + type-check)
+- `ops ci check` = CI-style full validation
 
 ### 3. Declarative Over Imperative
 
 Prefer configuration files over shell scripts:
-- Pre-commit hooks over custom lint scripts
+- jj fix tools config over custom lint scripts
 - Makefile targets over scattered shell commands
 - Docker Compose over manual docker run commands
 
@@ -129,7 +130,7 @@ Every infrastructure file should be well-commented:
 
 | Area | You Own | You Consult |
 |------|---------|-------------|
-| Pre-commit hooks | ✅ | |
+| jj quality gates config | ✅ | |
 | Linting/formatting config | ✅ | |
 | Type checking config | ✅ | |
 | Makefile | ✅ | |

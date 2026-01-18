@@ -13,11 +13,6 @@ set -e
 echo "🚀 Initializing dev container..."
 
 # ------------------------------------------------------------
-# Install Git Town
-# ------------------------------------------------------------
-curl https://www.git-town.com/install.sh | sh
-
-# ------------------------------------------------------------
 # Fix uv-cache permissions (for CI runner compatibility)
 # ------------------------------------------------------------
 if [ -d "/opt/uv-cache" ]; then
@@ -62,13 +57,6 @@ fi
 # ------------------------------------------------------------
 echo "🎭 Installing Playwright browsers..."
 (cd frontend && npx playwright install chromium --with-deps)
-
-# ------------------------------------------------------------
-# Pre-commit: Install Git Hooks
-# ------------------------------------------------------------
-echo "🔗 Installing pre-commit git hooks..."
-uv run pre-commit install
-uv run pre-commit install --hook-type pre-push
 
 # ------------------------------------------------------------
 # Install Claude Code

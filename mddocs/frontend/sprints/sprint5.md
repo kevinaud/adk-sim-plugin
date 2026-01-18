@@ -732,17 +732,27 @@ USER FEEDBACK:
 
 ## Open Questions
 
-### additionalProperties Rendering
+### additionalProperties / Open Object Rendering
 
-JSONForms Angular Material doesn't have a built-in renderer for `additionalProperties` key-value editing. When a schema includes `additionalProperties: { type: 'string' }`, the form renders an empty box with no way to add key-value pairs.
+JSONForms Angular Material doesn't have a built-in renderer for `additionalProperties` key-value editing. When a schema includes `additionalProperties: { type: 'string' }` or is an "open object" (OBJECT type with no defined properties), the form renders an empty box with no way to add key-value pairs.
 
-**Options to resolve:**
+**Options considered:**
 
 1. **Create a custom renderer** — Build a key-value pair editor component that registers with JSONForms for `additionalProperties` schemas
 2. **Change schema pattern** — Use `array` of `{key: string, value: string}` objects instead (workaround that changes the data structure)
 3. **Accept limitation** — Document as known limitation and defer to a future sprint
 
-**Status**: Awaiting decision
+**Resolution**: Option 1 implemented with a simplified approach:
+
+- Created `AnyObjectRenderer` custom renderer in `frontend/src/app/ui/control-panel/renderers/`
+- Renders a JSON textarea for open object schemas (type: object + additionalProperties: true)
+- Validates that input is parseable JSON and is an object (not array/null/primitive)
+- Updated `genaiSchemaToJsonSchema()` converter to detect open objects (OBJECT with no properties) and add `additionalProperties: true`
+- Custom renderer uses rank 5 to take priority over default object renderer (rank 2)
+
+**Future enhancement**: Replace JSON textarea with a proper key-value pair editor UI for better UX.
+
+**Status**: ✅ Resolved
 
 ### Field Descriptions Behavior
 

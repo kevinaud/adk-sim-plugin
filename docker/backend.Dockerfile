@@ -1,11 +1,45 @@
 # syntax=docker/dockerfile:1
 # ============================================================
-# ADK Simulator Backend - Optimized Multi-Stage Build
+# ADK Simulator - Optimized Multi-Stage Build
 # ============================================================
+# Builds both frontend and backend for production deployment.
 # Uses uv with BuildKit cache mounting for fast, reproducible builds.
 # See mddocs/development/devplatform.md for documentation.
 # ============================================================
 
+# ============================================================
+# Stage 1: Build Angular Frontend
+# ============================================================
+FROM node:22-slim AS frontend-build
+
+WORKDIR /app
+
+# Copy package files for dependency caching (npm workspaces)
+COPY package.json package-lock.json ./
+COPY frontend/package.json ./frontend/
+COPY packages/adk-sim-protos-ts/package.json ./packages/adk-sim-protos-ts/
+COPY packages/adk-converters-ts/package.json ./packages/adk-converters-ts/
+
+# Install dependencies at workspace root
+RUN npm ci
+
+# Copy source files
+COPY frontend/ ./frontend/
+COPY packages/adk-sim-protos-ts/ ./packages/adk-sim-protos-ts/
+COPY packages/adk-converters-ts/ ./packages/adk-converters-ts/
+
+# Build workspace packages in dependency order (protos -> converters -> frontend)
+# These packages export from dist/ which must be built before frontend can import them
+RUN npm run build --workspace=@adk-sim/protos && \
+    npm run build --workspace=@adk-sim/converters
+
+# Build frontend for production
+WORKDIR /app/frontend
+RUN npm run build
+
+# ============================================================
+# Stage 2: Python Backend Runtime
+# ============================================================
 FROM python:3.14-slim AS runtime
 
 WORKDIR /app
@@ -71,3 +105,11 @@ COPY ops/src/ ./ops/src/
 # Install workspace packages now that source is available
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
+
+# ============================================================
+# Copy Frontend Bundle
+# ============================================================
+# Copy built frontend from Stage 1 into the static directory.
+# The Python server serves these files at the root path.
+# ============================================================
+COPY --from=frontend-build /app/frontend/dist/frontend/ ./server/src/adk_sim_server/static/

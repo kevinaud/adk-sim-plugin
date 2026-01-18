@@ -13,7 +13,11 @@
 import { describe, it, expect } from 'vitest';
 import { Type as GenaiType } from '@google/genai';
 import type { Schema } from '@google/genai';
+import { Type as ProtoType, SchemaSchema } from '@adk-sim/protos';
+import type { Schema as ProtoSchema } from '@adk-sim/protos';
+import { create } from '@bufbuild/protobuf';
 import { genaiSchemaToJsonSchema, type JsonSchema7 } from './json-schema-converter.js';
+import { protoSchemaToGenaiSchema } from './tool-converter.js';
 
 // ============================================================================
 // Test Helpers
@@ -27,6 +31,39 @@ function createGenaiSchema(type: Schema['type'], options: Partial<Schema> = {}):
     type,
     ...options,
   };
+}
+
+/**
+ * Create a proto Schema for testing the full pipeline
+ */
+function createProtoSchema(
+  type: ProtoType,
+  options: Partial<Omit<ProtoSchema, 'type'>> = {},
+): ProtoSchema {
+  return {
+    $typeName: 'google.ai.generativelanguage.v1beta.Schema',
+    type,
+    format: options.format ?? '',
+    title: options.title ?? '',
+    description: options.description ?? '',
+    nullable: options.nullable ?? false,
+    enum: options.enum ?? [],
+    required: options.required ?? [],
+    pattern: options.pattern ?? '',
+    anyOf: options.anyOf ?? [],
+    propertyOrdering: options.propertyOrdering ?? [],
+    minItems: options.minItems ?? 0n,
+    maxItems: options.maxItems ?? 0n,
+    minProperties: options.minProperties ?? 0n,
+    maxProperties: options.maxProperties ?? 0n,
+    minLength: options.minLength ?? 0n,
+    maxLength: options.maxLength ?? 0n,
+    minimum: options.minimum,
+    maximum: options.maximum,
+    example: options.example,
+    items: options.items,
+    properties: options.properties ?? {},
+  } as ProtoSchema;
 }
 
 // ============================================================================
@@ -458,10 +495,13 @@ describe('genaiSchemaToJsonSchema', () => {
       expect(result.properties!['user'].properties!['address'].properties!['zip'].pattern).toBe(
         '^\\d{5}$',
       );
-      expect(result.properties!['user'].properties!['address'].required).toEqual(['street', 'city']);
+      expect(result.properties!['user'].properties!['address'].required).toEqual([
+        'street',
+        'city',
+      ]);
     });
 
-    it('should not include empty properties object', () => {
+    it('should set additionalProperties: true for empty properties (open object)', () => {
       const genaiSchema = createGenaiSchema(GenaiType.OBJECT, {
         properties: {},
       });
@@ -469,6 +509,31 @@ describe('genaiSchemaToJsonSchema', () => {
       const result = genaiSchemaToJsonSchema(genaiSchema);
 
       expect(result.properties).toBeUndefined();
+      expect(result.additionalProperties).toBe(true);
+    });
+
+    it('should set additionalProperties: true for OBJECT with no properties defined', () => {
+      // This represents Dict[str, Any] or dict in Python
+      const genaiSchema = createGenaiSchema(GenaiType.OBJECT);
+
+      const result = genaiSchemaToJsonSchema(genaiSchema);
+
+      expect(result.type).toBe('object');
+      expect(result.additionalProperties).toBe(true);
+    });
+
+    it('should NOT set additionalProperties for OBJECT with defined properties', () => {
+      const genaiSchema = createGenaiSchema(GenaiType.OBJECT, {
+        properties: {
+          name: { type: GenaiType.STRING },
+        },
+      });
+
+      const result = genaiSchemaToJsonSchema(genaiSchema);
+
+      expect(result.type).toBe('object');
+      expect(result.properties).toBeDefined();
+      expect(result.additionalProperties).toBeUndefined();
     });
   });
 
@@ -696,6 +761,190 @@ describe('genaiSchemaToJsonSchema', () => {
       const result = genaiSchemaToJsonSchema(genaiSchema);
 
       expect(result.minimum).toBe(0);
+    });
+  });
+
+  // ==========================================================================
+  // Full Pipeline Tests: Proto → Genai → JSON Schema
+  // ==========================================================================
+
+  describe('Full Pipeline: Proto → Genai → JSON Schema', () => {
+    /**
+     * Tests for the "open object" pattern (Dict[str, Any] in Python).
+     * This is common in ADK tools where a parameter accepts arbitrary key-value pairs.
+     */
+    describe('Open Object Pattern (Dict[str, Any])', () => {
+      it('should convert top-level open object (OBJECT with no properties)', () => {
+        // Proto schema: type: OBJECT with no properties
+        // This represents Dict[str, Any] in Python
+        const protoSchema = createProtoSchema(ProtoType.OBJECT);
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        expect(jsonSchema.type).toBe('object');
+        expect(jsonSchema.additionalProperties).toBe(true);
+        expect(jsonSchema.properties).toBeUndefined();
+      });
+
+      it('should convert nested open object property (store_state_tool pattern)', () => {
+        // This is the exact pattern from the FOMC store_state_tool:
+        // {
+        //   type: OBJECT,
+        //   properties: { state: { type: OBJECT } },  // state is an open object
+        //   required: ['state']
+        // }
+        const protoSchema = createProtoSchema(ProtoType.OBJECT, {
+          properties: {
+            state: createProtoSchema(ProtoType.OBJECT), // No properties = open object
+          },
+          required: ['state'],
+        });
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        // Top level should have properties defined
+        expect(jsonSchema.type).toBe('object');
+        expect(jsonSchema.properties).toBeDefined();
+        expect(jsonSchema.required).toEqual(['state']);
+        expect(jsonSchema.additionalProperties).toBeUndefined(); // Has properties, so no additionalProperties
+
+        // Nested 'state' property should be an open object
+        const stateSchema = jsonSchema.properties!['state'];
+        expect(stateSchema.type).toBe('object');
+        expect(stateSchema.additionalProperties).toBe(true);
+        expect(stateSchema.properties).toBeUndefined();
+      });
+
+      it('should convert deeply nested open object', () => {
+        // Schema with: outer.inner.data where data is an open object
+        const protoSchema = createProtoSchema(ProtoType.OBJECT, {
+          properties: {
+            outer: createProtoSchema(ProtoType.OBJECT, {
+              properties: {
+                inner: createProtoSchema(ProtoType.OBJECT, {
+                  properties: {
+                    data: createProtoSchema(ProtoType.OBJECT), // Open object at 3 levels deep
+                  },
+                }),
+              },
+            }),
+          },
+        });
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        // Navigate to the deeply nested 'data' property
+        const dataSchema = jsonSchema.properties!['outer'].properties!['inner'].properties!['data'];
+
+        expect(dataSchema.type).toBe('object');
+        expect(dataSchema.additionalProperties).toBe(true);
+        expect(dataSchema.properties).toBeUndefined();
+      });
+
+      it('should distinguish between open objects and closed objects with properties', () => {
+        const protoSchema = createProtoSchema(ProtoType.OBJECT, {
+          properties: {
+            // Open object - no defined properties
+            openData: createProtoSchema(ProtoType.OBJECT),
+            // Closed object - has defined properties
+            closedData: createProtoSchema(ProtoType.OBJECT, {
+              properties: {
+                name: createProtoSchema(ProtoType.STRING),
+                value: createProtoSchema(ProtoType.NUMBER),
+              },
+            }),
+          },
+        });
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        // Open object should have additionalProperties: true
+        const openDataSchema = jsonSchema.properties!['openData'];
+        expect(openDataSchema.type).toBe('object');
+        expect(openDataSchema.additionalProperties).toBe(true);
+        expect(openDataSchema.properties).toBeUndefined();
+
+        // Closed object should NOT have additionalProperties
+        const closedDataSchema = jsonSchema.properties!['closedData'];
+        expect(closedDataSchema.type).toBe('object');
+        expect(closedDataSchema.additionalProperties).toBeUndefined();
+        expect(closedDataSchema.properties).toBeDefined();
+        expect(closedDataSchema.properties!['name'].type).toBe('string');
+        expect(closedDataSchema.properties!['value'].type).toBe('number');
+      });
+
+      it('should handle open object in array items', () => {
+        // Array of open objects: Array<Dict[str, Any]>
+        const protoSchema = createProtoSchema(ProtoType.ARRAY, {
+          items: createProtoSchema(ProtoType.OBJECT), // Open object
+        });
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        expect(jsonSchema.type).toBe('array');
+        expect(jsonSchema.items).toBeDefined();
+
+        const itemsSchema = jsonSchema.items as JsonSchema7;
+        expect(itemsSchema.type).toBe('object');
+        expect(itemsSchema.additionalProperties).toBe(true);
+        expect(itemsSchema.properties).toBeUndefined();
+      });
+    });
+
+    describe('Real Tool Schemas', () => {
+      it('should convert store_state_tool schema exactly as received from gRPC', () => {
+        // Exact reproduction of the store_state_tool from SessionEvent
+        // parameters: { type: 6, properties: { state: { type: 6 } }, required: ['state'] }
+        // where type 6 = ProtoType.OBJECT
+        const protoSchema = createProtoSchema(ProtoType.OBJECT, {
+          properties: {
+            state: createProtoSchema(ProtoType.OBJECT),
+          },
+          required: ['state'],
+        });
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        // Verify the final JSON Schema structure
+        expect(jsonSchema).toEqual({
+          type: 'object',
+          properties: {
+            state: {
+              type: 'object',
+              additionalProperties: true,
+            },
+          },
+          required: ['state'],
+        });
+      });
+
+      it('should convert store_state_tool using bufbuild create() exactly as in Playwright test', () => {
+        // Use the actual bufbuild create() function to match the Playwright test setup
+        const stateSchema = create(SchemaSchema, { type: ProtoType.OBJECT });
+        const protoSchema = create(SchemaSchema, {
+          type: ProtoType.OBJECT,
+          properties: {
+            state: stateSchema,
+          },
+          required: ['state'],
+        }) as ProtoSchema;
+
+        const genaiSchema = protoSchemaToGenaiSchema(protoSchema);
+        const jsonSchema = genaiSchemaToJsonSchema(genaiSchema);
+
+        // Verify the final JSON Schema structure
+        expect(jsonSchema.type).toBe('object');
+        expect(jsonSchema.properties).toBeDefined();
+        expect(jsonSchema.properties!['state'].type).toBe('object');
+        expect(jsonSchema.properties!['state'].additionalProperties).toBe(true);
+        expect(jsonSchema.properties!['state'].properties).toBeUndefined();
+      });
     });
   });
 });

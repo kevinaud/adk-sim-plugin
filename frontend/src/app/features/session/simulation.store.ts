@@ -17,14 +17,17 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
  * State interface for the simulation feature.
  *
  * - currentRequest: The active LLM request being handled by the user
+ * - currentTurnId: The turn ID of the current request (for submitDecision)
  * - requestQueue: FIFO queue for concurrent agent requests (FR-024)
  * - selectedTool: Currently selected tool for invocation
  */
 export interface SimulationState {
   /** The active LLM request being handled, or null if idle. */
   currentRequest: GenerateContentRequest | null;
+  /** The turn ID of the current request, needed for submitDecision. */
+  currentTurnId: string | null;
   /** FIFO queue of pending requests when user is busy with another request. */
-  requestQueue: GenerateContentRequest[];
+  requestQueue: { request: GenerateContentRequest; turnId: string }[];
   /** Currently selected tool for invocation, or null if none selected. */
   selectedTool: FunctionDeclaration | null;
 }
@@ -34,6 +37,7 @@ export interface SimulationState {
  */
 const initialState: SimulationState = {
   currentRequest: null,
+  currentTurnId: null,
   requestQueue: [],
   selectedTool: null,
 };
@@ -98,15 +102,16 @@ export const SimulationStore = signalStore(
      * Per FR-024: queue if busy, set current if idle.
      *
      * @param request - The incoming LLM request
+     * @param turnId - The turn ID from the session event
      */
-    receiveRequest(request: GenerateContentRequest): void {
+    receiveRequest(request: GenerateContentRequest, turnId: string): void {
       if (store.currentRequest() === null) {
         // Idle - set as current request
-        patchState(store, { currentRequest: request });
+        patchState(store, { currentRequest: request, currentTurnId: turnId });
       } else {
         // Busy - add to queue
         patchState(store, {
-          requestQueue: [...store.requestQueue(), request],
+          requestQueue: [...store.requestQueue(), { request, turnId }],
         });
       }
     },
@@ -119,7 +124,8 @@ export const SimulationStore = signalStore(
     advanceQueue(): void {
       const [next, ...rest] = store.requestQueue();
       patchState(store, {
-        currentRequest: next ?? null,
+        currentRequest: next?.request ?? null,
+        currentTurnId: next?.turnId ?? null,
         requestQueue: rest,
         selectedTool: null, // Clear selection when advancing
       });

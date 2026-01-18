@@ -8,6 +8,7 @@
  * @see mddocs/frontend/frontend-tdd.md#mock-gateway-testing
  */
 
+import type { GenerateContentResponse } from '@adk-sim/protos';
 import { Injectable, signal } from '@angular/core';
 
 import type { Session, SessionEvent } from './session.gateway';
@@ -189,6 +190,61 @@ export class MockSessionGateway extends SessionGateway {
    */
   override cancelSubscription(): void {
     this.subscriptionActive = false;
+  }
+
+  /** Captured decisions for test verification */
+  private readonly submittedDecisions: {
+    sessionId: string;
+    turnId: string;
+    response: GenerateContentResponse;
+  }[] = [];
+
+  /**
+   * Submits a human decision (response) to the session.
+   *
+   * In this mock implementation, decisions are captured for test verification.
+   *
+   * @param sessionId - The session to submit to
+   * @param turnId - The turn ID correlating this response to its request
+   * @param response - The GenerateContentResponse to submit
+   */
+  override async submitDecision(
+    sessionId: string,
+    turnId: string,
+    response: GenerateContentResponse,
+  ): Promise<void> {
+    // Apply simulated delay if configured
+    if (this.simulatedDelayMs > 0) {
+      await this.delay(this.simulatedDelayMs);
+    }
+
+    // Throw error if configured (and clear it)
+    if (this.errorToThrow) {
+      const error = this.errorToThrow;
+      this.errorToThrow = null;
+      throw error;
+    }
+
+    // Capture the decision for test verification
+    this.submittedDecisions.push({ sessionId, turnId, response });
+  }
+
+  /**
+   * Returns all captured decisions for test verification.
+   */
+  getSubmittedDecisions(): {
+    sessionId: string;
+    turnId: string;
+    response: GenerateContentResponse;
+  }[] {
+    return [...this.submittedDecisions];
+  }
+
+  /**
+   * Clears all captured decisions.
+   */
+  clearSubmittedDecisions(): void {
+    this.submittedDecisions.length = 0;
   }
 
   /**

@@ -4,21 +4,18 @@ This is a monorepo for a gRPC-based agent simulator with Python backend, Angular
 
 ## Quality Gates
 
-Quality rules are defined in `.pre-commit-config.yaml` (single source of truth).
+Quality rules are defined in `.jj/repo/config.toml` (jj-native quality gates).
 
-- Run `ops ci check` before any `git push` - pushing failing code is prohibited
-- Run `ops quality` for quick quality checks (lint/format only)
-- Pre-commit hooks run automatically:
-  - `git commit`: Fast checks (lint, format, type check) on staged files
-  - `git push`: Full test suite (unit, integration, e2e) + Angular build
+- Run `jj secure-push` instead of `jj git push` - runs full verification pipeline then pushes
+- Run `jj fix` to auto-format modified files (ruff, prettier, buf format)
+- Run `jj quality` for quick quality checks (format + lint + type-check, no tests)
+- Run `ops ci check` for CI-style verification (equivalent to `jj secure-push` without push)
 
-## Git Workflow
+## Version Control (Jujutsu)
 
-YOU MUST use git-town for all branch management:
-- `git town hack <branch>` - create new feature branches (NOT `git checkout -b`)
-- `git town append <branch>` - create dependent/stacked branches
-- `git town sync` - synchronize branch chains with upstream
-- `git town ship` - merge completed branches
+This project uses **Jujutsu (jj) exclusively**. Git commands are prohibited.
+
+Load the `jujutsu` skill before any VCS operation. See `.claude/skills/jujutsu/` for workflows.
 
 ## Pull Request Standards
 
@@ -45,7 +42,7 @@ Use state-based verification, not interaction-based verification.
 - Python: managed by `uv` (NOT pip)
 - Frontend: managed by `npm`
 - Protos: managed by `buf`
-- Quality checks: managed by `pre-commit`
+- Quality checks: managed by `jj` (see `.jj/repo/config.toml`)
 - Developer CLI: `ops` (installed via `uv sync`)
 
 ## Key Commands

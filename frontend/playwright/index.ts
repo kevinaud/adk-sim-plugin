@@ -29,6 +29,7 @@ import {
 import { ToolFormService } from '../src/app/data-access/tool-form/tool-form.service';
 import { JsonFormsModule } from '@jsonforms/angular';
 import { angularMaterialRenderers } from '@jsonforms/angular-material';
+import { AnyObjectRenderer, AnyObjectRendererTester } from '../src/app/ui/control-panel/renderers';
 
 // Console.log creates a side effect that forces Rollup to include the imports
 console.log('[Playwright CT] Pre-loading JSONForms components:', {
@@ -39,6 +40,9 @@ console.log('[Playwright CT] Pre-loading JSONForms components:', {
   FORM_CONFIG_CREATOR,
   JsonFormsModule,
   renderersCount: angularMaterialRenderers.length,
+  // Custom renderers
+  AnyObjectRenderer,
+  AnyObjectRendererTester,
 });
 
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';

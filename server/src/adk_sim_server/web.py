@@ -10,6 +10,7 @@ directly in-process.
 
 import base64
 import struct
+from collections.abc import AsyncIterator
 from pathlib import Path
 
 import betterproto
@@ -22,10 +23,11 @@ from adk_sim_protos.adksim.v1 import (
   SubmitDecisionResponse,
   SubmitRequestRequest,
   SubmitRequestResponse,
+  SubscribeRequest,
 )
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import FileResponse, Response
+from starlette.responses import FileResponse, Response, StreamingResponse
 from starlette.routing import Route
 
 from adk_sim_server.logging import get_logger
@@ -102,6 +104,73 @@ def _get_content_type(is_text: bool) -> str:
   return "application/grpc-web-text" if is_text else "application/grpc-web+proto"
 
 
+def _encode_grpc_web_message_frame(
+  message: betterproto.Message, is_text: bool
+) -> bytes:
+  """Encode a single message as a gRPC-Web frame (without trailer).
+
+  Args:
+      message: The betterproto message to encode.
+      is_text: Whether to base64-encode the frame (grpc-web-text).
+
+  Returns:
+      The encoded gRPC-Web message frame bytes.
+  """
+  message_bytes = bytes(message)
+  # Build message frame: 0 (not compressed) + length + message
+  frame = bytes([0]) + struct.pack(">I", len(message_bytes)) + message_bytes
+  if is_text:
+    frame = base64.b64encode(frame)
+  return frame
+
+
+def _encode_grpc_web_trailer(
+  is_text: bool, status: int = 0, message: str = ""
+) -> bytes:
+  """Encode the gRPC-Web trailer frame.
+
+  Args:
+      is_text: Whether to base64-encode the frame (grpc-web-text).
+      status: gRPC status code (0 = OK).
+      message: Optional error message.
+
+  Returns:
+      The encoded gRPC-Web trailer frame bytes.
+  """
+  trailers = f"grpc-status:{status}\r\n"
+  if message:
+    trailers += f"grpc-message:{message}\r\n"
+  trailers_bytes = trailers.encode()
+  frame = bytes([0x80]) + struct.pack(">I", len(trailers_bytes)) + trailers_bytes
+  if is_text:
+    frame = base64.b64encode(frame)
+  return frame
+
+
+async def _stream_grpc_web_responses(
+  response_stream: AsyncIterator[betterproto.Message],
+  is_text: bool,
+) -> AsyncIterator[bytes]:
+  """Stream gRPC-Web message frames followed by trailer.
+
+  Args:
+      response_stream: Async iterator of protobuf messages.
+      is_text: Whether to base64-encode frames.
+
+  Yields:
+      Encoded gRPC-Web frames.
+  """
+  try:
+    async for message in response_stream:
+      yield _encode_grpc_web_message_frame(message, is_text)
+    # Stream completed successfully - send OK trailer
+    yield _encode_grpc_web_trailer(is_text, status=0)
+  except Exception as e:
+    logger.exception("Error during stream: %s", e)
+    # Send error trailer
+    yield _encode_grpc_web_trailer(is_text, status=2, message=str(e))
+
+
 # Method name to (request_class, handler_method_name) mapping
 _METHOD_MAP: dict[str, tuple[type[betterproto.Message], str]] = {
   "CreateSession": (CreateSessionRequest, "create_session"),
@@ -117,6 +186,62 @@ _RESPONSE_TYPES: dict[str, type[betterproto.Message]] = {
   "SubmitRequest": SubmitRequestResponse,
   "SubmitDecision": SubmitDecisionResponse,
 }
+
+
+async def grpc_web_subscribe_handler(request: Request) -> Response:
+  """Handle gRPC-Web Subscribe streaming requests.
+
+  This endpoint handles the Subscribe RPC which returns a server stream.
+  Uses StreamingResponse to send multiple gRPC-Web frames.
+
+  Args:
+      request: The incoming Starlette request.
+
+  Returns:
+      StreamingResponse with gRPC-Web frames.
+  """
+  # Check content type to determine if base64 encoded
+  content_type = request.headers.get("content-type", "")
+  is_text = "grpc-web-text" in content_type
+
+  # Get the service from app state
+  service: SimulatorService = request.app.state.simulator_service
+
+  try:
+    # Read and decode the request body
+    body = await request.body()
+    message_bytes = _decode_grpc_web_payload(body, is_text)
+
+    # Parse the SubscribeRequest
+    subscribe_request = SubscribeRequest().parse(message_bytes)
+
+    logger.info("Subscribe request for session: %s", subscribe_request.session_id)
+
+    # Get the response stream from the service
+    response_stream = service.subscribe(subscribe_request)
+
+    # Return a streaming response
+    return StreamingResponse(
+      _stream_grpc_web_responses(response_stream, is_text),
+      media_type=_get_content_type(is_text),
+      headers={
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers": "grpc-status,grpc-message",
+      },
+    )
+
+  except Exception as e:
+    logger.exception("Error handling Subscribe request: %s", e)
+    # Return gRPC error status
+    error_frame = _encode_grpc_web_trailer(is_text, status=2, message=str(e))
+    return Response(
+      content=error_frame,
+      media_type=_get_content_type(is_text),
+      headers={
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers": "grpc-status,grpc-message",
+      },
+    )
 
 
 async def grpc_web_handler(request: Request) -> Response:
@@ -138,6 +263,10 @@ async def grpc_web_handler(request: Request) -> Response:
     return Response(status_code=400, content="Invalid gRPC-Web path")
 
   method_name = path_parts[-1]
+
+  # Handle Subscribe separately (streaming method)
+  if method_name == "Subscribe":
+    return await grpc_web_subscribe_handler(request)
 
   if method_name not in _METHOD_MAP:
     logger.warning("Unknown gRPC method: %s", method_name)

@@ -37,12 +37,7 @@
  */
 
 // Multi-backend test fixtures - the primary test interface
-export {
-  expect,
-  test,
-  type BackendName,
-  type SimulatorClient,
-} from './multi-backend-fixtures';
+export { expect, test, type BackendName, type SimulatorClient } from './multi-backend-fixtures';
 
 // Angular-specific helpers
 export { waitForAngularApp, waitForAngularStable } from './angular-helpers';
@@ -64,6 +59,5 @@ export {
   DEFAULT_BACKEND,
   E2E_COMPOSE_FILE,
   getBackendUrl,
-  getGrpcUrl,
   getServiceName,
 } from './backend-config';
