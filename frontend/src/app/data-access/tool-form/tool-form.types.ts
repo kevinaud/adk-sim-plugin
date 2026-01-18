@@ -31,23 +31,23 @@ export interface ToolFormConfig {
    * JSON Schema 7 defining the form data structure and validation rules.
    * Used by JSONForms to generate form controls.
    */
-  schema: JsonSchema7;
+  readonly schema: JsonSchema7;
 
   /**
    * UI Schema defining the form layout and presentation.
    * Generated automatically via `generateDefaultUISchema()`.
    */
-  uischema: UISchemaElement;
+  readonly uischema: UISchemaElement;
 
   /**
    * The name of the tool being invoked.
    * Displayed in the form header.
    */
-  toolName: string;
+  readonly toolName: string;
 
   /**
    * Description of the tool's purpose.
    * Displayed below the form header.
    */
-  toolDescription: string;
+  readonly toolDescription: string;
 }

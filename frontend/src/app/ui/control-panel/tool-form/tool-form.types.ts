@@ -5,6 +5,11 @@
  * This is a "dumb" component pattern - the parent is responsible for converting
  * FunctionDeclaration to ToolFormConfig using ToolFormService.
  *
+ * NOTE: ToolFormConfig is intentionally defined here separately from the
+ * data-access layer version. This maintains Sheriff module boundary compliance
+ * (type:ui cannot import from type:data-access). Both definitions are identical
+ * and serve as the contract between layers.
+ *
  * @see mddocs/frontend/research/jsonforms-research.md#use-case-tool-invocation-forms
  * @see mddocs/frontend/frontend-tdd.md#toolformcomponent-jsonforms
  */
