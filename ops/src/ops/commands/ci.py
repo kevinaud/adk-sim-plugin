@@ -107,7 +107,7 @@ def _run_backend_tests() -> None:
 def _run_frontend_tests() -> None:
   """Run frontend Vitest tests."""
   run(
-    ["npm", "run", "ng", "--", "test", "--watch=false"],
+    ["npm", "run", "test"],
     cwd=FRONTEND_DIR,
     env={"CI": "true"},
   )
