@@ -10,6 +10,7 @@
  * @see mddocs/frontend/frontend-tdd.md#control-panel-components
  */
 
+export { FinalResponseComponent } from './final-response';
 export { jsonFormsRenderers } from './jsonforms.config';
 export { ToolCatalogComponent } from './tool-catalog';
 export type { ToolFormConfig, ToolInvokeEvent } from './tool-form';
