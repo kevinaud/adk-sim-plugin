@@ -70,6 +70,10 @@ describe('SimulationStore', () => {
       expect(store.currentRequest()).toBeNull();
     });
 
+    it('should have null currentTurnId initially', () => {
+      expect(store.currentTurnId()).toBeNull();
+    });
+
     it('should have empty requestQueue initially', () => {
       expect(store.requestQueue()).toEqual([]);
     });
@@ -104,7 +108,7 @@ describe('SimulationStore', () => {
       it('should set request as currentRequest when idle', () => {
         const request = createTestRequest('models/gemini-pro');
 
-        store.receiveRequest(request);
+        store.receiveRequest(request, 'test-turn-id');
 
         expect(store.currentRequest()).toBe(request);
         expect(store.hasRequest()).toBe(true);
@@ -124,7 +128,7 @@ describe('SimulationStore', () => {
           contents: [userContent],
         });
 
-        store.receiveRequest(request);
+        store.receiveRequest(request, 'test-turn-id');
 
         expect(store.contents().length).toBe(1);
         expect(store.contents()[0]?.role).toBe('user');
@@ -135,7 +139,7 @@ describe('SimulationStore', () => {
         const fn2 = createTestFunction('tool2', 'Second tool');
         const request = createTestRequest('models/gemini-pro', [fn1, fn2]);
 
-        store.receiveRequest(request);
+        store.receiveRequest(request, 'test-turn-id');
 
         const tools = store.availableTools();
         expect(tools.length).toBe(2);
@@ -149,12 +153,12 @@ describe('SimulationStore', () => {
         const request1 = createTestRequest('models/gemini-pro-1');
         const request2 = createTestRequest('models/gemini-pro-2');
 
-        store.receiveRequest(request1);
-        store.receiveRequest(request2);
+        store.receiveRequest(request1, 'turn-1');
+        store.receiveRequest(request2, 'turn-2');
 
         expect(store.currentRequest()).toBe(request1);
         expect(store.queueLength()).toBe(1);
-        expect(store.requestQueue()[0]).toBe(request2);
+        expect(store.requestQueue()[0]?.request).toBe(request2);
       });
 
       it('should maintain FIFO order when multiple requests queued', () => {
@@ -162,14 +166,14 @@ describe('SimulationStore', () => {
         const request2 = createTestRequest('models/gemini-pro-2');
         const request3 = createTestRequest('models/gemini-pro-3');
 
-        store.receiveRequest(request1);
-        store.receiveRequest(request2);
-        store.receiveRequest(request3);
+        store.receiveRequest(request1, 'turn-1');
+        store.receiveRequest(request2, 'turn-2');
+        store.receiveRequest(request3, 'turn-3');
 
         expect(store.currentRequest()).toBe(request1);
         expect(store.queueLength()).toBe(2);
-        expect(store.requestQueue()[0]).toBe(request2);
-        expect(store.requestQueue()[1]).toBe(request3);
+        expect(store.requestQueue()[0]?.request).toBe(request2);
+        expect(store.requestQueue()[1]?.request).toBe(request3);
       });
     });
   });
@@ -180,21 +184,21 @@ describe('SimulationStore', () => {
       const request2 = createTestRequest('models/gemini-pro-2');
       const request3 = createTestRequest('models/gemini-pro-3');
 
-      store.receiveRequest(request1);
-      store.receiveRequest(request2);
-      store.receiveRequest(request3);
+      store.receiveRequest(request1, 'turn-1');
+      store.receiveRequest(request2, 'turn-2');
+      store.receiveRequest(request3, 'turn-3');
 
       store.advanceQueue();
 
       expect(store.currentRequest()).toBe(request2);
       expect(store.queueLength()).toBe(1);
-      expect(store.requestQueue()[0]).toBe(request3);
+      expect(store.requestQueue()[0]?.request).toBe(request3);
     });
 
     it('should set currentRequest to null when queue is empty', () => {
       const request = createTestRequest('models/gemini-pro');
 
-      store.receiveRequest(request);
+      store.receiveRequest(request, 'test-turn-id');
       store.advanceQueue();
 
       expect(store.currentRequest()).toBeNull();
@@ -206,7 +210,7 @@ describe('SimulationStore', () => {
       const fn = createTestFunction('my-tool');
       const request = createTestRequest('models/gemini-pro', [fn]);
 
-      store.receiveRequest(request);
+      store.receiveRequest(request, 'test-turn-id');
       store.selectTool(fn);
       expect(store.selectedTool()).toBe(fn);
 
@@ -219,8 +223,8 @@ describe('SimulationStore', () => {
       const request1 = createTestRequest('models/gemini-pro-1');
       const request2 = createTestRequest('models/gemini-pro-2');
 
-      store.receiveRequest(request1);
-      store.receiveRequest(request2);
+      store.receiveRequest(request1, 'turn-1');
+      store.receiveRequest(request2, 'turn-2');
 
       store.advanceQueue();
       expect(store.currentRequest()).toBe(request2);
@@ -286,7 +290,7 @@ describe('SimulationStore', () => {
     it('should return empty array when request has no tools', () => {
       const request = createTestRequest('models/gemini-pro');
 
-      store.receiveRequest(request);
+      store.receiveRequest(request, 'test-turn-id');
 
       expect(store.availableTools()).toEqual([]);
     });
@@ -306,7 +310,7 @@ describe('SimulationStore', () => {
         ],
       });
 
-      store.receiveRequest(request);
+      store.receiveRequest(request, 'test-turn-id');
 
       expect(store.availableTools().length).toBe(3);
       expect(store.availableTools().map((t) => t.name)).toEqual(['fn1', 'fn2', 'fn3']);
@@ -318,8 +322,8 @@ describe('SimulationStore', () => {
       const request1 = createTestRequest('models/gemini-pro', [fn1]);
       const request2 = createTestRequest('models/gemini-pro', [fn2]);
 
-      store.receiveRequest(request1);
-      store.receiveRequest(request2);
+      store.receiveRequest(request1, 'turn-1');
+      store.receiveRequest(request2, 'turn-2');
 
       expect(store.availableTools()[0]?.name).toBe('tool1');
 
@@ -344,7 +348,7 @@ describe('SimulationStore', () => {
         systemInstruction: systemContent,
       });
 
-      store.receiveRequest(request);
+      store.receiveRequest(request, 'test-turn-id');
 
       expect(store.systemInstruction()?.role).toBe('system');
       const part = store.systemInstruction()?.parts[0];
@@ -358,7 +362,7 @@ describe('SimulationStore', () => {
     it('should be undefined when request has no systemInstruction', () => {
       const request = createTestRequest('models/gemini-pro');
 
-      store.receiveRequest(request);
+      store.receiveRequest(request, 'test-turn-id');
 
       expect(store.systemInstruction()).toBeUndefined();
     });
@@ -371,7 +375,7 @@ describe('SimulationStore', () => {
 
       // Request 1 arrives - becomes current
       const request1 = createTestRequest('models/gemini-pro-1');
-      store.receiveRequest(request1);
+      store.receiveRequest(request1, 'turn-1');
       expect(store.hasRequest()).toBe(true);
       expect(store.currentRequest()).toBe(request1);
 
@@ -382,7 +386,7 @@ describe('SimulationStore', () => {
 
       // While user is busy, request 2 arrives - queued
       const request2 = createTestRequest('models/gemini-pro-2');
-      store.receiveRequest(request2);
+      store.receiveRequest(request2, 'turn-2');
       expect(store.currentRequest()).toBe(request1);
       expect(store.queueLength()).toBe(1);
 

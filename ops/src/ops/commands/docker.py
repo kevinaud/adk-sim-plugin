@@ -4,33 +4,47 @@ import typer
 
 from ops.core.console import console
 from ops.core.paths import REPO_ROOT
-from ops.core.process import require_tools, run
+from ops.core.process import kill_port, require_tools, run
 
 app = typer.Typer(
   help="Manage Docker containers.",
   no_args_is_help=True,
 )
 
+# Ports used by Docker services
+DOCKER_PORTS = [50051, 8080, 4200]
+
 
 @app.command()
 def up(
   detach: bool = typer.Option(False, "--detach", "-d", help="Run in background"),
+  build: bool = typer.Option(False, "--build", "-b", help="Rebuild images"),
   verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
   Start Docker containers.
 
   Starts the full development stack (backend + frontend).
+  Automatically kills any processes using the required ports.
 
   Examples:
-    ops docker up        Start and attach to logs
-    ops docker up -d     Start in background
+    ops docker up           Start and attach to logs
+    ops docker up -d        Start in background
+    ops docker up --build   Rebuild images before starting
   """
   require_tools("docker")
 
+  # Kill any processes using Docker ports
+  killed_ports = [port for port in DOCKER_PORTS if kill_port(port)]
+  if killed_ports:
+    ports_str = ", ".join(str(p) for p in killed_ports)
+    console.print(f"[yellow]Killed processes on port(s): {ports_str}[/yellow]")
+
   console.print("Starting Docker containers...")
 
-  cmd = ["docker", "compose", "up"]
+  cmd = ["docker", "compose", "up", "--remove-orphans"]
+  if build:
+    cmd.append("--build")
   if detach:
     cmd.append("--detach")
 

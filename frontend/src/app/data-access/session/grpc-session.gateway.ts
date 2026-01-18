@@ -8,9 +8,15 @@
  * @see mddocs/frontend/research/prototype-findings.md#grpc-web-streaming-with-connect-es
  */
 
-import { SimulatorService, SubscribeRequestSchema } from '@adk-sim/protos';
+import {
+  type GenerateContentResponse,
+  SessionEventSchema,
+  SimulatorService,
+  SubmitDecisionRequestSchema,
+  SubscribeRequestSchema,
+} from '@adk-sim/protos';
 import { Injectable } from '@angular/core';
-import { create } from '@bufbuild/protobuf';
+import { create, toJson } from '@bufbuild/protobuf';
 import type { Client, Transport } from '@connectrpc/connect';
 import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
@@ -116,6 +122,13 @@ export class GrpcSessionGateway extends SessionGateway {
         signal: this.abortController.signal,
       })) {
         if (response.event) {
+          if (!ENVIRONMENT.production) {
+            // Log full event in development for debugging
+            console.log(
+              '[SessionEvent]',
+              JSON.stringify(toJson(SessionEventSchema, response.event), null, 2),
+            );
+          }
           yield response.event;
         }
       }
@@ -133,5 +146,29 @@ export class GrpcSessionGateway extends SessionGateway {
   override cancelSubscription(): void {
     this.abortController?.abort();
     this.abortController = null;
+  }
+
+  /**
+   * Submits a human decision (response) to the session.
+   *
+   * Makes a unary gRPC call to SimulatorService.SubmitDecision.
+   *
+   * @param sessionId - The session to submit to
+   * @param turnId - The turn ID correlating this response to its request
+   * @param response - The GenerateContentResponse to submit
+   * @returns Promise resolving when the decision is submitted
+   */
+  override async submitDecision(
+    sessionId: string,
+    turnId: string,
+    response: GenerateContentResponse,
+  ): Promise<void> {
+    const request = create(SubmitDecisionRequestSchema, {
+      sessionId,
+      turnId,
+      response,
+    });
+
+    await this.client.submitDecision(request);
   }
 }

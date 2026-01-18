@@ -129,7 +129,7 @@ test.describe('Session Page Layout', () => {
     await expect(controlPanel).toBeVisible();
   });
 
-  test('Event Stream shows placeholder content', async ({ page, gotoAndWaitForAngular }) => {
+  test('Event Stream shows empty state when no events', async ({ page, gotoAndWaitForAngular }) => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
@@ -140,11 +140,12 @@ test.describe('Session Page Layout', () => {
     await expect(page).toHaveURL(/\/session\//, { timeout: 30000 });
     await page.waitForTimeout(1000);
 
-    // Check placeholder content
-    const placeholder = page.locator('.event-stream-placeholder');
-    await expect(placeholder).toBeVisible();
-    await expect(placeholder).toContainText('No events yet');
-    await expect(placeholder).toContainText('Events will appear here as the simulation progresses');
+    // Check EventStreamComponent empty state (scoped to event-stream)
+    const eventStream = page.locator('[data-testid="event-stream"]');
+    await expect(eventStream).toBeVisible();
+    const emptyState = eventStream.locator('[data-testid="empty-state"]');
+    await expect(emptyState).toBeVisible();
+    await expect(emptyState).toContainText('No conversation events yet');
   });
 
   test('Event Stream has expand/collapse buttons', async ({ page, gotoAndWaitForAngular }) => {

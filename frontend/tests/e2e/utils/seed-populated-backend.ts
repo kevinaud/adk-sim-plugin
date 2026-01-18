@@ -13,7 +13,8 @@
  */
 
 // Backend URL for the 'populated' backend (hardcoded to avoid imports)
-const POPULATED_BACKEND_URL = 'http://127.0.0.1:8082';
+// Uses port 8092 to avoid conflicts with main docker-compose (8080)
+const POPULATED_BACKEND_URL = 'http://127.0.0.1:8092';
 
 /**
  * Fixed session descriptions for the populated backend.
@@ -39,9 +40,7 @@ export async function seedPopulatedBackend(): Promise<number> {
   // First check if backend already has sessions
   const existingCount = await getSessionCount(POPULATED_BACKEND_URL);
   if (existingCount >= SEED_SESSIONS.length) {
-    console.log(
-      `Populated backend already has ${String(existingCount)} sessions, skipping seed`,
-    );
+    console.log(`Populated backend already has ${String(existingCount)} sessions, skipping seed`);
     return 0;
   }
 

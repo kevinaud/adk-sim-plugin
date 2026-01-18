@@ -80,6 +80,35 @@ def run(
     raise typer.Exit(ExitCode.PREREQ) from None
 
 
+def kill_port(port: int) -> bool:
+  """Kill any process listening on the given port.
+
+  Uses lsof to find processes and SIGKILL to terminate them.
+
+  Args:
+    port: The port number to free up
+
+  Returns:
+    True if a process was killed, False if port was already free
+  """
+  result = subprocess.run(
+    ["lsof", "-ti", f":{port}"],
+    capture_output=True,
+    text=True,
+    check=False,
+  )
+
+  if result.returncode != 0 or not result.stdout.strip():
+    return False
+
+  pids = result.stdout.strip().split("\n")
+  for pid in pids:
+    if pid:
+      subprocess.run(["kill", "-9", pid], check=False)
+
+  return True
+
+
 def require_tools(*tools: str) -> None:
   """Ensure required external tools are available."""
   install_hints = {
