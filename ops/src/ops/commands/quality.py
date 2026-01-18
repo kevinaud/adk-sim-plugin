@@ -28,24 +28,52 @@ def check(
   verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
-  Run quality checks (lint, format, type check).
+  Run quality checks (format, lint, type check).
 
-  This runs pre-commit hooks on all files (commit stage only).
+  This applies formatters (jj fix) then runs fast verifiers (no tests).
   Use 'ops quality test' to also run tests.
 
   Examples:
     ops quality check    Run quality checks
     ops quality          Same as above (default)
   """
-  require_tools("uv")
+  import os
+  import shutil
 
-  console.print("Running quality checks...")
+  require_tools("uv", "npm", "buf")
 
-  run(
-    ["uv", "run", "pre-commit", "run", "--all-files"],
-    cwd=REPO_ROOT,
-    verbose=verbose,
-  )
+  console.print("Running quality checks...\n")
+
+  # Apply formatters (jj fix) if jj is available
+  # In CI environments, jj may not be installed
+  has_jj = shutil.which("jj") is not None
+  is_ci = os.environ.get("CI") == "true"
+
+  if has_jj:
+    console.print("[bold]Applying formatters...[/bold]")
+    run(["jj", "fix"], cwd=REPO_ROOT, verbose=verbose, check=False)
+    console.print("[green]✓[/green] Formatters applied\n")
+  elif is_ci:
+    console.print("[dim]Skipping jj fix (not available in CI)[/dim]\n")
+  else:
+    console.print("[yellow]⚠[/yellow] jj not found, skipping formatters\n")
+
+  # Fast checks
+  checks: list[tuple[str, list[str]]] = [
+    ("Buf lint", ["buf", "lint", "--config", "buf.yaml", "protos"]),
+    ("Pyright", ["uv", "run", "pyright"]),
+    ("ESLint", ["npm", "run", "lint", "--workspace=frontend"]),
+    ("Prettier", ["npm", "run", "format:check", "--workspace=frontend"]),
+  ]
+
+  for name, cmd in checks:
+    console.print(f"[bold]{name}...[/bold]")
+    try:
+      run(cmd, cwd=REPO_ROOT, verbose=verbose)
+      console.print(f"[green]✓[/green] {name}")
+    except Exception as e:
+      console.print(f"[red]✗[/red] {name}: {e}")
+      raise typer.Exit(1)
 
   console.print("\n[green]![/green] Quality checks passed")
 
@@ -55,38 +83,22 @@ def fix(
   verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
   """
-  Run quality checks with auto-fix enabled.
+  Run formatters to auto-fix code style issues.
 
-  This formats code and fixes auto-fixable lint issues.
+  This runs jj fix (ruff, prettier, buf format on modified files).
 
   Example:
     ops quality fix
   """
-  require_tools("uv")
+  require_tools("jj")
 
-  console.print("Running quality checks with auto-fix...")
+  console.print("Running formatters via jj fix...")
 
-  # Run ruff format first
   run(
-    ["uv", "run", "ruff", "format", "."],
+    ["jj", "fix"],
     cwd=REPO_ROOT,
     verbose=verbose,
-  )
-
-  # Run ruff check with --fix
-  run(
-    ["uv", "run", "ruff", "check", "--fix", "."],
-    cwd=REPO_ROOT,
-    verbose=verbose,
-    check=False,  # May have unfixable issues
-  )
-
-  # Run prettier on frontend
-  run(
-    ["npm", "run", "format"],
-    cwd=FRONTEND_DIR,
-    verbose=verbose,
-    check=False,
+    check=False,  # jj fix may exit non-zero if no changes
   )
 
   console.print("\n[green]![/green] Auto-fix complete")

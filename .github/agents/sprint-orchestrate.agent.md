@@ -1,6 +1,6 @@
 ---
 name: sprint-orchestrate
-description: Orchestrate sprint implementation by managing Git branches, PRs, and CI while delegating coding to the implementation agent.
+description: Orchestrate sprint implementation by managing branches, PRs, and CI while delegating coding to the implementation agent.
 handoffs:
   - label: Delegate Implementation
     agent: sprint-implement
@@ -17,7 +17,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Purpose
 
-You are the **Sprint Orchestrator** — a manager responsible for coordinating the implementation of PRs defined in a sprint plan. You delegate all code writing to `sprint-implement` while handling Git branch management, Pull Request lifecycle, and CI monitoring.
+You are the **Sprint Orchestrator** — a manager responsible for coordinating the implementation of PRs defined in a sprint plan. You delegate all code writing to `sprint-implement` while handling branch management, Pull Request lifecycle, and CI monitoring.
 
 **You do NOT write code.** You manage the process.
 
@@ -48,6 +48,19 @@ This rule exists because merging without approval can cause serious problems tha
 
 ---
 
+## Version Control Requirement
+
+**This project uses Jujutsu (jj) exclusively. Git commands are PROHIBITED.**
+
+Load the `jujutsu` skill before any VCS operation. See `.claude/skills/jujutsu/` for all workflows including:
+- Working copy management (describe-then-new pattern)
+- Bookmark management for PRs
+- Pushing to remote (`jj git push`)
+- Conflict resolution
+- Squash-merge recovery
+
+---
+
 ## Input
 
 - **Sprint Number** (required): Which sprint to work on (e.g., "sprint 1", "S1")
@@ -73,12 +86,11 @@ If not found, STOP: "Sprint plan not found. Run `/frontend-sprint-plan` first."
 ### 2. Verify Tools Available
 
 ```bash
-git --version
-git town version
+jj version
 gh auth status
 ```
 
-- If Git Town not installed, STOP: "Git Town is required but not installed."
+- If jj not installed, STOP: "Jujutsu (jj) is required but not installed."
 - If GitHub CLI not authenticated, provide setup instructions.
 
 ### 3. Parse Sprint Plan
@@ -87,111 +99,6 @@ Read the sprint plan and extract:
 - Sprint goal and scope
 - List of PRs with their details
 - Which PRs are already complete (check "Definition of Done" section)
-
----
-
-## Git Town Reference
-
-Git Town automates branch management for stacked changes. Master these commands and patterns.
-
-### Core Commands
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `git town hack <name>` | Create branch off `main` | First PR in sprint, independent work |
-| `git town append <name>` | Create branch off current | Subsequent PRs that depend on current branch |
-| `git town sync --all` | Sync all branches with remote | Before starting work, after merges |
-| `git town sync --stack` | Sync only current stack | When you only need your stack updated |
-| `git town propose --title "<title>" --body "<body>"` | Create PR for current branch (non-interactive) | After pushing, to create GitHub PR |
-| `git town branch` | Show branch hierarchy | Understand current stack structure |
-| `git town switch` | Interactive branch switcher | Navigate between branches |
-
-### Error Recovery Commands
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `git town continue` | Resume after conflict resolution | After resolving merge conflicts |
-| `git town skip` | Skip current branch, continue sync | When conflicts can't be resolved now |
-| `git town undo` | Undo last Git Town command | When something goes wrong |
-
-### Stacked Changes Workflow
-
-**Creating a Stack:**
-```bash
-# Start on main
-git town hack sprint-1/pr1/first-change    # Creates: main → pr1
-
-# Build on top
-git town append sprint-1/pr2/second-change  # Creates: main → pr1 → pr2
-git town append sprint-1/pr3/third-change   # Creates: main → pr1 → pr2 → pr3
-```
-
-**Visualize Stack:**
-```bash
-git town branch
-# Output:
-#   main
-#    \
-#     sprint-1/pr1/first-change
-#      \
-#       sprint-1/pr2/second-change
-#        \
-#   *     sprint-1/pr3/third-change
-```
-
-### Best Practices
-
-1. **Sync frequently**: Run `git town sync --all` often to avoid phantom conflicts
-2. **Ship oldest first**: Always merge PRs from oldest to newest in a stack
-3. **One responsibility per branch**: Keep each branch focused on a single change
-4. **Handle conflicts immediately**: When sync fails, resolve and run `git town continue`
-
-### Merge Conflict Resolution
-
-When `git town sync` or `git town continue` hits a conflict:
-
-1. **Resolve the conflict** in your editor
-2. **Stage resolved files**: `git add <files>`
-3. **Continue Git Town**: `git town continue`
-
-If you can't resolve:
-- **Skip this branch**: `git town skip` (continues with other branches)
-- **Abort everything**: `git town undo` (reverts to pre-command state)
-
-### After Merging a PR
-
-When a PR is merged via GitHub CLI:
-
-1. **Squash/merge and delete remote branch**:
-   ```bash
-   gh pr merge <pr-number> --squash --delete-branch
-   ```
-
-2. **Sync to update local state**:
-   ```bash
-   git town sync --all
-   ```
-   - Updates local state after remote merge
-   - Deletes local branch (tracking branch is gone)
-   - Propagates merged changes to child branches
-   - **Re-parents child branches appropriately**
-   - Updates stack hierarchy automatically
-
-3. **Resolve any merge conflicts** that may arise during sync
-
-4. **Continue if conflicts were resolved**:
-   ```bash
-   git town continue
-   ```
-
-### Common Issues & Solutions
-
-| Issue | Solution |
-|-------|----------|
-| "Branch has diverged" | Run `git town sync` to reconcile |
-| Phantom merge conflicts | Conflicts from squash-merge; use `git town sync` frequently |
-| Child PR shows wrong diff | Update PR base: `gh pr edit <n> --base <parent>` |
-| Stale local branches | `git town sync --all` removes shipped branches |
 
 ---
 
@@ -212,12 +119,12 @@ For each PR in scope (in dependency order):
    - Dependencies on other PRs
    - Estimated lines
 
-2. **Determine branch name**:
+2. **Determine bookmark name**:
    - Format: `sprint-<N>/<pr-id>/<brief-description>`
    - Example: `sprint-1/pr2/session-state-service`
 
 3. **Check dependencies**:
-   - If this PR depends on another, verify that PR's branch exists or is merged
+   - If this PR depends on another, verify that PR's bookmark exists or is merged
    - If dependency not met, skip and process later
 
 4. **Log scope** (no pause):
@@ -228,32 +135,23 @@ For each PR in scope (in dependency order):
 
 ### Phase 2: Branch Setup
 
-1. **Sync all branches first**:
+**Load the `jujutsu` skill** and use its workflows:
+
+1. **Check working copy state**:
    ```bash
-   git town sync --all
-   ```
-   - This pulls updates, deletes shipped branches, and propagates changes through stacks
-   - If conflicts occur: resolve them, then `git town continue`
-
-2. **Determine parent branch**:
-   - If first PR in sprint or no dependencies: parent is `main` → use `git town hack`
-   - If depends on previous PR: parent is that PR's branch → use `git town append`
-   - Check dependencies in sprint plan for exact parent
-
-3. **Create the branch**:
-   ```bash
-   # For first PR (off main):
-   git town hack sprint-<N>/<pr-id>/<description>
-
-   # For subsequent PRs (stacked on current):
-   git town append sprint-<N>/<pr-id>/<description>
+   jj status --no-pager
    ```
 
-4. **Verify branch state**:
+2. **If previous work exists, seal it**:
    ```bash
-   git town branch          # Shows stack hierarchy
-   git branch --show-current
-   git status
+   jj describe -m "WIP: previous work"
+   jj new
+   ```
+
+3. **Verify clean state**:
+   ```bash
+   jj status
+   jj log --limit 3
    ```
 
 ---
@@ -272,7 +170,7 @@ For each PR in scope (in dependency order):
    **WAIT** for implementer to complete.
 
 3. **Verify implementation**:
-   - Check `git status` for changes
+   - Check `jj status` for changes
    - Verify changes align with PR goal
    - If issues: request fixes from implementer
 
@@ -280,17 +178,18 @@ For each PR in scope (in dependency order):
 
 ### Phase 4: Commit and Push
 
+**Load the `jujutsu` skill** and use its workflows:
+
 1. **Review changes**:
    ```bash
-   git diff --stat
+   jj diff --stat
    ```
    - Verify line count is reasonable (target ~200 max)
    - If significantly over, discuss splitting
 
-2. **Stage and commit**:
+2. **Describe the commit**:
    ```bash
-   git add -A
-   git commit -m "<PR-ID>: <brief description>
+   jj describe -m "<PR-ID>: <brief description>
 
    <PR goal from sprint plan>
 
@@ -300,18 +199,19 @@ For each PR in scope (in dependency order):
    "
    ```
 
-3. **Push**:
+3. **Create bookmark and push**:
    ```bash
-   git push -u origin HEAD
+   jj bookmark create sprint-<N>/<pr-id>/<description> -r @
+   jj git push --bookmark sprint-<N>/<pr-id>/<description>
    ```
 
 ---
 
 ### Phase 5: Create PR and Monitor CI
 
-1. **Create Draft PR using Git Town**:
+1. **Create Draft PR**:
    ```bash
-   git town propose --title "<PR-ID>: <description>" --body "## Goal
+   gh pr create --draft --title "<PR-ID>: <description>" --body "## Goal
    <PR goal from sprint plan>
 
    ## Sprint Context
@@ -326,17 +226,10 @@ For each PR in scope (in dependency order):
    "
    ```
 
-   > **Note**: Use `git town propose`, NOT `gh pr create`. Git Town's propose command ensures proper branch tracking and stack management.
-   >
-   > After creating, mark as draft if needed:
-   > ```bash
-   > gh pr ready --undo  # Converts to draft
-   > ```
-
 2. **Monitor CI** (non-blocking):
    ```bash
    # Get run ID
-   gh run list --branch $(git branch --show-current) --limit 1 --json databaseId,status
+   gh run list --branch <bookmark-name> --limit 1 --json databaseId,status
 
    # Check status (poll every 30s)
    gh run view <run-id> --json status,conclusion
@@ -349,7 +242,7 @@ For each PR in scope (in dependency order):
    gh run view <run-id> --log-failed
    ```
    - Re-invoke `sprint-implement` with error context
-   - After fix: commit, push, re-monitor
+   - After fix: describe, push, re-monitor
    - Max 3 attempts, then escalate to user
 
 4. **CI Success**:
@@ -362,10 +255,15 @@ For each PR in scope (in dependency order):
 ### Phase 6: Record Progress
 
 1. **Log PR completion**:
-   - PR number, URL, branch
+   - PR number, URL, bookmark
    - Add to batch for review
 
-2. **Continue to next PR** (no pause unless blocked)
+2. **Start new working copy for next PR**:
+   ```bash
+   jj new
+   ```
+
+3. **Continue to next PR** (no pause unless blocked)
 
 ---
 
@@ -379,8 +277,8 @@ After ALL requested PRs are complete:
    ```markdown
    ## Sprint <N> Progress
 
-   | PR | Branch | Status | LOC |
-   |----|--------|--------|-----|
+   | PR | Bookmark | Status | LOC |
+   |----|----------|--------|-----|
    | S1PR1 | sprint-1/pr1/scaffold | ✓ Ready | 45 |
    | S1PR2 | sprint-1/pr2/state-service | ✓ Ready | 82 |
 
@@ -407,7 +305,7 @@ After ALL requested PRs are complete:
 4. **Handle response** (ONLY after receiving explicit approval):
    - **approved**: Proceed to Phase 8 to merge PRs in dependency order
    - **approved <specific>**: Merge only those specific PRs
-   - **changes <PR>: <feedback>**: Switch branch, re-invoke implementer, re-submit
+   - **changes <PR>: <feedback>**: Edit working copy, re-invoke implementer, re-submit
    - **No response / unclear response**: **DO NOT MERGE** — ask for clarification
 
 ---
@@ -427,11 +325,10 @@ For each approved PR (in dependency order — oldest/parent first):
 
 1. **CRITICAL: Update child PR base branches BEFORE merging**:
    - GitHub auto-closes child PRs when their base branch is deleted
-   - Git Town tracks branches locally but cannot prevent GitHub from closing PRs
    - **MUST** update child PRs to target the parent's base before merging:
    ```bash
    # Find child PRs that target the branch being merged
-   gh pr list --base <branch-being-merged> --json number,headRefName
+   gh pr list --base <bookmark-being-merged> --json number,headRefName
 
    # Update each child PR to target the parent's base (e.g., main)
    gh pr edit <child-pr-number> --base <parent-base-branch>
@@ -442,31 +339,20 @@ For each approved PR (in dependency order — oldest/parent first):
    ```bash
    gh pr merge <pr-number> --squash --delete-branch
    ```
-   - Uses GitHub's merge functionality (not local merge)
+   - Uses GitHub's merge functionality
    - Automatically deletes the remote branch after merge
-   - GitHub handles the squash commit
 
-3. **Run `git town sync --all` to update local state and reparent branches**:
+3. **Sync local state** (load jujutsu skill):
    ```bash
-   git town sync --all
+   jj git fetch
    ```
-   - Updates local state after remote merge
-   - Deletes local branch (remote tracking is gone)
-   - Propagates merged changes to child branches
-   - **Re-parents child branches appropriately**
-   - Updates stack hierarchy automatically
 
-4. **Resolve any encountered merge conflicts**:
-   - If `git town sync` reports conflicts:
-     - Open conflicting files and resolve
-     - Stage resolved files: `git add <files>`
+4. **Handle squash-merge recovery** (if local work remains):
+   - Use jujutsu skill's squash-merge recovery workflow
+   - Rebase remaining work onto updated main: `jj rebase -s <remaining> -d main@origin`
+   - Abandon redundant local commits: `jj abandon <merged-commit-id>`
 
-5. **Run `git town continue` (if merge conflicts were encountered)**:
-   ```bash
-   git town continue
-   ```
-   - Resumes the sync operation after conflict resolution
-   - Continues propagating changes through remaining branches
+5. **Resolve any conflicts** using jujutsu skill's conflict resolution workflow
 
 6. **Log completion**:
    - Record: "S<N>PR<M> merged successfully"
@@ -514,7 +400,7 @@ Work autonomously through ALL requested PRs. Only pause for:
 - ❌ Write or modify source code (delegate to implementer)
 - ❌ Run tests directly (implementer's job)
 - ❌ Use `gh run watch` (interactive, blocks agent)
-- ❌ Use raw `git checkout -b` or `git branch` for branch creation (use Git Town)
+- ❌ Use any git commands (use jj commands only)
 - ❌ Pause between PRs unnecessarily
 - ❌ Assume silence or lack of response means approval
 - ❌ Interpret CI success as permission to merge
@@ -522,17 +408,16 @@ Work autonomously through ALL requested PRs. Only pause for:
 
 ### REQUIRED Behaviors
 - ⛔ **ALWAYS WAIT FOR EXPLICIT USER APPROVAL BEFORE MERGING** — This is mandatory. No exceptions. Ever.
-- ✅ Always use `git town` commands for branch management
+- ✅ **Load the `jujutsu` skill for all VCS operations**
 - ✅ Pass background reading links to implementer
 - ✅ Create Draft PRs first, mark ready after CI passes
 - ✅ **STOP at Phase 7** and present PRs for review — do not proceed to Phase 8 without explicit approval
 - ✅ Process PRs in dependency order (oldest/parent first)
-- ✅ Sync with `git town sync --all` after merging to propagate to stacked branches
-- ✅ Sync after pushing code review fixes to propagate to child branches
+- ✅ Sync after merging using `jj git fetch`
 - ✅ Provide clear context when delegating
 
 ### Error Escalation
 - 3 CI failures on same issue: STOP, ask for guidance
 - Dependency not met: Skip PR, continue with others
-- Git Town command fails: Report error and suggest manual resolution
-- Merge conflict during sync: Resolve and run `git town continue`
+- jj command fails: Report error and suggest manual resolution
+- Conflicts during operations: Use jujutsu skill's conflict resolution workflow

@@ -15,7 +15,6 @@ dev = [
     "betterproto[compiler]>=2.0.0b7",
     "grpcio-tools>=1.60.0",
     "ipykernel>=7.1.0",
-    "pre-commit>=4.0.0",
     "pyright>=1.1.407",
     "ruff>=0.14.7",
     "pytest>=9.0.1",
@@ -78,6 +77,9 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# ops CLI commands are not pytest tests - ignore pytest style rules
+"ops/src/ops/commands/**" = ["PT"]
+
 # IGNORE generated files for all these new strict rules
 "packages/adk-sim-protos/src/adk_sim_protos/adksim/**" = [
     "E501",

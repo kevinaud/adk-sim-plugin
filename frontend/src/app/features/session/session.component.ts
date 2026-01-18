@@ -13,9 +13,22 @@
  * @see mddocs/frontend/sprints/mocks/tool-selection.png
  */
 
-import { protoFunctionDeclarationToGenai } from '@adk-sim/converters';
+import type { Content } from '@adk-sim/converters';
+import {
+  createTextResponse,
+  createToolInvocationResponse,
+  protoContentToGenaiContent,
+} from '@adk-sim/converters';
 import type { FunctionDeclaration as ProtoFunctionDeclaration } from '@adk-sim/protos';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,12 +36,14 @@ import { ActivatedRoute } from '@angular/router';
 import type { JsonSchema7 } from '@jsonforms/core';
 import { map } from 'rxjs';
 
+import { SessionGateway } from '../../data-access/session';
 import { ToolFormService } from '../../data-access/tool-form';
 import {
   ControlPanelComponent,
   type SessionStatusType,
   type ToolFormConfig,
 } from '../../ui/control-panel';
+import { EventStreamComponent } from '../../ui/event-stream';
 import { SplitPaneComponent } from '../../ui/shared';
 import { SimulationStore } from './simulation.store';
 
@@ -57,7 +72,13 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
 @Component({
   selector: 'app-session',
   standalone: true,
-  imports: [MatIconModule, MatButtonModule, SplitPaneComponent, ControlPanelComponent],
+  imports: [
+    MatIconModule,
+    MatButtonModule,
+    SplitPaneComponent,
+    ControlPanelComponent,
+    EventStreamComponent,
+  ],
   providers: [SimulationStore],
   template: `
     <div class="session-container" data-testid="session-container">
@@ -124,14 +145,7 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
             </div>
           </div>
           <div class="event-stream-content" data-testid="event-stream-content">
-            <!-- Placeholder content - actual event stream in future PR -->
-            <div class="event-stream-placeholder">
-              <mat-icon class="placeholder-icon">history</mat-icon>
-              <p class="placeholder-title">No events yet</p>
-              <p class="placeholder-subtitle">
-                Events will appear here as the simulation progresses.
-              </p>
-            </div>
+            <app-event-stream [events]="eventStreamContents()" />
           </div>
         </div>
 
@@ -309,37 +323,6 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       overflow: auto;
     }
 
-    /* Placeholder Content */
-    .event-stream-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      padding: 48px;
-      text-align: center;
-      color: var(--mat-sys-on-surface-variant, #49454f);
-    }
-
-    .placeholder-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .placeholder-title {
-      margin: 0 0 8px;
-      font-size: 18px;
-      font-weight: 500;
-    }
-
-    .placeholder-subtitle {
-      margin: 0;
-      font-size: 14px;
-    }
-
     /* Control Panel Sidebar */
     .control-panel-sidebar {
       padding: 16px;
@@ -353,12 +336,71 @@ export class SessionComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(SimulationStore);
   private readonly toolFormService = inject(ToolFormService);
+  private readonly gateway = inject(SessionGateway);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Observable stream of route params converted to signal */
   private readonly params = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))));
 
   /** Current session ID from route parameters */
   readonly sessionId = computed(() => this.params() ?? 'Unknown');
+
+  /**
+   * Contents converted to genai format for EventStreamComponent.
+   * The store holds proto Content[], but EventStreamComponent expects genai Content[].
+   */
+  readonly eventStreamContents = computed<Content[]>(() => {
+    const protoContents = this.store.contents();
+    return protoContents.map((c) => protoContentToGenaiContent(c));
+  });
+
+  /** AbortController for the current subscription */
+  private abortController: AbortController | null = null;
+
+  constructor() {
+    // Set up cleanup on destroy
+    this.destroyRef.onDestroy(() => {
+      this.abortController?.abort();
+      this.gateway.cancelSubscription();
+    });
+
+    // Reactively subscribe when session ID becomes available
+    effect(() => {
+      const sessionId = this.sessionId();
+      if (sessionId && sessionId !== 'Unknown') {
+        // Cancel any existing subscription
+        this.abortController?.abort();
+        this.abortController = new AbortController();
+
+        void this.subscribeToEvents(sessionId, this.abortController.signal);
+      }
+    });
+  }
+
+  /**
+   * Subscribe to session events and feed them to the store.
+   */
+  private async subscribeToEvents(sessionId: string, signal: AbortSignal): Promise<void> {
+    try {
+      for await (const event of this.gateway.subscribe(sessionId)) {
+        if (signal.aborted) {
+          break;
+        }
+
+        // Process llmRequest events - feed to store
+        if (event.payload.case === 'llmRequest') {
+          this.store.receiveRequest(event.payload.value, event.turnId);
+        }
+      }
+    } catch (error) {
+      // Ignore abort errors
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      // Re-throw other errors to be handled by the caller
+      throw error;
+    }
+  }
 
   /** Agent name for the header (derived from session or placeholder) */
   readonly agentName = computed(() => {
@@ -432,11 +474,12 @@ export class SessionComponent {
 
   /**
    * Wrapper function for form config creation.
-   * Converts proto FunctionDeclaration to genai type before calling ToolFormService.
+   * Passes proto FunctionDeclaration directly to ToolFormService which handles
+   * the proto → genai → JSON Schema conversion internally.
    */
   readonly boundCreateFormConfig = (tool: ProtoFunctionDeclaration): ToolFormConfig => {
-    const genaiFunctionDeclaration = protoFunctionDeclarationToGenai(tool);
-    return this.toolFormService.createFormConfig(genaiFunctionDeclaration);
+    // Pass proto directly - ToolFormService will detect it's a proto and convert appropriately
+    return this.toolFormService.createFormConfig(tool);
   };
 
   /** Toggle system instructions expanded state */
@@ -446,21 +489,61 @@ export class SessionComponent {
 
   /** Handle tool invocation from control panel */
   onToolInvoke(event: { toolName: string; args: unknown }): void {
-    // Log for now - actual submission will be implemented in future PR
-    console.log('Tool invoked:', event.toolName, event.args);
+    const turnId = this.store.currentTurnId();
+    const sessionId = this.sessionId();
+
+    if (!turnId) {
+      return;
+    }
+
+    // Create the response and submit
+    const response = createToolInvocationResponse(
+      event.toolName,
+      event.args as Record<string, unknown>,
+    );
+
+    this.gateway
+      .submitDecision(sessionId, turnId, response)
+      .then(() => {
+        // Advance the queue to handle the next request
+        this.store.advanceQueue();
+      })
+      .catch(() => {
+        // Error handling will be added in a future PR
+      });
   }
 
   /** Handle final response from control panel */
   onFinalResponse(
     event: { type: 'text'; data: string } | { type: 'structured'; data: unknown },
   ): void {
-    // Log for now - actual submission will be implemented in future PR
-    console.log('Final response:', event.type, event.data);
+    const turnId = this.store.currentTurnId();
+    const sessionId = this.sessionId();
+
+    if (!turnId) {
+      return;
+    }
+
+    // Create the response based on type
+    // For now, only handle text responses - structured will be handled in a future PR
+    const response =
+      event.type === 'text'
+        ? createTextResponse(event.data)
+        : createTextResponse(JSON.stringify(event.data));
+
+    this.gateway
+      .submitDecision(sessionId, turnId, response)
+      .then(() => {
+        // Advance the queue to handle the next request
+        this.store.advanceQueue();
+      })
+      .catch(() => {
+        // Error handling will be added in a future PR
+      });
   }
 
   /** Handle export button click */
   onExportClick(): void {
-    // Log for now - export functionality will be implemented in future PR
-    console.log('Export golden trace clicked');
+    // Export functionality will be implemented in a future PR
   }
 }

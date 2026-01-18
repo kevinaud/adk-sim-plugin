@@ -1,4 +1,8 @@
-# Playwright ephemeral test artifacts (traces, logs, debug screenshots)
+# Playwright ephemeral test artifacts
+# - test-results/: Contains traces (trace.zip), screenshots, and logs for each test
+#   View traces with: npx playwright show-trace test-results/<test-name>/trace.zip
+# - playwright-report/: HTML test report
+# - playwright/.cache/: Browser binaries cache
 test-results/
 playwright-report/
 playwright/.cache/

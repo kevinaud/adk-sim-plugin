@@ -1,6 +1,7 @@
 # E2E Testing Docker Compose Stack
 # =================================
-# Multiple backend instances for different testing scenarios.
+# Full-stack instances (frontend + backend) for E2E testing.
+# Mimics production: Python server serves Angular SPA + gRPC API.
 #
 # Backend Instances:
 # - no-sessions: Always empty, never has sessions created
@@ -10,14 +11,14 @@
 # Usage:
 #   docker compose -f docker-compose.e2e.yaml up -d --wait
 #
-# Each backend runs on a different port:
-# - no-sessions: 8081 (HTTP), 50052 (gRPC)
-# - populated:   8082 (HTTP), 50053 (gRPC)
-# - shared:      8083 (HTTP), 50054 (gRPC)
+# Each instance runs on a different port (non-conflicting with main docker-compose):
+# - no-sessions: 8091 (serves frontend + API)
+# - populated:   8092 (serves frontend + API)
+# - shared:      8093 (serves frontend + API)
 
 services:
   # ============================================================
-  # Backend: no-sessions
+  # Instance: no-sessions
   # ============================================================
   # Always empty - tests connecting here should NEVER create sessions.
   # Use for: empty session list tests, "session not found" error tests.
@@ -27,15 +28,14 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
     ports:
-      - "50052:50051"
-      - "8081:8080"
+      - "8091:8080"
     environment:
       PYTHONPATH: /app
       LOG_LEVEL: INFO
       ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/no-sessions.db"
     command: uv run adk-sim
     healthcheck:
-      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8080)); s.close()"]
       interval: 2s
       timeout: 5s
       retries: 15
@@ -53,15 +53,14 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
     ports:
-      - "50053:50051"
-      - "8082:8080"
+      - "8092:8080"
     environment:
       PYTHONPATH: /app
       LOG_LEVEL: INFO
       ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/populated.db"
     command: uv run adk-sim
     healthcheck:
-      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8080)); s.close()"]
       interval: 2s
       timeout: 5s
       retries: 15
@@ -80,15 +79,14 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
     ports:
-      - "50054:50051"
-      - "8080:8080"
+      - "8093:8080"
     environment:
       PYTHONPATH: /app
       LOG_LEVEL: INFO
       ADK_AGENT_SIM_DATABASE_URL: "sqlite+aiosqlite:///tmp/shared.db"
     command: uv run adk-sim
     healthcheck:
-      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 50051)); s.close()"]
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8080)); s.close()"]
       interval: 2s
       timeout: 5s
       retries: 15

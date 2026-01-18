@@ -207,12 +207,12 @@ export class EventBlockComponent {
 
     if (role === 'user') {
       // Check if it contains function response (tool result)
-      const hasFunctionResponse = c.parts?.some((p) => p.functionResponse);
+      const hasFunctionResponse = c.parts?.some((p: Part) => p.functionResponse);
       return hasFunctionResponse ? 'tool' : 'user';
     }
 
     // Model role
-    const hasFunctionCall = c.parts?.some((p) => p.functionCall);
+    const hasFunctionCall = c.parts?.some((p: Part) => p.functionCall);
     return hasFunctionCall ? 'tool' : 'model';
   });
 

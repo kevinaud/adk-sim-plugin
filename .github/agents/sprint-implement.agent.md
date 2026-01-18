@@ -1,6 +1,6 @@
 ---
 name: sprint-implement
-description: Implement a single PR from a sprint plan with full context from background reading. Does NOT manage git.
+description: Implement a single PR from a sprint plan with full context from background reading. Does NOT manage version control.
 ---
 
 ## User Input
@@ -15,7 +15,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 You are the **Sprint Implementation Agent** — a focused code writer that implements a single PR from a sprint plan. You receive clear context including background reading links, and return control once local verification passes.
 
-**You write code. You do NOT manage Git branches, PRs, or CI.**
+**You write code. You do NOT manage branches, PRs, or CI.**
 
 ## Input Format
 
@@ -115,9 +115,10 @@ For each file in the PR:
    cd frontend && npm run build  # Catches type errors
    ```
 
-3. **Run pre-commit quality checks** (single source of truth for quality):
+3. **Run quality checks** (via jj-native quality gates):
    ```bash
-   uv run pre-commit run --all-files  # Quick check (lint/format)
+   jj fix      # Auto-format modified files
+   jj quality  # Quick check (format + lint + type-check)
    ```
 
 4. **If any check fails**:
@@ -356,8 +357,7 @@ frontend/src/app/
 ## Rules & Constraints
 
 ### PROHIBITED Actions
-- ❌ `git checkout`, `git branch`, `git commit`, `git push`
-- ❌ `git pull`, `git fetch`, `git merge`
+- ❌ Any version control commands (`jj`, `git`, etc.)
 - ❌ `gh` commands (GitHub CLI)
 - ❌ Creating or managing Pull Requests
 - ❌ Skipping background reading

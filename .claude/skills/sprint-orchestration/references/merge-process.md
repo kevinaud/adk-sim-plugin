@@ -21,7 +21,7 @@ Before executing ANY merge step, verify ALL of the following:
 
 ## Critical: Update Child PR Bases BEFORE Merging
 
-GitHub automatically closes PRs when their base branch is deleted. Git Town tracks branches locally but CANNOT prevent this.
+GitHub automatically closes PRs when their base branch is deleted.
 
 **This step is MANDATORY before every merge:**
 
@@ -67,30 +67,38 @@ This:
 
 ### Step 4: Sync Local State
 
+**Load the `jujutsu` skill** and use its sync workflow:
+
 ```bash
-git town sync --all
+jj git fetch
 ```
 
-This:
-- Updates local state after remote merge
-- Deletes the local branch (tracking branch is gone)
-- Propagates merged changes to child branches
-- Re-parents child branches in Git Town's tracking
-- Updates stack hierarchy automatically
+This updates your local repository with the merged changes from the remote.
 
-### Step 5: Handle Any Merge Conflicts
+### Step 5: Handle Squash-Merge Recovery
 
-If `git town sync` reports conflicts:
+After a squash-merge, local commits may diverge from remote. Use jujutsu skill's squash-merge recovery workflow if needed:
 
-1. Open conflicting files and resolve them
-2. Stage resolved files: `git add <files>`
-3. Continue: `git town continue`
+1. Identify remaining local work that needs rebasing
+2. Rebase onto the updated main using `jj rebase`
+3. Abandon any redundant local commits using `jj abandon`
 
-### Step 6: Verify and Log
+See `.claude/skills/jujutsu/references/workflows.md` for detailed recovery protocol.
+
+### Step 6: Handle Any Conflicts
+
+If conflicts occur during rebase, use jujutsu skill's conflict resolution workflow:
+
+1. Check for conflicts: `jj resolve --list`
+2. Read conflicted files and resolve markers
+3. Write clean files (jj auto-snapshots resolution)
+4. Verify: `jj status`
+
+### Step 7: Verify and Log
 
 ```bash
-git town branch  # Verify stack looks correct
-git status       # Ensure clean state
+jj log --limit 5
+jj status
 ```
 
 Log: "S<N>PR<M> merged successfully"
@@ -112,14 +120,14 @@ gh pr edit 42 --base main
 # 3. Now safe to merge
 gh pr merge 41 --squash --delete-branch
 
-# 4. Sync local state
-git town sync --all
+# 4. Sync local state (load jujutsu skill first)
+jj git fetch
 
-# 5. If conflicts, resolve then:
-git town continue
+# 5. If local work needs rebasing, use jujutsu skill's recovery workflow
 
 # 6. Verify
-git town branch
+jj log --limit 5
+jj status
 ```
 
 ---
@@ -130,8 +138,7 @@ git town branch
 |---------|-------------|------------|
 | Merge without updating child PR bases | GitHub auto-closes child PRs | ALWAYS run `gh pr list --base` first |
 | Merge child before parent | Broken diffs, merge conflicts | Process in dependency order |
-| Skip `git town sync` after merge | Stale local state, phantom conflicts | ALWAYS sync after merge |
-| Forget `git town continue` after resolving conflicts | Incomplete sync, stuck state | Always continue after resolving |
+| Skip fetch after merge | Stale local state | ALWAYS fetch after merge |
 
 ---
 
@@ -141,19 +148,17 @@ git town branch
 
 If you forgot to update the base before merging:
 1. The PR is closed but branch still exists locally
-2. Push the branch again: `git push -u origin <branch>`
-3. Create new PR: `git town propose`
+2. Push the branch again: `jj git push --bookmark <bookmark-name>`
+3. Create new PR: `gh pr create`
 
-### Merge conflicts during sync
+### Conflicts after fetch
 
-1. Check which file(s) have conflicts: `git status`
+Use jujutsu skill's conflict resolution workflow:
+1. Check which file(s) have conflicts: `jj resolve --list`
 2. Open and resolve each conflict
-3. Stage: `git add <files>`
-4. Continue: `git town continue`
+3. jj auto-snapshots resolved files
+4. Verify with `jj status`
 
-### "Branch has diverged" error
+### "Bookmark has diverged" state
 
-Run sync to reconcile:
-```bash
-git town sync --all
-```
+This is expected after squash-merge. Use jujutsu skill's squash-merge recovery workflow to rebase remaining work.

@@ -29,8 +29,10 @@
       "packages": "jq,procps,snapd,vim,cloc"
     },
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/bartventer/arch-devcontainer-features/gcloud-cli:1": {},
-    "ghcr.io/joshuanianji/devcontainer-features/gcloud-cli-persistence:1": {}
+    "ghcr.io/jajera/features/gcloud-cli:1": {},
+    "ghcr.io/joshuanianji/devcontainer-features/gcloud-cli-persistence:1": {},
+    "ghcr.io/devcontainers/features/rust:1": {},
+    "ghcr.io/eitsupi/devcontainer-features/jujutsu-cli:1": {}
   },
 
   "customizations": {

@@ -23,9 +23,26 @@ import { angularMaterialRenderers } from '@jsonforms/angular-material';
 import { generateDefaultUISchema, type JsonSchema7, type UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 
+import { AnyObjectRenderer, AnyObjectRendererTester } from '../renderers';
+
+/**
+ * Combined JSONForms renderers: Angular Material + custom renderers.
+ *
+ * NOTE: This is intentionally defined inline (not imported from parent module)
+ * to comply with Sheriff module boundary rules. Child modules cannot import
+ * from parent barrel modules.
+ */
+const jsonFormsRenderers = [
+  ...angularMaterialRenderers,
+  { tester: AnyObjectRendererTester, renderer: AnyObjectRenderer },
+];
+
 /**
  * Recursively adds `showUnfocusedDescription: true` to all Control elements
  * in a UI schema so field descriptions are always visible.
+ *
+ * NOTE: This is intentionally duplicated (not shared) to comply with Sheriff
+ * module boundary rules.
  */
 function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
   // Clone to avoid mutation
@@ -184,9 +201,9 @@ export class FinalResponseComponent {
   readonly submitStructured = output<unknown>();
 
   /**
-   * JSONForms renderers (Angular Material).
+   * JSONForms renderers (Angular Material + custom renderers).
    */
-  readonly renderers = angularMaterialRenderers;
+  readonly renderers = jsonFormsRenderers;
 
   /**
    * JSONForms config with default options.
