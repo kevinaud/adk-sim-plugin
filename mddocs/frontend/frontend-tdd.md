@@ -1403,7 +1403,7 @@ Per [Infrastructure Research](./research/project-infrastructure.md#2-streaming-i
 | [ ] | `ToolFormComponent` + JSONForms | FR-017 | Schema-driven tool forms |
 | [x] | `ToolFormService` | FR-017 | Schema conversion (proto → JSON Schema) |
 | [ ] | `FinalResponseComponent` | FR-018-019 | Text area or schema form |
-| [ ] | `SimulationStore` | FR-024 | Request queue management |
+| [x] | `SimulationStore` | FR-024 | Request queue management |
 | [ ] | Split-pane layout | FR-005 | Layout primitive |
 
 ### Phase 5: Polish (Week 5)
