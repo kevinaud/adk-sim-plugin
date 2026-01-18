@@ -1,27 +1,52 @@
 /**
  * @fileoverview Session component for displaying an individual simulation session.
  *
- * This is a scaffold component that displays the current session ID.
- * It will be extended in future PRs to include event streaming and interaction.
+ * This component provides the main simulation interface with:
+ * - Blue header bar with "Simulating: {agentName}" and status badge
+ * - Collapsible "System Instructions" section
+ * - Split-pane layout with Event Stream (left) and Control Panel (right sidebar)
  *
- * Implements FR-001 (Session Navigation).
+ * Implements FR-001 (Session Navigation), FR-005 (Split-Pane Layout).
  *
  * @see mddocs/frontend/frontend-spec.md#fr-session-management
- * @see mddocs/frontend/frontend-tdd.md#routing-configuration
+ * @see mddocs/frontend/frontend-spec.md#us-4-split-pane-interface-layout
+ * @see mddocs/frontend/sprints/mocks/tool-selection.png
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { protoFunctionDeclarationToGenai } from '@adk-sim/converters';
+import type { FunctionDeclaration as ProtoFunctionDeclaration } from '@adk-sim/protos';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute } from '@angular/router';
+import type { JsonSchema7 } from '@jsonforms/core';
 import { map } from 'rxjs';
+
+import { ToolFormService } from '../../data-access/tool-form';
+import {
+  ControlPanelComponent,
+  type SessionStatusType,
+  type ToolFormConfig,
+} from '../../ui/control-panel';
+import { SplitPaneComponent } from '../../ui/shared';
+import { SimulationStore } from './simulation.store';
+
+/**
+ * Session status for the status badge.
+ * Maps simulation state to visual indicators.
+ */
+type SessionStatus = 'awaiting' | 'active' | 'completed';
 
 /**
  * Session component that displays an individual simulation session.
  *
- * This scaffold component:
- * - Extracts the session ID from route parameters
- * - Displays the session ID in the view
- * - Will be extended to show event stream and controls
+ * Layout structure (from mocks):
+ * - Header bar: Blue background with "Simulating: {agentName}" and status badge
+ * - System Instructions: Collapsible accordion section
+ * - Split-pane:
+ *   - Left (main): Event Stream with header and placeholder content
+ *   - Right (sidebar): Control Panel (400px width)
  *
  * @example
  * ```html
@@ -32,16 +57,98 @@ import { map } from 'rxjs';
 @Component({
   selector: 'app-session',
   standalone: true,
-  imports: [],
+  imports: [MatIconModule, MatButtonModule, SplitPaneComponent, ControlPanelComponent],
+  providers: [SimulationStore],
   template: `
-    <div class="session-container">
-      <header class="session-header">
-        <h1>Session</h1>
-        <span class="session-id">{{ sessionId() }}</span>
+    <div class="session-container" data-testid="session-container">
+      <!-- Header Bar -->
+      <header class="session-header" data-testid="session-header">
+        <div class="header-content">
+          <mat-icon class="agent-icon">smart_toy</mat-icon>
+          <span class="header-title">Simulating: {{ agentName() }}</span>
+        </div>
+        <div
+          class="status-badge"
+          [class.awaiting]="sessionStatus() === 'awaiting'"
+          [class.active]="sessionStatus() === 'active'"
+          [class.completed]="sessionStatus() === 'completed'"
+          data-testid="status-badge"
+        >
+          {{ statusLabel() }}
+        </div>
       </header>
-      <main class="session-content">
-        <p>Session content will be implemented in future PRs.</p>
-      </main>
+
+      <!-- System Instructions (Collapsible) -->
+      <div class="system-instructions" data-testid="system-instructions">
+        <button
+          class="instructions-header"
+          (click)="toggleInstructions()"
+          type="button"
+          [attr.aria-expanded]="instructionsExpanded()"
+          aria-controls="instructions-content"
+        >
+          <mat-icon class="instructions-icon">psychology</mat-icon>
+          <span class="instructions-label">System Instructions</span>
+          <mat-icon class="expand-icon">
+            {{ instructionsExpanded() ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        </button>
+        @if (instructionsExpanded()) {
+          <div
+            class="instructions-content"
+            id="instructions-content"
+            data-testid="instructions-content"
+          >
+            @if (systemInstruction()) {
+              <pre class="instructions-text">{{ systemInstructionText() }}</pre>
+            } @else {
+              <p class="no-instructions">No system instructions provided.</p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Split-Pane Layout -->
+      <app-split-pane [sidebarWidth]="400" class="flex-1">
+        <!-- Left Pane: Event Stream -->
+        <div main class="event-stream-pane" data-testid="event-stream-pane">
+          <div class="event-stream-header">
+            <span class="event-stream-title">Event Stream</span>
+            <div class="event-stream-actions">
+              <button mat-icon-button type="button" aria-label="Expand all" title="Expand all">
+                <mat-icon>unfold_more</mat-icon>
+              </button>
+              <button mat-icon-button type="button" aria-label="Collapse all" title="Collapse all">
+                <mat-icon>unfold_less</mat-icon>
+              </button>
+            </div>
+          </div>
+          <div class="event-stream-content" data-testid="event-stream-content">
+            <!-- Placeholder content - actual event stream in future PR -->
+            <div class="event-stream-placeholder">
+              <mat-icon class="placeholder-icon">history</mat-icon>
+              <p class="placeholder-title">No events yet</p>
+              <p class="placeholder-subtitle">
+                Events will appear here as the simulation progresses.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar: Control Panel -->
+        <div sidebar class="control-panel-sidebar" data-testid="control-panel-sidebar">
+          <app-control-panel
+            [tools]="availableTools()"
+            [formConfigCreator]="boundCreateFormConfig"
+            [outputSchema]="outputSchema()"
+            [sessionStatus]="controlPanelStatus()"
+            (toolInvoke)="onToolInvoke($event)"
+            (finalResponse)="onFinalResponse($event)"
+            (exportClick)="onExportClick()"
+            data-testid="control-panel"
+          />
+        </div>
+      </app-split-pane>
     </div>
   `,
   styles: `
@@ -49,47 +156,311 @@ import { map } from 'rxjs';
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding: 16px;
+      background-color: var(--mat-sys-surface-container, #f3edf7);
     }
 
+    /* Header Bar */
     .session-header {
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background-color: #1976d2;
+      color: white;
     }
 
-    .session-header h1 {
-      margin: 0;
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .agent-icon {
       font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .header-title {
+      font-size: 18px;
       font-weight: 500;
     }
 
-    .session-id {
-      font-family: monospace;
-      font-size: 14px;
-      color: var(--mat-sys-on-surface-variant, #666);
-      background: var(--mat-sys-surface-variant, #f5f5f5);
-      padding: 4px 8px;
+    /* Status Badge */
+    .status-badge {
+      padding: 4px 12px;
       border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .session-content {
-      flex: 1;
+    .status-badge.awaiting {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    .status-badge.active {
+      background-color: transparent;
+      border: 2px solid #4caf50;
+      color: white;
+    }
+
+    .status-badge.completed {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    /* System Instructions */
+    .system-instructions {
+      background-color: var(--mat-sys-surface, #fffbfe);
+      border-bottom: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+    }
+
+    .instructions-header {
       display: flex;
       align-items: center;
+      width: 100%;
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      gap: 12px;
+      color: var(--mat-sys-on-surface, #1c1b1f);
+    }
+
+    .instructions-header:hover {
+      background-color: var(--mat-sys-surface-container-high, #ece6f0);
+    }
+
+    .instructions-icon {
+      color: var(--mat-sys-on-surface-variant, #49454f);
+    }
+
+    .instructions-label {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .expand-icon {
+      color: var(--mat-sys-on-surface-variant, #49454f);
+    }
+
+    .instructions-content {
+      padding: 0 24px 16px 60px;
+    }
+
+    .instructions-text {
+      margin: 0;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--mat-sys-on-surface, #1c1b1f);
+      line-height: 1.5;
+    }
+
+    .no-instructions {
+      margin: 0;
+      font-size: 14px;
+      color: var(--mat-sys-on-surface-variant, #49454f);
+      font-style: italic;
+    }
+
+    /* Split-Pane Content */
+    app-split-pane {
+      min-height: 0;
+    }
+
+    /* Event Stream Pane */
+    .event-stream-pane {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 16px 24px;
+    }
+
+    .event-stream-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .event-stream-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface, #1c1b1f);
+    }
+
+    .event-stream-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .event-stream-content {
+      flex: 1;
+      border: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border-radius: 8px;
+      background-color: var(--mat-sys-surface, #fffbfe);
+      overflow: auto;
+    }
+
+    /* Placeholder Content */
+    .event-stream-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
-      color: var(--mat-sys-on-surface-variant, #666);
+      height: 100%;
+      padding: 48px;
+      text-align: center;
+      color: var(--mat-sys-on-surface-variant, #49454f);
+    }
+
+    .placeholder-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .placeholder-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .placeholder-subtitle {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* Control Panel Sidebar */
+    .control-panel-sidebar {
+      padding: 16px;
+      height: 100%;
+      box-sizing: border-box;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly store = inject(SimulationStore);
+  private readonly toolFormService = inject(ToolFormService);
 
   /** Observable stream of route params converted to signal */
   private readonly params = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))));
 
   /** Current session ID from route parameters */
   readonly sessionId = computed(() => this.params() ?? 'Unknown');
+
+  /** Agent name for the header (derived from session or placeholder) */
+  readonly agentName = computed(() => {
+    // In a full implementation, this would come from session metadata
+    // For now, use a placeholder that matches the mocks
+    return 'TestAgent';
+  });
+
+  /** Internal state: whether system instructions are expanded */
+  private readonly _instructionsExpanded = signal(false);
+  readonly instructionsExpanded = this._instructionsExpanded.asReadonly();
+
+  /** Session status for the status badge */
+  readonly sessionStatus = computed<SessionStatus>(() => {
+    // Derive status from store state
+    if (!this.store.hasRequest()) {
+      return 'awaiting';
+    }
+    // In a full implementation, 'completed' would be based on session state
+    return 'active';
+  });
+
+  /** Status label for the badge */
+  readonly statusLabel = computed(() => {
+    const status = this.sessionStatus();
+    switch (status) {
+      case 'awaiting': {
+        return 'Awaiting Query';
+      }
+      case 'active': {
+        return 'Active';
+      }
+      case 'completed': {
+        return 'Completed';
+      }
+    }
+  });
+
+  /** Control panel session status (mapped to its expected type) */
+  readonly controlPanelStatus = computed<SessionStatusType>(() => {
+    const status = this.sessionStatus();
+    if (status === 'completed') return 'completed';
+    return 'active';
+  });
+
+  /** Available tools from the simulation store */
+  readonly availableTools = this.store.availableTools;
+
+  /** System instruction from the current request */
+  readonly systemInstruction = this.store.systemInstruction;
+
+  /** System instruction as text */
+  readonly systemInstructionText = computed(() => {
+    const instruction = this.systemInstruction();
+    if (!instruction?.parts || instruction.parts.length === 0) return '';
+    // System instruction has parts array with text content
+    // Proto Part uses discriminated union: data.case === 'text' means data.value is the text
+    return instruction.parts
+      .map((p) => (p.data.case === 'text' ? p.data.value : ''))
+      .filter(Boolean)
+      .join('\n');
+  });
+
+  /** Output schema for the final response form (from request config) */
+  readonly outputSchema = computed(() => {
+    const request = this.store.currentRequest();
+    if (!request?.generationConfig?.responseSchema) return null;
+    // Convert to JSON Schema if needed - for now return as-is
+    return request.generationConfig.responseSchema as unknown as JsonSchema7;
+  });
+
+  /**
+   * Wrapper function for form config creation.
+   * Converts proto FunctionDeclaration to genai type before calling ToolFormService.
+   */
+  readonly boundCreateFormConfig = (tool: ProtoFunctionDeclaration): ToolFormConfig => {
+    const genaiFunctionDeclaration = protoFunctionDeclarationToGenai(tool);
+    return this.toolFormService.createFormConfig(genaiFunctionDeclaration);
+  };
+
+  /** Toggle system instructions expanded state */
+  toggleInstructions(): void {
+    this._instructionsExpanded.update((v) => !v);
+  }
+
+  /** Handle tool invocation from control panel */
+  onToolInvoke(event: { toolName: string; args: unknown }): void {
+    // Log for now - actual submission will be implemented in future PR
+    console.log('Tool invoked:', event.toolName, event.args);
+  }
+
+  /** Handle final response from control panel */
+  onFinalResponse(
+    event: { type: 'text'; data: string } | { type: 'structured'; data: unknown },
+  ): void {
+    // Log for now - actual submission will be implemented in future PR
+    console.log('Final response:', event.type, event.data);
+  }
+
+  /** Handle export button click */
+  onExportClick(): void {
+    // Log for now - export functionality will be implemented in future PR
+    console.log('Export golden trace clicked');
+  }
 }
