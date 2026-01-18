@@ -350,13 +350,13 @@ See `mocks/session-complete.png`.
 - [US-4 Acceptance Scenarios](../frontend-spec.md#us-4-acceptance-scenarios) - Layout behavior
 
 **Acceptance Criteria**:
-- [ ] Component uses content projection with named slots: `main` and `sidebar`
-- [ ] Layout uses Tailwind: `flex` with `main` taking remaining space, `sidebar` fixed width
-- [ ] Sidebar width configurable via input (default: 400px)
-- [ ] Both panes scroll independently (overflow-auto)
-- [ ] Renders correctly in both light and dark modes
-- [ ] Unit tests verify slot content projection
-- [ ] Presubmit passes
+- [x] Component uses content projection with named slots: `main` and `sidebar`
+- [x] Layout uses Tailwind: `flex` with `main` taking remaining space, `sidebar` fixed width
+- [x] Sidebar width configurable via input (default: 400px)
+- [x] Both panes scroll independently (overflow-auto)
+- [x] Renders correctly in both light and dark modes
+- [x] Unit tests verify slot content projection
+- [x] Presubmit passes
 
 ---
 
