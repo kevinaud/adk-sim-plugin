@@ -22,6 +22,11 @@ import '@angular/platform-browser-dynamic/testing';
 // @see mddocs/frontend/research/deep-research/json-forms-ct-testing-findings-2.md
 import { FinalResponseComponent } from '../src/app/ui/control-panel/final-response/final-response.component';
 import { ToolFormComponent } from '../src/app/ui/control-panel/tool-form/tool-form.component';
+import {
+  ControlPanelComponent,
+  FORM_CONFIG_CREATOR,
+} from '../src/app/ui/control-panel/control-panel/control-panel.component';
+import { ToolFormService } from '../src/app/data-access/tool-form/tool-form.service';
 import { JsonFormsModule } from '@jsonforms/angular';
 import { angularMaterialRenderers } from '@jsonforms/angular-material';
 
@@ -29,6 +34,9 @@ import { angularMaterialRenderers } from '@jsonforms/angular-material';
 console.log('[Playwright CT] Pre-loading JSONForms components:', {
   FinalResponseComponent,
   ToolFormComponent,
+  ControlPanelComponent,
+  ToolFormService,
+  FORM_CONFIG_CREATOR,
   JsonFormsModule,
   renderersCount: angularMaterialRenderers.length,
 });
@@ -57,6 +65,9 @@ export type HooksConfig = {
  *
  * By default, provides async animations support which is required
  * for Angular Material components to render correctly.
+ *
+ * Also provides the FORM_CONFIG_CREATOR token using ToolFormService
+ * for ControlPanelComponent tests.
  */
 beforeMount<HooksConfig>(async ({ hooksConfig, TestBed }) => {
   const providers = [];
@@ -66,6 +77,14 @@ beforeMount<HooksConfig>(async ({ hooksConfig, TestBed }) => {
   if (hooksConfig?.enableAnimations !== false) {
     providers.push(provideAnimationsAsync());
   }
+
+  // Provide ToolFormService and FORM_CONFIG_CREATOR for ControlPanelComponent tests
+  providers.push(ToolFormService);
+  providers.push({
+    provide: FORM_CONFIG_CREATOR,
+    useFactory: (service: ToolFormService) => service.createFormConfig.bind(service),
+    deps: [ToolFormService],
+  });
 
   if (providers.length > 0) {
     TestBed.configureTestingModule({ providers });
