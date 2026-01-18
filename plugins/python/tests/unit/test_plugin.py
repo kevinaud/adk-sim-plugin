@@ -1107,9 +1107,9 @@ class TestPluginReconnection:
       delay1 = retry_times[1] - retry_times[0]
       delay2 = retry_times[2] - retry_times[1]
       # Second delay should be approximately 2x the first
-      assert (
-        delay2 >= delay1 * 1.5
-      ), f"Backoff not increasing: {delay1:.3f} -> {delay2:.3f}"
+      assert delay2 >= delay1 * 1.5, (
+        f"Backoff not increasing: {delay1:.3f} -> {delay2:.3f}"
+      )
 
   @pytest.mark.asyncio
   async def test_reconnection_uses_existing_session_id(self) -> None:

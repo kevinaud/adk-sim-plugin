@@ -82,11 +82,18 @@ def _build_ts() -> None:
 
 
 def _run_quality() -> None:
-  """Run pre-commit quality checks."""
-  run(
-    ["uv", "run", "pre-commit", "run", "--all-files", "--hook-stage", "manual"],
-    cwd=REPO_ROOT,
-  )
+  """Run quality checks (lint, format, type-check)."""
+  # Python linting
+  run(["uv", "run", "ruff", "check", "."], cwd=REPO_ROOT)
+  run(["uv", "run", "ruff", "format", "--check", "."], cwd=REPO_ROOT)
+  run(["uv", "run", "pyright"], cwd=REPO_ROOT)
+
+  # Proto linting
+  run(["buf", "lint"], cwd=REPO_ROOT / "protos")
+
+  # Frontend linting
+  run(["npm", "run", "lint"], cwd=FRONTEND_DIR)
+  run(["npm", "run", "format:check"], cwd=FRONTEND_DIR)
 
 
 def _run_backend_tests() -> None:
@@ -512,13 +519,25 @@ def check_generated_cmd(
   all_files = [str(f) for f in py_files + ts_files]
 
   if all_files:
-    # Run pre-commit twice - first run may fix files, second ensures they're clean
-    for _ in range(2):
+    # Run formatters on generated files to match committed formatting
+    run(
+      ["uv", "run", "ruff", "format", *[str(f) for f in py_files]],
+      cwd=REPO_ROOT,
+      verbose=verbose,
+      check=False,
+    )
+    run(
+      ["uv", "run", "ruff", "check", "--fix", *[str(f) for f in py_files]],
+      cwd=REPO_ROOT,
+      verbose=verbose,
+      check=False,
+    )
+    if ts_files:
       run(
-        ["uv", "run", "pre-commit", "run", "--files", *all_files],
+        ["npx", "prettier", "--write", *[str(f) for f in ts_files]],
         cwd=REPO_ROOT,
         verbose=verbose,
-        check=False,  # Pre-commit may report "files were modified" which is expected
+        check=False,
       )
 
   # Check for changes
