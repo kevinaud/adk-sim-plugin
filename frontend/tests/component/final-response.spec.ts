@@ -194,8 +194,9 @@ test.describe('FinalResponseComponent', () => {
       await component.locator('textarea').fill(longText);
       await component.page().waitForTimeout(100);
 
+// Higher threshold due to font rendering differences between local Docker and CI Docker
       await expect(component).toHaveScreenshot('final-response-free-text-long.png', {
-        maxDiffPixelRatio: 0.02,
+        maxDiffPixelRatio: 0.03,
       });
     });
 

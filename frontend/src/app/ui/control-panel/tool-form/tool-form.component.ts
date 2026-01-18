@@ -19,9 +19,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
-  inject,
   input,
   output,
   signal,
@@ -33,11 +31,27 @@ import { angularMaterialRenderers } from '@jsonforms/angular-material';
 import type { UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 
+import { AnyObjectRenderer, AnyObjectRendererTester } from '../renderers';
 import type { ToolFormConfig, ToolInvokeEvent } from './tool-form.types';
+
+/**
+ * Combined JSONForms renderers: Angular Material + custom renderers.
+ *
+ * NOTE: This is intentionally defined inline (not imported from parent module)
+ * to comply with Sheriff module boundary rules. Child modules cannot import
+ * from parent barrel modules.
+ */
+const jsonFormsRenderers = [
+  ...angularMaterialRenderers,
+  { tester: AnyObjectRendererTester, renderer: AnyObjectRenderer },
+];
 
 /**
  * Recursively adds `showUnfocusedDescription: true` to all Control elements
  * in a UI schema so field descriptions are always visible.
+ *
+ * NOTE: This is intentionally duplicated (not shared) to comply with Sheriff
+ * module boundary rules.
  */
 function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
   // Clone to avoid mutation
@@ -117,7 +131,6 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
 
       <!-- Footer -->
       <div class="form-footer">
-        <span class="timer" data-testid="timer">{{ formattedTime() }}</span>
         <button
           mat-flat-button
           color="primary"
@@ -194,16 +207,10 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
     .form-footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       margin-top: 8px;
       padding-top: 16px;
       border-top: 1px solid var(--mat-sys-outline-variant, #cac4d0);
-    }
-
-    .timer {
-      font-size: 14px;
-      font-family: 'Roboto Mono', monospace;
-      color: var(--mat-sys-on-surface-variant, #49454f);
     }
 
     button[mat-flat-button] {
@@ -221,8 +228,6 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToolFormComponent {
-  private readonly destroyRef = inject(DestroyRef);
-
   /**
    * Configuration for the form including schema, UI schema, and tool metadata.
    */
@@ -239,9 +244,9 @@ export class ToolFormComponent {
   readonly invokeOutput = output<ToolInvokeEvent>();
 
   /**
-   * JSONForms renderers (Angular Material).
+   * JSONForms renderers (Angular Material + custom renderers).
    */
-  readonly renderers = angularMaterialRenderers;
+  readonly renderers = jsonFormsRenderers;
 
   /**
    * JSONForms config with default options.
@@ -274,50 +279,12 @@ export class ToolFormComponent {
    */
   readonly hasErrors = computed(() => this.errors().length > 0);
 
-  /**
-   * Elapsed time in seconds since the form was opened.
-   */
-  private readonly elapsedSeconds = signal(0);
-
-  /**
-   * Formatted elapsed time string (e.g., "0.00s").
-   */
-  readonly formattedTime = computed(() => {
-    const seconds = this.elapsedSeconds();
-    return `${seconds.toFixed(2)}s`;
-  });
-
-  /**
-   * Timer interval ID for cleanup.
-   */
-  private timerId: ReturnType<typeof setInterval> | null = null;
-
   constructor() {
-    // Start timer when config changes (form opens)
+    // Reset form data when config changes (form opens with new tool)
     effect(() => {
       // Access config to track changes
       this.config();
-
-      // Reset timer
-      this.elapsedSeconds.set(0);
       this.formData.set({});
-
-      // Clear any existing timer
-      if (this.timerId) {
-        clearInterval(this.timerId);
-      }
-
-      // Start new timer (updates every 10ms for smooth display)
-      this.timerId = setInterval(() => {
-        this.elapsedSeconds.update((t) => t + 0.01);
-      }, 10);
-    });
-
-    // Cleanup timer on destroy
-    this.destroyRef.onDestroy(() => {
-      if (this.timerId) {
-        clearInterval(this.timerId);
-      }
     });
   }
 

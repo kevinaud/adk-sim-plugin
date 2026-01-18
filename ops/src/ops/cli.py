@@ -15,6 +15,8 @@ from ops.commands.dev import app as dev_app
 from ops.commands.docker import app as docker_app
 from ops.commands.quality import app as quality_app
 from ops.commands.release import app as release_app
+from ops.commands.test import app as test_app
+from ops.commands.trace import app as trace_app
 from ops.core.console import console
 from ops.core.process import ExitCode
 
@@ -36,6 +38,8 @@ app.add_typer(docker_app, name="docker")
 app.add_typer(quality_app, name="quality")
 app.add_typer(release_app, name="release")
 app.add_typer(ci_app, name="ci")
+app.add_typer(test_app, name="test")
+app.add_typer(trace_app, name="trace")
 
 
 @app.callback(invoke_without_command=True)

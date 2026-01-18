@@ -29,10 +29,8 @@ export type BackendName = 'no-sessions' | 'populated' | 'shared';
 export interface BackendConfig {
   /** Backend name for identification */
   name: BackendName;
-  /** HTTP port for gRPC-Web endpoint */
-  httpPort: number;
-  /** gRPC port for direct gRPC access */
-  grpcPort: number;
+  /** HTTP port - serves both frontend and gRPC-Web API */
+  port: number;
   /** Description of what this backend is for */
   description: string;
   /** Whether tests can create sessions on this backend */
@@ -42,7 +40,7 @@ export interface BackendConfig {
 /**
  * Backend configurations for E2E tests.
  *
- * Each backend runs on different ports with different purposes:
+ * Each backend runs on a different port (non-conflicting with main docker-compose):
  * - no-sessions: Empty state tests
  * - populated: Visual regression with pre-seeded data
  * - shared: Session-specific tests with unique IDs
@@ -50,22 +48,19 @@ export interface BackendConfig {
 export const BACKENDS: Record<BackendName, BackendConfig> = {
   'no-sessions': {
     name: 'no-sessions',
-    httpPort: 8081,
-    grpcPort: 50052,
+    port: 8091,
     description: 'Always empty - never create sessions here',
     allowSessionCreation: false,
   },
   populated: {
     name: 'populated',
-    httpPort: 8082,
-    grpcPort: 50053,
+    port: 8092,
     description: 'Pre-seeded with fixed sessions for stable visual tests',
     allowSessionCreation: false,
   },
   shared: {
     name: 'shared',
-    httpPort: 8080,
-    grpcPort: 50054,
+    port: 8093,
     description: 'Allows session creation for session-specific tests',
     allowSessionCreation: true,
   },
@@ -78,25 +73,14 @@ export const BACKENDS: Record<BackendName, BackendConfig> = {
 export const DEFAULT_BACKEND: BackendName = 'shared';
 
 /**
- * Get the HTTP base URL for a backend instance.
+ * Get the base URL for a backend instance.
  *
  * @param backend - Backend name or config
- * @returns HTTP base URL (e.g., "http://127.0.0.1:8081")
+ * @returns Base URL (e.g., "http://127.0.0.1:8091")
  */
 export function getBackendUrl(backend: BackendName | BackendConfig = DEFAULT_BACKEND): string {
   const config = typeof backend === 'string' ? BACKENDS[backend] : backend;
-  return `http://127.0.0.1:${String(config.httpPort)}`;
-}
-
-/**
- * Get the gRPC URL for a backend instance.
- *
- * @param backend - Backend name or config
- * @returns gRPC URL (e.g., "127.0.0.1:50052")
- */
-export function getGrpcUrl(backend: BackendName | BackendConfig = DEFAULT_BACKEND): string {
-  const config = typeof backend === 'string' ? BACKENDS[backend] : backend;
-  return `127.0.0.1:${String(config.grpcPort)}`;
+  return `http://127.0.0.1:${String(config.port)}`;
 }
 
 /**

@@ -14,9 +14,12 @@
  * @see frontend/src/app/ui/control-panel/tool-form/tool-form.component.ts
  */
 
-import type { JsonSchema7 } from '@jsonforms/core';
+import { generateDefaultUISchema, type JsonSchema7 } from '@jsonforms/core';
+import { create } from '@bufbuild/protobuf';
 import { expect, test } from './fixtures/theme.fixture';
 
+import { FunctionDeclarationSchema, SchemaSchema, Type } from '@adk-sim/protos';
+import { genaiSchemaToJsonSchema, protoSchemaToGenaiSchema } from '@adk-sim/converters';
 import { ToolFormComponent } from '../../src/app/ui/control-panel/tool-form/tool-form.component';
 import type { ToolFormConfig } from '../../src/app/ui/control-panel/tool-form/tool-form.types';
 
@@ -99,7 +102,7 @@ test.describe('ToolFormComponent', () => {
       });
 
       await expect(component.getByTestId('form-description')).toContainText(
-        'Retrieves current weather information'
+        'Retrieves current weather information',
       );
     });
 
@@ -111,16 +114,6 @@ test.describe('ToolFormComponent', () => {
       });
 
       await expect(component.getByTestId('back-link')).toContainText('BACK TO ACTIONS');
-    });
-
-    test('displays timer', async ({ mount }) => {
-      const config = createTestConfig();
-
-      const component = await mount(ToolFormComponent, {
-        props: { config },
-      });
-
-      await expect(component.getByTestId('timer')).toHaveText(/^\d+\.\d{2}s$/);
     });
 
     test('displays execute button', async ({ mount }) => {
@@ -563,7 +556,10 @@ test.describe('ToolFormComponent', () => {
       await component.locator('input').first().fill('Weekly Update');
 
       // Add recipients by clicking the add button
-      const addButton = component.locator('button').filter({ hasText: /add|plus|\+/i }).first();
+      const addButton = component
+        .locator('button')
+        .filter({ hasText: /add|plus|\+/i })
+        .first();
       if (await addButton.isVisible()) {
         await addButton.click();
         await component.page().waitForTimeout(100);
@@ -571,7 +567,9 @@ test.describe('ToolFormComponent', () => {
         await component.page().waitForTimeout(100);
 
         // Fill in the recipient data (table rows)
-        const nameInputs = component.locator('input').filter({ has: component.page().locator('..').filter({ hasText: /name/i }) });
+        const nameInputs = component
+          .locator('input')
+          .filter({ has: component.page().locator('..').filter({ hasText: /name/i }) });
         const allInputs = component.locator('input');
 
         // Fill first recipient row
@@ -618,6 +616,116 @@ test.describe('ToolFormComponent', () => {
       await component.page().waitForTimeout(100);
 
       await expect(component).toHaveScreenshot('tool-form-validation-errors.png');
+    });
+
+    /**
+     * Real store_state_tool from FOMC research agent SessionEvent.
+     *
+     * This creates the exact proto FunctionDeclaration as received from the gRPC stream
+     * and passes it through the same ToolFormService converter the app uses.
+     *
+     * From SessionEvent JSON:
+     * ```json
+     * {
+     *   "name": "store_state_tool",
+     *   "description": "Stores new state values in the ToolContext.\n\nArgs:\n  state: A dict of new state values.\n  tool_context: ToolContext object.\n\nReturns:\n  A dict with \"status\" and (optional) \"error_message\" keys.\n",
+     *   "parameters": {
+     *     "type": "OBJECT",
+     *     "properties": { "state": { "type": "OBJECT" } },
+     *     "required": ["state"]
+     *   }
+     * }
+     * ```
+     */
+    function createStoreStateToolConfig(): ToolFormConfig {
+      // Create the proto FunctionDeclaration exactly as it comes from the gRPC stream
+      const storeStateTool = create(FunctionDeclarationSchema, {
+        name: 'store_state_tool',
+        description:
+          'Stores new state values in the ToolContext.\n\n' +
+          'Args:\n' +
+          '  state: A dict of new state values.\n' +
+          '  tool_context: ToolContext object.\n\n' +
+          'Returns:\n' +
+          '  A dict with "status" and (optional) "error_message" keys.\n',
+        parameters: create(SchemaSchema, {
+          type: Type.OBJECT,
+          properties: {
+            // state is an open object (Dict[str, Any]) - type: OBJECT with no defined properties
+            state: create(SchemaSchema, { type: Type.OBJECT }),
+          },
+          required: ['state'],
+        }),
+      });
+
+      // Convert proto Schema -> genai Schema -> JSON Schema (same pipeline as ToolFormService)
+      const genaiSchema = protoSchemaToGenaiSchema(storeStateTool.parameters!);
+      const jsonSchema = genaiSchemaToJsonSchema(genaiSchema) as JsonSchema7;
+
+      return {
+        toolName: storeStateTool.name ?? '',
+        toolDescription: storeStateTool.description ?? '',
+        schema: jsonSchema,
+        uischema: generateDefaultUISchema(jsonSchema),
+      };
+    }
+
+    test('open object - empty state (store_state_tool)', async ({ mount }) => {
+      // This tests the AnyObjectRenderer custom renderer for open objects
+      // Reproduces the real store_state_tool from FOMC research agent
+      const config = createStoreStateToolConfig();
+
+      const component = await mount(ToolFormComponent, {
+        props: { config },
+      });
+
+      await expect(component.getByTestId('form-header')).toBeVisible();
+      await component.page().waitForTimeout(100);
+
+      await expect(component).toHaveScreenshot('tool-form-open-object-empty.png');
+    });
+
+    test('open object - with JSON filled (store_state_tool)', async ({ mount }) => {
+      // This tests the AnyObjectRenderer with JSON content
+      // Example: storing the user_requested_meeting_date as mentioned in the system instruction
+      const config = createStoreStateToolConfig();
+
+      const component = await mount(ToolFormComponent, {
+        props: { config },
+      });
+
+      await expect(component.getByTestId('form-header')).toBeVisible();
+
+      // Fill the JSON textarea with realistic data matching the FOMC use case
+      const textarea = component.locator('textarea');
+      await textarea.fill(JSON.stringify({ user_requested_meeting_date: '2025-03-19' }, null, 2));
+
+      // Click elsewhere to unfocus
+      await component.getByTestId('form-header').click();
+      await component.page().waitForTimeout(200);
+
+      await expect(component).toHaveScreenshot('tool-form-open-object-filled.png');
+    });
+
+    test('open object - invalid JSON error (store_state_tool)', async ({ mount }) => {
+      // This tests the AnyObjectRenderer showing validation error
+      const config = createStoreStateToolConfig();
+
+      const component = await mount(ToolFormComponent, {
+        props: { config },
+      });
+
+      await expect(component.getByTestId('form-header')).toBeVisible();
+
+      // Fill with invalid JSON
+      const textarea = component.locator('textarea');
+      await textarea.fill('{ invalid json }');
+
+      // Click elsewhere to trigger validation
+      await component.getByTestId('form-header').click();
+      await component.page().waitForTimeout(200);
+
+      await expect(component).toHaveScreenshot('tool-form-open-object-invalid.png');
     });
   });
 });

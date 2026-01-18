@@ -10,6 +10,8 @@
     "test:watch": "ng test --watch",
     "test:ct": "playwright test -c playwright-ct.config.ts",
     "test:ct:update": "playwright test -c playwright-ct.config.ts --update-snapshots",
+    "test:ct:docker": "docker run --rm -v $(pwd)/..:/app -w /app/frontend --ipc=host mcr.microsoft.com/playwright:v1.57.0-noble npm exec playwright test -- -c playwright-ct.config.ts",
+    "test:ct:docker:update": "docker run --rm -v $(pwd)/..:/app -w /app/frontend --ipc=host mcr.microsoft.com/playwright:v1.57.0-noble npm exec playwright test -- -c playwright-ct.config.ts --update-snapshots",
     "test:ct:ui": "playwright test -c playwright-ct.config.ts --ui",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
@@ -35,6 +37,7 @@
   "private": true,
   "packageManager": "npm@9.2.0",
   "dependencies": {
+    "@adk-sim/converters": "*",
     "@adk-sim/protos": "*",
     "@angular/animations": "^21.0.6",
     "@angular/cdk": "^21.0.5",

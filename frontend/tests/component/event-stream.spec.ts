@@ -45,10 +45,7 @@ function createFunctionCallContent(name: string, args: Record<string, unknown>):
 /**
  * Create a Content object with a function response.
  */
-function createFunctionResponseContent(
-  name: string,
-  response: Record<string, unknown>,
-): Content {
+function createFunctionResponseContent(name: string, response: Record<string, unknown>): Content {
   return {
     role: 'user',
     parts: [
@@ -117,7 +114,10 @@ test.describe('EventStreamComponent', () => {
           temperature: 72,
           condition: 'Sunny',
         }),
-        createContent('model', 'The weather in San Francisco is sunny with a temperature of 72 degrees.'),
+        createContent(
+          'model',
+          'The weather in San Francisco is sunny with a temperature of 72 degrees.',
+        ),
       ];
 
       const component = await mount(EventStreamComponent, {
@@ -177,14 +177,20 @@ test.describe('EventStreamComponent', () => {
           temperature: 72,
           condition: 'Sunny',
         }),
-        createContent('model', 'The weather in San Francisco is sunny with a temperature of 72 degrees.'),
+        createContent(
+          'model',
+          'The weather in San Francisco is sunny with a temperature of 72 degrees.',
+        ),
       ];
 
       const component = await mount(EventStreamComponent, {
         props: { events },
       });
 
-      await expect(component).toHaveScreenshot('event-stream-conversation.png');
+      // Higher threshold due to font rendering differences between local Docker and CI Docker
+      await expect(component).toHaveScreenshot('event-stream-conversation.png', {
+        maxDiffPixelRatio: 0.1,
+      });
     });
   });
 });
