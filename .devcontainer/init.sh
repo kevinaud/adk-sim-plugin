@@ -13,6 +13,17 @@ set -e
 echo "🚀 Initializing dev container..."
 
 # ------------------------------------------------------------
+# Jujutsu: Copy shared config template to repo config location
+# ------------------------------------------------------------
+# The jj-config.toml is tracked in version control and contains
+# shared team settings (jj fix tools, aliases, etc.)
+# This copies it to .jj/repo/config.toml where jj reads it.
+if [ -f "jj-config.toml" ] && [ -d ".jj/repo" ]; then
+    echo "📋 Installing shared jj config..."
+    cp jj-config.toml .jj/repo/config.toml
+fi
+
+# ------------------------------------------------------------
 # Fix uv-cache permissions (for CI runner compatibility)
 # ------------------------------------------------------------
 if [ -d "/opt/uv-cache" ]; then

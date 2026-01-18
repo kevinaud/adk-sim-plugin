@@ -1,0 +1,103 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+# ============================================================
+# Jujutsu Configuration for ADK Simulator
+# ============================================================
+# Migrated from .pre-commit-config.yaml
+#
+# Philosophy:
+#   - Category A (jj fix): Deterministic formatters that auto-fix code
+#   - Category B (secure-push): Verifiers, linters, type checkers, tests
+#
+# Usage:
+#   jj fix                    # Format all modified files
+#   jj fix --include-unchanged # Format entire repo
+#   jj secure-push            # Verify + push (runs fix first)
+# ============================================================
+
+# ============================================================
+# Revset Aliases
+# ============================================================
+[revset-aliases]
+"trunk()" = "main@origin"
+
+# ============================================================
+# Category A: Deterministic Formatters (jj fix)
+# ============================================================
+# These tools modify code to fix formatting/style issues.
+# They run on file content via stdin/stdout where supported.
+# ============================================================
+
+[fix.tools.ruff-format]
+# Python formatter (replaces black)
+# Reads from stdin, writes to stdout
+command = ["ruff", "format", "--stdin-filename=$path", "-"]
+patterns = [
+    "glob:server/**/*.py",
+    "glob:plugins/python/**/*.py",
+    "glob:packages/**/*.py",
+    "glob:ops/**/*.py",
+]
+# Exclude generated proto code
+# Note: jj fix doesn't have exclude patterns, so we rely on precise includes
+
+[fix.tools.ruff-fix]
+# Python linter with auto-fix (isort, pyupgrade, etc.)
+# Reads from stdin, writes to stdout
+command = ["ruff", "check", "--fix", "--stdin-filename=$path", "-"]
+patterns = [
+    "glob:server/**/*.py",
+    "glob:plugins/python/**/*.py",
+    "glob:packages/**/*.py",
+    "glob:ops/**/*.py",
+]
+
+[fix.tools.prettier-ts]
+# TypeScript/HTML/SCSS formatter
+# Uses --stdin-filepath to infer parser from extension
+command = ["npx", "prettier", "--stdin-filepath=$path"]
+patterns = [
+    "glob:frontend/**/*.ts",
+    "glob:frontend/**/*.html",
+    "glob:frontend/**/*.scss",
+    "glob:packages/**/*.ts",
+]
+
+[fix.tools.buf-format]
+# Protobuf formatter
+# buf format reads from stdin with -
+command = ["buf", "format", "-"]
+patterns = ["glob:protos/**/*.proto"]
+
+# ============================================================
+# Note on trailing-whitespace and end-of-file-fixer:
+# These are not easily done via jj fix since they require
+# whole-file processing. Consider using a custom script or
+# rely on editor settings / git hooks for these.
+# ============================================================
+
+# ============================================================
+# Category B: Verifiers (secure-push alias)
+# ============================================================
+# These tools check code quality but don't modify files.
+# Run via the secure-push alias before pushing.
+# ============================================================
+
+[aliases]
+# Secure push: runs full quality gate pipeline then pushes
+# Usage: jj secure-push [--bookmark <name>] [--all] [--skip-e2e]
+#
+# This delegates to `ops ci push` which handles:
+#   1. jj fix (apply formatters)
+#   2. Fast checks (lint, type-check)
+#   3. Build verification (Angular AOT)
+#   4. Test suite (unit, component, e2e)
+#   5. Proto code regeneration
+#   6. Push if all pass
+secure-push = ["util", "exec", "--", "ops", "ci", "push"]
+
+# Quick quality check (formatters + fast verifiers only, no tests)
+# Usage: jj quality
+quality = ["util", "exec", "--", "ops", "quality"]
+
+# Run jj fix on all files (not just modified)
+fix-all = ["fix", "--include-unchanged"]
