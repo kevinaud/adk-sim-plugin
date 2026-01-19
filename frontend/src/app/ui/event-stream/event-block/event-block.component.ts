@@ -3,13 +3,18 @@
  *
  * Renders a single conversation turn (Content) with role-based styling.
  * Implements FR-007: Conversation history rendered as structured stream
- * of distinct blocks (User Input, Agent Response, Tool Execution).
+ * of distinct blocks (User Input, Agent Response, Tool Call, Tool Response).
  *
  * Block type determination:
  * - 'user' role -> 'user' type (unless contains functionResponse)
- * - 'model' role with functionCall in parts -> 'tool' type
+ * - 'model' role with functionCall in parts -> 'tool-call' type
  * - 'model' role without functionCall -> 'model' type
- * - 'user' role with functionResponse -> 'tool' type (function results)
+ * - 'user' role with functionResponse -> 'tool-response' type (function results)
+ *
+ * Both tool-call and tool-response use 'tool' CSS type for orange accent styling,
+ * but have distinct icons and labels for visual differentiation:
+ * - Tool Call: call_made icon, "Tool Call" label
+ * - Tool Response: call_received icon, "Tool Response" label
  *
  * @see mddocs/frontend/frontend-spec.md#fr-context-inspection - FR-007
  * @see mddocs/frontend/frontend-tdd.md#eventblockcomponent
@@ -21,8 +26,15 @@ import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Block type enum for styling differentiation.
+ * Uses 'tool-call' and 'tool-response' for distinct tool sub-types.
  */
-export type BlockType = 'user' | 'model' | 'tool';
+export type BlockType = 'user' | 'model' | 'tool-call' | 'tool-response';
+
+/**
+ * CSS type for styling - maps sub-types to parent category.
+ * Both tool-call and tool-response map to 'tool' for CSS styling.
+ */
+export type CssBlockType = 'user' | 'model' | 'tool';
 
 /**
  * Configuration for each block type.
@@ -30,6 +42,7 @@ export type BlockType = 'user' | 'model' | 'tool';
 interface BlockConfig {
   icon: string;
   label: string;
+  cssType: CssBlockType;
 }
 
 /**
@@ -39,14 +52,22 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
   user: {
     icon: 'person',
     label: 'User Input',
+    cssType: 'user',
   },
   model: {
     icon: 'smart_toy',
     label: 'Agent Response',
+    cssType: 'model',
   },
-  tool: {
-    icon: 'build',
-    label: 'Tool Execution',
+  'tool-call': {
+    icon: 'call_made',
+    label: 'Tool Call',
+    cssType: 'tool',
+  },
+  'tool-response': {
+    icon: 'call_received',
+    label: 'Tool Response',
+    cssType: 'tool',
   },
 };
 
@@ -66,7 +87,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
   standalone: true,
   imports: [MatIconModule],
   template: `
-    <div class="event-block" [attr.data-type]="blockType()" data-testid="event-block">
+    <div class="event-block" [attr.data-type]="cssType()" data-testid="event-block">
       <div class="block-header">
         <mat-icon>{{ icon() }}</mat-icon>
         <span class="block-label">{{ label() }}</span>
@@ -196,9 +217,9 @@ export class EventBlockComponent {
    * Computed signal that determines the block type based on role and parts.
    *
    * Logic:
-   * - 'user' role with functionResponse parts -> 'tool' (function results)
+   * - 'user' role with functionResponse parts -> 'tool-response' (function results)
    * - 'user' role without functionResponse -> 'user'
-   * - 'model' role with functionCall parts -> 'tool' (function calls)
+   * - 'model' role with functionCall parts -> 'tool-call' (function calls)
    * - 'model' role without functionCall -> 'model'
    */
   readonly blockType = computed<BlockType>(() => {
@@ -208,13 +229,19 @@ export class EventBlockComponent {
     if (role === 'user') {
       // Check if it contains function response (tool result)
       const hasFunctionResponse = c.parts?.some((p: Part) => p.functionResponse);
-      return hasFunctionResponse ? 'tool' : 'user';
+      return hasFunctionResponse ? 'tool-response' : 'user';
     }
 
     // Model role
     const hasFunctionCall = c.parts?.some((p: Part) => p.functionCall);
-    return hasFunctionCall ? 'tool' : 'model';
+    return hasFunctionCall ? 'tool-call' : 'model';
   });
+
+  /**
+   * Computed signal that maps block type to CSS type for styling.
+   * Both tool-call and tool-response map to 'tool' for CSS styling.
+   */
+  readonly cssType = computed<CssBlockType>(() => BLOCK_CONFIG[this.blockType()].cssType);
 
   /**
    * Computed signal that extracts the parts array from content.

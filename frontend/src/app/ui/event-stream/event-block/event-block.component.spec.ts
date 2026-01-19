@@ -2,9 +2,10 @@
  * @fileoverview Tests for EventBlockComponent.
  *
  * Tests verify that the component correctly:
- * - Determines block type based on role and parts
+ * - Determines block type based on role and parts (user, model, tool-call, tool-response)
+ * - Maps block types to CSS types (tool-call and tool-response both map to 'tool' for styling)
  * - Extracts parts from content
- * - Maps block type to icon and label
+ * - Maps block type to icon and label (distinct icons/labels for tool-call vs tool-response)
  * - Renders header with icon and label
  * - Renders text content
  * - Renders function calls with formatted args
@@ -18,7 +19,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Content } from '@adk-sim/converters';
 
-import { EventBlockComponent, type BlockType } from './event-block.component';
+import { EventBlockComponent, type BlockType, type CssBlockType } from './event-block.component';
 
 /**
  * Create a test Content object with specified configuration.
@@ -93,7 +94,7 @@ describe('EventBlockComponent', () => {
       expect(block.getAttribute('data-type')).toBe('model');
     });
 
-    it('should return "tool" for model role with functionCall', () => {
+    it('should return "tool-call" for model role with functionCall', () => {
       hostComponent.content.set(
         createTestContent({
           role: 'model',
@@ -102,11 +103,17 @@ describe('EventBlockComponent', () => {
       );
       fixture.detectChanges();
 
+      // blockType is 'tool-call' but CSS data-type is 'tool'
       const block = fixture.nativeElement.querySelector('[data-testid="event-block"]');
       expect(block.getAttribute('data-type')).toBe('tool');
+
+      // Verify the actual blockType
+      const debugChild = fixture.debugElement.children[0];
+      const component = debugChild!.componentInstance as EventBlockComponent;
+      expect(component.blockType()).toBe('tool-call');
     });
 
-    it('should return "tool" for user role with functionResponse', () => {
+    it('should return "tool-response" for user role with functionResponse', () => {
       hostComponent.content.set(
         createTestContent({
           role: 'user',
@@ -115,8 +122,14 @@ describe('EventBlockComponent', () => {
       );
       fixture.detectChanges();
 
+      // blockType is 'tool-response' but CSS data-type is 'tool'
       const block = fixture.nativeElement.querySelector('[data-testid="event-block"]');
       expect(block.getAttribute('data-type')).toBe('tool');
+
+      // Verify the actual blockType
+      const debugChild = fixture.debugElement.children[0];
+      const component = debugChild!.componentInstance as EventBlockComponent;
+      expect(component.blockType()).toBe('tool-response');
     });
 
     it('should handle content with empty parts', () => {
@@ -153,7 +166,7 @@ describe('EventBlockComponent', () => {
       expect(icon.textContent.trim()).toBe('smart_toy');
     });
 
-    it('should return "build" icon for tool block type', () => {
+    it('should return "call_made" icon for tool-call block type', () => {
       hostComponent.content.set(
         createTestContent({
           role: 'model',
@@ -163,7 +176,20 @@ describe('EventBlockComponent', () => {
       fixture.detectChanges();
 
       const icon = fixture.nativeElement.querySelector('mat-icon');
-      expect(icon.textContent.trim()).toBe('build');
+      expect(icon.textContent.trim()).toBe('call_made');
+    });
+
+    it('should return "call_received" icon for tool-response block type', () => {
+      hostComponent.content.set(
+        createTestContent({
+          role: 'user',
+          functionResponse: { name: 'test_tool', response: { result: 'ok' } },
+        }),
+      );
+      fixture.detectChanges();
+
+      const icon = fixture.nativeElement.querySelector('mat-icon');
+      expect(icon.textContent.trim()).toBe('call_received');
     });
   });
 
@@ -184,7 +210,7 @@ describe('EventBlockComponent', () => {
       expect(label.textContent).toBe('Agent Response');
     });
 
-    it('should return "Tool Execution" label for tool block type', () => {
+    it('should return "Tool Call" label for tool-call block type', () => {
       hostComponent.content.set(
         createTestContent({
           role: 'model',
@@ -194,7 +220,20 @@ describe('EventBlockComponent', () => {
       fixture.detectChanges();
 
       const label = fixture.nativeElement.querySelector('.block-label');
-      expect(label.textContent).toBe('Tool Execution');
+      expect(label.textContent).toBe('Tool Call');
+    });
+
+    it('should return "Tool Response" label for tool-response block type', () => {
+      hostComponent.content.set(
+        createTestContent({
+          role: 'user',
+          functionResponse: { name: 'test_tool', response: { result: 'ok' } },
+        }),
+      );
+      fixture.detectChanges();
+
+      const label = fixture.nativeElement.querySelector('.block-label');
+      expect(label.textContent).toBe('Tool Response');
     });
   });
 
@@ -348,7 +387,7 @@ describe('EventBlockComponent', () => {
       expect(block.getAttribute('data-type')).toBe('model');
     });
 
-    it('should apply tool styling class for function call', () => {
+    it('should apply tool styling class for function call (tool-call maps to tool CSS)', () => {
       hostComponent.content.set(
         createTestContent({
           role: 'model',
@@ -357,11 +396,12 @@ describe('EventBlockComponent', () => {
       );
       fixture.detectChanges();
 
+      // CSS data-type is 'tool' (orange accent), blockType is 'tool-call'
       const block = fixture.nativeElement.querySelector('[data-testid="event-block"]');
       expect(block.getAttribute('data-type')).toBe('tool');
     });
 
-    it('should apply tool styling class for function response', () => {
+    it('should apply tool styling class for function response (tool-response maps to tool CSS)', () => {
       hostComponent.content.set(
         createTestContent({
           role: 'user',
@@ -370,6 +410,7 @@ describe('EventBlockComponent', () => {
       );
       fixture.detectChanges();
 
+      // CSS data-type is 'tool' (orange accent), blockType is 'tool-response'
       const block = fixture.nativeElement.querySelector('[data-testid="event-block"]');
       expect(block.getAttribute('data-type')).toBe('tool');
     });
@@ -416,6 +457,48 @@ describe('EventBlockComponent', () => {
       const component = debugChild!.componentInstance as EventBlockComponent;
       expect(component.label()).toBe('User Input');
     });
+
+    it('should correctly compute cssType signal for user', () => {
+      hostComponent.content.set(createTestContent({ role: 'user', text: 'Hello' }));
+      fixture.detectChanges();
+
+      const debugChild = fixture.debugElement.children[0];
+      expect(debugChild).toBeTruthy();
+      const component = debugChild!.componentInstance as EventBlockComponent;
+      expect(component.cssType()).toBe('user' as CssBlockType);
+    });
+
+    it('should correctly compute cssType signal for tool-call (maps to tool)', () => {
+      hostComponent.content.set(
+        createTestContent({
+          role: 'model',
+          functionCall: { name: 'test_tool' },
+        }),
+      );
+      fixture.detectChanges();
+
+      const debugChild = fixture.debugElement.children[0];
+      expect(debugChild).toBeTruthy();
+      const component = debugChild!.componentInstance as EventBlockComponent;
+      expect(component.blockType()).toBe('tool-call');
+      expect(component.cssType()).toBe('tool' as CssBlockType);
+    });
+
+    it('should correctly compute cssType signal for tool-response (maps to tool)', () => {
+      hostComponent.content.set(
+        createTestContent({
+          role: 'user',
+          functionResponse: { name: 'test_tool', response: { result: 'ok' } },
+        }),
+      );
+      fixture.detectChanges();
+
+      const debugChild = fixture.debugElement.children[0];
+      expect(debugChild).toBeTruthy();
+      const component = debugChild!.componentInstance as EventBlockComponent;
+      expect(component.blockType()).toBe('tool-response');
+      expect(component.cssType()).toBe('tool' as CssBlockType);
+    });
   });
 
   describe('reactivity', () => {
@@ -435,7 +518,7 @@ describe('EventBlockComponent', () => {
       expect(block.getAttribute('data-type')).toBe('model');
     });
 
-    it('should update icon and label when block type changes', () => {
+    it('should update icon and label when block type changes to tool-call', () => {
       // Start with user content
       hostComponent.content.set(createTestContent({ role: 'user', text: 'Hello' }));
       fixture.detectChanges();
@@ -456,8 +539,33 @@ describe('EventBlockComponent', () => {
 
       icon = fixture.nativeElement.querySelector('mat-icon');
       label = fixture.nativeElement.querySelector('.block-label');
-      expect(icon.textContent.trim()).toBe('build');
-      expect(label.textContent).toBe('Tool Execution');
+      expect(icon.textContent.trim()).toBe('call_made');
+      expect(label.textContent).toBe('Tool Call');
+    });
+
+    it('should update icon and label when block type changes to tool-response', () => {
+      // Start with model content
+      hostComponent.content.set(createTestContent({ role: 'model', text: 'Hello' }));
+      fixture.detectChanges();
+
+      let icon = fixture.nativeElement.querySelector('mat-icon');
+      let label = fixture.nativeElement.querySelector('.block-label');
+      expect(icon.textContent.trim()).toBe('smart_toy');
+      expect(label.textContent).toBe('Agent Response');
+
+      // Change to user with function response
+      hostComponent.content.set(
+        createTestContent({
+          role: 'user',
+          functionResponse: { name: 'test_tool', response: { result: 'ok' } },
+        }),
+      );
+      fixture.detectChanges();
+
+      icon = fixture.nativeElement.querySelector('mat-icon');
+      label = fixture.nativeElement.querySelector('.block-label');
+      expect(icon.textContent.trim()).toBe('call_received');
+      expect(label.textContent).toBe('Tool Response');
     });
   });
 });

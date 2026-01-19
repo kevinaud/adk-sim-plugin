@@ -407,14 +407,14 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [FR-007 Event Blocks](../frontend-spec.md#fr-context-inspection) - Block type requirements
 
 **Acceptance Criteria**:
-- [ ] Tool Call blocks show distinct styling (e.g., "Tool Call" label, call icon)
-- [ ] Tool Response blocks show distinct styling (e.g., "Tool Response" label, response icon)
-- [ ] Both types maintain orange accent color for "tool" category
-- [ ] Icon differentiation: `call_made` or `functions` for calls, `call_received` or `output` for responses
-- [ ] Clear visual hierarchy between call and response
-- [ ] Works correctly in both light and dark modes
-- [ ] Playwright component tests with screenshots for both types
-- [ ] Presubmit passes
+- [x] Tool Call blocks show distinct styling (e.g., "Tool Call" label, call icon)
+- [x] Tool Response blocks show distinct styling (e.g., "Tool Response" label, response icon)
+- [x] Both types maintain orange accent color for "tool" category
+- [x] Icon differentiation: `call_made` or `functions` for calls, `call_received` or `output` for responses
+- [x] Clear visual hierarchy between call and response
+- [x] Works correctly in both light and dark modes
+- [x] Playwright component tests with screenshots for both types
+- [x] Presubmit passes
 
 ---
 
