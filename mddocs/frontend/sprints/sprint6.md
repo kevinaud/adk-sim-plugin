@@ -325,12 +325,12 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [SessionComponent](../../../frontend/src/app/features/session/session.component.ts) - Where to integrate
 
 **Acceptance Criteria**:
-- [ ] System instructions render using SmartBlobComponent
-- [ ] Markdown instructions display as formatted HTML by default
-- [ ] Users can toggle to RAW view to see original text
-- [ ] JSON-structured instructions (if any) can be viewed as tree
-- [ ] Works in both light and dark modes
-- [ ] Presubmit passes
+- [x] System instructions render using SmartBlobComponent
+- [x] Markdown instructions display as formatted HTML by default
+- [x] Users can toggle to RAW view to see original text
+- [x] JSON-structured instructions (if any) can be viewed as tree
+- [x] Works in both light and dark modes
+- [x] Presubmit passes
 
 ---
 

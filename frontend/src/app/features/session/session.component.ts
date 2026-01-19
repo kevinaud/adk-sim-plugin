@@ -44,7 +44,7 @@ import {
   type ToolFormConfig,
 } from '../../ui/control-panel';
 import { EventStreamComponent } from '../../ui/event-stream';
-import { SplitPaneComponent } from '../../ui/shared';
+import { SmartBlobComponent, SplitPaneComponent } from '../../ui/shared';
 import { SimulationStore } from './simulation.store';
 
 /**
@@ -76,6 +76,7 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
     MatIconModule,
     MatButtonModule,
     SplitPaneComponent,
+    SmartBlobComponent,
     ControlPanelComponent,
     EventStreamComponent,
   ],
@@ -124,8 +125,8 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
                 id="instructions-content"
                 data-testid="instructions-content"
               >
-                @if (systemInstruction()) {
-                  <pre class="instructions-text">{{ systemInstructionText() }}</pre>
+                @if (systemInstructionText()) {
+                  <app-smart-blob [content]="systemInstructionText()" />
                 } @else {
                   <p class="no-instructions">No system instructions provided.</p>
                 }
@@ -287,18 +288,8 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
 
     .instructions-content {
       padding: 0 24px 16px 60px;
-      max-height: 200px;
+      max-height: 300px;
       overflow-y: auto;
-    }
-
-    .instructions-text {
-      margin: 0;
-      font-family: monospace;
-      font-size: 13px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: var(--sys-on-surface);
-      line-height: 1.5;
     }
 
     .no-instructions {
