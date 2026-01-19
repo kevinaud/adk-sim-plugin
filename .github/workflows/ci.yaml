@@ -6,7 +6,10 @@ name: CI
 # Runs quality checks and tests on all PRs and pushes to main.
 #
 # Architecture:
-#   - Main 'check' job uses lightweight setup (no devcontainer)
+#   - Jobs run in parallel for faster feedback:
+#     - 'check': Quality checks, backend tests, frontend unit tests
+#     - 'frontend-component-tests': Playwright component tests (visual regression)
+#     - 'frontend-e2e-tests': Playwright E2E tests
 #   - Devcontainer verification only runs when .devcontainer/ changes
 #
 # Local testing:
@@ -21,10 +24,10 @@ on:
 
 jobs:
   # ============================================================
-  # Main CI Check - Lightweight Setup
+  # Main CI Check - Quality + Backend + Frontend Unit Tests
   # ============================================================
-  # Uses standard GitHub Actions setup for faster startup (~30s vs ~5min).
-  # Installs only what's needed: uv, node, buf.
+  # Fast checks that don't require Playwright Docker setup.
+  # Runs in parallel with component and E2E test jobs.
   # ============================================================
   check:
     name: Check
@@ -36,13 +39,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # ============================================================
-      # UV Setup with Caching
-      # ============================================================
-      # enable-cache: Persists the uv cache directory across runs.
-      #   Cache key is automatically derived from uv.lock, reducing
-      #   dependency installation from ~45-60s to ~2-5s on cache hit.
-      # ============================================================
       - name: Setup uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -62,23 +58,120 @@ jobs:
           uv sync
           npm ci
 
-      # ============================================================
-      # Playwright Docker Image
-      # ============================================================
-      # Pull the official Playwright Docker image to ensure consistent
-      # visual regression testing across all environments.
-      #
-      # Using Docker for component tests ensures pixel-perfect consistency
-      # between local development and CI, eliminating font rendering
-      # differences between Debian (devcontainer) and Ubuntu (CI).
-      #
-      # @see mddocs/frontend/research/deep-research/visual-regression-ci-investigation-report.md
-      # ============================================================
+      - name: Build TypeScript packages
+        run: |
+          npm run build --workspace=packages/adk-sim-protos-ts
+          npm run build --workspace=packages/adk-converters-ts
+
+      - name: Run quality checks
+        run: |
+          buf lint --config buf.yaml protos
+          uv run pyright
+          npm run lint --workspace=frontend
+          npm run format:check --workspace=frontend
+
+      - name: Run backend tests
+        run: |
+          uv run pytest server/tests/unit -v
+          uv run pytest plugins/python/tests -v
+
+      - name: Run frontend unit tests
+        run: npm run test --workspace=frontend
+        env:
+          CI: 'true'
+
+      - name: Run TypeScript package tests
+        run: npm test --workspace=packages/adk-converters-ts
+
+  # ============================================================
+  # Frontend Component Tests (Visual Regression)
+  # ============================================================
+  # Runs Playwright component tests in Docker for consistent
+  # visual regression snapshots across all environments.
+  # ============================================================
+  frontend-component-tests:
+    name: Component Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript packages
+        run: |
+          npm run build --workspace=packages/adk-sim-protos-ts
+          npm run build --workspace=packages/adk-converters-ts
+
       - name: Pull Playwright Docker image
         run: docker pull mcr.microsoft.com/playwright:v1.57.0-noble
 
-      # For E2E tests (not component tests), install Playwright locally
-      # since E2E tests need to access Docker Compose services
+      - name: Run component tests
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            -w /app/frontend \
+            --ipc=host \
+            -u $(id -u):$(id -g) \
+            mcr.microsoft.com/playwright:v1.57.0-noble \
+            npm exec playwright test -- -c playwright-ct.config.ts
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-test-results
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 7
+
+  # ============================================================
+  # Frontend E2E Tests
+  # ============================================================
+  # Runs Playwright E2E tests against Docker Compose backends.
+  # ============================================================
+  frontend-e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          uv sync
+          npm ci
+
+      - name: Build TypeScript packages
+        run: |
+          npm run build --workspace=packages/adk-sim-protos-ts
+          npm run build --workspace=packages/adk-converters-ts
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(cd frontend && npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
@@ -98,37 +191,23 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: cd frontend && npx playwright install-deps chromium
 
-      # ============================================================
-      # Multi-Backend Docker Compose for E2E Tests
-      # ============================================================
-      # Start multiple backend instances for E2E testing:
-      # - no-sessions (8081): Always empty for empty state tests
-      # - populated (8082): Pre-seeded with sessions for visual tests
-      # - shared (8080): Allows session creation for test isolation
-      #
-      # The --wait flag ensures all healthchecks pass before continuing.
-      # ============================================================
-      - name: Start multi-backend Docker Compose
+      - name: Start E2E Docker backends
         run: docker compose -f docker-compose.e2e.yaml up -d --wait
 
       - name: Seed populated backend
         run: cd frontend && npx tsx tests/e2e/utils/seed-populated-backend.ts
 
-      - name: Run CI checks
-        run: uv run ops ci check
+      - name: Run frontend E2E tests
+        run: cd frontend && npm exec playwright test -- -c playwright.config.ts
 
-      # ============================================================
-      # Upload Playwright Artifacts on Failure
-      # ============================================================
-      # Uploads test results and reports when tests fail.
-      # test-results/ contains actual screenshots and visual diffs.
-      # playwright-report/ contains the HTML report for debugging.
-      # ============================================================
-      - name: Upload Playwright test results
+      - name: Run backend E2E tests
+        run: uv run pytest server/tests/e2e --run-e2e -v
+
+      - name: Upload test results on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
+          name: e2e-test-results
           path: |
             frontend/test-results/
             frontend/playwright-report/

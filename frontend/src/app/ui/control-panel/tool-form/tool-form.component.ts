@@ -159,7 +159,7 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
       background: none;
       border: none;
       padding: 0;
-      color: #1976d2;
+      color: var(--color-action-accent);
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
@@ -181,13 +181,13 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
       margin: 0;
       font-size: 18px;
       font-weight: 500;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     .form-description {
       margin: 0;
       font-size: 14px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
       line-height: 1.5;
     }
 
@@ -201,7 +201,7 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
       margin: 0;
       font-size: 14px;
       font-weight: 500;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     .form-footer {
@@ -210,7 +210,7 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
       justify-content: flex-end;
       margin-top: 8px;
       padding-top: 16px;
-      border-top: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border-top: 1px solid var(--sys-outline-variant);
     }
 
     button[mat-flat-button] {

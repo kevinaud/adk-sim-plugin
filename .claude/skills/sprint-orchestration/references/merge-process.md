@@ -54,16 +54,22 @@ gh pr edit 42 --base main
 
 ## Merge Execution
 
-### Step 3: Squash Merge and Delete Remote Branch
+### Step 3: Rebase Merge and Delete Remote Branch
 
 ```bash
-gh pr merge <pr-number> --squash --delete-branch
+gh pr merge <pr-number> --rebase --delete-branch
 ```
 
 This:
-- Squash-merges the PR into its base branch
+- Rebase-merges the PR into its base branch (preserves commit hash)
 - Deletes the remote branch automatically
 - Updates the PR status to "merged"
+
+**Why rebase-merge (NOT squash-merge):**
+- With jj's workflow, each PR already has a single commit
+- Rebase-merge preserves the commit hash, so jj recognizes the commit is now on main
+- Squash-merge creates a NEW hash, leaving orphaned "zombie" commits locally
+- Using rebase-merge eliminates manual cleanup with `jj abandon`
 
 ### Step 4: Sync Local State
 
@@ -73,17 +79,21 @@ This:
 jj git fetch
 ```
 
-This updates your local repository with the merged changes from the remote.
+This updates your local repository with the merged changes from the remote. Because we use rebase-merge, jj will recognize that your local commit is now on main.
 
-### Step 5: Handle Squash-Merge Recovery
+### Step 5: Rebase Remaining Stack
 
-After a squash-merge, local commits may diverge from remote. Use jujutsu skill's squash-merge recovery workflow if needed:
+After fetching, rebase any remaining work onto the updated main:
 
-1. Identify remaining local work that needs rebasing
-2. Rebase onto the updated main using `jj rebase`
-3. Abandon any redundant local commits using `jj abandon`
+```bash
+# 1. Identify remaining unmerged work
+jj log -r 'trunk()..visible_heads()' --no-pager
 
-See `.claude/skills/jujutsu/references/workflows.md` for detailed recovery protocol.
+# 2. Rebase remaining work onto new main
+jj rebase -s <oldest-unmerged-change-id> -d main
+```
+
+**Note:** With rebase-merge, you do NOT need to `jj abandon` the merged commit—jj automatically recognizes it's now part of main.
 
 ### Step 6: Handle Any Conflicts
 
@@ -117,13 +127,14 @@ gh pr list --base sprint-1/pr1/scaffold --json number,headRefName
 # 2. Update child base BEFORE merge
 gh pr edit 42 --base main
 
-# 3. Now safe to merge
-gh pr merge 41 --squash --delete-branch
+# 3. Now safe to merge (use rebase, NOT squash)
+gh pr merge 41 --rebase --delete-branch
 
 # 4. Sync local state (load jujutsu skill first)
 jj git fetch
 
-# 5. If local work needs rebasing, use jujutsu skill's recovery workflow
+# 5. Rebase remaining work onto updated main
+jj rebase -s <S1PR2-change-id> -d main
 
 # 6. Verify
 jj log --limit 5
@@ -159,6 +170,9 @@ Use jujutsu skill's conflict resolution workflow:
 3. jj auto-snapshots resolved files
 4. Verify with `jj status`
 
-### "Bookmark has diverged" state
+### Zombie commits after squash-merge
 
-This is expected after squash-merge. Use jujutsu skill's squash-merge recovery workflow to rebase remaining work.
+If squash-merge was used accidentally, orphaned "zombie" commits will remain:
+1. Find them: `jj log -r 'trunk()..visible_heads()'`
+2. Abandon them: `jj abandon <zombie-change-id>`
+3. Use `--rebase` for future merges to avoid this

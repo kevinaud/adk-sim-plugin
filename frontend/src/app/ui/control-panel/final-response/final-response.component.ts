@@ -165,7 +165,7 @@ function addDescriptionOptions(uischema: UISchemaElement): UISchemaElement {
       justify-content: flex-end;
       margin-top: 8px;
       padding-top: 16px;
-      border-top: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border-top: 1px solid var(--sys-outline-variant);
     }
 
     button[mat-flat-button] {

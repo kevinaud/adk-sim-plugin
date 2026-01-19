@@ -67,8 +67,8 @@ import { EventBlockComponent } from './event-block';
       justify-content: center;
       padding: 48px 24px;
       text-align: center;
-      color: var(--mat-sys-on-surface-variant, #666);
-      background-color: var(--mat-sys-surface-variant, #f5f5f5);
+      color: var(--sys-on-surface-variant);
+      background-color: var(--sys-surface-variant);
       border-radius: 8px;
     }
 

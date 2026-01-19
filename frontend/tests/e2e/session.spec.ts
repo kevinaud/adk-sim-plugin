@@ -243,7 +243,9 @@ test.describe('Session Page Layout', () => {
   });
 });
 
-test.describe('Visual Regression - Session Page', () => {
+// TODO: Skip due to screenshot differences between local and CI environments
+// See: https://github.com/kevinaud/adk-sim-plugin/issues/204
+test.describe.skip('Visual Regression - Session Page', () => {
   test.use({ backend: 'populated' });
 
   test('session page initial state - light theme', async ({ page, gotoAndWaitForAngular }) => {

@@ -267,13 +267,13 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       font-size: 20px;
       width: 20px;
       height: 20px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
 
     .header-title {
       font-size: 14px;
       font-weight: 500;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
       flex: 1;
     }
 
@@ -282,33 +282,33 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       border: none;
       padding: 4px;
       cursor: pointer;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
       display: flex;
       align-items: center;
       justify-content: center;
 
       &:hover {
-        background-color: var(--mat-sys-surface-variant, #e7e0ec);
+        background-color: var(--sys-surface-variant);
         border-radius: 50%;
       }
     }
 
     .tool-card {
-      border: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border: 1px solid var(--sys-outline-variant);
       border-radius: 8px;
       padding: 16px;
-      background: var(--mat-sys-surface, #fff);
+      background: var(--sys-surface);
       transition:
         border-color 0.2s,
         box-shadow 0.2s;
 
       &:hover {
-        border-color: var(--mat-sys-outline, #79747e);
+        border-color: var(--sys-outline);
       }
 
       &.selected {
-        border-color: var(--mat-sys-primary, #6750a4);
-        box-shadow: 0 0 0 1px var(--mat-sys-primary, #6750a4);
+        border-color: var(--sys-primary);
+        box-shadow: 0 0 0 1px var(--sys-primary);
       }
     }
 
@@ -323,14 +323,14 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       font-size: 18px;
       width: 18px;
       height: 18px;
-      color: var(--mat-sys-primary, #1976d2);
+      color: var(--sys-primary);
     }
 
     .tool-name {
       flex: 1;
       font-size: 14px;
       font-weight: 500;
-      color: var(--mat-sys-primary, #1976d2);
+      color: var(--sys-primary);
       font-family: 'Roboto Mono', monospace;
     }
 
@@ -341,13 +341,13 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
     .tool-description {
       margin: 8px 0 0 0;
       font-size: 13px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
       line-height: 1.5;
     }
 
     .parameters-section {
       margin-top: 12px;
-      border-top: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border-top: 1px solid var(--sys-outline-variant);
       padding-top: 12px;
     }
 
@@ -360,19 +360,19 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       border: none;
       padding: 4px 0;
       cursor: pointer;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
       font-size: 13px;
       font-weight: 500;
 
       &:hover {
-        color: var(--mat-sys-primary, #6750a4);
+        color: var(--sys-primary);
       }
     }
 
     .parameters-icon {
       font-size: 13px;
       font-family: 'Roboto Mono', monospace;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
 
     .parameters-label {
@@ -406,7 +406,7 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
     .parameter-name {
       font-size: 13px;
       font-family: 'Roboto Mono', monospace;
-      color: var(--mat-sys-primary, #1976d2);
+      color: var(--sys-primary);
     }
 
     .type-badge {
@@ -417,15 +417,15 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       font-weight: 500;
       font-family: 'Roboto Mono', monospace;
       border-radius: 4px;
-      background-color: var(--mat-sys-primary, #1976d2);
-      color: white;
+      background-color: var(--sys-primary);
+      color: var(--sys-on-primary);
       text-transform: uppercase;
     }
 
     .parameter-description {
       margin: 4px 0 0 16px;
       font-size: 12px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
       line-height: 1.4;
     }
 
@@ -433,7 +433,7 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       margin: 8px 0 0 0;
       font-size: 11px;
       font-style: italic;
-      color: var(--mat-sys-on-surface-variant, #79747e);
+      color: var(--sys-on-surface-variant);
     }
 
     .empty-state {
@@ -442,7 +442,7 @@ function extractParameters(tool: FunctionDeclaration): ParameterInfo[] {
       align-items: center;
       justify-content: center;
       padding: 32px 16px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
 
       mat-icon {
         font-size: 48px;

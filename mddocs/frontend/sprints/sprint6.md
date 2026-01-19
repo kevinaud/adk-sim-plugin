@@ -216,11 +216,11 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [Global Styles](../../../frontend/src/styles.scss) - Current body styling
 
 **Acceptance Criteria**:
-- [ ] In dark mode, entire viewport has dark background (no white rectangles)
-- [ ] Works when session content doesn't fill the screen vertically
-- [ ] Light mode continues to work correctly
-- [ ] Tested with `ops docker up` at localhost:4200
-- [ ] Presubmit passes
+- [x] In dark mode, entire viewport has dark background (no white rectangles)
+- [x] Works when session content doesn't fill the screen vertically
+- [x] Light mode continues to work correctly
+- [ ] Tested with `ops docker up` at localhost:4200 (requires manual verification)
+- [x] Presubmit passes
 
 ---
 
@@ -239,11 +239,11 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [Material Theme Variables](../../../frontend/src/theme.scss) - Available CSS variables
 
 **Acceptance Criteria**:
-- [ ] User input block text is clearly readable in dark mode
-- [ ] User input block maintains distinct visual identity (blue accent)
-- [ ] Model and tool blocks also look good in dark mode (verify no regressions)
-- [ ] Light mode appearance is unchanged or improved
-- [ ] Playwright component tests pass (update snapshots if needed)
+- [x] User input block text is clearly readable in dark mode
+- [x] User input block maintains distinct visual identity (blue accent)
+- [x] Model and tool blocks also look good in dark mode (verify no regressions)
+- [x] Light mode appearance is unchanged or improved
+- [x] Playwright component tests pass (update snapshots if needed)
 - [ ] Presubmit passes
 
 ---

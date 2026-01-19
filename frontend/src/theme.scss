@@ -65,3 +65,63 @@ body.dark-theme {
   @include mat.all-component-colors($dark-theme);
   @include mat.system-level-colors($dark-theme);
 }
+
+/* --------------------------------------------------------------------------
+   Semantic Role Colors
+   Colors for conversation roles (user, model, tool) with light/dark variants
+   -------------------------------------------------------------------------- */
+
+/* Light mode role colors (default) */
+:root {
+  /* Role accent colors (border indicators) */
+  --color-role-user: #2196f3;
+  --color-role-model: #4caf50;
+  --color-role-tool: #ff9800;
+
+  /* Role surface colors (tinted backgrounds) - 5% opacity in light mode */
+  --color-role-user-surface: rgba(33, 150, 243, 0.05);
+  --color-role-model-surface: rgba(76, 175, 80, 0.05);
+  --color-role-tool-surface: rgba(255, 152, 0, 0.05);
+
+  /* Success accent for completed states */
+  --color-success-accent: #4caf50;
+  --color-success-surface: rgba(76, 175, 80, 0.1);
+
+  /* Warning accent */
+  --color-warning-accent: #ffc107;
+  --color-warning-on: #000;
+
+  /* Action accent (for primary actions like buttons) */
+  --color-action-accent: #1976d2;
+}
+
+/* Dark mode overrides */
+body.dark-theme {
+  /* Role surface colors - 15% opacity in dark mode for better visibility */
+  --color-role-user-surface: rgba(33, 150, 243, 0.15);
+  --color-role-model-surface: rgba(76, 175, 80, 0.15);
+  --color-role-tool-surface: rgba(255, 152, 0, 0.15);
+
+  /*
+   * Explicit dark mode surface colors.
+   * Angular Material's system-level-colors should set these, but we define them
+   * explicitly to ensure they cascade properly through Angular's view encapsulation.
+   */
+  --sys-surface: #121212;
+  --sys-surface-container: #1e1e1e;
+  --sys-surface-container-low: #1a1a1a;
+  --sys-surface-container-high: #2d2d2d;
+  --sys-surface-container-highest: #3d3d3d;
+  --sys-surface-variant: #49454f;
+  --sys-on-surface: #e6e1e5;
+  --sys-on-surface-variant: #cac4d0;
+  --sys-outline: #938f99;
+  --sys-outline-variant: #49454f;
+}
+
+/* Ensure html element also gets dark background when dark theme is active */
+/* This prevents white background showing through when content is short */
+html:has(body.dark-theme) {
+  background-color: var(--sys-surface);
+  color: var(--sys-on-surface);
+}
