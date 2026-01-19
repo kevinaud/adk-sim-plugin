@@ -381,14 +381,14 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [ToolFormComponent](../../../frontend/src/app/ui/control-panel/tool-form/tool-form.component.ts) - Where renderers are registered
 
 **Acceptance Criteria**:
-- [ ] All string type fields render as `<textarea>` instead of `<input type="text">`
-- [ ] Textarea has single-line height by default (rows="1" or equivalent)
-- [ ] Textarea expands vertically when user enters multiple lines
-- [ ] Material Design styling matches other form fields
-- [ ] Validation errors display correctly
-- [ ] Works with required fields, patterns, and other string constraints
-- [ ] Unit tests verify renderer registration and behavior
-- [ ] Presubmit passes
+- [x] All string type fields render as `<textarea>` instead of `<input type="text">`
+- [x] Textarea has single-line height by default (rows="1" or equivalent)
+- [x] Textarea expands vertically when user enters multiple lines
+- [x] Material Design styling matches other form fields
+- [x] Validation errors display correctly
+- [x] Works with required fields, patterns, and other string constraints
+- [x] Unit tests verify renderer registration and behavior - NOTE: Covered by Playwright e2e tests per implementation-tips.md (JSONForms ESM/CJS issue)
+- [x] Presubmit passes
 
 ---
 

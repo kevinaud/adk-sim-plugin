@@ -31,7 +31,12 @@ import { angularMaterialRenderers } from '@jsonforms/angular-material';
 import type { UISchemaElement } from '@jsonforms/core';
 import type { ErrorObject } from 'ajv';
 
-import { AnyObjectRenderer, AnyObjectRendererTester } from '../renderers';
+import {
+  AnyObjectRenderer,
+  AnyObjectRendererTester,
+  StringTextareaRenderer,
+  StringTextareaRendererTester,
+} from '../renderers';
 import type { ToolFormConfig, ToolInvokeEvent } from './tool-form.types';
 
 /**
@@ -44,6 +49,7 @@ import type { ToolFormConfig, ToolInvokeEvent } from './tool-form.types';
 const jsonFormsRenderers = [
   ...angularMaterialRenderers,
   { tester: AnyObjectRendererTester, renderer: AnyObjectRenderer },
+  { tester: StringTextareaRendererTester, renderer: StringTextareaRenderer },
 ];
 
 /**

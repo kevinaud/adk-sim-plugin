@@ -6,3 +6,4 @@
  */
 
 export { AnyObjectRenderer, AnyObjectRendererTester } from './any-object.renderer';
+export { StringTextareaRenderer, StringTextareaRendererTester } from './string-textarea.renderer';

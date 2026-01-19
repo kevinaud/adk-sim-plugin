@@ -72,7 +72,8 @@ test.describe('ToolFormComponent', () => {
       await expect(component.getByTestId('form-header')).toBeVisible();
 
       // Fill the location field to make it valid (removes error state)
-      const locationInput = component.locator('input').first();
+      // String fields are rendered as textareas by the custom StringTextareaRenderer
+      const locationInput = component.locator('textarea').first();
       await locationInput.fill('San Francisco, CA');
 
       // Click elsewhere to unfocus
@@ -163,10 +164,11 @@ test.describe('ToolFormComponent', () => {
 
       await expect(component.getByTestId('form-header')).toBeVisible();
 
-      // Fill in the fields (JSONForms renders enum as autocomplete input)
-      const inputs = component.locator('input');
-      await inputs.nth(0).fill('San Francisco, CA');
-      await inputs.nth(1).fill('fahrenheit');
+      // Fill in the fields - string fields are rendered as textareas
+      const textareas = component.locator('textarea');
+      await textareas.nth(0).fill('San Francisco, CA');
+      // Enum fields are rendered as autocomplete inputs (still input elements)
+      await component.locator('input').first().fill('fahrenheit');
 
       // Click elsewhere to close autocomplete and unfocus
       await component.getByTestId('form-header').click();
@@ -206,10 +208,12 @@ test.describe('ToolFormComponent', () => {
       await expect(component.getByTestId('form-header')).toBeVisible();
 
       // Fill all fields
-      const inputs = component.locator('input');
-      await inputs.nth(0).fill('Hello World');
-      await inputs.nth(1).fill('3.14159');
-      await inputs.nth(2).fill('42');
+      // String field is rendered as textarea
+      await component.locator('textarea').first().fill('Hello World');
+      // Number and integer fields are rendered as inputs
+      const inputs = component.locator('input:not([type="checkbox"])');
+      await inputs.nth(0).fill('3.14159');
+      await inputs.nth(1).fill('42');
 
       // Check the boolean checkbox
       await component.locator('mat-checkbox').click();
@@ -253,10 +257,10 @@ test.describe('ToolFormComponent', () => {
 
       await expect(component.getByTestId('form-header')).toBeVisible();
 
-      // Fill enum as text (JSONForms renders as autocomplete)
-      const inputs = component.locator('input');
-      await inputs.nth(0).fill('claude-3-opus');
-      await inputs.nth(1).fill('0.7');
+      // Fill enum as text (JSONForms renders enum as autocomplete input)
+      await component.locator('input').first().fill('claude-3-opus');
+      // Number field is rendered as input
+      await component.locator('input').nth(1).fill('0.7');
 
       await component.page().waitForTimeout(100);
 
@@ -334,12 +338,12 @@ test.describe('ToolFormComponent', () => {
 
       await expect(component.getByTestId('form-header')).toBeVisible();
 
-      // Fill all fields
-      const inputs = component.locator('input');
-      await inputs.nth(0).fill('John Doe');
-      await inputs.nth(1).fill('123 Main Street');
-      await inputs.nth(2).fill('San Francisco');
-      await inputs.nth(3).fill('94102');
+      // Fill all fields - string fields are rendered as textareas
+      const textareas = component.locator('textarea');
+      await textareas.nth(0).fill('John Doe');
+      await textareas.nth(1).fill('123 Main Street');
+      await textareas.nth(2).fill('San Francisco');
+      await textareas.nth(3).fill('94102');
 
       await component.page().waitForTimeout(100);
 
@@ -369,7 +373,8 @@ test.describe('ToolFormComponent', () => {
       await expect(component.getByTestId('form-header')).toBeVisible();
       await expect(component.getByTestId('form-description')).not.toBeVisible();
 
-      await component.locator('input').fill('192.168.1.1');
+      // String field is rendered as textarea
+      await component.locator('textarea').fill('192.168.1.1');
       await component.page().waitForTimeout(100);
 
       await expect(component).toHaveScreenshot('tool-form-no-description.png');
@@ -496,15 +501,18 @@ test.describe('ToolFormComponent', () => {
       await expect(component.getByTestId('form-header')).toBeVisible();
 
       // Fill the form fields
-      const inputs = component.locator('input:not([type="checkbox"])');
-      await inputs.nth(0).fill('https://api.example.com/v1/users'); // url
-      await inputs.nth(1).fill('POST'); // method
+      // String fields are rendered as textareas
+      const textareas = component.locator('textarea');
+      await textareas.nth(0).fill('https://api.example.com/v1/users'); // url
+      // Enum field (method) is rendered as autocomplete input
+      await component.locator('input').first().fill('POST'); // method
 
       // Note: Headers (additionalProperties object) doesn't have a simple input
       // It renders as an expandable section for dynamic key-value pairs
 
-      await inputs.nth(2).fill('{"name": "John"}'); // body
-      await inputs.nth(3).fill('30'); // timeout
+      await textareas.nth(1).fill('{"name": "John"}'); // body
+      // Integer field is rendered as input
+      await component.locator('input').nth(1).fill('30'); // timeout
 
       // Note: Checkbox clicks don't visually persist in Playwright CT screenshots
       // due to Angular Material change detection timing. This is a known limitation.
@@ -552,8 +560,8 @@ test.describe('ToolFormComponent', () => {
 
       await expect(component.getByTestId('form-header')).toBeVisible();
 
-      // Fill the subject
-      await component.locator('input').first().fill('Weekly Update');
+      // Fill the subject - string field is rendered as textarea
+      await component.locator('textarea').first().fill('Weekly Update');
 
       // Add recipients by clicking the add button
       const addButton = component
@@ -567,18 +575,16 @@ test.describe('ToolFormComponent', () => {
         await component.page().waitForTimeout(100);
 
         // Fill in the recipient data (table rows)
-        const nameInputs = component
-          .locator('input')
-          .filter({ has: component.page().locator('..').filter({ hasText: /name/i }) });
-        const allInputs = component.locator('input');
+        // String fields in nested objects are also rendered as textareas
+        const allTextareas = component.locator('textarea');
 
-        // Fill first recipient row
-        await allInputs.nth(1).fill('Alice Smith');
-        await allInputs.nth(2).fill('alice@example.com');
+        // Fill first recipient row (name and email are strings -> textareas)
+        await allTextareas.nth(1).fill('Alice Smith');
+        await allTextareas.nth(2).fill('alice@example.com');
 
         // Fill second recipient row
-        await allInputs.nth(3).fill('Bob Jones');
-        await allInputs.nth(4).fill('bob@example.com');
+        await allTextareas.nth(3).fill('Bob Jones');
+        await allTextareas.nth(4).fill('bob@example.com');
       }
 
       await component.page().waitForTimeout(100);
