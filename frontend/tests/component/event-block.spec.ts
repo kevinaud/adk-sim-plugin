@@ -2,10 +2,15 @@
  * @fileoverview Component tests for EventBlockComponent.
  *
  * Tests the visual appearance of individual event blocks
- * for different content types: user input, model response, and tool execution.
+ * for different content types: user input, model response, tool call, and tool response.
  *
  * Uses visual regression testing with screenshots to verify the
  * component renders correctly with proper icons, colors, and styling.
+ *
+ * Tool Call vs Tool Response differentiation:
+ * - Tool Call: model role with functionCall, uses call_made icon, "Tool Call" label
+ * - Tool Response: user role with functionResponse, uses call_received icon, "Tool Response" label
+ * - Both maintain orange accent color via data-type="tool" CSS attribute
  *
  * Uses the theme fixture to automatically run tests in both light and dark modes,
  * generating separate snapshots for each theme variant.
@@ -66,7 +71,7 @@ test.describe('EventBlockComponent', () => {
       await expect(block).toHaveAttribute('data-type', 'model');
     });
 
-    test('displays function call as tool execution', async ({ mount, page }) => {
+    test('displays function call as tool call with call_made icon', async ({ mount, page }) => {
       const content: Content = {
         role: 'model',
         parts: [
@@ -83,21 +88,24 @@ test.describe('EventBlockComponent', () => {
         props: { content },
       });
 
-      // Verify text content
-      await expect(component).toContainText('Tool Execution');
+      // Verify label shows "Tool Call" (not generic "Tool Execution")
+      await expect(component).toContainText('Tool Call');
       await expect(component).toContainText('get_weather');
       await expect(component).toContainText('San Francisco');
 
-      // Verify the icon is present
+      // Verify the icon is call_made (for outgoing tool call)
       const icon = page.locator('mat-icon').first();
-      await expect(icon).toContainText('build');
+      await expect(icon).toContainText('call_made');
 
-      // Verify the block type attribute
+      // Verify the CSS block type attribute is 'tool' (for orange styling)
       const block = page.locator('[data-testid="event-block"]');
       await expect(block).toHaveAttribute('data-type', 'tool');
     });
 
-    test('displays function response as tool execution', async ({ mount, page }) => {
+    test('displays function response as tool response with call_received icon', async ({
+      mount,
+      page,
+    }) => {
       const content: Content = {
         role: 'user',
         parts: [
@@ -114,18 +122,25 @@ test.describe('EventBlockComponent', () => {
         props: { content },
       });
 
-      // Verify text content
-      await expect(component).toContainText('Tool Execution');
+      // Verify label shows "Tool Response" (not generic "Tool Execution")
+      await expect(component).toContainText('Tool Response');
       await expect(component).toContainText('get_weather');
       await expect(component).toContainText('72');
       await expect(component).toContainText('Sunny');
 
-      // Verify the block type attribute
+      // Verify the icon is call_received (for incoming tool response)
+      const icon = page.locator('mat-icon').first();
+      await expect(icon).toContainText('call_received');
+
+      // Verify the CSS block type attribute is 'tool' (for orange styling)
       const block = page.locator('[data-testid="event-block"]');
       await expect(block).toHaveAttribute('data-type', 'tool');
     });
 
-    test('handles multiple parts in single content', async ({ mount, page }) => {
+    test('handles multiple parts in single content (classified as tool-call)', async ({
+      mount,
+      page,
+    }) => {
       const content: Content = {
         role: 'model',
         parts: [
@@ -143,9 +158,12 @@ test.describe('EventBlockComponent', () => {
         props: { content },
       });
 
-      // Should be classified as tool due to functionCall
+      // Should be classified as tool-call (CSS data-type='tool')
       const block = page.locator('[data-testid="event-block"]');
       await expect(block).toHaveAttribute('data-type', 'tool');
+
+      // Label should be "Tool Call" since content has functionCall
+      await expect(component).toContainText('Tool Call');
 
       // Both parts should be rendered
       await expect(component).toContainText('Here is the weather information:');
@@ -180,7 +198,7 @@ test.describe('EventBlockComponent', () => {
       await expect(component).toHaveScreenshot('event-block-model.png');
     });
 
-    test('function call visual appearance', async ({ mount }) => {
+    test('tool call visual appearance (call_made icon)', async ({ mount }) => {
       const content: Content = {
         role: 'model',
         parts: [
@@ -198,12 +216,12 @@ test.describe('EventBlockComponent', () => {
       });
 
       // Higher threshold due to font rendering differences between local Docker and CI Docker
-      await expect(component).toHaveScreenshot('event-block-function-call.png', {
+      await expect(component).toHaveScreenshot('event-block-tool-call.png', {
         maxDiffPixelRatio: 0.1,
       });
     });
 
-    test('function response visual appearance', async ({ mount }) => {
+    test('tool response visual appearance (call_received icon)', async ({ mount }) => {
       const content: Content = {
         role: 'user',
         parts: [
@@ -221,7 +239,7 @@ test.describe('EventBlockComponent', () => {
       });
 
       // Higher threshold due to font rendering differences between local Docker and CI Docker
-      await expect(component).toHaveScreenshot('event-block-function-response.png', {
+      await expect(component).toHaveScreenshot('event-block-tool-response.png', {
         maxDiffPixelRatio: 0.1,
       });
     });
