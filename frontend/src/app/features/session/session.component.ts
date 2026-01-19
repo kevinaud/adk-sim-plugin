@@ -99,53 +99,61 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
         </div>
       </header>
 
-      <!-- System Instructions (Collapsible) -->
-      <div class="system-instructions" data-testid="system-instructions">
-        <button
-          class="instructions-header"
-          (click)="toggleInstructions()"
-          type="button"
-          [attr.aria-expanded]="instructionsExpanded()"
-          aria-controls="instructions-content"
-        >
-          <mat-icon class="instructions-icon">psychology</mat-icon>
-          <span class="instructions-label">System Instructions</span>
-          <mat-icon class="expand-icon">
-            {{ instructionsExpanded() ? 'expand_less' : 'expand_more' }}
-          </mat-icon>
-        </button>
-        @if (instructionsExpanded()) {
-          <div
-            class="instructions-content"
-            id="instructions-content"
-            data-testid="instructions-content"
-          >
-            @if (systemInstruction()) {
-              <pre class="instructions-text">{{ systemInstructionText() }}</pre>
-            } @else {
-              <p class="no-instructions">No system instructions provided.</p>
-            }
-          </div>
-        }
-      </div>
-
       <!-- Split-Pane Layout -->
       <app-split-pane [sidebarWidth]="400" class="flex-1">
-        <!-- Left Pane: Event Stream -->
-        <div main class="event-stream-pane" data-testid="event-stream-pane">
-          <div class="event-stream-header">
-            <span class="event-stream-title">Event Stream</span>
-            <div class="event-stream-actions">
-              <button mat-icon-button type="button" aria-label="Expand all" title="Expand all">
-                <mat-icon>unfold_more</mat-icon>
-              </button>
-              <button mat-icon-button type="button" aria-label="Collapse all" title="Collapse all">
-                <mat-icon>unfold_less</mat-icon>
-              </button>
-            </div>
+        <!-- Left Pane: System Instructions + Event Stream -->
+        <div main class="main-pane" data-testid="main-pane">
+          <!-- System Instructions (Collapsible) - Now inside main pane -->
+          <div class="system-instructions" data-testid="system-instructions">
+            <button
+              class="instructions-header"
+              (click)="toggleInstructions()"
+              type="button"
+              [attr.aria-expanded]="instructionsExpanded()"
+              aria-controls="instructions-content"
+            >
+              <mat-icon class="instructions-icon">psychology</mat-icon>
+              <span class="instructions-label">System Instructions</span>
+              <mat-icon class="expand-icon">
+                {{ instructionsExpanded() ? 'expand_less' : 'expand_more' }}
+              </mat-icon>
+            </button>
+            @if (instructionsExpanded()) {
+              <div
+                class="instructions-content"
+                id="instructions-content"
+                data-testid="instructions-content"
+              >
+                @if (systemInstruction()) {
+                  <pre class="instructions-text">{{ systemInstructionText() }}</pre>
+                } @else {
+                  <p class="no-instructions">No system instructions provided.</p>
+                }
+              </div>
+            }
           </div>
-          <div class="event-stream-content" data-testid="event-stream-content">
-            <app-event-stream [events]="eventStreamContents()" />
+
+          <!-- Event Stream Section -->
+          <div class="event-stream-pane" data-testid="event-stream-pane">
+            <div class="event-stream-header">
+              <span class="event-stream-title">Event Stream</span>
+              <div class="event-stream-actions">
+                <button mat-icon-button type="button" aria-label="Expand all" title="Expand all">
+                  <mat-icon>unfold_more</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  aria-label="Collapse all"
+                  title="Collapse all"
+                >
+                  <mat-icon>unfold_less</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="event-stream-content" data-testid="event-stream-content">
+              <app-event-stream [events]="eventStreamContents()" />
+            </div>
           </div>
         </div>
 
@@ -226,8 +234,22 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       color: var(--sys-surface);
     }
 
-    /* System Instructions */
+    /* Split-Pane Content */
+    app-split-pane {
+      min-height: 0;
+    }
+
+    /* Main Pane (contains instructions + event stream) */
+    .main-pane {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* System Instructions (inside main pane) */
     .system-instructions {
+      flex-shrink: 0;
       background-color: var(--sys-surface);
       border-bottom: 1px solid var(--sys-outline-variant);
     }
@@ -265,6 +287,8 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
 
     .instructions-content {
       padding: 0 24px 16px 60px;
+      max-height: 200px;
+      overflow-y: auto;
     }
 
     .instructions-text {
@@ -284,16 +308,13 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       font-style: italic;
     }
 
-    /* Split-Pane Content */
-    app-split-pane {
-      min-height: 0;
-    }
-
     /* Event Stream Pane */
     .event-stream-pane {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
       padding: 16px 24px;
     }
 

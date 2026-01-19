@@ -263,12 +263,12 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [FR-015 Requirement](../frontend-spec.md#fr-context-inspection) - System instruction accordion requirement
 
 **Acceptance Criteria**:
-- [ ] System instructions accordion is inside the left pane (same column as event stream)
-- [ ] Expanding accordion only affects event stream area, control panel stays in place
-- [ ] Accordion header styling is consistent with current design
-- [ ] Event stream scrolls independently when instructions expanded
-- [ ] Works correctly in both light and dark modes
-- [ ] Presubmit passes
+- [x] System instructions accordion is inside the left pane (same column as event stream)
+- [x] Expanding accordion only affects event stream area, control panel stays in place
+- [x] Accordion header styling is consistent with current design
+- [x] Event stream scrolls independently when instructions expanded
+- [x] Works correctly in both light and dark modes
+- [x] Presubmit passes
 
 ---
 
