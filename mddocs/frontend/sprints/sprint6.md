@@ -296,16 +296,16 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [SmartBlob Entity](../frontend-spec.md#smartblob-entity) - Entity definition
 
 **Acceptance Criteria**:
-- [ ] Component accepts `content` input signal (required string)
-- [ ] Auto-detects JSON content and shows `[JSON]` toggle
-- [ ] Auto-detects Markdown content and shows `[MD]` toggle
-- [ ] Always shows `[RAW]` toggle
-- [ ] JSON mode renders content using DataTreeComponent (or simple formatted view)
-- [ ] Markdown mode renders HTML using marked library
-- [ ] Raw mode displays preformatted text preserving whitespace
-- [ ] Sanitizes rendered markdown HTML for security
-- [ ] Unit tests cover detection logic and mode switching
-- [ ] Playwright component tests with screenshots for each mode
+- [x] Component accepts `content` input signal (required string)
+- [x] Auto-detects JSON content and shows `[JSON]` toggle
+- [x] Auto-detects Markdown content and shows `[MD]` toggle
+- [x] Always shows `[RAW]` toggle
+- [x] JSON mode renders content using DataTreeComponent (or simple formatted view)
+- [x] Markdown mode renders HTML using marked library
+- [x] Raw mode displays preformatted text preserving whitespace
+- [x] Sanitizes rendered markdown HTML for security
+- [x] Unit tests cover detection logic and mode switching
+- [x] Playwright component tests with screenshots for each mode
 - [ ] Presubmit passes
 
 ---
