@@ -350,16 +350,16 @@ The existing `AnyObjectRenderer` provides a good template for implementation.
 - [FR-005 Layout](../frontend-spec.md#fr-layout-and-navigation) - Split pane requirements
 
 **Acceptance Criteria**:
-- [ ] Divider element is visible between panes (subtle vertical line)
-- [ ] Cursor changes to `col-resize` on hover over divider
-- [ ] Dragging divider adjusts sidebar width in real-time
-- [ ] Sidebar has minimum width constraint (200px)
-- [ ] Sidebar has maximum width constraint (50% of container)
-- [ ] Drag state properly cleaned up on mouse up (even outside component)
-- [ ] Works with touch events for mobile/tablet
-- [ ] Existing `sidebarWidth` input still works as initial value
-- [ ] Unit tests cover drag behavior
-- [ ] Presubmit passes
+- [x] Divider element is visible between panes (subtle vertical line)
+- [x] Cursor changes to `col-resize` on hover over divider
+- [x] Dragging divider adjusts sidebar width in real-time
+- [x] Sidebar has minimum width constraint (200px)
+- [x] Sidebar has maximum width constraint (50% of container)
+- [x] Drag state properly cleaned up on mouse up (even outside component)
+- [x] Works with touch events for mobile/tablet
+- [x] Existing `sidebarWidth` input still works as initial value
+- [x] Unit tests cover drag behavior
+- [x] Presubmit passes
 
 ---
 
