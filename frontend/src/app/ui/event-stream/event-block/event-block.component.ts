@@ -105,6 +105,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
       border-left: 4px solid var(--mat-sys-primary, #6750a4);
     }
 
+    /* Light mode: subtle tinted backgrounds with 5% opacity */
     .event-block[data-type='user'] {
       border-left-color: #2196f3;
       background-color: rgba(33, 150, 243, 0.05);
@@ -118,6 +119,19 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
     .event-block[data-type='tool'] {
       border-left-color: #ff9800;
       background-color: rgba(255, 152, 0, 0.05);
+    }
+
+    /* Dark mode: more opaque backgrounds for better contrast */
+    :host-context(body.dark-theme) .event-block[data-type='user'] {
+      background-color: rgba(33, 150, 243, 0.15);
+    }
+
+    :host-context(body.dark-theme) .event-block[data-type='model'] {
+      background-color: rgba(76, 175, 80, 0.15);
+    }
+
+    :host-context(body.dark-theme) .event-block[data-type='tool'] {
+      background-color: rgba(255, 152, 0, 0.15);
     }
 
     .block-header {
