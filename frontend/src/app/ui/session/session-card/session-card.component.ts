@@ -120,7 +120,7 @@ import { timestampDate } from '@bufbuild/protobuf/wkt';
       width: 8px !important;
       height: 8px !important;
       line-height: 1 !important;
-      color: #22c55e;
+      color: var(--color-success);
     }
 
     /* Focus styles */

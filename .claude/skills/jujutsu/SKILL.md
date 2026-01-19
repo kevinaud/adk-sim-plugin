@@ -39,6 +39,7 @@ description: |
 | **Format code** | `jj fix` |
 | **Quick lint check** | `jj quality` |
 | **Full verify + push** | `jj secure-push` |
+| **Post-merge sync** | `jj git fetch && jj rebase -s <next> -d main` |
 
 ## Workflow Patterns
 
@@ -61,6 +62,20 @@ jj edit <tip_id>
 # Verify no conflicts
 jj log -r '::@' --template 'change_id " " conflict "\n"'
 ```
+
+### Post-Merge Sync (after GitHub merges)
+
+**jj has no `git pull --rebase` equivalent.** After a PR is merged on GitHub:
+
+```bash
+# 1. Fetch the merged commit
+jj git fetch
+
+# 2. Rebase remaining work onto new main
+jj rebase -s <oldest-unmerged-change-id> -d main
+```
+
+**Important:** Always use `gh pr merge --rebase` (not `--squash`). With rebase-merge, jj recognizes the commit is on main. Squash-merge creates a new hash, leaving orphaned "zombie" commits.
 
 ### Forbidden Commands
 
@@ -109,6 +124,6 @@ jj quality
 See [references/workflows.md](references/workflows.md) for:
 - State verification protocols
 - Non-interactive splitting techniques
-- GitHub squash-merge recovery
+- Post-merge sync workflow
 - Conflict resolution steps
 - Safety and recovery operations

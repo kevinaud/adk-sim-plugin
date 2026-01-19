@@ -73,6 +73,21 @@
   --color-success: #22c55e; /* Green 500 - for positive/success states */
   --color-warning: #f59e0b; /* Amber 500 - for warning/attention states */
 
+  /* Role-based colors (defined in theme.scss with light/dark variants) */
+  --color-role-user: var(--color-role-user);
+  --color-role-model: var(--color-role-model);
+  --color-role-tool: var(--color-role-tool);
+  --color-role-user-surface: var(--color-role-user-surface);
+  --color-role-model-surface: var(--color-role-model-surface);
+  --color-role-tool-surface: var(--color-role-tool-surface);
+
+  /* Semantic accents */
+  --color-success-accent: var(--color-success-accent);
+  --color-success-surface: var(--color-success-surface);
+  --color-warning-accent: var(--color-warning-accent);
+  --color-warning-on: var(--color-warning-on);
+  --color-action-accent: var(--color-action-accent);
+
   /* Outline */
   --color-outline: var(--sys-outline);
   --color-outline-variant: var(--sys-outline-variant);
@@ -124,10 +139,7 @@ body {
   height: 100%;
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
-}
-
-body {
   /* Use theme bridge surface color - auto-updates with dark mode */
-  background-color: var(--sys-surface, #fafafa);
-  color: var(--sys-on-surface, #1f1f1f);
+  background-color: var(--sys-surface);
+  color: var(--sys-on-surface);
 }

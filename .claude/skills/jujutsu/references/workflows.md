@@ -239,21 +239,51 @@ jj git push --bookmark agent/task-101-zso
 jj git push --all
 ```
 
-### Handling Squash-and-Merge
+### Post-Merge Sync
 
-After maintainer squash-merges commit A, local graph breaks.
+**Always use rebase-merge on GitHub** (`gh pr merge --rebase`), not squash-merge.
 
-**Recovery protocol:**
+**Why rebase-merge:**
+- With jj's workflow, each PR already has a single commit
+- Rebase-merge preserves the commit hash, so jj recognizes the commit is now on main
+- Squash-merge creates a NEW hash, leaving orphaned "zombie" commits
+
+**After every GitHub merge:**
 
 ```bash
-# 1. Fetch remote
+# 1. Fetch the merged commit
 jj git fetch
 
-# 2. Rebase remaining stack onto new main
-jj rebase -s <Commit_B_ID> -d main@origin
+# 2. Find remaining unmerged work
+jj log -r 'trunk()..visible_heads()' --no-pager
 
-# 3. Abandon redundant local commit
-jj abandon <Commit_A_ID>
+# 3. Rebase remaining stack onto new main
+jj rebase -s <next-unmerged-change-id> -d main
+
+# 4. Verify the graph is clean
+jj log -r '::@ | main' --no-pager
+```
+
+**Example:** Stack was A→B→C, PR for A was merged:
+```bash
+jj git fetch
+jj rebase -s <B-change-id> -d main
+# No need to abandon A—jj recognizes it's on main
+```
+
+**If squash-merge was used accidentally:**
+```bash
+# Find zombie commits
+jj log -r 'trunk()..visible_heads()' --no-pager
+# Abandon the orphaned local commit
+jj abandon <zombie-change-id>
+```
+
+**Handling conflicts:** If rebase introduces conflicts, resolve them:
+```bash
+jj resolve --list                           # See conflicted files
+jj restore --from main -- <file-path>       # Accept version from main
+# Or manually edit the file to resolve
 ```
 
 ---

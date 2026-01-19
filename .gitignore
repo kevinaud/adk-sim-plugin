@@ -66,3 +66,5 @@ server/src/adk_sim_server/static/*
 !server/src/adk_sim_server/static/.gitkeep
 
 .claude/agents
+
+tmp/

@@ -170,7 +170,7 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       display: flex;
       flex-direction: column;
       height: 100%;
-      background-color: var(--mat-sys-surface-container, #f3edf7);
+      background-color: var(--sys-surface-container);
     }
 
     /* Header Bar */
@@ -179,8 +179,8 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       align-items: center;
       justify-content: space-between;
       padding: 12px 24px;
-      background-color: #1976d2;
-      color: white;
+      background-color: var(--color-action-accent);
+      color: var(--sys-surface);
     }
 
     .header-content {
@@ -211,25 +211,25 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
     }
 
     .status-badge.awaiting {
-      background-color: #ffc107;
-      color: #000;
+      background-color: var(--color-warning-accent);
+      color: var(--color-warning-on);
     }
 
     .status-badge.active {
       background-color: transparent;
-      border: 2px solid #4caf50;
-      color: white;
+      border: 2px solid var(--color-success-accent);
+      color: var(--sys-surface);
     }
 
     .status-badge.completed {
-      background-color: #4caf50;
-      color: white;
+      background-color: var(--color-success-accent);
+      color: var(--sys-surface);
     }
 
     /* System Instructions */
     .system-instructions {
-      background-color: var(--mat-sys-surface, #fffbfe);
-      border-bottom: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      background-color: var(--sys-surface);
+      border-bottom: 1px solid var(--sys-outline-variant);
     }
 
     .instructions-header {
@@ -242,15 +242,15 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       cursor: pointer;
       text-align: left;
       gap: 12px;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     .instructions-header:hover {
-      background-color: var(--mat-sys-surface-container-high, #ece6f0);
+      background-color: var(--sys-surface-container-high);
     }
 
     .instructions-icon {
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
 
     .instructions-label {
@@ -260,7 +260,7 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
     }
 
     .expand-icon {
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
 
     .instructions-content {
@@ -273,14 +273,14 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       font-size: 13px;
       white-space: pre-wrap;
       word-break: break-word;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
       line-height: 1.5;
     }
 
     .no-instructions {
       margin: 0;
       font-size: 14px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
       font-style: italic;
     }
 
@@ -307,7 +307,7 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
     .event-stream-title {
       font-size: 16px;
       font-weight: 500;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     .event-stream-actions {
@@ -317,9 +317,9 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
 
     .event-stream-content {
       flex: 1;
-      border: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border: 1px solid var(--sys-outline-variant);
       border-radius: 8px;
-      background-color: var(--mat-sys-surface, #fffbfe);
+      background-color: var(--sys-surface);
       overflow: auto;
     }
 

@@ -178,8 +178,8 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
       display: flex;
       flex-direction: column;
       min-height: 200px; /* Minimum height for visibility */
-      background: var(--mat-sys-surface, #fff);
-      border: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      background: var(--sys-surface);
+      border: 1px solid var(--sys-outline-variant);
       border-radius: 12px;
       overflow: hidden;
     }
@@ -189,7 +189,7 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
       padding: 16px 16px 0;
       font-size: 20px;
       font-weight: 500;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     /* Tab Navigation */
@@ -209,7 +209,7 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
       border: none;
       border-bottom: 2px solid transparent;
       cursor: pointer;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
       font-size: 12px;
       font-weight: 500;
       letter-spacing: 0.5px;
@@ -224,12 +224,12 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
       }
 
       &:hover {
-        color: var(--mat-sys-on-surface, #1c1b1f);
+        color: var(--sys-on-surface);
       }
 
       &.active {
-        color: var(--mat-sys-on-surface, #1c1b1f);
-        border-bottom-color: var(--mat-sys-on-surface, #1c1b1f);
+        color: var(--sys-on-surface);
+        border-bottom-color: var(--sys-on-surface);
       }
     }
 
@@ -249,7 +249,7 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
     .select-label {
       margin: 0;
       font-size: 14px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
 
     /* Completed State */
@@ -270,32 +270,32 @@ export const FORM_CONFIG_CREATOR = new InjectionToken<FormConfigCreator>('FormCo
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background-color: rgba(76, 175, 80, 0.1);
+      background-color: var(--color-success-surface);
     }
 
     .checkmark-icon {
       font-size: 48px;
       width: 48px;
       height: 48px;
-      color: #4caf50;
+      color: var(--color-success-accent);
     }
 
     .completed-title {
       margin: 0;
       font-size: 20px;
       font-weight: 500;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     .completed-message {
       margin: 0;
       font-size: 14px;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
 
     .export-button {
-      background-color: #4caf50 !important;
-      color: white !important;
+      background-color: var(--color-success-accent) !important;
+      color: var(--sys-surface) !important;
       display: inline-flex;
       align-items: center;
       gap: 8px;

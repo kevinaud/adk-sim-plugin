@@ -121,31 +121,32 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
       flex-direction: column;
       gap: 8px;
       padding: 12px 16px;
-      background-color: var(--mat-sys-surface-container, #fafafa);
+      background-color: var(--sys-surface-container);
       border-radius: 8px;
-      border-left: 4px solid var(--mat-sys-primary, #6750a4);
+      border-left: 4px solid var(--sys-primary);
     }
 
+    /* Role-based styling using semantic tokens (auto-switch light/dark) */
     .event-block[data-type='user'] {
-      border-left-color: #2196f3;
-      background-color: rgba(33, 150, 243, 0.05);
+      border-left-color: var(--color-role-user);
+      background-color: var(--color-role-user-surface);
     }
 
     .event-block[data-type='model'] {
-      border-left-color: #4caf50;
-      background-color: rgba(76, 175, 80, 0.05);
+      border-left-color: var(--color-role-model);
+      background-color: var(--color-role-model-surface);
     }
 
     .event-block[data-type='tool'] {
-      border-left-color: #ff9800;
-      background-color: rgba(255, 152, 0, 0.05);
+      border-left-color: var(--color-role-tool);
+      background-color: var(--color-role-tool-surface);
     }
 
     .block-header {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--mat-sys-on-surface, #1c1b1f);
+      color: var(--sys-on-surface);
     }
 
     mat-icon {
@@ -167,7 +168,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
 
     .text-part {
       padding: 8px;
-      background-color: var(--mat-sys-surface, #fff);
+      background-color: transparent;
       border-radius: 4px;
     }
 
@@ -177,21 +178,22 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
       font-size: 14px;
       white-space: pre-wrap;
       word-break: break-word;
+      color: var(--sys-on-surface);
     }
 
     .function-call,
     .function-response {
       padding: 8px;
-      background-color: var(--mat-sys-surface, #fff);
+      background-color: transparent;
       border-radius: 4px;
-      border: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border: 1px solid var(--sys-outline-variant);
     }
 
     .function-name {
       display: block;
       font-weight: 600;
       font-size: 13px;
-      color: var(--mat-sys-primary, #6750a4);
+      color: var(--sys-primary);
       margin-bottom: 4px;
     }
 
@@ -202,7 +204,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
       font-size: 12px;
       white-space: pre-wrap;
       word-break: break-word;
-      color: var(--mat-sys-on-surface-variant, #49454f);
+      color: var(--sys-on-surface-variant);
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

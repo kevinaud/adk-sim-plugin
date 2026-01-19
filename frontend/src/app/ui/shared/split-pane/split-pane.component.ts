@@ -13,17 +13,14 @@
  */
 
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
-  effect,
   type ElementRef,
   inject,
   input,
   signal,
-  untracked,
   viewChild,
 } from '@angular/core';
 
@@ -130,9 +127,15 @@ export class SplitPaneComponent {
   private readonly _isDragging = signal(false);
   readonly isDragging = this._isDragging.asReadonly();
 
-  /** The current sidebar width, initialized from input and updated during drag. */
-  private readonly _currentWidth = signal<number>(400);
-  readonly currentWidth = this._currentWidth.asReadonly();
+  /**
+   * The current sidebar width, updated during drag.
+   * When undefined, falls back to the sidebarWidth input.
+   */
+  // eslint-disable-next-line unicorn/no-useless-undefined -- Angular signal() requires initial value
+  private readonly _userDraggedWidth = signal<number | undefined>(undefined);
+
+  /** The effective current width - user-dragged width or input default. */
+  readonly currentWidth = computed(() => this._userDraggedWidth() ?? this.sidebarWidth());
 
   /** The starting X position when drag began. */
   private dragStartX = 0;
@@ -160,14 +163,6 @@ export class SplitPaneComponent {
   });
 
   constructor() {
-    // Set initial width to 30% of container after first render
-    afterNextRender(() => {
-      const container = this.containerRef()?.nativeElement;
-      if (container && container.clientWidth > 0) {
-        this._currentWidth.set(container.clientWidth * MIN_SIDEBAR_WIDTH_FRACTION);
-      }
-    });
-
     // Set up document-level event listeners for drag
     this.setupDragListeners();
   }
@@ -180,7 +175,7 @@ export class SplitPaneComponent {
 
     this._isDragging.set(true);
     this.dragStartX = event.clientX;
-    this.dragStartWidth = this._currentWidth();
+    this.dragStartWidth = this.currentWidth();
 
     // Capture pointer events to this element (guard for JSDOM in tests)
     const target = event.target as HTMLElement;
@@ -204,7 +199,7 @@ export class SplitPaneComponent {
       // Clamp to min/max constraints (30% to 70% of container)
       const clampedWidth = Math.max(this.minWidth(), Math.min(newWidth, this.maxWidth()));
 
-      this._currentWidth.set(clampedWidth);
+      this._userDraggedWidth.set(clampedWidth);
     };
 
     const onPointerUp = () => {

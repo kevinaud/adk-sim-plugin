@@ -8,6 +8,7 @@ Examples:
   ops test e2e                Run all E2E tests
   ops test frontend           Run frontend unit + E2E
   ops test frontend e2e --trace  Run frontend E2E with tracing
+  ops test frontend screenshots  Update component visual regression baselines
   ops test server             Run server unit + E2E
   ops test plugin             Run all plugin tests
   ops test plugin:python      Run Python plugin tests only
@@ -196,6 +197,71 @@ def run_frontend_component(
     )
 
 
+def update_frontend_component_snapshots(
+  verbose: bool = False, use_docker: bool | None = None
+) -> None:
+  """Update Playwright component test screenshots.
+
+  Runs component tests with --update-snapshots flag to regenerate baselines.
+
+  Args:
+    verbose: Show detailed output.
+    use_docker: Use Docker for consistent visual regression testing.
+      - None (default): Auto-detect (use Docker in CI)
+      - True: Always use Docker
+      - False: Never use Docker
+  """
+  import os
+
+  if use_docker is None:
+    use_docker = os.environ.get("CI") == "true"
+
+  if use_docker:
+    console.print("[dim]Using Playwright Docker for consistent snapshots[/dim]")
+    uid = os.getuid()
+    gid = os.getgid()
+    run(
+      [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{REPO_ROOT}:/app",
+        "-w",
+        "/app/frontend",
+        "--ipc=host",
+        "-u",
+        f"{uid}:{gid}",
+        "mcr.microsoft.com/playwright:v1.57.0-noble",
+        "npm",
+        "exec",
+        "playwright",
+        "test",
+        "--",
+        "-c",
+        "playwright-ct.config.ts",
+        "--update-snapshots",
+      ],
+      cwd=REPO_ROOT,
+      verbose=verbose,
+    )
+  else:
+    run(
+      [
+        "npm",
+        "exec",
+        "playwright",
+        "test",
+        "--",
+        "-c",
+        "playwright-ct.config.ts",
+        "--update-snapshots",
+      ],
+      cwd=FRONTEND_DIR,
+      verbose=verbose,
+    )
+
+
 def run_frontend_e2e(verbose: bool = False, trace: bool = False) -> None:
   """Run Playwright E2E tests.
 
@@ -206,6 +272,32 @@ def run_frontend_e2e(verbose: bool = False, trace: bool = False) -> None:
     if trace:
       cmd.extend(["--trace", "on"])
     run(cmd, cwd=FRONTEND_DIR, verbose=verbose)
+
+
+def update_frontend_e2e_snapshots(verbose: bool = False) -> None:
+  """Update Playwright E2E test screenshots.
+
+  Runs E2E tests with --update-snapshots flag to regenerate baselines.
+  Automatically starts/stops E2E Docker backends as needed.
+
+  Args:
+    verbose: Show detailed output.
+  """
+  with e2e_backends(verbose):
+    run(
+      [
+        "npm",
+        "exec",
+        "playwright",
+        "test",
+        "--",
+        "-c",
+        "playwright.config.ts",
+        "--update-snapshots",
+      ],
+      cwd=FRONTEND_DIR,
+      verbose=verbose,
+    )
 
 
 def run_plugin_python(verbose: bool = False) -> None:
@@ -302,6 +394,43 @@ def frontend_e2e(
       "\n[dim]View traces with: npx playwright show-trace "
       "frontend/test-results/<test-name>/trace.zip[/dim]"
     )
+
+
+@frontend_app.command("screenshots")
+def frontend_screenshots(
+  docker: bool = typer.Option(
+    False, "--docker", help="Use Docker for consistent cross-platform snapshots"
+  ),
+  verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+) -> None:
+  """
+  Update component and E2E test screenshot baselines.
+
+  Runs Playwright tests with --update-snapshots to regenerate visual
+  regression baselines. Use --docker for consistent cross-platform
+  component snapshots.
+
+  Examples:
+    ops test frontend screenshots           Update all snapshots locally
+    ops test frontend screenshots --docker  Update with Docker for components
+  """
+  require_tools("npm")
+  console.print(Panel("Update Frontend Screenshots", style="blue"))
+
+  # Override auto-detection when --docker is explicitly set
+  use_docker = True if docker else None
+
+  console.print("\n[bold]Updating component screenshots...[/bold]")
+  update_frontend_component_snapshots(verbose, use_docker=use_docker)
+  console.print("[green]✓[/green] Component screenshots updated")
+
+  console.print("\n[bold]Updating E2E screenshots...[/bold]")
+  update_frontend_e2e_snapshots(verbose)
+  console.print("[green]✓[/green] E2E screenshots updated")
+
+  console.print("\n[green]✓ All frontend screenshots updated![/green]")
+  console.print("[dim]Component: frontend/tests/component/__snapshots__/[/dim]")
+  console.print("[dim]E2E: frontend/tests/e2e/__snapshots__/[/dim]")
 
 
 # =============================================================================

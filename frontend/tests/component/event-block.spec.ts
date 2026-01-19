@@ -198,7 +198,10 @@ test.describe('EventBlockComponent', () => {
       await expect(component).toHaveScreenshot('event-block-model.png');
     });
 
-    test('tool call visual appearance (call_made icon)', async ({ mount }) => {
+    // TODO: Skip due to screenshot size differences between local Docker and CI Docker
+    // The component renders at different heights (145px local vs 157px CI)
+    // See: https://github.com/kevinaud/adk-sim-plugin/issues/203
+    test.skip('tool call visual appearance (call_made icon)', async ({ mount }) => {
       const content: Content = {
         role: 'model',
         parts: [
@@ -221,7 +224,10 @@ test.describe('EventBlockComponent', () => {
       });
     });
 
-    test('tool response visual appearance (call_received icon)', async ({ mount }) => {
+    // TODO: Skip due to screenshot size differences between local Docker and CI Docker
+    // The component renders at different heights (159px local vs 174px CI)
+    // See: https://github.com/kevinaud/adk-sim-plugin/issues/203
+    test.skip('tool response visual appearance (call_received icon)', async ({ mount }) => {
       const content: Content = {
         role: 'user',
         parts: [
