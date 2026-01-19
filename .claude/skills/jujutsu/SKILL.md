@@ -127,3 +127,8 @@ See [references/workflows.md](references/workflows.md) for:
 - Post-merge sync workflow
 - Conflict resolution steps
 - Safety and recovery operations
+
+See [references/divergent-changes.md](references/divergent-changes.md) for:
+- Identifying divergent changes (multiple commits with same change ID)
+- Resolution strategies: abandon, give new ID, squash, or ignore
+- Common causes and prevention
