@@ -19,7 +19,7 @@ import type { Message } from '@bufbuild/protobuf';
 export const file_adksim_v1_simulator_session: GenFile =
   /*@__PURE__*/
   fileDesc(
-    'CiFhZGtzaW0vdjEvc2ltdWxhdG9yX3Nlc3Npb24ucHJvdG8SCWFka3NpbS52MSJjChBTaW11bGF0b3JTZXNzaW9uEgoKAmlkGAEgASgJEi4KCmNyZWF0ZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2Rlc2NyaXB0aW9uGAMgASgJIr0CCgxTZXNzaW9uRXZlbnQSEAoIZXZlbnRfaWQYASABKAkSEgoKc2Vzc2lvbl9pZBgCIAEoCRItCgl0aW1lc3RhbXAYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg8KB3R1cm5faWQYBCABKAkSEgoKYWdlbnRfbmFtZRgFIAEoCRJSCgtsbG1fcmVxdWVzdBgKIAEoCzI7Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkdlbmVyYXRlQ29udGVudFJlcXVlc3RIABJUCgxsbG1fcmVzcG9uc2UYCyABKAsyPC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5HZW5lcmF0ZUNvbnRlbnRSZXNwb25zZUgAQgkKB3BheWxvYWQqhgEKDVNlc3Npb25TdGF0dXMSHgoaU0VTU0lPTl9TVEFUVVNfVU5TUEVDSUZJRUQQABIZChVTRVNTSU9OX1NUQVRVU19BQ1RJVkUQARIcChhTRVNTSU9OX1NUQVRVU19DT01QTEVURUQQAhIcChhTRVNTSU9OX1NUQVRVU19DQU5DRUxMRUQQA2IGcHJvdG8z',
+    'CiFhZGtzaW0vdjEvc2ltdWxhdG9yX3Nlc3Npb24ucHJvdG8SCWFka3NpbS52MSJjChBTaW11bGF0b3JTZXNzaW9uEgoKAmlkGAEgASgJEi4KCmNyZWF0ZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhMKC2Rlc2NyaXB0aW9uGAMgASgJIvUCCgxTZXNzaW9uRXZlbnQSEAoIZXZlbnRfaWQYASABKAkSEgoKc2Vzc2lvbl9pZBgCIAEoCRItCgl0aW1lc3RhbXAYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg8KB3R1cm5faWQYBCABKAkSEgoKYWdlbnRfbmFtZRgFIAEoCRJSCgtsbG1fcmVxdWVzdBgKIAEoCzI7Lmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFiZXRhLkdlbmVyYXRlQ29udGVudFJlcXVlc3RIABJUCgxsbG1fcmVzcG9uc2UYCyABKAsyPC5nb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxYmV0YS5HZW5lcmF0ZUNvbnRlbnRSZXNwb25zZUgAEjYKEGhpc3RvcnlfY29tcGxldGUYDCABKAsyGi5hZGtzaW0udjEuSGlzdG9yeUNvbXBsZXRlSABCCQoHcGF5bG9hZCImCg9IaXN0b3J5Q29tcGxldGUSEwoLZXZlbnRfY291bnQYASABKAUqhgEKDVNlc3Npb25TdGF0dXMSHgoaU0VTU0lPTl9TVEFUVVNfVU5TUEVDSUZJRUQQABIZChVTRVNTSU9OX1NUQVRVU19BQ1RJVkUQARIcChhTRVNTSU9OX1NUQVRVU19DT01QTEVURUQQAhIcChhTRVNTSU9OX1NUQVRVU19DQU5DRUxMRUQQA2IGcHJvdG8z',
     [file_google_ai_generativelanguage_v1beta_generative_service, file_google_protobuf_timestamp],
   );
 
@@ -103,7 +103,7 @@ export type SessionEvent = Message<'adksim.v1.SessionEvent'> & {
   agentName: string;
 
   /**
-   * The event payload - either a request or response.
+   * The event payload - either a request, response, or control message.
    *
    * @generated from oneof adksim.v1.SessionEvent.payload
    */
@@ -126,6 +126,16 @@ export type SessionEvent = Message<'adksim.v1.SessionEvent'> & {
         value: GenerateContentResponse;
         case: 'llmResponse';
       }
+    | {
+        /**
+         * Marker indicating all historical events have been sent.
+         * After this, all subsequent events are live/real-time.
+         *
+         * @generated from field: adksim.v1.HistoryComplete history_complete = 12;
+         */
+        value: HistoryComplete;
+        case: 'historyComplete';
+      }
     | { case: undefined; value?: undefined };
 };
 
@@ -136,6 +146,29 @@ export type SessionEvent = Message<'adksim.v1.SessionEvent'> & {
 export const SessionEventSchema: GenMessage<SessionEvent> =
   /*@__PURE__*/
   messageDesc(file_adksim_v1_simulator_session, 1);
+
+/**
+ * Marker message sent after replaying all historical events.
+ * The frontend uses this to distinguish between history replay and live events.
+ *
+ * @generated from message adksim.v1.HistoryComplete
+ */
+export type HistoryComplete = Message<'adksim.v1.HistoryComplete'> & {
+  /**
+   * Number of historical events that were replayed.
+   *
+   * @generated from field: int32 event_count = 1;
+   */
+  eventCount: number;
+};
+
+/**
+ * Describes the message adksim.v1.HistoryComplete.
+ * Use `create(HistoryCompleteSchema)` to create a new message.
+ */
+export const HistoryCompleteSchema: GenMessage<HistoryComplete> =
+  /*@__PURE__*/
+  messageDesc(file_adksim_v1_simulator_session, 2);
 
 /**
  * Status of a simulator session.

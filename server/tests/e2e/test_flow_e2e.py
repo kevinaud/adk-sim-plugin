@@ -179,6 +179,9 @@ async def test_full_round_trip_e2e(grpc_channel: Channel) -> None:
   async def subscribe_collector() -> None:
     """Collect events from the subscribe stream."""
     async for response in stub.subscribe(SubscribeRequest(session_id=session_id)):
+      # Skip the history_complete marker (has empty event_id and no turn_id)
+      if not response.event.event_id:
+        continue
       received_events.append(response.event)
       # Stop after receiving both request and decision events (2 events)
       if len(received_events) >= 2:
@@ -272,6 +275,9 @@ async def test_fifo_ordering_e2e(grpc_channel: Channel) -> None:
   async def subscribe_collector() -> None:
     """Collect events from the subscribe stream."""
     async for response in stub.subscribe(SubscribeRequest(session_id=session_id)):
+      # Skip the history_complete marker (has empty event_id)
+      if not response.event.event_id:
+        continue
       received_events.append(response.event)
       # Collect historical events (3 requests) + 3 decisions = 6 total
       if len(received_events) >= 6:

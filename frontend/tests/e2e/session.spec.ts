@@ -83,18 +83,18 @@ test.describe('Session Page Layout', () => {
     await expect(section).toBeVisible();
     await expect(section).toContainText('System Instructions');
 
-    // Initially collapsed
+    // Initially expanded (changed from collapsed per user feedback)
     const content = page.locator('[data-testid="instructions-content"]');
-    await expect(content).not.toBeVisible();
-
-    // Click to expand
-    const header = section.locator('.instructions-header');
-    await header.click();
     await expect(content).toBeVisible();
 
-    // Click again to collapse
+    // Click to collapse
+    const header = section.locator('.instructions-header');
     await header.click();
     await expect(content).not.toBeVisible();
+
+    // Click again to expand
+    await header.click();
+    await expect(content).toBeVisible();
   });
 
   test('displays split-pane layout with Event Stream and Control Panel', async ({

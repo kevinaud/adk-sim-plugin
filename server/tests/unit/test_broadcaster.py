@@ -18,6 +18,12 @@ def _make_event(session_id: str, event_id: str) -> SessionEvent:
   )
 
 
+def _is_history_complete(event: SessionEvent) -> bool:
+  """Check if an event is a history_complete marker."""
+  # Check using betterproto's presence detection
+  return bool(event.history_complete.event_count >= 0 and not event.event_id)
+
+
 async def _empty_history() -> list[SessionEvent]:
   """Return empty history for tests that don't need replay."""
   return []
@@ -43,18 +49,24 @@ class TestEventBroadcaster:
   async def test_subscribe_creates_subscriber(self) -> None:
     """Test that subscribe creates a subscriber."""
     broadcaster = EventBroadcaster()
+    events_received = 0
 
     # Start subscription in a task
+    # With empty history, we get history_complete marker first, then live events
     async def subscriber() -> None:
+      nonlocal events_received
       async for _ in broadcaster.subscribe("session-1", _empty_history):
-        break
+        events_received += 1
+        # Break after receiving history_complete + one live event
+        if events_received >= 2:
+          break
 
     task = asyncio.create_task(subscriber())
     await asyncio.sleep(0.01)  # Let the subscription start
 
     assert broadcaster.subscriber_count("session-1") == 1
 
-    # Broadcast to unblock the subscriber
+    # Broadcast to unblock the subscriber (after history_complete)
     await broadcaster.broadcast("session-1", _make_event("session-1", "e1"))
     await task
 
@@ -67,7 +79,8 @@ class TestEventBroadcaster:
     async def subscriber() -> None:
       async for event in broadcaster.subscribe("session-1", _empty_history):
         received_events.append(event)
-        if len(received_events) >= 2:
+        # history_complete + 2 live events = 3 total
+        if len(received_events) >= 3:
           break
 
     task = asyncio.create_task(subscriber())
@@ -80,9 +93,11 @@ class TestEventBroadcaster:
 
     await task
 
-    assert len(received_events) == 2
-    assert received_events[0].event_id == "event-1"
-    assert received_events[1].event_id == "event-2"
+    # First event is history_complete marker, then live events
+    assert len(received_events) == 3
+    assert _is_history_complete(received_events[0])
+    assert received_events[1].event_id == "event-1"
+    assert received_events[2].event_id == "event-2"
 
   @pytest.mark.asyncio
   async def test_broadcast_to_multiple_subscribers(self) -> None:
@@ -94,12 +109,15 @@ class TestEventBroadcaster:
     async def subscriber_1() -> None:
       async for event in broadcaster.subscribe("session-1", _empty_history):
         received_1.append(event)
-        break
+        # history_complete + 1 live event = 2 total
+        if len(received_1) >= 2:
+          break
 
     async def subscriber_2() -> None:
       async for event in broadcaster.subscribe("session-1", _empty_history):
         received_2.append(event)
-        break
+        if len(received_2) >= 2:
+          break
 
     task1 = asyncio.create_task(subscriber_1())
     task2 = asyncio.create_task(subscriber_2())
@@ -113,10 +131,13 @@ class TestEventBroadcaster:
     await task1
     await task2
 
-    assert len(received_1) == 1
-    assert len(received_2) == 1
-    assert received_1[0].event_id == "shared-event"
-    assert received_2[0].event_id == "shared-event"
+    # Both should receive history_complete + shared-event
+    assert len(received_1) == 2
+    assert len(received_2) == 2
+    assert _is_history_complete(received_1[0])
+    assert _is_history_complete(received_2[0])
+    assert received_1[1].event_id == "shared-event"
+    assert received_2[1].event_id == "shared-event"
 
   @pytest.mark.asyncio
   async def test_per_session_isolation(self) -> None:
@@ -128,12 +149,15 @@ class TestEventBroadcaster:
     async def subscriber_s1() -> None:
       async for event in broadcaster.subscribe("session-1", _empty_history):
         received_s1.append(event)
-        break
+        # history_complete + 1 live = 2 total
+        if len(received_s1) >= 2:
+          break
 
     async def subscriber_s2() -> None:
       async for event in broadcaster.subscribe("session-2", _empty_history):
         received_s2.append(event)
-        break
+        if len(received_s2) >= 2:
+          break
 
     task1 = asyncio.create_task(subscriber_s1())
     task2 = asyncio.create_task(subscriber_s2())
@@ -143,24 +167,31 @@ class TestEventBroadcaster:
     await broadcaster.broadcast("session-1", _make_event("session-1", "s1-e1"))
     await task1
 
-    # Session 2 should not have received anything
-    assert len(received_s1) == 1
-    assert len(received_s2) == 0
+    # Session 1 should have history_complete + live event
+    # Session 2 should only have history_complete (from its own subscription)
+    assert len(received_s1) == 2
+    assert len(received_s2) == 1  # Just history_complete so far
+    assert _is_history_complete(received_s2[0])
 
     # Now broadcast to session-2
     await broadcaster.broadcast("session-2", _make_event("session-2", "s2-e1"))
     await task2
 
-    assert len(received_s2) == 1
+    assert len(received_s2) == 2
 
   @pytest.mark.asyncio
   async def test_subscriber_cleanup_on_break(self) -> None:
     """Test that subscribers are cleaned up when iteration stops."""
     broadcaster = EventBroadcaster()
+    events_received = 0
 
     async def subscriber() -> None:
+      nonlocal events_received
       async for _ in broadcaster.subscribe("session-1", _empty_history):
-        break
+        events_received += 1
+        # Break after history_complete + 1 live event
+        if events_received >= 2:
+          break
 
     task = asyncio.create_task(subscriber())
     await asyncio.sleep(0.01)
@@ -208,7 +239,8 @@ class TestEventBroadcasterHistory:
     async def subscriber() -> None:
       async for event in broadcaster.subscribe("session-1", fetch_history):
         received_events.append(event)
-        if len(received_events) >= 3:
+        # 2 history + 1 history_complete + 1 live = 4 total
+        if len(received_events) >= 4:
           break
 
     task = asyncio.create_task(subscriber())
@@ -219,12 +251,15 @@ class TestEventBroadcasterHistory:
 
     await task
 
-    assert len(received_events) == 3
+    assert len(received_events) == 4
     # History events come first, in order
     assert received_events[0].event_id == "history-1"
     assert received_events[1].event_id == "history-2"
+    # Then history_complete marker
+    assert _is_history_complete(received_events[2])
+    assert received_events[2].history_complete.event_count == 2
     # Then live event
-    assert received_events[2].event_id == "live-1"
+    assert received_events[3].event_id == "live-1"
 
   @pytest.mark.asyncio
   async def test_history_and_subscription_atomic(self) -> None:
@@ -248,7 +283,8 @@ class TestEventBroadcasterHistory:
     async def subscriber() -> None:
       async for event in broadcaster.subscribe("session-1", slow_history_fetcher):
         received_events.append(event)
-        if len(received_events) >= 2:
+        # 1 history + 1 history_complete + 1 live = 3 total
+        if len(received_events) >= 3:
           break
 
     async def broadcaster_task() -> None:
@@ -264,10 +300,11 @@ class TestEventBroadcasterHistory:
     await task
     await broadcast_task
 
-    # Both events should be received - history first, then live
-    assert len(received_events) == 2
+    # All events should be received: history, history_complete, live
+    assert len(received_events) == 3
     assert received_events[0].event_id == "history-1"
-    assert received_events[1].event_id == "live-1"
+    assert _is_history_complete(received_events[1])
+    assert received_events[2].event_id == "live-1"
 
   @pytest.mark.asyncio
   async def test_empty_history_yields_only_live_events(self) -> None:
@@ -278,7 +315,9 @@ class TestEventBroadcasterHistory:
     async def subscriber() -> None:
       async for event in broadcaster.subscribe("session-1", _empty_history):
         received_events.append(event)
-        break
+        # history_complete + 1 live = 2 total
+        if len(received_events) >= 2:
+          break
 
     task = asyncio.create_task(subscriber())
     await asyncio.sleep(0.01)
@@ -287,5 +326,9 @@ class TestEventBroadcasterHistory:
 
     await task
 
-    assert len(received_events) == 1
-    assert received_events[0].event_id == "live-1"
+    assert len(received_events) == 2
+    # First is history_complete with event_count=0
+    assert _is_history_complete(received_events[0])
+    assert received_events[0].history_complete.event_count == 0
+    # Then live event
+    assert received_events[1].event_id == "live-1"

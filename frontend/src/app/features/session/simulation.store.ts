@@ -9,9 +9,18 @@
  * @see mddocs/frontend/frontend-tdd.md#simulationstore-feature-scoped
  */
 
-import type { FunctionDeclaration, GenerateContentRequest } from '@adk-sim/protos';
+import type { Content, FunctionDeclaration, GenerateContentRequest } from '@adk-sim/protos';
 import { computed } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+
+/**
+ * A historical event with its turn ID for replay tracking.
+ */
+interface HistoricalEvent {
+  turnId: string;
+  type: 'request' | 'response';
+  request?: GenerateContentRequest;
+}
 
 /**
  * State interface for the simulation feature.
@@ -20,6 +29,9 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
  * - currentTurnId: The turn ID of the current request (for submitDecision)
  * - requestQueue: FIFO queue for concurrent agent requests (FR-024)
  * - selectedTool: Currently selected tool for invocation
+ * - isReplayComplete: Whether historical event replay is finished
+ * - historicalEvents: Events received during replay (before history_complete)
+ * - displayedContents: All contents to display in the event stream
  */
 export interface SimulationState {
   /** The active LLM request being handled, or null if idle. */
@@ -30,16 +42,27 @@ export interface SimulationState {
   requestQueue: { request: GenerateContentRequest; turnId: string }[];
   /** Currently selected tool for invocation, or null if none selected. */
   selectedTool: FunctionDeclaration | null;
+  /** Whether history replay is complete (true = live mode). */
+  isReplayComplete: boolean;
+  /** Events received during replay, used to determine unanswered requests. */
+  historicalEvents: HistoricalEvent[];
+  /** Contents to display in the event stream (cumulative from all requests). */
+  displayedContents: Content[];
 }
 
 /**
  * Initial state for the simulation store.
+ * Starts in "live mode" (isReplayComplete = true) for backward compatibility.
+ * When subscribing to a session with history, explicitly call startReplay().
  */
 const initialState: SimulationState = {
   currentRequest: null,
   currentTurnId: null,
   requestQueue: [],
   selectedTool: null,
+  isReplayComplete: true, // Start in live mode; call startReplay() to enter replay mode
+  historicalEvents: [],
+  displayedContents: [],
 };
 
 /**
@@ -88,8 +111,8 @@ export const SimulationStore = signalStore(
       return req.tools.flatMap((t) => t.functionDeclarations);
     }),
 
-    /** Contents from the current request, or empty array if no request. */
-    contents: computed(() => store.currentRequest()?.contents ?? []),
+    /** Contents to display in the event stream (cumulative from all requests). */
+    contents: computed(() => store.displayedContents()),
 
     /** System instruction from the current request, if present. */
     systemInstruction: computed(() => store.currentRequest()?.systemInstruction),
@@ -99,17 +122,37 @@ export const SimulationStore = signalStore(
   withMethods((store) => ({
     /**
      * Handle incoming request from stream.
-     * Per FR-024: queue if busy, set current if idle.
+     * During replay: records the request for later processing.
+     * After replay: queue if busy, set current if idle (FR-024).
+     *
+     * Always updates displayedContents with the request's contents for display.
      *
      * @param request - The incoming LLM request
      * @param turnId - The turn ID from the session event
      */
     receiveRequest(request: GenerateContentRequest, turnId: string): void {
+      // Always update displayed contents (request.contents is the conversation history)
+      const newContents = request.contents;
+
+      if (!store.isReplayComplete()) {
+        // During replay - record the event and update display
+        patchState(store, {
+          historicalEvents: [...store.historicalEvents(), { turnId, type: 'request', request }],
+          displayedContents: newContents,
+        });
+        return;
+      }
+
+      // Live mode - normal queuing behavior + update display
       if (store.currentRequest() === null) {
         // Idle - set as current request
-        patchState(store, { currentRequest: request, currentTurnId: turnId });
+        patchState(store, {
+          currentRequest: request,
+          currentTurnId: turnId,
+          displayedContents: newContents,
+        });
       } else {
-        // Busy - add to queue
+        // Busy - add to queue (don't update display until it becomes current)
         patchState(store, {
           requestQueue: [...store.requestQueue(), { request, turnId }],
         });
@@ -117,18 +160,86 @@ export const SimulationStore = signalStore(
     },
 
     /**
+     * Handle incoming response from stream (during replay).
+     * Marks the corresponding request as answered.
+     *
+     * @param turnId - The turn ID of the response
+     */
+    receiveResponse(turnId: string): void {
+      if (store.isReplayComplete()) {
+        // Live mode - responses come from user submissions, not stream
+        return;
+      }
+
+      // During replay - record that this turn has a response
+      patchState(store, {
+        historicalEvents: [...store.historicalEvents(), { turnId, type: 'response' }],
+      });
+    },
+
+    /**
+     * Enter replay mode to handle historical events.
+     * Called when subscribing to a session that may have history.
+     */
+    startReplay(): void {
+      patchState(store, {
+        isReplayComplete: false,
+        historicalEvents: [],
+      });
+    },
+
+    /**
+     * Mark history replay as complete and queue unanswered requests.
+     * Called when the history_complete marker is received from the server.
+     */
+    completeReplay(): void {
+      const events = store.historicalEvents();
+
+      // Find turn IDs that have responses
+      const answeredTurnIds = new Set(
+        events.filter((e) => e.type === 'response').map((e) => e.turnId),
+      );
+
+      // Find requests without responses (unanswered)
+      const unansweredRequests = events
+        .filter(
+          (e): e is HistoricalEvent & { type: 'request'; request: GenerateContentRequest } =>
+            e.type === 'request' && e.request !== undefined && !answeredTurnIds.has(e.turnId),
+        )
+        .map((e) => ({ request: e.request, turnId: e.turnId }));
+
+      // Set first unanswered as current, rest as queue
+      const [first, ...rest] = unansweredRequests;
+
+      patchState(store, {
+        isReplayComplete: true,
+        historicalEvents: [], // Clear - no longer needed
+        currentRequest: first?.request ?? null,
+        currentTurnId: first?.turnId ?? null,
+        requestQueue: rest,
+      });
+    },
+
+    /**
      * Advance to next request after user submits response.
      * Clears current request and promotes first queued request (FIFO).
-     * Also clears any tool selection.
+     * Also clears any tool selection and updates displayed contents.
      */
     advanceQueue(): void {
       const [next, ...rest] = store.requestQueue();
-      patchState(store, {
+      const stateUpdate: Partial<SimulationState> = {
         currentRequest: next?.request ?? null,
         currentTurnId: next?.turnId ?? null,
         requestQueue: rest,
         selectedTool: null, // Clear selection when advancing
-      });
+      };
+
+      // Update displayed contents if there's a next request
+      if (next) {
+        stateUpdate.displayedContents = next.request.contents;
+      }
+
+      patchState(store, stateUpdate);
     },
 
     /**

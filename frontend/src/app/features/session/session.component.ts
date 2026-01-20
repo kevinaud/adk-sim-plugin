@@ -391,17 +391,38 @@ export class SessionComponent {
 
   /**
    * Subscribe to session events and feed them to the store.
+   *
+   * Handles three event types:
+   * - llmRequest: Incoming LLM request (historical or live)
+   * - llmResponse: Historical response (marks request as answered)
+   * - historyComplete: Marker indicating end of history replay
    */
   private async subscribeToEvents(sessionId: string, signal: AbortSignal): Promise<void> {
+    // Enter replay mode to handle historical events
+    this.store.startReplay();
+
     try {
       for await (const event of this.gateway.subscribe(sessionId)) {
         if (signal.aborted) {
           break;
         }
 
-        // Process llmRequest events - feed to store
-        if (event.payload.case === 'llmRequest') {
-          this.store.receiveRequest(event.payload.value, event.turnId);
+        switch (event.payload.case) {
+          case 'llmRequest': {
+            // Pass to store - it handles replay vs live mode internally
+            this.store.receiveRequest(event.payload.value, event.turnId);
+            break;
+          }
+          case 'llmResponse': {
+            // Record response during replay (marks turn as answered)
+            this.store.receiveResponse(event.turnId);
+            break;
+          }
+          case 'historyComplete': {
+            // End of history replay - switch to live mode
+            this.store.completeReplay();
+            break;
+          }
         }
       }
     } catch (error) {
@@ -422,7 +443,7 @@ export class SessionComponent {
   });
 
   /** Internal state: whether system instructions are expanded */
-  private readonly _instructionsExpanded = signal(false);
+  private readonly _instructionsExpanded = signal(true);
   readonly instructionsExpanded = this._instructionsExpanded.asReadonly();
 
   /** Session status for the status badge */
