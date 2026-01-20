@@ -24,6 +24,8 @@ import type { Content, Part } from '@adk-sim/converters';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
+import { DataTreeComponent } from '../../shared/data-tree';
+
 /**
  * Block type enum for styling differentiation.
  * Uses 'tool-call' and 'tool-response' for distinct tool sub-types.
@@ -85,7 +87,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
 @Component({
   selector: 'app-event-block',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [MatIconModule, DataTreeComponent],
   template: `
     <div class="event-block" [attr.data-type]="cssType()" data-testid="event-block">
       <div class="block-header">
@@ -102,13 +104,17 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
           @if (part.functionCall) {
             <div class="function-call" data-testid="function-call">
               <span class="function-name">{{ part.functionCall.name }}</span>
-              <pre class="function-args">{{ formatArgs(part.functionCall.args) }}</pre>
+              <div class="function-data">
+                <app-data-tree [data]="part.functionCall.args" [showThreadLines]="false" />
+              </div>
             </div>
           }
           @if (part.functionResponse) {
             <div class="function-response" data-testid="function-response">
               <span class="function-name">{{ part.functionResponse.name }}</span>
-              <pre class="function-result">{{ formatArgs(part.functionResponse.response) }}</pre>
+              <div class="function-data">
+                <app-data-tree [data]="part.functionResponse.response" [showThreadLines]="false" />
+              </div>
             </div>
           }
         }
@@ -197,14 +203,8 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
       margin-bottom: 4px;
     }
 
-    .function-args,
-    .function-result {
-      margin: 0;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 12px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: var(--sys-on-surface-variant);
+    .function-data {
+      padding-top: 4px;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -260,19 +260,4 @@ export class EventBlockComponent {
    * Computed signal that maps block type to display label.
    */
   readonly label = computed<string>(() => BLOCK_CONFIG[this.blockType()].label);
-
-  /**
-   * Format function arguments or response for display.
-   *
-   * @param args - The arguments or response object to format
-   * @returns JSON-formatted string or empty string if undefined
-   */
-  formatArgs(args: Record<string, unknown> | undefined): string {
-    if (!args) return '';
-    try {
-      return JSON.stringify(args, null, 2);
-    } catch {
-      return '[unable to format]';
-    }
-  }
 }

@@ -71,7 +71,10 @@ test.describe('EventBlockComponent', () => {
       await expect(block).toHaveAttribute('data-type', 'model');
     });
 
-    test('displays function call as tool call with call_made icon', async ({ mount, page }) => {
+    test('displays function call as tool call with call_made icon and DataTree', async ({
+      mount,
+      page,
+    }) => {
       const content: Content = {
         role: 'model',
         parts: [
@@ -91,6 +94,13 @@ test.describe('EventBlockComponent', () => {
       // Verify label shows "Tool Call" (not generic "Tool Execution")
       await expect(component).toContainText('Tool Call');
       await expect(component).toContainText('get_weather');
+
+      // Verify DataTree is rendered for function args
+      const dataTree = page.locator('[data-testid="function-call"] app-data-tree');
+      await expect(dataTree).toBeVisible();
+
+      // Verify DataTree displays the argument keys
+      await expect(component).toContainText('location');
       await expect(component).toContainText('San Francisco');
 
       // Verify the icon is call_made (for outgoing tool call)
@@ -102,7 +112,7 @@ test.describe('EventBlockComponent', () => {
       await expect(block).toHaveAttribute('data-type', 'tool');
     });
 
-    test('displays function response as tool response with call_received icon', async ({
+    test('displays function response as tool response with call_received icon and DataTree', async ({
       mount,
       page,
     }) => {
@@ -125,6 +135,13 @@ test.describe('EventBlockComponent', () => {
       // Verify label shows "Tool Response" (not generic "Tool Execution")
       await expect(component).toContainText('Tool Response');
       await expect(component).toContainText('get_weather');
+
+      // Verify DataTree is rendered for function response
+      const dataTree = page.locator('[data-testid="function-response"] app-data-tree');
+      await expect(dataTree).toBeVisible();
+
+      // Verify DataTree displays the response keys and values
+      await expect(component).toContainText('temperature');
       await expect(component).toContainText('72');
       await expect(component).toContainText('Sunny');
 
@@ -165,9 +182,13 @@ test.describe('EventBlockComponent', () => {
       // Label should be "Tool Call" since content has functionCall
       await expect(component).toContainText('Tool Call');
 
-      // Both parts should be rendered
+      // Text part should be rendered
       await expect(component).toContainText('Here is the weather information:');
       await expect(component).toContainText('display_weather');
+
+      // DataTree should be rendered for function args
+      const dataTree = page.locator('[data-testid="function-call"] app-data-tree');
+      await expect(dataTree).toBeVisible();
     });
   });
 

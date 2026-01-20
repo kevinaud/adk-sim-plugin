@@ -19,6 +19,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Content } from '@adk-sim/converters';
 
+import { DataTreeComponent } from '../../shared/data-tree';
 import { EventBlockComponent, type BlockType, type CssBlockType } from './event-block.component';
 
 /**
@@ -64,7 +65,7 @@ describe('EventBlockComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TestHostComponent, EventBlockComponent],
+      imports: [TestHostComponent, EventBlockComponent, DataTreeComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);
@@ -303,7 +304,7 @@ describe('EventBlockComponent', () => {
       expect(functionName.textContent).toBe('get_weather');
     });
 
-    it('should render function call args as formatted JSON', () => {
+    it('should render function call args via DataTreeComponent', () => {
       const args = { city: 'NYC', units: 'fahrenheit' };
       hostComponent.content.set(
         createTestContent({
@@ -313,9 +314,14 @@ describe('EventBlockComponent', () => {
       );
       fixture.detectChanges();
 
-      const functionArgs = fixture.nativeElement.querySelector('.function-args');
-      expect(functionArgs.textContent).toContain('"city": "NYC"');
-      expect(functionArgs.textContent).toContain('"units": "fahrenheit"');
+      // Verify DataTreeComponent is rendered for function args
+      const functionCall = fixture.nativeElement.querySelector('[data-testid="function-call"]');
+      const dataTree = functionCall.querySelector('app-data-tree');
+      expect(dataTree).toBeTruthy();
+
+      // DataTree should render the data keys
+      const treeNodes = functionCall.querySelectorAll('[data-testid="tree-node"]');
+      expect(treeNodes.length).toBeGreaterThan(0);
     });
 
     it('should handle function call with no args', () => {
@@ -330,8 +336,9 @@ describe('EventBlockComponent', () => {
       const functionCall = fixture.nativeElement.querySelector('[data-testid="function-call"]');
       expect(functionCall).toBeTruthy();
 
-      const functionArgs = fixture.nativeElement.querySelector('.function-args');
-      expect(functionArgs.textContent.trim()).toBe('');
+      // DataTreeComponent should still be present even with undefined args
+      const dataTree = functionCall.querySelector('app-data-tree');
+      expect(dataTree).toBeTruthy();
     });
   });
 
@@ -354,7 +361,7 @@ describe('EventBlockComponent', () => {
       expect(functionName.textContent).toBe('get_weather');
     });
 
-    it('should render function response result as formatted JSON', () => {
+    it('should render function response result via DataTreeComponent', () => {
       const response = { temp: 72, conditions: 'sunny' };
       hostComponent.content.set(
         createTestContent({
@@ -364,9 +371,16 @@ describe('EventBlockComponent', () => {
       );
       fixture.detectChanges();
 
-      const functionResult = fixture.nativeElement.querySelector('.function-result');
-      expect(functionResult.textContent).toContain('"temp": 72');
-      expect(functionResult.textContent).toContain('"conditions": "sunny"');
+      // Verify DataTreeComponent is rendered for function response
+      const functionResponse = fixture.nativeElement.querySelector(
+        '[data-testid="function-response"]',
+      );
+      const dataTree = functionResponse.querySelector('app-data-tree');
+      expect(dataTree).toBeTruthy();
+
+      // DataTree should render the data keys
+      const treeNodes = functionResponse.querySelectorAll('[data-testid="tree-node"]');
+      expect(treeNodes.length).toBeGreaterThan(0);
     });
   });
 
