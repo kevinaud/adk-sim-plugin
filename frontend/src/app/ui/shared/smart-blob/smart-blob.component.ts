@@ -3,7 +3,7 @@
  *
  * A presentational component that displays text content with automatic
  * format detection and toggleable rendering modes:
- * - JSON: Renders parsed JSON as formatted pre block
+ * - JSON: Renders parsed JSON as interactive DataTreeComponent
  * - Markdown: Renders as HTML using the marked library
  * - Raw: Displays unprocessed text preserving whitespace
  *
@@ -25,6 +25,7 @@ import {
   untracked,
 } from '@angular/core';
 
+import { DataTreeComponent } from '../data-tree';
 import { ContentDetectionService } from './content-detection.service';
 import { MarkdownPipe } from './markdown.pipe';
 
@@ -38,7 +39,7 @@ export type SmartBlobMode = 'json' | 'markdown' | 'raw';
  *
  * Renders text content with format detection and mode toggles.
  * Auto-selects the best rendering mode based on content analysis:
- * - JSON strings are displayed in a formatted pre block
+ * - JSON strings are displayed as interactive DataTreeComponent
  * - Markdown content is rendered as HTML
  * - Plain text is shown in a preformatted block
  *
@@ -54,7 +55,7 @@ export type SmartBlobMode = 'json' | 'markdown' | 'raw';
 @Component({
   selector: 'app-smart-blob',
   standalone: true,
-  imports: [MarkdownPipe],
+  imports: [DataTreeComponent, MarkdownPipe],
   template: `
     <div class="smart-blob" data-testid="smart-blob">
       <div class="blob-controls" data-testid="blob-controls">
@@ -93,7 +94,7 @@ export type SmartBlobMode = 'json' | 'markdown' | 'raw';
       <div class="blob-content" data-testid="blob-content">
         @switch (mode()) {
           @case ('json') {
-            <pre class="json-content" data-testid="json-view">{{ formattedJson() }}</pre>
+            <app-data-tree [data]="parsedJson()" data-testid="json-view" />
           }
           @case ('markdown') {
             <div
@@ -156,7 +157,6 @@ export type SmartBlobMode = 'json' | 'markdown' | 'raw';
       overflow: auto;
     }
 
-    .json-content,
     .raw-content {
       margin: 0;
       font-family: 'Roboto Mono', monospace;
@@ -165,10 +165,6 @@ export type SmartBlobMode = 'json' | 'markdown' | 'raw';
       white-space: pre-wrap;
       word-break: break-word;
       color: var(--mat-sys-on-surface, #1c1b1f);
-    }
-
-    .json-content {
-      /* Syntax highlighting could be added here */
     }
 
     /* Markdown content styling */
@@ -319,16 +315,11 @@ export class SmartBlobComponent {
   readonly isMarkdown = computed(() => this.detectionService.isMarkdown(this.content()));
 
   /**
-   * Computed signal: formatted JSON for display.
-   * Returns prettified JSON if valid, otherwise the original content.
+   * Computed signal: parsed JSON object for DataTreeComponent.
+   * Returns the parsed object if valid, otherwise null.
    */
-  readonly formattedJson = computed(() => {
-    const contentValue = this.content();
-    const parsed = this.detectionService.parseJson(contentValue);
-    if (parsed !== null) {
-      return JSON.stringify(parsed, null, 2);
-    }
-    return contentValue;
+  readonly parsedJson = computed(() => {
+    return this.detectionService.parseJson(this.content());
   });
 
   constructor() {

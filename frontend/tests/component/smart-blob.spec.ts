@@ -19,7 +19,7 @@ import { SmartBlobComponent } from '../../src/app/ui/shared/smart-blob';
 
 test.describe('SmartBlobComponent', () => {
   test.describe('renders correctly for each content type', () => {
-    test('displays JSON content with formatted view and JSON toggle', async ({ mount, page }) => {
+    test('displays JSON content with DataTree view and JSON toggle', async ({ mount, page }) => {
       const content = JSON.stringify({ name: 'Test User', age: 25, active: true }, null, 0);
 
       const component = await mount(SmartBlobComponent, {
@@ -35,11 +35,13 @@ test.describe('SmartBlobComponent', () => {
       const rawToggle = page.locator('[data-testid="raw-toggle"]');
       await expect(rawToggle).toBeVisible();
 
-      // Verify JSON view is shown by default (auto-detected)
+      // Verify JSON view is shown by default (auto-detected) as DataTree
       const jsonView = page.locator('[data-testid="json-view"]');
       await expect(jsonView).toBeVisible();
 
-      // Verify JSON is formatted with proper structure
+      // Verify DataTree renders tree nodes with values
+      const treeNodes = page.locator('[data-testid="tree-node"]');
+      await expect(treeNodes.first()).toBeVisible();
       await expect(jsonView).toContainText('Test User');
     });
 
@@ -106,8 +108,9 @@ Check out [this link](https://example.com)`;
         props: { content },
       });
 
-      // Should start in JSON mode (auto-detected)
+      // Should start in JSON mode (auto-detected) with DataTree
       await expect(page.locator('[data-testid="json-view"]')).toBeVisible();
+      await expect(page.locator('[data-testid="data-tree"]')).toBeVisible();
 
       // Click RAW toggle
       await page.locator('[data-testid="raw-toggle"]').click();
@@ -123,8 +126,9 @@ Check out [this link](https://example.com)`;
       // Click JSON toggle to go back
       await page.locator('[data-testid="json-toggle"]').click();
 
-      // Should show JSON view again
+      // Should show JSON view again with DataTree
       await expect(page.locator('[data-testid="json-view"]')).toBeVisible();
+      await expect(page.locator('[data-testid="data-tree"]')).toBeVisible();
     });
   });
 

@@ -318,18 +318,20 @@ describe('SmartBlobComponent', () => {
   });
 
   describe('content rendering', () => {
-    it('should format JSON with indentation', async () => {
+    it('should render JSON as DataTreeComponent', async () => {
       hostComponent.content.set('{"name":"test","value":123}');
       fixture.detectChanges();
       await fixture.whenStable();
       fixture.detectChanges();
 
+      // JSON view should contain the DataTreeComponent
       const jsonView = fixture.nativeElement.querySelector('[data-testid="json-view"]');
-      const content = jsonView.textContent;
+      expect(jsonView).toBeTruthy();
+      expect(jsonView.tagName.toLowerCase()).toBe('app-data-tree');
 
-      // Should be formatted with newlines
-      expect(content).toContain('\n');
-      expect(content).toContain('  '); // indentation
+      // DataTree should render the tree nodes
+      const treeNodes = jsonView.querySelectorAll('[data-testid="tree-node"]');
+      expect(treeNodes.length).toBeGreaterThan(0);
     });
 
     it('should render markdown as HTML', async () => {
