@@ -81,16 +81,29 @@ jj git fetch
 
 This updates your local repository with the merged changes from the remote. Because we use rebase-merge, jj will recognize that your local commit is now on main.
 
-### Step 5: Rebase Remaining Stack
+### Step 5: Rebase ALL Remaining Work
 
-After fetching, rebase any remaining work onto the updated main:
+After fetching, rebase **ALL** unmerged work onto the updated main—not just the stack you were actively merging.
 
 ```bash
-# 1. Identify remaining unmerged work
+# 1. Find ALL unmerged work (critical: check for other branches!)
 jj log -r 'trunk()..visible_heads()' --no-pager
 
-# 2. Rebase remaining work onto new main
-jj rebase -s <oldest-unmerged-change-id> -d main
+# 2. Rebase EACH unmerged branch onto main
+# For each separate branch/head you see, rebase it:
+jj rebase -s <change-id> -d main
+```
+
+**CRITICAL**: The `visible_heads()` query returns ALL branches that aren't on main. If you have multiple feature branches (e.g., S6PR7 on a separate branch from S6PR3-5), you must rebase EACH one individually. Missing this step leaves branches behind main.
+
+**Example with multiple branches:**
+```bash
+# After merging S6PR5, you see:
+#   - S6PR6 (was stacked on S6PR5, now needs rebase)
+#   - S6PR7 (separate branch, also needs rebase)
+
+jj rebase -s <S6PR6-change-id> -d main
+jj rebase -s <S6PR7-change-id> -d main
 ```
 
 **Note:** With rebase-merge, you do NOT need to `jj abandon` the merged commit—jj automatically recognizes it's now part of main.
@@ -150,6 +163,7 @@ jj status
 | Merge without updating child PR bases | GitHub auto-closes child PRs | ALWAYS run `gh pr list --base` first |
 | Merge child before parent | Broken diffs, merge conflicts | Process in dependency order |
 | Skip fetch after merge | Stale local state | ALWAYS fetch after merge |
+| Only rebase active stack, not all branches | Other branches left behind main | Run `jj log -r 'trunk()..visible_heads()'` and rebase ALL |
 
 ---
 
