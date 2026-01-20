@@ -21,7 +21,6 @@ from ...google.ai.generativelanguage import (
   v1beta as __google_ai_generativelanguage_v1_beta__,
 )
 
-
 if TYPE_CHECKING:
   import grpclib.server
   from betterproto.grpc.grpclib_client import MetadataLike
@@ -92,6 +91,23 @@ class SessionEvent(betterproto.Message):
     betterproto.message_field(11, group="payload")
   )
   """Human decision/response (UI -> Plugin)."""
+
+  history_complete: "HistoryComplete" = betterproto.message_field(12, group="payload")
+  """
+    Marker indicating all historical events have been sent.
+     After this, all subsequent events are live/real-time.
+    """
+
+
+@dataclass(eq=False, repr=False)
+class HistoryComplete(betterproto.Message):
+  """
+  Marker message sent after replaying all historical events.
+   The frontend uses this to distinguish between history replay and live events.
+  """
+
+  event_count: int = betterproto.int32_field(1)
+  """Number of historical events that were replayed."""
 
 
 @dataclass(eq=False, repr=False)

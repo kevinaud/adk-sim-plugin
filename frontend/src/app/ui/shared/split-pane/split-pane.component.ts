@@ -13,6 +13,7 @@
  */
 
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -165,6 +166,15 @@ export class SplitPaneComponent {
   constructor() {
     // Set up document-level event listeners for drag
     this.setupDragListeners();
+
+    // Initialize sidebar width to 30% of container after first render
+    afterNextRender(() => {
+      const container = this.containerRef()?.nativeElement;
+      if (container && container.clientWidth > 0) {
+        const initialWidth = container.clientWidth * MIN_SIDEBAR_WIDTH_FRACTION;
+        this._userDraggedWidth.set(initialWidth);
+      }
+    });
   }
 
   /**

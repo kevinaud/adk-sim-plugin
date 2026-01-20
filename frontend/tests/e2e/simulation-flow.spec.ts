@@ -253,11 +253,8 @@ test.describe('Full Simulation Flow', () => {
     await client.submitRequest(submitRequest);
     await page.waitForTimeout(1500);
 
-    // 3. Expand system instructions section
-    const instructionsHeader = page.locator('.instructions-header');
-    await instructionsHeader.click();
-
-    // 4. Verify system instruction is displayed
+    // 3. Verify system instruction is displayed (accordion is expanded by default)
+    // Note: No click needed - accordion starts expanded
     const instructionsContent = page.locator('[data-testid="instructions-content"]');
     await expect(instructionsContent).toBeVisible();
     await expect(instructionsContent).toContainText('financial advisor');

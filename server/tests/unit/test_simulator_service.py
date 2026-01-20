@@ -31,6 +31,11 @@ async def _empty_history() -> list[SessionEvent]:
   return []
 
 
+def _is_history_complete(event: SessionEvent) -> bool:
+  """Check if an event is a history_complete marker."""
+  return bool(event.history_complete.event_count >= 0 and not event.event_id)
+
+
 @dataclass
 class SimulatorServiceFixture:
   """Groups the SimulatorService with its dependencies for testing."""
@@ -121,14 +126,16 @@ class TestSimulatorService:
     session = await simulator_service.manager.create_session("test session")
 
     # Subscribe to events to verify broadcast
-    events = []
+    events: list[SessionEvent] = []
 
     async def subscriber() -> None:
       async for event in simulator_service.event_broadcaster.subscribe(
         session.id, _empty_history
       ):
         events.append(event)
-        break  # Stop after receiving one event
+        # history_complete + 1 live event = 2 total
+        if len(events) >= 2:
+          break
 
     # Start subscriber task
     subscriber_task = asyncio.create_task(subscriber())
@@ -157,10 +164,11 @@ class TestSimulatorService:
     assert queued_event is not None
     assert queued_event.event_id == response.event_id
 
-    # Verify broadcast
+    # Verify broadcast (first is history_complete, second is the request)
     await asyncio.wait_for(subscriber_task, timeout=1.0)
-    assert len(events) == 1
-    assert events[0].event_id == response.event_id
+    assert len(events) == 2
+    assert _is_history_complete(events[0])
+    assert events[1].event_id == response.event_id
 
   @pytest.mark.asyncio
   async def test_list_sessions_pagination(
@@ -227,7 +235,8 @@ class TestSimulatorService:
         session.id, _empty_history
       ):
         events.append(event)
-        if len(events) >= 1:
+        # history_complete + 1 live event = 2 total
+        if len(events) >= 2:
           break
 
     subscriber_task = asyncio.create_task(subscriber())
@@ -258,10 +267,11 @@ class TestSimulatorService:
     # Verify queue was dequeued
     assert simulator_service.request_queue.get_current(session.id) is None
 
-    # Verify broadcast
+    # Verify broadcast (first event is history_complete, second is the decision)
     await asyncio.wait_for(subscriber_task, timeout=1.0)
-    assert len(events) == 1
-    assert events[0].event_id == response.event_id
+    assert len(events) == 2
+    assert _is_history_complete(events[0])
+    assert events[1].event_id == response.event_id
 
   @pytest.mark.asyncio
   async def test_submit_decision_links_by_turn_id(
@@ -334,17 +344,20 @@ class TestSimulatorService:
       async for response in simulator_service.service.subscribe(subscribe_request):
         assert_that(response, instance_of(SubscribeResponse))
         events.append(response.event)
-        if len(events) >= 2:
+        # 2 historical + 1 history_complete = 3 total
+        if len(events) >= 3:
           break
 
     await asyncio.wait_for(collect_events(), timeout=1.0)
 
-    # Verify we got the historical events
-    assert len(events) == 2
+    # Verify we got the historical events, then history_complete
+    assert len(events) == 3
     assert events[0].turn_id == "turn_1"
     assert events[0].agent_name == "agent1"
     assert events[1].turn_id == "turn_2"
     assert events[1].agent_name == "agent2"
+    assert _is_history_complete(events[2])
+    assert events[2].history_complete.event_count == 2
 
   @pytest.mark.asyncio
   async def test_subscribe_yields_live_events(
@@ -369,7 +382,8 @@ class TestSimulatorService:
     async def collect_events() -> None:
       async for response in simulator_service.service.subscribe(subscribe_request):
         events.append(response.event)
-        if len(events) >= 2:
+        # 1 historical + 1 history_complete + 1 live = 3 total
+        if len(events) >= 3:
           break
 
     # Start subscriber
@@ -388,10 +402,11 @@ class TestSimulatorService:
 
     await asyncio.wait_for(subscriber_task, timeout=1.0)
 
-    # Verify we got historical first, then live
-    assert len(events) == 2
+    # Verify we got historical first, then history_complete, then live
+    assert len(events) == 3
     assert events[0].turn_id == "historical_turn"
-    assert events[1].turn_id == "live_turn"
+    assert _is_history_complete(events[1])
+    assert events[2].turn_id == "live_turn"
 
   @pytest.mark.asyncio
   async def test_subscribe_streams_all_events_atomically(
@@ -416,7 +431,8 @@ class TestSimulatorService:
     async def collect_events() -> None:
       async for response in simulator_service.service.subscribe(subscribe_request):
         events.append(response.event)
-        if len(events) >= 3:
+        # 1 historical + 1 history_complete + 2 live = 4 total
+        if len(events) >= 4:
           break
 
     # Start subscriber
@@ -443,8 +459,9 @@ class TestSimulatorService:
 
     await asyncio.wait_for(subscriber_task, timeout=1.0)
 
-    # Verify all events received in order, none missed
-    assert len(events) == 3
+    # Verify all events received in order: history, history_complete, live events
+    assert len(events) == 4
     assert events[0].turn_id == "event_1"
-    assert events[1].turn_id == "event_2"
-    assert events[2].turn_id == "event_3"
+    assert _is_history_complete(events[1])
+    assert events[2].turn_id == "event_2"
+    assert events[3].turn_id == "event_3"

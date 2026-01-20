@@ -41,11 +41,21 @@ message SessionEvent {
   // Name of the agent that triggered this event.
   string agent_name = 5;
 
-  // The event payload - either a request or response.
+  // The event payload - either a request, response, or control message.
   oneof payload {
     // LLM request intercepted from an agent (Plugin -> UI).
     google.ai.generativelanguage.v1beta.GenerateContentRequest llm_request = 10;
     // Human decision/response (UI -> Plugin).
     google.ai.generativelanguage.v1beta.GenerateContentResponse llm_response = 11;
+    // Marker indicating all historical events have been sent.
+    // After this, all subsequent events are live/real-time.
+    HistoryComplete history_complete = 12;
   }
+}
+
+// Marker message sent after replaying all historical events.
+// The frontend uses this to distinguish between history replay and live events.
+message HistoryComplete {
+  // Number of historical events that were replayed.
+  int32 event_count = 1;
 }

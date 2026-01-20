@@ -13,7 +13,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable
 
-from adk_sim_protos.adksim.v1 import SessionEvent
+from adk_sim_protos.adksim.v1 import HistoryComplete, SessionEvent
 
 
 class EventBroadcaster:
@@ -85,6 +85,12 @@ class EventBroadcaster:
       # Yield historical events first
       for event in history:
         yield event
+
+      # Send history_complete marker to signal end of replay
+      yield SessionEvent(
+        session_id=session_id,
+        history_complete=HistoryComplete(event_count=len(history)),
+      )
 
       # Then yield live events
       while True:
