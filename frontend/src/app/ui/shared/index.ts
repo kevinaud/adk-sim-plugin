@@ -10,6 +10,7 @@
 
 export { type ConnectionStatus, ConnectionStatusComponent } from './connection-status';
 export { DarkModeToggleComponent } from './dark-mode-toggle';
+export { DataTreeComponent, flattenTree, type TreeNode, ValueType } from './data-tree';
 export { EmptyStateComponent } from './empty-state';
 export { ErrorBannerComponent } from './error-banner';
 export { ErrorStateComponent } from './error-state';
