@@ -447,6 +447,266 @@ EventBlockComponent currently uses `formatArgs()` method that calls `JSON.string
 
 ---
 
+## Visual Fidelity Checklist
+
+This checklist captures the **exact visual requirements** from the UI mock (`EventBlock_ToolOutput_Complex_default.png`). The DataTreeComponent implementation MUST meet ALL of these criteria to be considered complete.
+
+### 1. JSON Syntax Format (CRITICAL)
+
+The mock shows **standard JSON syntax**, NOT YAML-style. Every detail matters:
+
+- [x] **Keys MUST be wrapped in double quotes**: `"status"` not `status`
+- [x] **Colon separator with space**: `"key": value` (colon immediately after closing quote, then space, then value)
+- [x] **String values MUST be wrapped in double quotes**: `"success"` not `success`
+- [x] **Number values MUST NOT have quotes**: `1240` not `"1240"`
+- [x] **Boolean values MUST be lowercase without quotes**: `true` / `false`
+- [x] **Null values MUST be lowercase without quotes**: `null`
+
+**Example of CORRECT format (from mock)**:
+```
+"status": "success"
+"total_duration": 1240
+"execution_trace": [
+```
+
+**Example of INCORRECT format (current implementation)**:
+```
+status: "success"
+total_duration: 1240
+execution_trace: [3]
+```
+
+### 2. No Artificial "root" Wrapper (CRITICAL)
+
+The DataTree MUST render the data's own structure directly, WITHOUT adding an artificial "root" wrapper.
+
+- [ ] **NO "root" key** - The tree should NOT wrap the input data in a `"root": { ... }` structure
+- [ ] **Direct rendering** - If the input is `{ "status": "success" }`, the tree starts with `˅ {` followed by `"status": "success"`, NOT `˅ "root": {`
+- [ ] **Top-level object** - For object input, the first line should be the opening brace `{` (expandable)
+- [ ] **Top-level array** - For array input, the first line should be the opening bracket `[` (expandable)
+- [ ] **Top-level primitive** - For primitive input (string, number, etc.), render just the value
+
+**Example of CORRECT format (from mock)**:
+```
+˅ {
+    "status": "success",
+    "total_duration": 1240,
+```
+
+**Example of INCORRECT format (current implementation)**:
+```
+˅ "root": {          ← THIS IS WRONG - no "root" in the actual data
+    "status": "success",
+```
+
+### 3. Structural Elements (Braces, Brackets, Commas)
+
+The mock shows **explicit JSON structural characters**:
+
+- [x] **Opening brace `{`** appears on its own line (or after `: ` for nested objects)
+- [ ] **Closing brace `}`** appears on its own line at the appropriate indentation (deferred - requires closing brace nodes)
+- [x] **Opening bracket `[`** appears after the key for arrays
+- [ ] **Closing bracket `]`** appears on its own line at the appropriate indentation (deferred - requires closing brace nodes)
+- [ ] **Commas** appear after values when there are more siblings (standard JSON) (deferred - adds complexity)
+- [x] **NO count badges** like `{2}` or `[3]` - the mock does NOT show these
+
+**Example of CORRECT format (from mock)**:
+```
+˅ {
+    "status": "success",
+    "total_duration": 1240,
+  ˅ "execution_trace": [
+    ˅ [0]: {
+        "step_id": "init_01",
+```
+
+### 4. Expand/Collapse Indicators
+
+- [x] **Chevron icon `˅`** for expanded nodes (pointing down)
+- [x] **Chevron icon `>`** for collapsed nodes (pointing right)
+- [x] Chevron appears **to the left** of the opening brace/bracket or key
+- [x] Chevron is **clickable** to toggle expansion state
+- [x] Chevron ONLY appears for expandable nodes (objects and arrays)
+- [x] Primitive values (strings, numbers, booleans, null) have NO chevron
+
+### 5. Color Coding (MUST Match Mock)
+
+The mock uses a specific color scheme that MUST be replicated:
+
+- [x] **Keys**: Purple/magenta color (e.g., `"status"`, `"total_duration"`)
+- [x] **String values**: Green color (e.g., `"success"`, `"init_01"`)
+- [x] **Number values**: Teal/cyan color (e.g., `1240`, `0.7`)
+- [x] **Structural characters**: Default text color (braces, brackets, commas, colons)
+- [x] **Expand/collapse chevrons**: Subtle/muted color (not prominent)
+
+### 6. Array Index Display
+
+The mock shows array indices in a specific format:
+
+- [x] Array indices displayed as `[0]`, `[1]`, `[2]`, etc.
+- [x] Index appears **before** the colon, like a key: `[0]: {`
+- [x] Indices use the **same color as keys** (purple/magenta)
+- [x] Indices are **expandable** when the array element is an object or array
+
+### 7. Thread Lines (Indentation Guides)
+
+- [ ] Vertical lines connect parent nodes to their children
+- [ ] Thread lines are **subtle** (thin, low-contrast color)
+- [ ] Thread lines appear at each indentation level
+- [ ] Lines should use a **left border or pseudo-element** approach
+- [ ] Thread lines respect the hierarchical structure
+- [ ] Thread lines can be **toggled off** via `showThreadLines` input
+
+### 8. Smart Blob Integration (CRITICAL)
+
+The DataTree must detect string values that contain markdown or JSON and render inline toggle buttons with rendered content below. This is NOT about using SmartBlobComponent as a wrapper - it's about embedding smart blob detection and rendering directly into the tree's node rendering.
+
+#### 8.1 Smart Blob Detection
+
+- [ ] **Detect markdown-like strings**: Strings containing markdown indicators (headings `#`, lists `- ` or `* `, code blocks, etc.)
+- [ ] **Detect JSON-like strings**: Strings that parse as valid JSON objects or arrays
+- [ ] **Detection happens per-node**: Each string value node independently checks if it's smart-blob-eligible
+- [ ] **Reuse existing detection logic**: Use the same heuristics as SmartBlobComponent (`looksLikeMarkdown()`, `tryParseJson()`)
+
+#### 8.2 Inline Toggle Buttons
+
+- [ ] **Toggle buttons appear inline** on the same line as the key-value pair, after the string value
+- [ ] **RAW/MD buttons** for markdown-detected strings
+- [ ] **RAW/JSON buttons** for JSON-detected strings
+- [ ] **Button styling**: Small pill-shaped toggles (rounded rectangles)
+- [ ] **Active state**: Filled background (highlighted)
+- [ ] **Inactive state**: Outlined/border only
+- [ ] **Default mode**: RAW mode by default (show the raw string value in quotes)
+- [ ] **Per-node state**: Each node tracks its own toggle state independently
+
+#### 8.3 Rendered Content Display
+
+When toggled to MD or JSON mode:
+
+- [ ] **Content appears BELOW the key-value line**, not replacing it
+- [ ] **Indented** to align with the tree's hierarchy
+- [ ] **Left border indicator** for markdown content (blockquote-style vertical line)
+- [ ] **For JSON mode**: Render a **nested DataTree** (recursive!) with full expand/collapse capability
+- [ ] **For MD mode**: Render formatted markdown (headings, lists, code blocks, etc.)
+
+#### 8.4 Implementation Approach
+
+The DataTree node template should:
+1. Check if the node is a string primitive
+2. If so, run smart blob detection
+3. If detected, render toggle buttons inline after the value
+4. Track toggle state per-node (e.g., `Map<string, 'raw' | 'md' | 'json'>`)
+5. When toggled, render the appropriate content below the node
+
+**Example of expected output**:
+```
+˅ {
+    "status": "success",
+    "total_duration": 1240,
+  ˅ "execution_trace": [
+    ˅ [0]: {
+        "step_id": "init_01",
+        "console_log": "Connecting to..." [RAW] [MD]    ← INLINE TOGGLES
+            │ Connecting to subsystem... Connection established.  ← RENDERED BELOW (when MD active)
+
+      ˅ "remote_config": "{\"model\":...}" [RAW] [JSON]  ← INLINE TOGGLES
+          ˅ {                                              ← NESTED DATATREE (when JSON active)
+              "model": "gemini-1.5-pro",
+              "temperature": 0.7
+            }
+
+        "chain_of_thought": "# Reasoning\n..." [RAW] [MD]
+            # Reasoning                                    ← RENDERED MARKDOWN
+            • The system successfully initialized...
+```
+
+### 9. Inline Rendered Content Layout
+
+When a smart blob is in rendered mode (MD or JSON):
+
+- [ ] Rendered content appears **indented below** the key-value line
+- [ ] Rendered content has a **left border/quote indicator** (visible in mock for markdown)
+- [ ] Markdown headings render at appropriate sizes
+- [ ] Markdown bullet points render as proper list items
+- [ ] Markdown blockquotes render with left border styling
+- [ ] Nested JSON renders as a fully functional DataTree (with its own expand/collapse)
+- [ ] Rendered content is **contained within** the parent tree's visual hierarchy
+
+### 10. Typography
+
+- [ ] **Monospace font** for all tree content (`Roboto Mono` or similar)
+- [ ] **Consistent font size** across keys, values, and structural characters
+- [ ] **Proper line height** for readability
+- [ ] **No word wrapping** - long lines should either truncate or scroll horizontally
+
+### 11. Spacing and Indentation
+
+- [ ] **Consistent indentation** per nesting level (appears to be ~20-24px in mock)
+- [ ] **No extra vertical spacing** between sibling nodes
+- [ ] **Compact vertical layout** - nodes should be close together
+- [ ] Proper alignment of values across different key lengths
+
+### 12. Empty States
+
+- [ ] Empty object `{}` displays as `{}`  on a single line (no expansion needed)
+- [ ] Empty array `[]` displays as `[]` on a single line (no expansion needed)
+- [ ] `null` value displays as `null` with appropriate styling
+- [ ] `undefined` values (if possible) handled gracefully
+
+### 13. Expand All / Collapse All Controls
+
+- [ ] Located in a **subtle header area** above the tree
+- [ ] Uses **icon-only buttons** (unfold_more / unfold_less)
+- [ ] **Only visible** when the tree has expandable nodes
+- [ ] Buttons are **not prominent** - secondary/ghost button style
+- [ ] Expand All expands **all** nested levels (not just top level)
+- [ ] Collapse All collapses **all** nested levels (not just top level)
+
+### 14. Integration Points
+
+#### SmartBlobComponent Integration:
+- [ ] JSON mode in SmartBlob renders DataTreeComponent (not `<pre>` with formatted JSON)
+- [ ] DataTreeComponent receives parsed JSON object as input
+- [ ] Toggle between RAW and JSON modes still works
+- [ ] Visual appearance matches the standalone DataTree tests
+
+#### EventBlockComponent Integration:
+- [ ] Function call arguments render via DataTreeComponent with smart blob support
+- [ ] Function response data renders via DataTreeComponent with smart blob support
+- [ ] The DataTree appears within the "Result" accordion section
+- [ ] Proper container styling (padding, borders) around the tree
+
+### 15. Theme Support
+
+- [ ] All colors work correctly in **light theme**
+- [ ] All colors work correctly in **dark theme**
+- [ ] Thread lines visible in both themes
+- [ ] Smart blob toggle buttons styled appropriately in both themes
+- [ ] Rendered markdown content styled appropriately in both themes
+
+### 16. Interactive Behavior
+
+- [ ] Clicking a chevron **toggles only that node** (not siblings or children)
+- [ ] Clicking a smart blob toggle **switches the render mode** for that value only
+- [ ] Expansion state is **preserved** when parent components re-render
+- [ ] No flickering or layout shifts when expanding/collapsing
+- [ ] Smooth transitions (optional, but nice to have)
+
+---
+
+### Summary of Critical Gaps in Current Implementation
+
+Based on comparing the mock to current screenshot tests, these are the **highest priority fixes**:
+
+1. ~~**JSON syntax format** - Switch from YAML-style (`key: value`) to JSON-style (`"key": value`)~~ **DONE**
+2. ~~**Remove count badges** - Delete the `{2}`, `[3]` indicators; show actual braces/brackets~~ **DONE**
+3. ~~**Color scheme** - Change keys to purple/magenta, strings to green, numbers to teal/cyan~~ **DONE**
+4. **Remove "root" wrapper** - The tree currently wraps all data in an artificial `"root": { }` which is NOT in the mock - **MUST FIX**
+5. **Smart blob integration** - Add inline RAW/MD/JSON toggles within the tree for string values that contain markdown or JSON - **MUST FIX**
+6. **Inline rendered content** - When smart blob is toggled to MD/JSON mode, render the formatted content below the key-value line - **MUST FIX**
+
+---
+
 ## Retrospective Notes
 
 *(To be filled after sprint completion)*

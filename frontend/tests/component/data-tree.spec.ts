@@ -135,6 +135,30 @@ const specialCharacters = {
   mixed: 'Quote: "test" and \\escape\\',
 };
 
+/**
+ * Complex tool output data matching the UI mock:
+ * mddocs/frontend/sprints/mocks/components/EventBlock_ToolOutput_Complex_default.png
+ *
+ * Contains smart blob content (markdown and JSON strings) to test inline
+ * content detection and rendering toggles.
+ */
+const toolOutputComplex = {
+  status: 'success',
+  total_duration: 1240,
+  execution_trace: [
+    {
+      step_id: 'init_01',
+      // Markdown string (blockquote) - should show RAW/MD toggles
+      console_log: '> Connecting to subsystem... Connection established.',
+      // JSON string - should show RAW/JSON toggles
+      remote_config: '{"model": "gemini-1.5-pro", "temperature": 0.7}',
+      // Markdown string (heading + list) - should show RAW/MD toggles
+      chain_of_thought:
+        '# Reasoning\n\n- The system successfully initialized the core components.\n- Configuration parameters were correctly loaded.',
+    },
+  ],
+};
+
 // =============================================================================
 // Functional Tests (NOT skipped)
 // =============================================================================
@@ -238,9 +262,9 @@ test.describe('DataTreeComponent', () => {
         props: { data: simpleFlatObject },
       });
 
-      // Should have 5 nodes: root + 4 properties
+      // Should have 6 nodes: root + 4 properties + closing brace
       const nodes = await page.locator('[data-testid="tree-node"]').count();
-      expect(nodes).toBe(5);
+      expect(nodes).toBe(6);
     });
 
     test('renders correct number of nodes for nested object', async ({ mount, page }) => {
@@ -249,10 +273,11 @@ test.describe('DataTreeComponent', () => {
       });
 
       // root(1) + user(1) + user.name(1) + user.email(1) + user.profile(1)
-      // + profile.bio(1) + profile.location(1) + settings(1)
-      // + settings.theme(1) + settings.notifications(1) = 10
+      // + profile.bio(1) + profile.location(1) + profile.closing(1) + user.closing(1)
+      // + settings(1) + settings.theme(1) + settings.notifications(1) + settings.closing(1)
+      // + root.closing(1) = 14
       const nodes = await page.locator('[data-testid="tree-node"]').count();
-      expect(nodes).toBe(10);
+      expect(nodes).toBe(14);
     });
 
     test('expand/collapse all buttons visible when tree has expandable nodes', async ({
@@ -466,6 +491,23 @@ test.describe('DataTreeComponent', () => {
       });
 
       await expect(component).toHaveScreenshot('data-tree-special-chars.png');
+    });
+
+    /**
+     * Tests visual match against UI mock:
+     * mddocs/frontend/sprints/mocks/components/EventBlock_ToolOutput_Complex_default.png
+     *
+     * This test validates:
+     * - JSON syntax formatting (quoted keys, braces, brackets)
+     * - Smart blob detection and toggle buttons (RAW/MD/JSON)
+     * - Proper nesting and indentation for arrays of objects
+     */
+    test('tool output complex (smart blob integration)', async ({ mount }) => {
+      const component = await mount(DataTreeComponent, {
+        props: { data: toolOutputComplex },
+      });
+
+      await expect(component).toHaveScreenshot('data-tree-tool-output-complex.png');
     });
   });
 });

@@ -91,25 +91,29 @@ describe('DataTreeComponent', () => {
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
-      expect(nodes.length).toBe(3); // root + name + age
+      expect(nodes.length).toBe(4); // root + name + age + closing brace
     });
 
-    it('should render keys with colon suffix', () => {
+    it('should render keys with quotes and colon', () => {
       hostComponent.data.set({ name: 'Alice' });
       fixture.detectChanges();
 
-      const nameNode = getNodeByPath('root.name');
+      const nameNode = getNodeByPath('$.name');
       expect(nameNode).toBeTruthy();
 
+      // Keys are now rendered as "key" with a separate colon span
       const keySpan = nameNode?.querySelector('.key');
-      expect(keySpan?.textContent).toBe('name:');
+      expect(keySpan?.textContent).toBe('"name"');
+
+      const colonSpan = nameNode?.querySelector('.colon');
+      expect(colonSpan?.textContent).toBe(':');
     });
 
     it('should render string values with quotes', () => {
       hostComponent.data.set({ name: 'Alice' });
       fixture.detectChanges();
 
-      const nameNode = getNodeByPath('root.name');
+      const nameNode = getNodeByPath('$.name');
       const valueSpan = nameNode?.querySelector('.value');
       expect(valueSpan?.textContent).toBe('"Alice"');
     });
@@ -118,7 +122,7 @@ describe('DataTreeComponent', () => {
       hostComponent.data.set({ age: 30 });
       fixture.detectChanges();
 
-      const ageNode = getNodeByPath('root.age');
+      const ageNode = getNodeByPath('$.age');
       const valueSpan = ageNode?.querySelector('.value');
       expect(valueSpan?.textContent).toBe('30');
     });
@@ -127,10 +131,10 @@ describe('DataTreeComponent', () => {
       hostComponent.data.set({ active: true, deleted: false });
       fixture.detectChanges();
 
-      const activeNode = getNodeByPath('root.active');
+      const activeNode = getNodeByPath('$.active');
       expect(activeNode?.querySelector('.value')?.textContent).toBe('true');
 
-      const deletedNode = getNodeByPath('root.deleted');
+      const deletedNode = getNodeByPath('$.deleted');
       expect(deletedNode?.querySelector('.value')?.textContent).toBe('false');
     });
 
@@ -138,7 +142,7 @@ describe('DataTreeComponent', () => {
       hostComponent.data.set({ nothing: null });
       fixture.detectChanges();
 
-      const nullNode = getNodeByPath('root.nothing');
+      const nullNode = getNodeByPath('$.nothing');
       expect(nullNode?.querySelector('.value')?.textContent).toBe('null');
     });
   });
@@ -156,8 +160,8 @@ describe('DataTreeComponent', () => {
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
-      // root + user + name + address + city = 5
-      expect(nodes.length).toBe(5);
+      // root + user + name + address + city + 3 closing braces = 8
+      expect(nodes.length).toBe(8);
     });
 
     it('should apply increasing indentation based on depth', () => {
@@ -170,10 +174,10 @@ describe('DataTreeComponent', () => {
       });
       fixture.detectChanges();
 
-      const rootNode = getNodeByPath('root');
-      const level1Node = getNodeByPath('root.level1');
-      const level2Node = getNodeByPath('root.level1.level2');
-      const level3Node = getNodeByPath('root.level1.level2.level3');
+      const rootNode = getNodeByPath('$');
+      const level1Node = getNodeByPath('$.level1');
+      const level2Node = getNodeByPath('$.level1.level2');
+      const level3Node = getNodeByPath('$.level1.level2.level3');
 
       // Check padding-left increases with depth (16px per level)
       expect(rootNode?.style.paddingLeft).toBe('0px');
@@ -189,12 +193,12 @@ describe('DataTreeComponent', () => {
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
-      expect(nodes.length).toBe(4); // root + 3 items
+      expect(nodes.length).toBe(5); // root + 3 items + closing bracket
 
       // Check array items have numeric keys
-      expect(getNodeByPath('root[0]')).toBeTruthy();
-      expect(getNodeByPath('root[1]')).toBeTruthy();
-      expect(getNodeByPath('root[2]')).toBeTruthy();
+      expect(getNodeByPath('$[0]')).toBeTruthy();
+      expect(getNodeByPath('$[1]')).toBeTruthy();
+      expect(getNodeByPath('$[2]')).toBeTruthy();
     });
 
     it('should render array of objects', () => {
@@ -202,54 +206,61 @@ describe('DataTreeComponent', () => {
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
-      // root + obj1 + id1 + obj2 + id2 = 5
-      expect(nodes.length).toBe(5);
+      // root + obj1 + id1 + obj2 + id2 + 3 closings = 8
+      expect(nodes.length).toBe(8);
 
-      expect(getNodeByPath('root[0].id')).toBeTruthy();
-      expect(getNodeByPath('root[1].id')).toBeTruthy();
+      expect(getNodeByPath('$[0].id')).toBeTruthy();
+      expect(getNodeByPath('$[1].id')).toBeTruthy();
     });
   });
 
-  describe('container info display', () => {
-    it('should display child count for objects', () => {
+  describe('bracket display for containers', () => {
+    it('should display opening brace for objects when expanded', () => {
       hostComponent.data.set({ a: 1, b: 2, c: 3 });
       fixture.detectChanges();
 
-      const rootNode = getNodeByPath('root');
-      const containerInfo = rootNode?.querySelector('.container-info');
-      expect(containerInfo).toBeTruthy();
-
-      const childCount = rootNode?.querySelector('.child-count');
-      expect(childCount?.textContent).toBe('3');
-
-      // Check for object indicators
-      const typeIndicators = rootNode?.querySelectorAll('.type-indicator');
-      expect(typeIndicators?.length).toBe(2);
-      expect(typeIndicators?.[0]?.textContent).toBe('{');
-      expect(typeIndicators?.[1]?.textContent).toBe('}');
+      const rootNode = getNodeByPath('$');
+      const bracket = rootNode?.querySelector('.bracket');
+      expect(bracket).toBeTruthy();
+      expect(bracket?.textContent).toBe('{');
     });
 
-    it('should display child count for arrays', () => {
+    it('should display opening bracket for arrays when expanded', () => {
       hostComponent.data.set([1, 2, 3, 4, 5]);
       fixture.detectChanges();
 
-      const rootNode = getNodeByPath('root');
-      const childCount = rootNode?.querySelector('.child-count');
-      expect(childCount?.textContent).toBe('5');
-
-      // Check for array indicators
-      const typeIndicators = rootNode?.querySelectorAll('.type-indicator');
-      expect(typeIndicators?.[0]?.textContent).toBe('[');
-      expect(typeIndicators?.[1]?.textContent).toBe(']');
+      const rootNode = getNodeByPath('$');
+      const bracket = rootNode?.querySelector('.bracket');
+      expect(bracket?.textContent).toBe('[');
     });
 
-    it('should not display container info for primitives', () => {
+    it('should display collapsed indicator for objects when collapsed', () => {
+      hostComponent.data.set({ a: 1 });
+      hostComponent.expanded.set(false);
+      fixture.detectChanges();
+
+      const rootNode = getNodeByPath('$');
+      const bracket = rootNode?.querySelector('.bracket');
+      expect(bracket?.textContent).toBe('{...}');
+    });
+
+    it('should display collapsed indicator for arrays when collapsed', () => {
+      hostComponent.data.set([1, 2, 3]);
+      hostComponent.expanded.set(false);
+      fixture.detectChanges();
+
+      const rootNode = getNodeByPath('$');
+      const bracket = rootNode?.querySelector('.bracket');
+      expect(bracket?.textContent).toBe('[...]');
+    });
+
+    it('should not display brackets for primitives', () => {
       hostComponent.data.set({ name: 'test' });
       fixture.detectChanges();
 
-      const nameNode = getNodeByPath('root.name');
-      const containerInfo = nameNode?.querySelector('.container-info');
-      expect(containerInfo).toBeNull();
+      const nameNode = getNodeByPath('$.name');
+      const bracket = nameNode?.querySelector('.bracket');
+      expect(bracket).toBeNull();
     });
   });
 
@@ -260,8 +271,8 @@ describe('DataTreeComponent', () => {
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
-      // root + a + b + c = 4
-      expect(nodes.length).toBe(4);
+      // root + a + b + c + 3 closings = 7
+      expect(nodes.length).toBe(7);
     });
 
     it('should only render root when expanded is false', () => {
@@ -279,7 +290,7 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      const rootNode = getNodeByPath('root');
+      const rootNode = getNodeByPath('$');
       expect(rootNode?.classList.contains('expandable')).toBe(true);
       expect(rootNode?.classList.contains('expanded')).toBe(true);
     });
@@ -289,7 +300,7 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(false);
       fixture.detectChanges();
 
-      const rootNode = getNodeByPath('root');
+      const rootNode = getNodeByPath('$');
       expect(rootNode?.classList.contains('expandable')).toBe(true);
       expect(rootNode?.classList.contains('expanded')).toBe(false);
     });
@@ -327,36 +338,38 @@ describe('DataTreeComponent', () => {
       });
       fixture.detectChanges();
 
-      expect(getNodeByPath('root.str')?.getAttribute('data-value-type')).toBe('string');
-      expect(getNodeByPath('root.num')?.getAttribute('data-value-type')).toBe('number');
-      expect(getNodeByPath('root.bool')?.getAttribute('data-value-type')).toBe('boolean');
-      expect(getNodeByPath('root.nil')?.getAttribute('data-value-type')).toBe('null');
-      expect(getNodeByPath('root.obj')?.getAttribute('data-value-type')).toBe('object');
-      expect(getNodeByPath('root.arr')?.getAttribute('data-value-type')).toBe('array');
+      expect(getNodeByPath('$.str')?.getAttribute('data-value-type')).toBe('string');
+      expect(getNodeByPath('$.num')?.getAttribute('data-value-type')).toBe('number');
+      expect(getNodeByPath('$.bool')?.getAttribute('data-value-type')).toBe('boolean');
+      expect(getNodeByPath('$.nil')?.getAttribute('data-value-type')).toBe('null');
+      expect(getNodeByPath('$.obj')?.getAttribute('data-value-type')).toBe('object');
+      expect(getNodeByPath('$.arr')?.getAttribute('data-value-type')).toBe('array');
     });
   });
 
   describe('empty data handling', () => {
-    it('should render empty object with zero child count', () => {
+    it('should render empty object with opening brace', () => {
       hostComponent.data.set({});
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
       expect(nodes.length).toBe(1);
 
-      const childCount = getNodeByPath('root')?.querySelector('.child-count');
-      expect(childCount?.textContent).toBe('0');
+      // Empty expanded object still shows opening brace
+      const bracket = getNodeByPath('$')?.querySelector('.bracket');
+      expect(bracket?.textContent).toBe('{');
     });
 
-    it('should render empty array with zero child count', () => {
+    it('should render empty array with opening bracket', () => {
       hostComponent.data.set([]);
       fixture.detectChanges();
 
       const nodes = getTreeNodes();
       expect(nodes.length).toBe(1);
 
-      const childCount = getNodeByPath('root')?.querySelector('.child-count');
-      expect(childCount?.textContent).toBe('0');
+      // Empty expanded array still shows opening bracket
+      const bracket = getNodeByPath('$')?.querySelector('.bracket');
+      expect(bracket?.textContent).toBe('[');
     });
   });
 
@@ -364,18 +377,18 @@ describe('DataTreeComponent', () => {
     it('should update when data changes', () => {
       hostComponent.data.set({ a: 1 });
       fixture.detectChanges();
-      expect(getTreeNodes().length).toBe(2);
+      expect(getTreeNodes().length).toBe(3); // root + a + closing
 
       hostComponent.data.set({ a: 1, b: 2, c: 3 });
       fixture.detectChanges();
-      expect(getTreeNodes().length).toBe(4);
+      expect(getTreeNodes().length).toBe(5); // root + a + b + c + closing
     });
 
     it('should update when expanded changes', () => {
       hostComponent.data.set({ nested: { deep: { value: 1 } } });
       hostComponent.expanded.set(true);
       fixture.detectChanges();
-      expect(getTreeNodes().length).toBe(4);
+      expect(getTreeNodes().length).toBe(7); // root + nested + deep + value + 3 closings
 
       hostComponent.expanded.set(false);
       fixture.detectChanges();
@@ -430,7 +443,7 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      const rootToggle = getToggleForPath('root');
+      const rootToggle = getToggleForPath('$');
       expect(getIconName(rootToggle)).toBe('expand_more');
     });
 
@@ -439,7 +452,7 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(false);
       fixture.detectChanges();
 
-      const rootToggle = getToggleForPath('root');
+      const rootToggle = getToggleForPath('$');
       expect(getIconName(rootToggle)).toBe('chevron_right');
     });
 
@@ -529,8 +542,8 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      // All expanded initially: root + a + x + b + y = 5
-      expect(getTreeNodes().length).toBe(5);
+      // All expanded initially: root + a + x + b + y + 3 closings = 8
+      expect(getTreeNodes().length).toBe(8);
 
       // Click collapse all
       getCollapseAllButton()?.click();
@@ -538,7 +551,7 @@ describe('DataTreeComponent', () => {
 
       // Only root should be visible
       expect(getTreeNodes().length).toBe(1);
-      expect(isNodeExpanded('root')).toBe(false);
+      expect(isNodeExpanded('$')).toBe(false);
     });
 
     it('should expand all nodes when clicking expand all button', () => {
@@ -556,11 +569,11 @@ describe('DataTreeComponent', () => {
       getExpandAllButton()?.click();
       fixture.detectChanges();
 
-      // All nodes visible: root + a + x + b + y = 5
-      expect(getTreeNodes().length).toBe(5);
-      expect(isNodeExpanded('root')).toBe(true);
-      expect(isNodeExpanded('root.a')).toBe(true);
-      expect(isNodeExpanded('root.b')).toBe(true);
+      // All nodes visible: root + a + x + a:closing + b + y + b:closing + root:closing = 8
+      expect(getTreeNodes().length).toBe(8);
+      expect(isNodeExpanded('$')).toBe(true);
+      expect(isNodeExpanded('$.a')).toBe(true);
+      expect(isNodeExpanded('$.b')).toBe(true);
     });
 
     it('should expand all after manual collapse', () => {
@@ -572,20 +585,21 @@ describe('DataTreeComponent', () => {
       fixture.detectChanges();
 
       // Manually collapse 'a'
-      const nodeA = getNodeByPath('root.a');
+      const nodeA = getNodeByPath('$.a');
       const toggleA = nodeA?.querySelector('[data-testid="expand-toggle"]') as HTMLButtonElement;
       toggleA?.click();
       fixture.detectChanges();
 
-      // Should be 4 nodes now (x is hidden)
-      expect(getTreeNodes().length).toBe(4);
+      // Should be 6 nodes now (x and a:closing hidden, but root:closing still there)
+      // root + a + b + y + b:closing + root:closing = 6
+      expect(getTreeNodes().length).toBe(6);
 
       // Click expand all
       getExpandAllButton()?.click();
       fixture.detectChanges();
 
-      // All 5 nodes visible again
-      expect(getTreeNodes().length).toBe(5);
+      // All 8 nodes visible again
+      expect(getTreeNodes().length).toBe(8);
     });
 
     it('should collapse all after partial expansion', () => {
@@ -600,15 +614,15 @@ describe('DataTreeComponent', () => {
       expect(getTreeNodes().length).toBe(1);
 
       // Manually expand root
-      const rootNode = getNodeByPath('root');
+      const rootNode = getNodeByPath('$');
       const rootToggle = rootNode?.querySelector(
         '[data-testid="expand-toggle"]',
       ) as HTMLButtonElement;
       rootToggle?.click();
       fixture.detectChanges();
 
-      // Root expanded, showing a and b (but not their children)
-      expect(getTreeNodes().length).toBe(3);
+      // Root expanded, showing a and b (collapsed) + root:closing
+      expect(getTreeNodes().length).toBe(4);
 
       // Click collapse all
       getCollapseAllButton()?.click();
@@ -623,8 +637,8 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      // root + [0] + id + [1] + id = 5
-      expect(getTreeNodes().length).toBe(5);
+      // root + [0] + id + [0]:closing + [1] + id + [1]:closing + root:closing = 8
+      expect(getTreeNodes().length).toBe(8);
 
       // Collapse all
       getCollapseAllButton()?.click();
@@ -636,7 +650,7 @@ describe('DataTreeComponent', () => {
       getExpandAllButton()?.click();
       fixture.detectChanges();
 
-      expect(getTreeNodes().length).toBe(5);
+      expect(getTreeNodes().length).toBe(8);
     });
 
     it('should show buttons for empty objects (which are expandable)', () => {
@@ -672,15 +686,15 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      // Verify initially expanded
-      expect(getTreeNodes().length).toBe(3); // root + nested + value
+      // Verify initially expanded: root + nested + value + nested:closing + root:closing = 5
+      expect(getTreeNodes().length).toBe(5);
 
       // Click root toggle to collapse
-      clickToggle('root');
+      clickToggle('$');
 
       // Children should be hidden
       expect(getTreeNodes().length).toBe(1); // Only root
-      expect(isNodeExpanded('root')).toBe(false);
+      expect(isNodeExpanded('$')).toBe(false);
     });
 
     it('should expand node when clicking toggle on collapsed node', () => {
@@ -692,11 +706,11 @@ describe('DataTreeComponent', () => {
       expect(getTreeNodes().length).toBe(1); // Only root
 
       // Click root toggle to expand
-      clickToggle('root');
+      clickToggle('$');
 
       // Children should be visible
       expect(getTreeNodes().length).toBeGreaterThan(1);
-      expect(isNodeExpanded('root')).toBe(true);
+      expect(isNodeExpanded('$')).toBe(true);
     });
 
     it('should toggle individual nested nodes independently', () => {
@@ -707,16 +721,17 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      // All expanded: root + a + x + b + y = 5
-      expect(getTreeNodes().length).toBe(5);
+      // All expanded: root + a + x + a:closing + b + y + b:closing + root:closing = 8
+      expect(getTreeNodes().length).toBe(8);
 
       // Collapse only 'a'
-      clickToggle('root.a');
+      clickToggle('$.a');
 
-      // Should hide 'x' but keep 'b.y' visible
-      expect(getTreeNodes().length).toBe(4); // root + a + b + y
-      expect(isNodeExpanded('root.a')).toBe(false);
-      expect(isNodeExpanded('root.b')).toBe(true);
+      // Should hide 'x' and 'a:closing' but keep 'b.y' visible
+      // root + a + b + y + b:closing + root:closing = 6
+      expect(getTreeNodes().length).toBe(6);
+      expect(isNodeExpanded('$.a')).toBe(false);
+      expect(isNodeExpanded('$.b')).toBe(true);
     });
 
     it('should hide nested children when collapsing parent', () => {
@@ -730,16 +745,16 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      // All expanded: root + level1 + level2 + level3 = 4
-      expect(getTreeNodes().length).toBe(4);
+      // All expanded: root + level1 + level2 + level3 + 3 closings = 7
+      expect(getTreeNodes().length).toBe(7);
 
-      // Collapse level1 - should hide level2 and level3
-      clickToggle('root.level1');
+      // Collapse level1 - should hide level2, level3, and their closings
+      clickToggle('$.level1');
 
-      // Only root + level1 visible
-      expect(getTreeNodes().length).toBe(2);
-      expect(getNodeByPath('root.level1.level2')).toBeNull();
-      expect(getNodeByPath('root.level1.level2.level3')).toBeNull();
+      // Only root + level1 + root:closing visible
+      expect(getTreeNodes().length).toBe(3);
+      expect(getNodeByPath('$.level1.level2')).toBeNull();
+      expect(getNodeByPath('$.level1.level2.level3')).toBeNull();
     });
 
     it('should change icon when toggling', () => {
@@ -747,15 +762,15 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      const node = getNodeByPath('root');
+      const node = getNodeByPath('$');
       const getIcon = () => node?.querySelector('mat-icon')?.textContent?.trim();
 
       expect(getIcon()).toBe('expand_more');
 
-      clickToggle('root');
+      clickToggle('$');
       expect(getIcon()).toBe('chevron_right');
 
-      clickToggle('root');
+      clickToggle('$');
       expect(getIcon()).toBe('expand_more');
     });
 
@@ -764,16 +779,16 @@ describe('DataTreeComponent', () => {
       hostComponent.expanded.set(true);
       fixture.detectChanges();
 
-      // root + [0] + a + [1] + b = 5
-      expect(getTreeNodes().length).toBe(5);
+      // root + [0] + a + [0]:closing + [1] + b + [1]:closing + root:closing = 8
+      expect(getTreeNodes().length).toBe(8);
 
       // Collapse first array element
-      clickToggle('root[0]');
+      clickToggle('$[0]');
 
-      // root + [0] + [1] + b = 4
-      expect(getTreeNodes().length).toBe(4);
-      expect(getNodeByPath('root[0].a')).toBeNull();
-      expect(getNodeByPath('root[1].b')).toBeTruthy();
+      // root + [0] + [1] + b + [1]:closing + root:closing = 6
+      expect(getTreeNodes().length).toBe(6);
+      expect(getNodeByPath('$[0].a')).toBeNull();
+      expect(getNodeByPath('$[1].b')).toBeTruthy();
     });
   });
 });

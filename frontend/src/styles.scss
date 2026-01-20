@@ -143,3 +143,34 @@ body {
   background-color: var(--sys-surface);
   color: var(--sys-on-surface);
 }
+
+/* ==========================================================================
+   JSON Syntax Highlighting (for innerHTML content in DataTree)
+   These styles must be global because they target dynamically inserted HTML.
+   Uses unique class names (json-*) to avoid conflicts.
+   ========================================================================== */
+
+.json-key {
+  color: #c586c0 !important; /* Purple/magenta for keys */
+}
+
+.json-string {
+  color: #6a9955 !important; /* Green for strings */
+}
+
+.json-number {
+  color: #4ec9b0 !important; /* Teal/cyan for numbers */
+}
+
+.json-boolean {
+  color: #569cd6 !important; /* Blue for booleans */
+}
+
+.json-null {
+  color: #569cd6 !important; /* Blue for null */
+  font-style: italic;
+}
+
+.json-bracket {
+  color: inherit;
+}

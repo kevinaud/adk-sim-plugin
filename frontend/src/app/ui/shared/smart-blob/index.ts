@@ -9,6 +9,8 @@
  * @see mddocs/frontend/frontend-tdd.md#smartblobcomponent
  */
 
-export { ContentDetectionService } from './content-detection.service';
-export { MarkdownPipe } from './markdown.pipe';
+// Re-export ContentDetectionService from util for backwards compatibility
+export { ContentDetectionService } from '../../../util/content-detection';
+// Re-export MarkdownPipe from markdown-pipe for backwards compatibility
+export { MarkdownPipe } from '../markdown-pipe';
 export { SmartBlobComponent, type SmartBlobMode } from './smart-blob.component';
