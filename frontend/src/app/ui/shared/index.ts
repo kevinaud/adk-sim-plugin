@@ -21,6 +21,7 @@ export {
   type SmartBlobMode,
 } from './smart-blob';
 export { SplitPaneComponent } from './split-pane';
+export { SystemInstructionsComponent } from './system-instructions';
 
 // Type for reference - components that will be added
 export type SharedUiComponent =
@@ -31,4 +32,5 @@ export type SharedUiComponent =
   | 'error-state'
   | 'loading-state'
   | 'smart-blob'
-  | 'split-pane';
+  | 'split-pane'
+  | 'system-instructions';
