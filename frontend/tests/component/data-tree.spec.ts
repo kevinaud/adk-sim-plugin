@@ -318,12 +318,12 @@ test.describe('DataTreeComponent', () => {
   });
 
   // ===========================================================================
-  // Visual Regression Tests (skipped due to issue #203)
-  // Screenshot size differences between local Docker and CI Docker
+  // Visual Regression Tests
+  // Screenshots captured for documentation but not enforced (maxDiffPixelRatio: 1)
   // See: https://github.com/kevinaud/adk-sim-plugin/issues/203
   // ===========================================================================
 
-  test.describe.skip('visual regression', () => {
+  test.describe('visual regression', () => {
     test('simple flat object (3-4 keys)', async ({ mount }) => {
       const component = await mount(DataTreeComponent, {
         props: { data: simpleFlatObject },

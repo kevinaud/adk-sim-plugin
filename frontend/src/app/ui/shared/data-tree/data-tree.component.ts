@@ -114,15 +114,17 @@ function calculateIndent(depth: number): number {
           }
           @if (node.expandable) {
             <span class="container-info">
-              @if (node.valueType === 'object') {
-                <span class="type-indicator">{{ '{' }}</span>
-                <span class="child-count">{{ node.childCount }}</span>
-                <span class="type-indicator">{{ '}' }}</span>
-              }
-              @if (node.valueType === 'array') {
-                <span class="type-indicator">[</span>
-                <span class="child-count">{{ node.childCount }}</span>
-                <span class="type-indicator">]</span>
+              @switch (node.valueType) {
+                @case ('object') {
+                  <span class="type-indicator">{{ '{' }}</span>
+                  <span class="child-count">{{ node.childCount }}</span>
+                  <span class="type-indicator">{{ '}' }}</span>
+                }
+                @case ('array') {
+                  <span class="type-indicator">[</span>
+                  <span class="child-count">{{ node.childCount }}</span>
+                  <span class="type-indicator">]</span>
+                }
               }
             </span>
           }
@@ -189,6 +191,10 @@ function calculateIndent(depth: number): number {
        Thread Lines (FR-010)
        Visual connectors between parent and child nodes using CSS borders.
        Uses a vertical line at each depth level to show hierarchy.
+
+       NOTE: Thread lines are supported up to MAX_THREAD_LINE_DEPTH (8) levels.
+       Nodes deeper than this will not display thread lines.
+       To extend support, add more CSS selectors below.
        ========================================================================= */
 
     .thread-lines .tree-node::before {
