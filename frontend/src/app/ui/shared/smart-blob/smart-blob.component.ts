@@ -25,9 +25,9 @@ import {
   untracked,
 } from '@angular/core';
 
+import { ContentDetectionService } from '../../../util/content-detection';
 import { DataTreeComponent } from '../data-tree';
-import { ContentDetectionService } from './content-detection.service';
-import { MarkdownPipe } from './markdown.pipe';
+import { MarkdownPipe } from '../markdown-pipe';
 
 /**
  * Display mode for content rendering.

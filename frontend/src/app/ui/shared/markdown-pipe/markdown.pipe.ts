@@ -6,6 +6,9 @@ import { marked } from 'marked';
 /**
  * Pipe that transforms markdown text into sanitized HTML.
  *
+ * This pipe is extracted into its own module to avoid circular dependencies
+ * between data-tree and smart-blob components.
+ *
  * Usage in template:
  * ```html
  * <div [innerHTML]="content | markdown"></div>

@@ -24,14 +24,16 @@ describe('flattenTree', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
-        path: 'root',
+        path: '$',
         depth: 0,
-        key: 'root',
+        key: '',
         displayValue: null,
         valueType: ValueType.Object,
         expandable: true,
         expanded: true,
         childCount: 0,
+        isClosingBrace: false,
+        isRoot: true,
       });
     });
 
@@ -40,14 +42,16 @@ describe('flattenTree', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
-        path: 'root',
+        path: '$',
         depth: 0,
-        key: 'root',
+        key: '',
         displayValue: null,
         valueType: ValueType.Array,
         expandable: true,
         expanded: true,
         childCount: 0,
+        isClosingBrace: false,
+        isRoot: true,
       });
     });
   });
@@ -58,14 +62,15 @@ describe('flattenTree', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
-        path: 'root',
+        path: '$',
         depth: 0,
-        key: 'root',
+        key: '',
         displayValue: '"hello"',
         valueType: ValueType.String,
         expandable: false,
         expanded: false,
         childCount: 0,
+        isRoot: true,
       });
     });
 
@@ -125,37 +130,47 @@ describe('flattenTree', () => {
       const data = { a: 1, b: 'hello' };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(4); // root + 2 properties + closing brace
 
-      // Root node
+      // Root node (no key, represents the object itself)
       expect(result[0]).toMatchObject({
-        path: 'root',
+        path: '$',
         depth: 0,
-        key: 'root',
+        key: '',
         valueType: ValueType.Object,
         expandable: true,
         expanded: true,
         childCount: 2,
+        isRoot: true,
       });
 
       // Property 'a'
       expect(result[1]).toMatchObject({
-        path: 'root.a',
+        path: '$.a',
         depth: 1,
         key: 'a',
         displayValue: '1',
         valueType: ValueType.Number,
         expandable: false,
+        isArrayIndex: false,
       });
 
       // Property 'b'
       expect(result[2]).toMatchObject({
-        path: 'root.b',
+        path: '$.b',
         depth: 1,
         key: 'b',
         displayValue: '"hello"',
         valueType: ValueType.String,
         expandable: false,
+        isArrayIndex: false,
+      });
+
+      // Closing brace
+      expect(result[3]).toMatchObject({
+        path: '$:closing',
+        isClosingBrace: true,
+        closingBrace: '}',
       });
     });
 
@@ -168,7 +183,7 @@ describe('flattenTree', () => {
       };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(5); // root + 4 properties
+      expect(result).toHaveLength(6); // root + 4 properties + closing brace
 
       const nodeMap = new Map(result.map((n) => [n.key, n]));
       expect(nodeMap.get('str')?.valueType).toBe(ValueType.String);
@@ -188,20 +203,21 @@ describe('flattenTree', () => {
       };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(6); // root + user + name + age + 2 closing braces
 
-      // Root
+      // Root (no key, represents the object itself)
       expect(result[0]).toMatchObject({
-        path: 'root',
+        path: '$',
         depth: 0,
-        key: 'root',
+        key: '',
         valueType: ValueType.Object,
         childCount: 1,
+        isRoot: true,
       });
 
       // user
       expect(result[1]).toMatchObject({
-        path: 'root.user',
+        path: '$.user',
         depth: 1,
         key: 'user',
         valueType: ValueType.Object,
@@ -211,7 +227,7 @@ describe('flattenTree', () => {
 
       // name
       expect(result[2]).toMatchObject({
-        path: 'root.user.name',
+        path: '$.user.name',
         depth: 2,
         key: 'name',
         displayValue: '"John"',
@@ -219,10 +235,24 @@ describe('flattenTree', () => {
 
       // age
       expect(result[3]).toMatchObject({
-        path: 'root.user.age',
+        path: '$.user.age',
         depth: 2,
         key: 'age',
         displayValue: '30',
+      });
+
+      // Closing brace for user object
+      expect(result[4]).toMatchObject({
+        path: '$.user:closing',
+        isClosingBrace: true,
+        closingBrace: '}',
+      });
+
+      // Closing brace for root
+      expect(result[5]).toMatchObject({
+        path: '$:closing',
+        isClosingBrace: true,
+        closingBrace: '}',
       });
     });
   });
@@ -232,36 +262,48 @@ describe('flattenTree', () => {
       const data = [1, 2, 3];
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(5); // root + 3 items + closing bracket
 
-      // Root array
+      // Root array (no key, represents the array itself)
       expect(result[0]).toMatchObject({
-        path: 'root',
+        path: '$',
         depth: 0,
+        key: '',
         valueType: ValueType.Array,
         childCount: 3,
+        isRoot: true,
       });
 
       // Array items with bracket notation paths
       expect(result[1]).toMatchObject({
-        path: 'root[0]',
+        path: '$[0]',
         depth: 1,
         key: '0',
         displayValue: '1',
+        isArrayIndex: true,
       });
 
       expect(result[2]).toMatchObject({
-        path: 'root[1]',
+        path: '$[1]',
         depth: 1,
         key: '1',
         displayValue: '2',
+        isArrayIndex: true,
       });
 
       expect(result[3]).toMatchObject({
-        path: 'root[2]',
+        path: '$[2]',
         depth: 1,
         key: '2',
         displayValue: '3',
+        isArrayIndex: true,
+      });
+
+      // Closing bracket
+      expect(result[4]).toMatchObject({
+        path: '$:closing',
+        isClosingBrace: true,
+        closingBrace: ']',
       });
     });
 
@@ -269,40 +311,63 @@ describe('flattenTree', () => {
       const data = [{ id: 1 }, { id: 2 }];
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(5); // root + 2 objects + 2 id properties
+      expect(result).toHaveLength(8); // root + 2 objects + 2 ids + 3 closing (2 inner + 1 root)
 
       // First object
       expect(result[1]).toMatchObject({
-        path: 'root[0]',
+        path: '$[0]',
         depth: 1,
         key: '0',
         valueType: ValueType.Object,
         expandable: true,
         childCount: 1,
+        isArrayIndex: true,
       });
 
       // First object's id
       expect(result[2]).toMatchObject({
-        path: 'root[0].id',
+        path: '$[0].id',
         depth: 2,
         key: 'id',
         displayValue: '1',
       });
 
-      // Second object
+      // First object's closing brace
       expect(result[3]).toMatchObject({
-        path: 'root[1]',
+        path: '$[0]:closing',
+        isClosingBrace: true,
+        closingBrace: '}',
+      });
+
+      // Second object
+      expect(result[4]).toMatchObject({
+        path: '$[1]',
         depth: 1,
         key: '1',
         valueType: ValueType.Object,
+        isArrayIndex: true,
       });
 
       // Second object's id
-      expect(result[4]).toMatchObject({
-        path: 'root[1].id',
+      expect(result[5]).toMatchObject({
+        path: '$[1].id',
         depth: 2,
         key: 'id',
         displayValue: '2',
+      });
+
+      // Second object's closing brace
+      expect(result[6]).toMatchObject({
+        path: '$[1]:closing',
+        isClosingBrace: true,
+        closingBrace: '}',
+      });
+
+      // Root array closing bracket
+      expect(result[7]).toMatchObject({
+        path: '$:closing',
+        isClosingBrace: true,
+        closingBrace: ']',
       });
     });
 
@@ -310,11 +375,11 @@ describe('flattenTree', () => {
       const data = { items: [1, 2] };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(6); // root + items + 2 elements + 2 closing
 
       // items array
       expect(result[1]).toMatchObject({
-        path: 'root.items',
+        path: '$.items',
         depth: 1,
         key: 'items',
         valueType: ValueType.Array,
@@ -323,15 +388,31 @@ describe('flattenTree', () => {
 
       // array items
       expect(result[2]).toMatchObject({
-        path: 'root.items[0]',
+        path: '$.items[0]',
         depth: 2,
         key: '0',
+        isArrayIndex: true,
       });
 
       expect(result[3]).toMatchObject({
-        path: 'root.items[1]',
+        path: '$.items[1]',
         depth: 2,
         key: '1',
+        isArrayIndex: true,
+      });
+
+      // Closing bracket for items array
+      expect(result[4]).toMatchObject({
+        path: '$.items:closing',
+        isClosingBrace: true,
+        closingBrace: ']',
+      });
+
+      // Closing brace for root
+      expect(result[5]).toMatchObject({
+        path: '$:closing',
+        isClosingBrace: true,
+        closingBrace: '}',
       });
     });
   });
@@ -351,12 +432,12 @@ describe('flattenTree', () => {
       const pathMap = new Map(result.map((n) => [n.path, n]));
 
       // Check types
-      expect(pathMap.get('root.name')?.valueType).toBe(ValueType.String);
-      expect(pathMap.get('root.count')?.valueType).toBe(ValueType.Number);
-      expect(pathMap.get('root.active')?.valueType).toBe(ValueType.Boolean);
-      expect(pathMap.get('root.deleted')?.valueType).toBe(ValueType.Null);
-      expect(pathMap.get('root.meta')?.valueType).toBe(ValueType.Object);
-      expect(pathMap.get('root.tags')?.valueType).toBe(ValueType.Array);
+      expect(pathMap.get('$.name')?.valueType).toBe(ValueType.String);
+      expect(pathMap.get('$.count')?.valueType).toBe(ValueType.Number);
+      expect(pathMap.get('$.active')?.valueType).toBe(ValueType.Boolean);
+      expect(pathMap.get('$.deleted')?.valueType).toBe(ValueType.Null);
+      expect(pathMap.get('$.meta')?.valueType).toBe(ValueType.Object);
+      expect(pathMap.get('$.tags')?.valueType).toBe(ValueType.Array);
 
       // Verify all expanded by default
       result.forEach((node) => {
@@ -369,8 +450,8 @@ describe('flattenTree', () => {
 
   describe('deeply nested (5+ levels)', () => {
     it('should handle 5+ levels of nesting', () => {
-      // Structure: root -> l1 -> l2 -> l3 -> l4 -> l5 -> value
-      // Depths:    0       1     2     3     4     5     6
+      // Structure: $ -> l1 -> l2 -> l3 -> l4 -> l5 -> value
+      // Depths:    0    1     2     3     4     5     6
       const data = {
         l1: {
           l2: {
@@ -390,7 +471,7 @@ describe('flattenTree', () => {
       const deepNode = result.find((n) => n.key === 'value');
       expect(deepNode).toBeDefined();
       expect(deepNode?.depth).toBe(6); // 6 levels deep (root=0, then 5 objects + 1 value)
-      expect(deepNode?.path).toBe('root.l1.l2.l3.l4.l5.value');
+      expect(deepNode?.path).toBe('$.l1.l2.l3.l4.l5.value');
       expect(deepNode?.displayValue).toBe('"deep"');
     });
 
@@ -402,7 +483,7 @@ describe('flattenTree', () => {
       const deepNode = result.find((n) => n.valueType === ValueType.String);
       expect(deepNode).toBeDefined();
       expect(deepNode?.depth).toBe(5);
-      expect(deepNode?.path).toBe('root[0][0][0][0][0]');
+      expect(deepNode?.path).toBe('$[0][0][0][0][0]');
     });
   });
 
@@ -418,48 +499,49 @@ describe('flattenTree', () => {
       });
 
       // Should have all nodes because everything is expanded
-      expect(result).toHaveLength(4); // root, a, b, c
+      // $, a, b, c + 3 closing braces for $, a, b
+      expect(result).toHaveLength(7);
     });
 
     it('should only expand paths in expandedPaths set', () => {
       const data = { a: { b: { c: 1 } } };
-      const expandedPaths = new Set(['root', 'root.a']);
+      const expandedPaths = new Set(['$', '$.a']);
       const result = flattenTree(data, expandedPaths);
 
       const pathMap = new Map(result.map((n) => [n.path, n]));
 
       // root should be expanded
-      expect(pathMap.get('root')?.expanded).toBe(true);
+      expect(pathMap.get('$')?.expanded).toBe(true);
 
       // a should be expanded (in set)
-      expect(pathMap.get('root.a')?.expanded).toBe(true);
+      expect(pathMap.get('$.a')?.expanded).toBe(true);
 
       // b should NOT be expanded (not in set)
-      expect(pathMap.get('root.a.b')?.expanded).toBe(false);
+      expect(pathMap.get('$.a.b')?.expanded).toBe(false);
 
       // c should NOT be in result because b is collapsed
-      expect(pathMap.has('root.a.b.c')).toBe(false);
+      expect(pathMap.has('$.a.b.c')).toBe(false);
     });
 
     it('should not recurse into collapsed nodes', () => {
       const data = { a: { b: 1, c: 2 }, d: 3 };
-      const expandedPaths = new Set(['root']); // Only root expanded
+      const expandedPaths = new Set(['$']); // Only root expanded
       const result = flattenTree(data, expandedPaths);
 
-      // Should have: root, a (collapsed), d
-      expect(result).toHaveLength(3);
+      // Should have: $, a (collapsed), d, $:closing
+      expect(result).toHaveLength(4);
 
       const paths = result.map((n) => n.path);
-      expect(paths).toContain('root');
-      expect(paths).toContain('root.a');
-      expect(paths).toContain('root.d');
+      expect(paths).toContain('$');
+      expect(paths).toContain('$.a');
+      expect(paths).toContain('$.d');
 
       // Should NOT have b or c because a is collapsed
-      expect(paths).not.toContain('root.a.b');
-      expect(paths).not.toContain('root.a.c');
+      expect(paths).not.toContain('$.a.b');
+      expect(paths).not.toContain('$.a.c');
 
       // Verify a is marked as not expanded
-      const aNode = result.find((n) => n.path === 'root.a');
+      const aNode = result.find((n) => n.path === '$.a');
       expect(aNode?.expanded).toBe(false);
       expect(aNode?.expandable).toBe(true);
       expect(aNode?.childCount).toBe(2); // Still knows it has children
@@ -474,7 +556,7 @@ describe('flattenTree', () => {
       expect(result).toHaveLength(1);
       const rootNode = result[0];
       expect(rootNode).toBeDefined();
-      expect(rootNode?.path).toBe('root');
+      expect(rootNode?.path).toBe('$');
       expect(rootNode?.expanded).toBe(false);
     });
   });
@@ -512,7 +594,7 @@ describe('flattenTree', () => {
       const data = { '': 'empty key' };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(3); // root + property + closing brace
       const emptyKeyNode = result[1];
       expect(emptyKeyNode).toBeDefined();
       expect(emptyKeyNode?.key).toBe('');
@@ -523,7 +605,7 @@ describe('flattenTree', () => {
       const data = { '0': 'zero', '1': 'one' };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(4); // root + 2 properties + closing brace
       const keys = result.map((n) => n.key);
       expect(keys).toContain('0');
       expect(keys).toContain('1');
@@ -533,12 +615,12 @@ describe('flattenTree', () => {
       const data = { 'key.with.dots': 'value' };
       const result = flattenTree(data);
 
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(3); // root + property + closing brace
       const dotKeyNode = result[1];
       expect(dotKeyNode).toBeDefined();
       expect(dotKeyNode?.key).toBe('key.with.dots');
       // Path still uses dot notation (may need escaping in real use)
-      expect(dotKeyNode?.path).toBe('root.key.with.dots');
+      expect(dotKeyNode?.path).toBe('$.key.with.dots');
     });
 
     it('should handle empty string value', () => {
@@ -590,7 +672,8 @@ describe('flattenTree', () => {
       const data = { str: 'text', num: 1, bool: true, nil: null };
       const result = flattenTree(data);
 
-      const primitiveNodes = result.filter((n) => n.key !== 'root');
+      // Filter out root node (key === '')
+      const primitiveNodes = result.filter((n) => n.key !== '');
 
       primitiveNodes.forEach((node) => {
         expect(node.expandable).toBe(false);

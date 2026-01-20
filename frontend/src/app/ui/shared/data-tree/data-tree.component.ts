@@ -11,15 +11,30 @@
  * - FR-010: Thread lines for visual hierarchy (styling added in S7PR4)
  * - FR-011: Syntax coloring for value types (styling added in S7PR4)
  *
+ * Also implements smart blob detection for string values:
+ * - Detects JSON strings and renders nested DataTree when toggled
+ * - Detects markdown strings and renders formatted HTML when toggled
+ *
  * @see mddocs/frontend/frontend-spec.md#fr-context-inspection - FR-008 through FR-011
  * @see mddocs/frontend/frontend-tdd.md#datatreecomponent
  */
 
-import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
+import { ContentDetectionService } from '../../../util/content-detection';
+import { MarkdownPipe } from '../markdown-pipe';
 import { flattenTree } from './flatten-tree.util';
-import type { TreeNode } from './tree-node.types';
+import { JsonSyntaxPipe } from './json-syntax.pipe';
+import type { SmartBlobDetection, SmartBlobNodeMode, TreeNode } from './tree-node.types';
 
 /**
  * Indentation width per depth level in pixels.
@@ -46,6 +61,9 @@ function calculateIndent(depth: number): number {
  * Per FR-009, all nodes are expanded by default to minimize user interaction.
  * Individual nodes can be collapsed/expanded via toggle buttons.
  *
+ * String values are analyzed for smart blob content (JSON or markdown) and
+ * display inline toggle buttons when detected.
+ *
  * @example
  * ```html
  * <!-- Basic usage with required data input -->
@@ -62,7 +80,7 @@ function calculateIndent(depth: number): number {
 @Component({
   selector: 'app-data-tree',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [MatIconModule, MarkdownPipe, JsonSyntaxPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (hasExpandableNodes()) {
@@ -89,46 +107,135 @@ function calculateIndent(depth: number): number {
     }
     <div class="data-tree" [class.thread-lines]="showThreadLines()" data-testid="data-tree">
       @for (node of flatNodes(); track node.path) {
+        <!-- Main node line -->
         <div
           class="tree-node"
           [style.padding-left.px]="getIndent(node.depth)"
           [class.expandable]="node.expandable"
           [class.expanded]="node.expanded"
+          [class.closing-brace]="node.isClosingBrace"
           [attr.data-path]="node.path"
           [attr.data-value-type]="node.valueType"
+          [attr.data-last-sibling]="node.isLastSibling"
           data-testid="tree-node"
         >
-          @if (node.expandable) {
-            <button
-              class="toggle"
-              (click)="toggleNode(node.path)"
-              data-testid="expand-toggle"
-              type="button"
-            >
-              <mat-icon>{{ node.expanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
-            </button>
-          }
-          <span class="key">{{ node.key }}:</span>
-          @if (!node.expandable && node.displayValue !== null) {
-            <span class="value" [class]="node.valueType">{{ node.displayValue }}</span>
-          }
-          @if (node.expandable) {
-            <span class="container-info">
-              @switch (node.valueType) {
-                @case ('object') {
-                  <span class="type-indicator">{{ '{' }}</span>
-                  <span class="child-count">{{ node.childCount }}</span>
-                  <span class="type-indicator">{{ '}' }}</span>
-                }
-                @case ('array') {
-                  <span class="type-indicator">[</span>
-                  <span class="child-count">{{ node.childCount }}</span>
-                  <span class="type-indicator">]</span>
+          <!-- Chevron column - fixed width, always present -->
+          <span class="chevron-column">
+            @if (node.expandable) {
+              <button
+                class="toggle"
+                (click)="toggleNode(node.path)"
+                data-testid="expand-toggle"
+                type="button"
+              >
+                <mat-icon>{{ node.expanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+              </button>
+            }
+          </span>
+          <!-- Content column -->
+          <span class="content-column">
+            @if (node.isClosingBrace) {
+              <!-- Closing brace node -->
+              <span class="bracket">{{ node.closingBrace }}</span>
+            } @else {
+              <!-- Key display: root nodes have no key, array indices are bracketed, object keys are quoted -->
+              @if (!node.isRoot) {
+                @if (node.isArrayIndex) {
+                  <span class="key">[{{ node.key }}]</span><span class="colon">:</span>
+                } @else {
+                  <span class="key">"{{ node.key }}"</span><span class="colon">:</span>
                 }
               }
-            </span>
-          }
+              @if (!node.expandable && node.displayValue !== null) {
+                <!-- Smart blob detection for string values -->
+                @if (node.valueType === 'string' && node.rawStringValue) {
+                  @let detection = getSmartBlobDetection(node);
+                  @let mode = getSmartBlobMode(node.path, detection);
+                  @if (detection.isJson || detection.isMarkdown) {
+                    <!-- Only show raw value when in raw mode -->
+                    @if (mode === 'raw') {
+                      <span class="value" [class]="node.valueType">{{ node.displayValue }}</span>
+                    }
+                    <span class="smart-blob-toggles" data-testid="smart-blob-toggles">
+                      <button
+                        type="button"
+                        class="mode-toggle"
+                        [class.active]="mode === 'raw'"
+                        (click)="setSmartBlobMode(node.path, 'raw')"
+                        data-testid="raw-toggle"
+                      >
+                        RAW
+                      </button>
+                      @if (detection.isMarkdown) {
+                        <button
+                          type="button"
+                          class="mode-toggle"
+                          [class.active]="mode === 'markdown'"
+                          (click)="setSmartBlobMode(node.path, 'markdown')"
+                          data-testid="md-toggle"
+                        >
+                          MD
+                        </button>
+                      }
+                      @if (detection.isJson) {
+                        <button
+                          type="button"
+                          class="mode-toggle"
+                          [class.active]="mode === 'json'"
+                          (click)="setSmartBlobMode(node.path, 'json')"
+                          data-testid="json-toggle"
+                        >
+                          JSON
+                        </button>
+                      }
+                    </span>
+                  } @else {
+                    <!-- Non-smart-blob string: show value normally -->
+                    <span class="value" [class]="node.valueType">{{ node.displayValue }}</span>
+                  }
+                } @else {
+                  <!-- Non-string primitives: show value normally -->
+                  <span class="value" [class]="node.valueType">{{ node.displayValue }}</span>
+                }
+              }
+              @if (node.expandable && node.expanded) {
+                <span class="bracket">{{ node.valueType === 'array' ? '[' : '{' }}</span>
+              }
+              @if (node.expandable && !node.expanded) {
+                <span class="bracket">{{ node.valueType === 'array' ? '[...]' : '{...}' }}</span>
+              }
+            }
+          </span>
         </div>
+        <!-- Smart blob rendered content (below the node line) -->
+        @if (node.valueType === 'string' && node.rawStringValue) {
+          @let detection = getSmartBlobDetection(node);
+          @let mode = getSmartBlobMode(node.path, detection);
+          @if (
+            (detection.isMarkdown && mode === 'markdown') || (detection.isJson && mode === 'json')
+          ) {
+            <div
+              class="smart-blob-content"
+              [style.padding-left.px]="getIndent(node.depth + 1)"
+              data-testid="smart-blob-content"
+            >
+              @if (mode === 'markdown') {
+                <div
+                  class="markdown-rendered"
+                  [innerHTML]="node.rawStringValue | markdown"
+                  data-testid="markdown-content"
+                ></div>
+              }
+              @if (mode === 'json' && detection.parsedJson !== undefined) {
+                <pre
+                  class="json-rendered"
+                  data-testid="nested-json-tree"
+                  [innerHTML]="detection.parsedJson | jsonSyntax"
+                ></pre>
+              }
+            </div>
+          }
+        }
       }
     </div>
   `,
@@ -181,10 +288,25 @@ function calculateIndent(depth: number): number {
 
     .tree-node {
       display: flex;
-      align-items: baseline;
-      gap: 4px;
+      align-items: flex-start;
       padding: 2px 0;
       position: relative;
+    }
+
+    /* Chevron column - fixed width, always present for alignment */
+    .chevron-column {
+      width: 20px;
+      min-width: 20px;
+      flex-shrink: 0;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      height: 20px;
+    }
+
+    /* Content column - contains key, value, and toggles */
+    .content-column {
+      display: inline;
     }
 
     /* =========================================================================
@@ -283,64 +405,56 @@ function calculateIndent(depth: number): number {
 
     /* =========================================================================
        Key Styling (FR-011)
-       Keys are styled distinctly with a different color
+       Keys are styled with purple/magenta color to match UI mock.
        ========================================================================= */
 
     .key {
-      color: var(--sys-primary);
-      font-weight: 500;
+      color: #c586c0; /* Purple/magenta for keys - matches VS Code theme */
+    }
+
+    /* Colon separator - default text color */
+    .colon {
+      color: var(--sys-on-surface);
+      margin-right: 4px;
     }
 
     /* =========================================================================
        Value Type Syntax Coloring (FR-011)
-       Different colors for each value type using Material Design tokens.
-       Colors are semantic and work in both light and dark themes.
+       Colors match VS Code / Monaco Editor theme for JSON.
        ========================================================================= */
 
     .value {
       color: var(--sys-on-surface-variant);
     }
 
-    /* String values - green tint using tertiary color */
+    /* String values - green color */
     .value.string {
-      color: var(--sys-tertiary);
+      color: #6a9955; /* Green for strings */
     }
 
-    /* Number values - blue using primary color */
+    /* Number values - teal/cyan color (matches mock) */
     .value.number {
-      color: var(--sys-primary);
+      color: #4ec9b0; /* Teal/cyan for numbers - matches VS Code "number" token */
     }
 
-    /* Boolean values - purple/magenta using secondary color */
+    /* Boolean values - blue color */
     .value.boolean {
-      color: var(--sys-secondary);
+      color: #569cd6; /* Blue for booleans */
     }
 
-    /* Null values - muted gray with italic */
+    /* Null values - blue with italic */
     .value.null {
-      color: var(--sys-on-surface-variant);
+      color: #569cd6; /* Blue for null */
       font-style: italic;
-      opacity: 0.7;
     }
 
     /* =========================================================================
-       Container Info (objects and arrays)
+       Brackets and Braces
+       Default text color for structural characters
        ========================================================================= */
 
-    .container-info {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 2px;
-      color: var(--sys-on-surface-variant);
-    }
-
-    .type-indicator {
-      opacity: 0.7;
-    }
-
-    .child-count {
-      font-size: 11px;
-      opacity: 0.6;
+    .bracket {
+      color: var(--sys-on-surface);
     }
 
     /* =========================================================================
@@ -376,9 +490,149 @@ function calculateIndent(depth: number): number {
         height: 18px;
       }
     }
+
+    /* =========================================================================
+       Smart Blob Toggle Buttons
+       Inline RAW/MD/JSON toggle buttons for string values with smart content.
+       ========================================================================= */
+
+    .smart-blob-toggles {
+      display: inline-flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .mode-toggle {
+      padding: 1px 6px;
+      font-size: 10px;
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 500;
+      border: 1px solid var(--mat-sys-outline-variant, #cac4d0);
+      border-radius: 3px;
+      background-color: var(--mat-sys-surface, #fff);
+      color: var(--mat-sys-on-surface-variant, #49454f);
+      cursor: pointer;
+      transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        color 0.15s;
+    }
+
+    .mode-toggle:hover {
+      background-color: var(--mat-sys-surface-container-high, #e6e0e9);
+    }
+
+    .mode-toggle.active {
+      background-color: var(--mat-sys-primary-container, #eaddff);
+      border-color: var(--mat-sys-primary, #6750a4);
+      color: var(--mat-sys-on-primary-container, #21005d);
+    }
+
+    /* =========================================================================
+       Smart Blob Rendered Content
+       Container for rendered markdown or nested JSON below the value line.
+       ========================================================================= */
+
+    .smart-blob-content {
+      margin: 4px 0;
+      position: relative;
+    }
+
+    .markdown-rendered {
+      padding: 8px 12px;
+      border-left: 3px solid var(--mat-sys-primary, #6750a4);
+      background-color: var(--mat-sys-surface-container, #f3edf7);
+      border-radius: 0 4px 4px 0;
+      font-family:
+        system-ui,
+        -apple-system,
+        sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .markdown-rendered h1,
+    .markdown-rendered h2,
+    .markdown-rendered h3,
+    .markdown-rendered h4,
+    .markdown-rendered h5,
+    .markdown-rendered h6 {
+      margin-top: 12px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .markdown-rendered h1 {
+      font-size: 1.4em;
+    }
+    .markdown-rendered h2 {
+      font-size: 1.2em;
+    }
+    .markdown-rendered h3 {
+      font-size: 1.1em;
+    }
+
+    .markdown-rendered p {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .markdown-rendered ul,
+    .markdown-rendered ol {
+      margin-top: 0;
+      margin-bottom: 8px;
+      padding-left: 20px;
+    }
+
+    .markdown-rendered li {
+      margin-bottom: 2px;
+    }
+
+    .markdown-rendered code {
+      padding: 1px 4px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.9em;
+      background-color: var(--mat-sys-surface-container-highest, #e6e0e9);
+      border-radius: 3px;
+    }
+
+    .markdown-rendered pre {
+      padding: 8px;
+      margin: 8px 0;
+      overflow: auto;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.9em;
+      background-color: var(--mat-sys-surface-container-highest, #e6e0e9);
+      border-radius: 4px;
+    }
+
+    .markdown-rendered pre code {
+      padding: 0;
+      background-color: transparent;
+    }
+
+    .json-rendered {
+      padding: 8px 12px;
+      margin: 0;
+      border-left: 3px solid var(--mat-sys-tertiary, #7d5260);
+      background-color: var(--mat-sys-surface-container, #f3edf7);
+      border-radius: 0 4px 4px 0;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      overflow: auto;
+      white-space: pre;
+    }
+
+    /* JSON syntax highlighting styles are in global styles.scss
+       because they target innerHTML content that is outside Angular's
+       view encapsulation. */
   `,
 })
 export class DataTreeComponent {
+  private readonly detectionService = inject(ContentDetectionService);
+
   /**
    * The data to render as a tree.
    * Can be any JSON-serializable value: object, array, or primitive.
@@ -418,6 +672,19 @@ export class DataTreeComponent {
    * Publicly readable expansion state.
    */
   readonly expandedPaths = this._expandedPaths.asReadonly();
+
+  /**
+   * Internal signal tracking smart blob display modes per node path.
+   * Maps node path to display mode ('raw' | 'markdown' | 'json').
+   * Default is 'raw' for all nodes.
+   */
+  private readonly _smartBlobModes = signal<Map<string, SmartBlobNodeMode>>(new Map());
+
+  /**
+   * Cache for smart blob detection results.
+   * Avoids re-detecting content on every render.
+   */
+  private readonly _detectionCache = new Map<string, SmartBlobDetection>();
 
   constructor() {
     // Initialize expandedPaths based on the expanded input.
@@ -505,6 +772,97 @@ export class DataTreeComponent {
   }
 
   /**
+   * Gets the smart blob detection result for a node.
+   * Uses cached detection to avoid re-computing on every render.
+   *
+   * @param node - The tree node to analyze
+   * @returns Detection result with isJson, isMarkdown, and optional parsedJson
+   */
+  getSmartBlobDetection(node: TreeNode): SmartBlobDetection {
+    const rawValue = node.rawStringValue;
+    if (!rawValue) {
+      return { isJson: false, isMarkdown: false };
+    }
+
+    // Check cache first
+    const cacheKey = node.path;
+    const cached = this._detectionCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Perform detection
+    const isJson = this.detectionService.isJson(rawValue);
+    const isMarkdown = this.detectionService.isMarkdown(rawValue);
+    const parsedJson = isJson ? this.detectionService.parseJson(rawValue) : undefined;
+
+    const detection: SmartBlobDetection = {
+      isJson,
+      isMarkdown,
+      parsedJson,
+    };
+
+    // Cache the result
+    this._detectionCache.set(cacheKey, detection);
+
+    return detection;
+  }
+
+  /**
+   * Gets the current smart blob display mode for a node.
+   * Returns the explicitly set mode, or null if no mode has been set yet.
+   * This allows the template to determine the default based on detection.
+   *
+   * @param path - The node path
+   * @returns The current display mode, or null if not explicitly set
+   */
+  private getExplicitSmartBlobMode(path: string): SmartBlobNodeMode | null {
+    return this._smartBlobModes().get(path) ?? null;
+  }
+
+  /**
+   * Gets the effective smart blob display mode for a node.
+   * If not explicitly set, defaults to 'markdown' if markdown detected,
+   * 'json' if JSON detected, otherwise 'raw'.
+   *
+   * This matches the UI mock where MD/JSON are the default active modes
+   * when smart blob content is detected.
+   *
+   * @param path - The node path
+   * @param detection - The smart blob detection result for this node
+   * @returns The effective display mode
+   */
+  getSmartBlobMode(path: string, detection?: SmartBlobDetection): SmartBlobNodeMode {
+    const explicit = this.getExplicitSmartBlobMode(path);
+    if (explicit !== null) {
+      return explicit;
+    }
+
+    // Default to rendered mode when smart blob content is detected
+    if (detection?.isMarkdown) {
+      return 'markdown';
+    }
+    if (detection?.isJson) {
+      return 'json';
+    }
+    return 'raw';
+  }
+
+  /**
+   * Sets the smart blob display mode for a node.
+   *
+   * @param path - The node path
+   * @param mode - The display mode to set
+   */
+  setSmartBlobMode(path: string, mode: SmartBlobNodeMode): void {
+    this._smartBlobModes.update((modes) => {
+      const newModes = new Map(modes);
+      newModes.set(path, mode);
+      return newModes;
+    });
+  }
+
+  /**
    * Collects all expandable node paths from the current data.
    *
    * Used when transitioning from "all expanded" (null) state to explicit tracking.
@@ -514,7 +872,7 @@ export class DataTreeComponent {
    */
   private collectExpandablePaths(): Set<string> {
     const paths = new Set<string>();
-    this.collectPaths(this.data(), 'root', paths);
+    this.collectPaths(this.data(), '$', paths);
     return paths;
   }
 
@@ -547,5 +905,16 @@ export class DataTreeComponent {
    */
   protected getIndent(depth: number): number {
     return calculateIndent(depth);
+  }
+
+  /**
+   * Formats a parsed JSON value for display.
+   * Uses JSON.stringify with indentation for readable formatting.
+   *
+   * @param value - The parsed JSON value to format
+   * @returns Formatted JSON string
+   */
+  protected formatJsonForDisplay(value: unknown): string {
+    return JSON.stringify(value, null, 2);
   }
 }

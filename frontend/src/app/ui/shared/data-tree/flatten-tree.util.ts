@@ -135,6 +135,9 @@ function createArrayPath(parentPath: string, index: number): string {
  * @param nodes - Accumulator array for nodes
  * @param expandedPaths - Set of paths that should be expanded
  * @param maxDepth - Maximum depth limit for recursion
+ * @param isArrayIndex - Whether this key is an array index
+ * @param ancestorThreadState - Thread state for ancestor depths (true = more siblings exist)
+ * @param isLastSibling - Whether this node is the last sibling at its depth
  */
 function flattenValue(
   value: unknown,
@@ -144,6 +147,9 @@ function flattenValue(
   nodes: TreeNode[],
   expandedPaths: Set<string> | null,
   maxDepth: number,
+  isArrayIndex: boolean,
+  ancestorThreadState: readonly boolean[],
+  isLastSibling: boolean,
 ): void {
   // Safety check for max depth
   if (depth > maxDepth) {
@@ -156,6 +162,10 @@ function flattenValue(
       expandable: false,
       expanded: false,
       childCount: 0,
+      isArrayIndex,
+      isClosingBrace: false,
+      isLastSibling,
+      ancestorThreadState,
     });
     return;
   }
@@ -169,6 +179,8 @@ function flattenValue(
   // - If expandedPaths is provided, only paths in the set are expanded
   const expanded = expandable && (expandedPaths === null || expandedPaths.has(path));
 
+  const childCount = getChildCount(value, valueType);
+
   const node: TreeNode = {
     path,
     depth,
@@ -177,7 +189,13 @@ function flattenValue(
     valueType,
     expandable,
     expanded,
-    childCount: getChildCount(value, valueType),
+    childCount,
+    isArrayIndex,
+    isClosingBrace: false,
+    isLastSibling,
+    ancestorThreadState,
+    // Store raw string value for smart blob detection
+    rawStringValue: valueType === ValueType.String ? String(value) : undefined,
   };
 
   nodes.push(node);
@@ -187,11 +205,47 @@ function flattenValue(
     return;
   }
 
+  // Build thread state for children:
+  // At this depth, if we're NOT the last sibling, children should continue the vertical line
+  const childAncestorThreadState = [...ancestorThreadState, !isLastSibling];
+
   // Handle arrays
   if (valueType === ValueType.Array && Array.isArray(value)) {
+    const arrayLength = value.length;
     for (const [index, item] of value.entries()) {
       const itemPath = createArrayPath(path, index);
-      flattenValue(item, String(index), itemPath, depth + 1, nodes, expandedPaths, maxDepth);
+      const isLast = index === arrayLength - 1;
+      flattenValue(
+        item,
+        String(index),
+        itemPath,
+        depth + 1,
+        nodes,
+        expandedPaths,
+        maxDepth,
+        true,
+        childAncestorThreadState,
+        isLast,
+      );
+    }
+
+    // Add closing bracket for non-empty expanded arrays
+    if (arrayLength > 0) {
+      nodes.push({
+        path: `${path}:closing`,
+        depth,
+        key: '',
+        displayValue: null,
+        valueType,
+        expandable: false,
+        expanded: false,
+        childCount: 0,
+        isArrayIndex: false,
+        isClosingBrace: true,
+        closingBrace: ']',
+        isLastSibling,
+        ancestorThreadState,
+      });
     }
     return;
   }
@@ -199,9 +253,42 @@ function flattenValue(
   // Handle objects
   if (valueType === ValueType.Object && value !== null && typeof value === 'object') {
     const obj = value as Record<string, unknown>;
-    for (const propKey of Object.keys(obj)) {
+    const keys = Object.keys(obj);
+    const keysLength = keys.length;
+    for (const [index, propKey] of keys.entries()) {
       const propPath = createObjectPath(path, propKey);
-      flattenValue(obj[propKey], propKey, propPath, depth + 1, nodes, expandedPaths, maxDepth);
+      const isLast = index === keysLength - 1;
+      flattenValue(
+        obj[propKey],
+        propKey,
+        propPath,
+        depth + 1,
+        nodes,
+        expandedPaths,
+        maxDepth,
+        false,
+        childAncestorThreadState,
+        isLast,
+      );
+    }
+
+    // Add closing brace for non-empty expanded objects
+    if (keysLength > 0) {
+      nodes.push({
+        path: `${path}:closing`,
+        depth,
+        key: '',
+        displayValue: null,
+        valueType,
+        expandable: false,
+        expanded: false,
+        childCount: 0,
+        isArrayIndex: false,
+        isClosingBrace: true,
+        closingBrace: '}',
+        isLastSibling,
+        ancestorThreadState,
+      });
     }
   }
 }
@@ -212,6 +299,9 @@ function flattenValue(
  * This pure function converts hierarchical data (objects/arrays) into a flat
  * array suitable for template iteration with @for. Each node includes path,
  * depth, key, and display information needed for rendering.
+ *
+ * The tree renders the data's structure directly WITHOUT adding an artificial
+ * "root" wrapper. For objects, the tree starts with "{"; for arrays, with "[".
  *
  * Per FR-009, all nodes are expanded by default to minimize interaction.
  * Pass an expandedPaths Set to control which nodes are expanded.
@@ -226,9 +316,10 @@ function flattenValue(
  * ```typescript
  * // Flatten with all nodes expanded (default)
  * const nodes = flattenTree({ user: { name: 'Bob' } });
+ * // => First node has key='', valueType='object' (represents the root object itself)
  *
  * // Flatten with specific paths expanded
- * const expandedPaths = new Set(['root', 'root.user']);
+ * const expandedPaths = new Set(['$', '$.user']);
  * const nodes = flattenTree({ user: { name: 'Bob' } }, expandedPaths);
  * ```
  */
@@ -247,7 +338,134 @@ export function flattenTree(
   // Use null to indicate "all expanded" (FR-009 default)
   const expandedSet = expandedPaths ?? null;
 
-  flattenValue(data, 'root', 'root', 0, nodes, expandedSet, maxDepth);
+  const valueType = getValueType(data);
+  const expandable = valueType === ValueType.Object || valueType === ValueType.Array;
+
+  // For primitive data at root, just return a single node
+  if (!expandable) {
+    nodes.push({
+      path: '$',
+      depth: 0,
+      key: '',
+      displayValue: formatDisplayValue(data, valueType),
+      valueType,
+      expandable: false,
+      expanded: false,
+      childCount: 0,
+      isArrayIndex: false,
+      isClosingBrace: false,
+      isRoot: true,
+      isLastSibling: true,
+      ancestorThreadState: [],
+    });
+    return nodes;
+  }
+
+  // For object/array at root, create a root node without a key
+  // This represents the opening brace/bracket
+  const expanded = expandedSet === null || expandedSet.has('$');
+  const childCount = getChildCount(data, valueType);
+
+  nodes.push({
+    path: '$',
+    depth: 0,
+    key: '',
+    displayValue: null,
+    valueType,
+    expandable: true,
+    expanded,
+    childCount,
+    isArrayIndex: false,
+    isClosingBrace: false,
+    isRoot: true,
+    isLastSibling: true,
+    ancestorThreadState: [],
+  });
+
+  // Only recurse into children if expanded
+  if (expanded) {
+    // Root thread state: empty array since root has no ancestors
+    // For children, we track that root is the last sibling (so no continuing vertical line from root)
+    const childAncestorThreadState: readonly boolean[] = [false]; // Root is last sibling, no more siblings
+
+    if (valueType === ValueType.Array && Array.isArray(data)) {
+      const arrayLength = data.length;
+      for (const [index, item] of data.entries()) {
+        const itemPath = `$[${String(index)}]`;
+        const isLast = index === arrayLength - 1;
+        flattenValue(
+          item,
+          String(index),
+          itemPath,
+          1,
+          nodes,
+          expandedSet,
+          maxDepth,
+          true,
+          childAncestorThreadState,
+          isLast,
+        );
+      }
+
+      // Add closing bracket for non-empty expanded root array
+      if (arrayLength > 0) {
+        nodes.push({
+          path: '$:closing',
+          depth: 0,
+          key: '',
+          displayValue: null,
+          valueType,
+          expandable: false,
+          expanded: false,
+          childCount: 0,
+          isArrayIndex: false,
+          isClosingBrace: true,
+          closingBrace: ']',
+          isLastSibling: true,
+          ancestorThreadState: [],
+        });
+      }
+    } else if (valueType === ValueType.Object && data !== null && typeof data === 'object') {
+      const obj = data as Record<string, unknown>;
+      const keys = Object.keys(obj);
+      const keysLength = keys.length;
+      for (const [index, propKey] of keys.entries()) {
+        const propPath = `$.${propKey}`;
+        const isLast = index === keysLength - 1;
+        flattenValue(
+          obj[propKey],
+          propKey,
+          propPath,
+          1,
+          nodes,
+          expandedSet,
+          maxDepth,
+          false,
+          childAncestorThreadState,
+          isLast,
+        );
+      }
+
+      // Add closing brace for non-empty expanded root object
+      if (keysLength > 0) {
+        nodes.push({
+          path: '$:closing',
+          depth: 0,
+          key: '',
+          displayValue: null,
+          valueType,
+          expandable: false,
+          expanded: false,
+          childCount: 0,
+          isArrayIndex: false,
+          isClosingBrace: true,
+          closingBrace: '}',
+          isLastSibling: true,
+          ancestorThreadState: [],
+        });
+      }
+    }
+  }
 
   return nodes;
 }

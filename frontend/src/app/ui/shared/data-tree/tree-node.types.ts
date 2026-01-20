@@ -84,4 +84,65 @@ export interface TreeNode {
    * Zero for primitives.
    */
   readonly childCount: number;
+
+  /**
+   * Whether this key represents an array index (e.g., "0", "1", "2").
+   * Used to render indices as [0], [1], etc. instead of quoted strings.
+   */
+  readonly isArrayIndex: boolean;
+
+  /**
+   * Whether this node is a closing brace/bracket.
+   * Used to render the closing } or ] on a separate line.
+   */
+  readonly isClosingBrace: boolean;
+
+  /**
+   * The closing brace character to display (} or ]).
+   * Only set when isClosingBrace is true.
+   */
+  readonly closingBrace?: string;
+
+  /**
+   * Whether this node is the root node of the tree.
+   * The root node represents the top-level object/array/primitive.
+   */
+  readonly isRoot?: boolean;
+
+  /**
+   * The raw string value (unquoted) for smart blob detection.
+   * Only set for string value nodes. Undefined for non-string nodes.
+   */
+  readonly rawStringValue?: string | undefined;
+
+  /**
+   * Whether this node is the last sibling at its depth level.
+   * Used to determine thread line termination (L-shape vs T-shape connector).
+   */
+  readonly isLastSibling?: boolean;
+
+  /**
+   * Thread state for ancestor depths.
+   * For each ancestor depth (index), true means more siblings exist below that ancestor,
+   * so a vertical thread line should continue. False means the vertical line should stop.
+   * This enables drawing correct thread lines at all indent levels.
+   */
+  readonly ancestorThreadState?: readonly boolean[];
+}
+
+/**
+ * Display mode for smart blob content within a tree node.
+ */
+export type SmartBlobNodeMode = 'raw' | 'markdown' | 'json';
+
+/**
+ * Detection result for a string value that may contain smart content.
+ */
+export interface SmartBlobDetection {
+  /** Whether the string contains valid JSON */
+  readonly isJson: boolean;
+  /** Whether the string contains markdown-like content */
+  readonly isMarkdown: boolean;
+  /** Parsed JSON object if isJson is true */
+  readonly parsedJson?: unknown;
 }

@@ -18,4 +18,4 @@
  * Libraries available in the util layer.
  * Each library has its own index.ts barrel file for exports.
  */
-export type UtilLibrary = 'json-detection' | 'md-detection' | 'reconnect' | 'theme';
+export type UtilLibrary = 'content-detection' | 'reconnect' | 'theme';

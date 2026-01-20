@@ -10,6 +10,7 @@ This document serves as a knowledge base for the implementation agent to record 
 2. [SCSS @use rules must precede Tailwind directives](#scss-use-rules-must-precede-tailwind-directives)
 3. [Playwright CT signal updates may not trigger Angular change detection](#playwright-ct-signal-updates-may-not-trigger-angular-change-detection)
 4. [JSONForms causes ESM/CJS compatibility issues in Vitest and large bundle sizes](#jsonforms-causes-esmcjs-compatibility-issues-in-vitest-and-large-bundle-sizes)
+5. [Circular dependencies between Angular components cause Playwright CT initialization errors](#circular-dependencies-between-angular-components-cause-playwright-ct-initialization-errors)
 
 ---
 
@@ -126,6 +127,46 @@ Example: After clicking a back link that sets `_showToolForm.set(false)`, the co
    ```
 
 **General Principle**: Third-party libraries with CommonJS dependencies may not work correctly in ESM test environments. When this happens, use integration tests (Playwright e2e) instead of unit tests for those components. Always verify build budgets when adding large dependencies.
+
+---
+
+### Circular dependencies between Angular components cause Playwright CT initialization errors
+
+**Problem**: When running Playwright Component Tests, you get an error like:
+```
+Error: page._wrapApiCall: ReferenceError: Cannot access 'DataTreeComponent' before initialization
+    at <static_initializer> (http://localhost:3100/assets/index-....js:3926:21)
+```
+
+This happens even though unit tests (Vitest) pass successfully.
+
+**Root Cause**: Circular dependencies between Angular components through barrel (index.ts) imports. Example:
+- `DataTreeComponent` imports from `../smart-blob` (barrel)
+- `SmartBlobComponent` in smart-blob imports from `../data-tree` (barrel)
+- Both barrels export their components, creating a cycle
+
+Vitest handles this differently than Playwright CT's bundler (Vite). The bundler tries to initialize components in a specific order, but circular imports mean neither can be initialized first.
+
+**Solution**: Break the circular dependency by extracting shared utilities to separate modules:
+
+1. **Identify the circular path**: Trace imports from barrel to barrel looking for a cycle.
+
+2. **Extract shared services/utilities**: Move shared code (like `ContentDetectionService`, `MarkdownPipe`) to a separate module that both components can import without cycling:
+   ```
+   Before: data-tree -> smart-blob -> data-tree (cycle!)
+   After:  data-tree -> util/content-detection (no cycle)
+           smart-blob -> util/content-detection
+           data-tree -> markdown-pipe (separate module)
+           smart-blob -> markdown-pipe
+   ```
+
+3. **Update barrel exports**: Have the original barrel re-export from the new location for backwards compatibility:
+   ```typescript
+   // In smart-blob/index.ts
+   export { ContentDetectionService } from '../../../util/content-detection';
+   ```
+
+**General Principle**: When components need to share utilities and one component uses another, extract shared code to leaf modules (no circular dependencies). Barrel files amplify circular dependency issues because importing from a barrel imports ALL exports, even ones you don't need. When facing "Cannot access X before initialization" errors in Playwright CT but not in Vitest, suspect circular imports through barrels.
 
 ---
 
