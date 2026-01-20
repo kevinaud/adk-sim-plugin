@@ -26,14 +26,11 @@ import { DataTreeComponent } from './data-tree.component';
   selector: 'app-test-host',
   standalone: true,
   imports: [DataTreeComponent],
-  template: `
-    <app-data-tree [data]="data()" [expanded]="expanded()" [showThreadLines]="showThreadLines()" />
-  `,
+  template: ` <app-data-tree [data]="data()" [expanded]="expanded()" /> `,
 })
 class TestHostComponent {
   readonly data = signal<unknown>({});
   readonly expanded = signal<boolean>(true);
-  readonly showThreadLines = signal<boolean>(true);
 }
 
 describe('DataTreeComponent', () => {
@@ -292,26 +289,6 @@ describe('DataTreeComponent', () => {
       const rootNode = getNodeByPath('root');
       expect(rootNode?.classList.contains('expandable')).toBe(true);
       expect(rootNode?.classList.contains('expanded')).toBe(false);
-    });
-  });
-
-  describe('showThreadLines input', () => {
-    it('should have thread-lines class when showThreadLines is true', () => {
-      hostComponent.data.set({ key: 'value' });
-      hostComponent.showThreadLines.set(true);
-      fixture.detectChanges();
-
-      const container = getDataTreeContainer();
-      expect(container.classList.contains('thread-lines')).toBe(true);
-    });
-
-    it('should not have thread-lines class when showThreadLines is false', () => {
-      hostComponent.data.set({ key: 'value' });
-      hostComponent.showThreadLines.set(false);
-      fixture.detectChanges();
-
-      const container = getDataTreeContainer();
-      expect(container.classList.contains('thread-lines')).toBe(false);
     });
   });
 

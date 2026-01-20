@@ -5,7 +5,7 @@
  * across different data types, nesting levels, and expansion states.
  *
  * Uses visual regression testing with screenshots to verify the component
- * renders correctly with proper indentation, thread lines, and syntax coloring.
+ * renders correctly with proper indentation and syntax coloring.
  *
  * Uses the theme fixture to automatically run tests in both light and dark modes,
  * generating separate snapshots for each theme variant.
@@ -288,33 +288,6 @@ test.describe('DataTreeComponent', () => {
       const nodes = await page.locator('[data-testid="tree-node"]').count();
       expect(nodes).toBeGreaterThanOrEqual(1);
     });
-
-    test('thread lines class applied when showThreadLines is true', async ({ mount, page }) => {
-      await mount(DataTreeComponent, {
-        props: {
-          data: nestedObject,
-          showThreadLines: true,
-        },
-      });
-
-      const tree = page.locator('[data-testid="data-tree"]');
-      await expect(tree).toHaveClass(/thread-lines/);
-    });
-
-    test('thread lines class not applied when showThreadLines is false', async ({
-      mount,
-      page,
-    }) => {
-      await mount(DataTreeComponent, {
-        props: {
-          data: nestedObject,
-          showThreadLines: false,
-        },
-      });
-
-      const tree = page.locator('[data-testid="data-tree"]');
-      await expect(tree).not.toHaveClass(/thread-lines/);
-    });
   });
 
   // ===========================================================================
@@ -428,28 +401,6 @@ test.describe('DataTreeComponent', () => {
       await toggleButtons.first().click();
 
       await expect(component).toHaveScreenshot('data-tree-partially-collapsed.png');
-    });
-
-    test('thread lines visible', async ({ mount }) => {
-      const component = await mount(DataTreeComponent, {
-        props: {
-          data: nestedObject,
-          showThreadLines: true,
-        },
-      });
-
-      await expect(component).toHaveScreenshot('data-tree-thread-lines.png');
-    });
-
-    test('thread lines disabled (showThreadLines=false)', async ({ mount }) => {
-      const component = await mount(DataTreeComponent, {
-        props: {
-          data: nestedObject,
-          showThreadLines: false,
-        },
-      });
-
-      await expect(component).toHaveScreenshot('data-tree-no-thread-lines.png');
     });
 
     test('unicode keys and values', async ({ mount }) => {
