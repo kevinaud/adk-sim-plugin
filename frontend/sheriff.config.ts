@@ -80,10 +80,10 @@ export const config: SheriffConfig = {
     // Allow noTag modules during migration
     noTag: ['noTag', 'root'],
 
-    // Domain isolation for UI components: can access same domain or untagged
-    'domain:event-stream': [sameTag, 'noTag'],
-    'domain:control-panel': [sameTag, 'noTag'],
-    'domain:session': [sameTag, 'noTag'],
+    // Domain isolation for UI components: can access same domain, shared domain, or untagged
+    'domain:event-stream': [sameTag, 'domain:shared', 'noTag'],
+    'domain:control-panel': [sameTag, 'domain:shared', 'noTag'],
+    'domain:session': [sameTag, 'domain:shared', 'noTag'],
     // domain:shared can also access util for components that need services (e.g., dark-mode-toggle)
     'domain:shared': [sameTag, 'noTag', 'type:util'],
   },
