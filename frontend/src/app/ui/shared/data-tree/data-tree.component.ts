@@ -5,11 +5,10 @@
  * Uses the flattenTree utility to convert hierarchical data into a flat array
  * suitable for template iteration with @for.
  *
- * Implements FR-008 through FR-011:
+ * Implements FR-008, FR-009, FR-011:
  * - FR-008: Complex data renders as hierarchical trees with collapsible nodes
  * - FR-009: All nodes expanded by default (minimize interaction)
- * - FR-010: Thread lines for visual hierarchy (styling added in S7PR4)
- * - FR-011: Syntax coloring for value types (styling added in S7PR4)
+ * - FR-011: Syntax coloring for value types
  *
  * @see mddocs/frontend/frontend-spec.md#fr-context-inspection - FR-008 through FR-011
  * @see mddocs/frontend/frontend-tdd.md#datatreecomponent
@@ -51,12 +50,8 @@ function calculateIndent(depth: number): number {
  * <!-- Basic usage with required data input -->
  * <app-data-tree [data]="myObject" />
  *
- * <!-- With all options -->
- * <app-data-tree
- *   [data]="myObject"
- *   [expanded]="true"
- *   [showThreadLines]="true"
- * />
+ * <!-- With expanded option -->
+ * <app-data-tree [data]="myObject" [expanded]="true" />
  * ```
  */
 @Component({
@@ -87,7 +82,7 @@ function calculateIndent(depth: number): number {
         </button>
       </div>
     }
-    <div class="data-tree" [class.thread-lines]="showThreadLines()" data-testid="data-tree">
+    <div class="data-tree" data-testid="data-tree">
       @for (node of flatNodes(); track node.path) {
         <div
           class="tree-node"
@@ -185,100 +180,6 @@ function calculateIndent(depth: number): number {
       gap: 4px;
       padding: 2px 0;
       position: relative;
-    }
-
-    /* =========================================================================
-       Thread Lines (FR-010)
-       Visual connectors between parent and child nodes using CSS borders.
-       Uses a vertical line at each depth level to show hierarchy.
-
-       NOTE: Thread lines are supported up to MAX_THREAD_LINE_DEPTH (8) levels.
-       Nodes deeper than this will not display thread lines.
-       To extend support, add more CSS selectors below.
-       ========================================================================= */
-
-    .thread-lines .tree-node::before {
-      content: '';
-      position: absolute;
-      left: 8px; /* Centered in first indent level */
-      top: 0;
-      bottom: 0;
-      width: 0;
-      border-left: 1px solid var(--sys-outline-variant);
-      pointer-events: none;
-    }
-
-    /* Root node (depth 0) has no thread line */
-    .thread-lines .tree-node[style*='padding-left: 0px']::before {
-      display: none;
-    }
-
-    /* Position thread lines at each depth level */
-    .thread-lines .tree-node[style*='padding-left: 16px']::before {
-      left: 8px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 32px']::before {
-      left: 24px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 48px']::before {
-      left: 40px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 64px']::before {
-      left: 56px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 80px']::before {
-      left: 72px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 96px']::before {
-      left: 88px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 112px']::before {
-      left: 104px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 128px']::before {
-      left: 120px;
-    }
-
-    /* Horizontal connector from vertical line to node content */
-    .thread-lines .tree-node::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 6px;
-      height: 0;
-      border-top: 1px solid var(--sys-outline-variant);
-      pointer-events: none;
-    }
-
-    /* Root node has no horizontal connector */
-    .thread-lines .tree-node[style*='padding-left: 0px']::after {
-      display: none;
-    }
-
-    /* Position horizontal connectors */
-    .thread-lines .tree-node[style*='padding-left: 16px']::after {
-      left: 8px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 32px']::after {
-      left: 24px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 48px']::after {
-      left: 40px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 64px']::after {
-      left: 56px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 80px']::after {
-      left: 72px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 96px']::after {
-      left: 88px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 112px']::after {
-      left: 104px;
-    }
-    .thread-lines .tree-node[style*='padding-left: 128px']::after {
-      left: 120px;
     }
 
     /* =========================================================================
@@ -393,15 +294,6 @@ export class DataTreeComponent {
    * be collapsed via toggle buttons. When false, starts with all collapsed.
    */
   readonly expanded = input<boolean>(true);
-
-  /**
-   * Whether to show visual thread lines connecting parent/child nodes.
-   * Per FR-010, defaults to true for clear visual hierarchy.
-   *
-   * Note: Thread line styling will be added in S7PR4.
-   * This input is defined now for API completeness.
-   */
-  readonly showThreadLines = input<boolean>(true);
 
   /**
    * Internal signal tracking which paths are currently expanded.

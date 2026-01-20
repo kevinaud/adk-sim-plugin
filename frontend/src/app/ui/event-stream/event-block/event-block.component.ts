@@ -105,7 +105,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
             <div class="function-call" data-testid="function-call">
               <span class="function-name">{{ part.functionCall.name }}</span>
               <div class="function-data">
-                <app-data-tree [data]="part.functionCall.args" [showThreadLines]="false" />
+                <app-data-tree [data]="part.functionCall.args" />
               </div>
             </div>
           }
@@ -113,7 +113,7 @@ const BLOCK_CONFIG: Record<BlockType, BlockConfig> = {
             <div class="function-response" data-testid="function-response">
               <span class="function-name">{{ part.functionResponse.name }}</span>
               <div class="function-data">
-                <app-data-tree [data]="part.functionResponse.response" [showThreadLines]="false" />
+                <app-data-tree [data]="part.functionResponse.response" />
               </div>
             </div>
           }
