@@ -4,4 +4,4 @@
  * @module ui/shared/split-pane
  */
 
-export { SplitPaneComponent } from './split-pane.component';
+export { SplitPaneComponent, type SplitPaneConfig } from './split-pane.component';

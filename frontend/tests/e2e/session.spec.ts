@@ -67,7 +67,7 @@ test.describe('Session Page Layout', () => {
     await expect(badge).toHaveClass(/awaiting/);
   });
 
-  test('has collapsible System Instructions section', async ({ page, gotoAndWaitForAngular }) => {
+  test('displays System Instructions section', async ({ page, gotoAndWaitForAngular }) => {
     await gotoAndWaitForAngular('/');
     await page.waitForTimeout(2000);
 
@@ -83,17 +83,8 @@ test.describe('Session Page Layout', () => {
     await expect(section).toBeVisible();
     await expect(section).toContainText('System Instructions');
 
-    // Initially expanded (changed from collapsed per user feedback)
+    // Content should be visible (height controlled by split-pane divider)
     const content = page.locator('[data-testid="instructions-content"]');
-    await expect(content).toBeVisible();
-
-    // Click to collapse
-    const header = section.locator('.instructions-header');
-    await header.click();
-    await expect(content).not.toBeVisible();
-
-    // Click again to expand
-    await header.click();
     await expect(content).toBeVisible();
   });
 
@@ -111,8 +102,8 @@ test.describe('Session Page Layout', () => {
     await expect(page).toHaveURL(/\/session\//, { timeout: 30000 });
     await page.waitForTimeout(1000);
 
-    // Check split-pane exists
-    const splitPane = page.locator('app-split-pane');
+    // Check split-pane exists (outer horizontal split-pane)
+    const splitPane = page.locator('app-split-pane').first();
     await expect(splitPane).toBeVisible();
 
     // Check Event Stream pane
@@ -370,8 +361,8 @@ test.describe('Session Page with Created Session', () => {
     const badge = page.locator('[data-testid="status-badge"]');
     await expect(badge).toBeVisible();
 
-    // Verify split-pane layout
-    const splitPane = page.locator('app-split-pane');
+    // Verify split-pane layout (outer horizontal split-pane)
+    const splitPane = page.locator('app-split-pane').first();
     await expect(splitPane).toBeVisible();
 
     // Verify Event Stream pane

@@ -20,7 +20,7 @@ export {
   SmartBlobComponent,
   type SmartBlobMode,
 } from './smart-blob';
-export { SplitPaneComponent } from './split-pane';
+export { SplitPaneComponent, type SplitPaneConfig } from './split-pane';
 export { SystemInstructionsComponent } from './system-instructions';
 
 // Type for reference - components that will be added
