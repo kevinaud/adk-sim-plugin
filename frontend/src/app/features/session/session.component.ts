@@ -27,7 +27,6 @@ import {
   DestroyRef,
   effect,
   inject,
-  signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -44,7 +43,7 @@ import {
   type ToolFormConfig,
 } from '../../ui/control-panel';
 import { EventStreamComponent } from '../../ui/event-stream';
-import { SmartBlobComponent, SplitPaneComponent } from '../../ui/shared';
+import { SplitPaneComponent, SystemInstructionsComponent } from '../../ui/shared';
 import { SimulationStore } from './simulation.store';
 
 /**
@@ -76,7 +75,7 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
     MatIconModule,
     MatButtonModule,
     SplitPaneComponent,
-    SmartBlobComponent,
+    SystemInstructionsComponent,
     ControlPanelComponent,
     EventStreamComponent,
   ],
@@ -104,35 +103,8 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       <app-split-pane [sidebarWidth]="400" class="flex-1">
         <!-- Left Pane: System Instructions + Event Stream -->
         <div main class="main-pane" data-testid="main-pane">
-          <!-- System Instructions (Collapsible) - Now inside main pane -->
-          <div class="system-instructions" data-testid="system-instructions">
-            <button
-              class="instructions-header"
-              (click)="toggleInstructions()"
-              type="button"
-              [attr.aria-expanded]="instructionsExpanded()"
-              aria-controls="instructions-content"
-            >
-              <mat-icon class="instructions-icon">psychology</mat-icon>
-              <span class="instructions-label">System Instructions</span>
-              <mat-icon class="expand-icon">
-                {{ instructionsExpanded() ? 'expand_less' : 'expand_more' }}
-              </mat-icon>
-            </button>
-            @if (instructionsExpanded()) {
-              <div
-                class="instructions-content"
-                id="instructions-content"
-                data-testid="instructions-content"
-              >
-                @if (systemInstructionText()) {
-                  <app-smart-blob [content]="systemInstructionText()" />
-                } @else {
-                  <p class="no-instructions">No system instructions provided.</p>
-                }
-              </div>
-            }
-          </div>
+          <!-- System Instructions (Collapsible) -->
+          <app-system-instructions [content]="systemInstructionText()" />
 
           <!-- Event Stream Section -->
           <div class="event-stream-pane" data-testid="event-stream-pane">
@@ -246,57 +218,6 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-    }
-
-    /* System Instructions (inside main pane) */
-    .system-instructions {
-      flex-shrink: 0;
-      background-color: var(--sys-surface);
-      border-bottom: 1px solid var(--sys-outline-variant);
-    }
-
-    .instructions-header {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 12px 24px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-align: left;
-      gap: 12px;
-      color: var(--sys-on-surface);
-    }
-
-    .instructions-header:hover {
-      background-color: var(--sys-surface-container-high);
-    }
-
-    .instructions-icon {
-      color: var(--sys-on-surface-variant);
-    }
-
-    .instructions-label {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .expand-icon {
-      color: var(--sys-on-surface-variant);
-    }
-
-    .instructions-content {
-      padding: 0 24px 16px 60px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .no-instructions {
-      margin: 0;
-      font-size: 14px;
-      color: var(--sys-on-surface-variant);
-      font-style: italic;
     }
 
     /* Event Stream Pane */
@@ -442,10 +363,6 @@ export class SessionComponent {
     return 'TestAgent';
   });
 
-  /** Internal state: whether system instructions are expanded */
-  private readonly _instructionsExpanded = signal(true);
-  readonly instructionsExpanded = this._instructionsExpanded.asReadonly();
-
   /** Session status for the status badge */
   readonly sessionStatus = computed<SessionStatus>(() => {
     // Derive status from store state
@@ -514,11 +431,6 @@ export class SessionComponent {
     // Pass proto directly - ToolFormService will detect it's a proto and convert appropriately
     return this.toolFormService.createFormConfig(tool);
   };
-
-  /** Toggle system instructions expanded state */
-  toggleInstructions(): void {
-    this._instructionsExpanded.update((v) => !v);
-  }
 
   /** Handle tool invocation from control panel */
   onToolInvoke(event: { toolName: string; args: unknown }): void {
