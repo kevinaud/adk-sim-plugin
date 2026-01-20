@@ -120,16 +120,144 @@ function calculateIndent(depth: number): number {
       align-items: baseline;
       gap: 4px;
       padding: 2px 0;
+      position: relative;
     }
 
+    /* =========================================================================
+       Thread Lines (FR-010)
+       Visual connectors between parent and child nodes using CSS borders.
+       Uses a vertical line at each depth level to show hierarchy.
+       ========================================================================= */
+
+    .thread-lines .tree-node::before {
+      content: '';
+      position: absolute;
+      left: 8px; /* Centered in first indent level */
+      top: 0;
+      bottom: 0;
+      width: 0;
+      border-left: 1px solid var(--sys-outline-variant);
+      pointer-events: none;
+    }
+
+    /* Root node (depth 0) has no thread line */
+    .thread-lines .tree-node[style*='padding-left: 0px']::before {
+      display: none;
+    }
+
+    /* Position thread lines at each depth level */
+    .thread-lines .tree-node[style*='padding-left: 16px']::before {
+      left: 8px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 32px']::before {
+      left: 24px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 48px']::before {
+      left: 40px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 64px']::before {
+      left: 56px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 80px']::before {
+      left: 72px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 96px']::before {
+      left: 88px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 112px']::before {
+      left: 104px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 128px']::before {
+      left: 120px;
+    }
+
+    /* Horizontal connector from vertical line to node content */
+    .thread-lines .tree-node::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 6px;
+      height: 0;
+      border-top: 1px solid var(--sys-outline-variant);
+      pointer-events: none;
+    }
+
+    /* Root node has no horizontal connector */
+    .thread-lines .tree-node[style*='padding-left: 0px']::after {
+      display: none;
+    }
+
+    /* Position horizontal connectors */
+    .thread-lines .tree-node[style*='padding-left: 16px']::after {
+      left: 8px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 32px']::after {
+      left: 24px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 48px']::after {
+      left: 40px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 64px']::after {
+      left: 56px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 80px']::after {
+      left: 72px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 96px']::after {
+      left: 88px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 112px']::after {
+      left: 104px;
+    }
+    .thread-lines .tree-node[style*='padding-left: 128px']::after {
+      left: 120px;
+    }
+
+    /* =========================================================================
+       Key Styling (FR-011)
+       Keys are styled distinctly with a different color
+       ========================================================================= */
+
     .key {
-      color: var(--sys-on-surface);
+      color: var(--sys-primary);
       font-weight: 500;
     }
+
+    /* =========================================================================
+       Value Type Syntax Coloring (FR-011)
+       Different colors for each value type using Material Design tokens.
+       Colors are semantic and work in both light and dark themes.
+       ========================================================================= */
 
     .value {
       color: var(--sys-on-surface-variant);
     }
+
+    /* String values - green tint using tertiary color */
+    .value.string {
+      color: var(--sys-tertiary);
+    }
+
+    /* Number values - blue using primary color */
+    .value.number {
+      color: var(--sys-primary);
+    }
+
+    /* Boolean values - purple/magenta using secondary color */
+    .value.boolean {
+      color: var(--sys-secondary);
+    }
+
+    /* Null values - muted gray with italic */
+    .value.null {
+      color: var(--sys-on-surface-variant);
+      font-style: italic;
+      opacity: 0.7;
+    }
+
+    /* =========================================================================
+       Container Info (objects and arrays)
+       ========================================================================= */
 
     .container-info {
       display: inline-flex;
@@ -146,6 +274,10 @@ function calculateIndent(depth: number): number {
       font-size: 11px;
       opacity: 0.6;
     }
+
+    /* =========================================================================
+       Toggle Button
+       ========================================================================= */
 
     .toggle {
       display: inline-flex;
