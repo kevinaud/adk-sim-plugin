@@ -15,7 +15,8 @@
  * @see mddocs/frontend/frontend-tdd.md#datatreecomponent
  */
 
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 import { flattenTree } from './flatten-tree.util';
 import type { TreeNode } from './tree-node.types';
@@ -43,7 +44,7 @@ function calculateIndent(depth: number): number {
  * This enables efficient template iteration with trackBy on the unique path.
  *
  * Per FR-009, all nodes are expanded by default to minimize user interaction.
- * Expand/collapse toggle functionality will be added in S7PR3.
+ * Individual nodes can be collapsed/expanded via toggle buttons.
  *
  * @example
  * ```html
@@ -61,6 +62,7 @@ function calculateIndent(depth: number): number {
 @Component({
   selector: 'app-data-tree',
   standalone: true,
+  imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="data-tree" [class.thread-lines]="showThreadLines()" data-testid="data-tree">
@@ -74,6 +76,16 @@ function calculateIndent(depth: number): number {
           [attr.data-value-type]="node.valueType"
           data-testid="tree-node"
         >
+          @if (node.expandable) {
+            <button
+              class="toggle"
+              (click)="toggleNode(node.path)"
+              data-testid="expand-toggle"
+              type="button"
+            >
+              <mat-icon>{{ node.expanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+            </button>
+          }
           <span class="key">{{ node.key }}:</span>
           @if (!node.expandable && node.displayValue !== null) {
             <span class="value" [class]="node.valueType">{{ node.displayValue }}</span>
@@ -134,6 +146,36 @@ function calculateIndent(depth: number): number {
       font-size: 11px;
       opacity: 0.6;
     }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      margin: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--sys-on-surface-variant);
+      border-radius: 2px;
+
+      &:hover {
+        background: var(--sys-surface-variant);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--sys-primary);
+        outline-offset: 1px;
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
   `,
 })
 export class DataTreeComponent {
@@ -147,8 +189,8 @@ export class DataTreeComponent {
    * Whether all nodes should be expanded by default.
    * Per FR-009, defaults to true to minimize user interaction.
    *
-   * Note: Expand/collapse toggle functionality will be added in S7PR3.
-   * For now, this controls the initial expansion state of all nodes.
+   * When true, starts with all nodes expanded. Individual nodes can then
+   * be collapsed via toggle buttons. When false, starts with all collapsed.
    */
   readonly expanded = input<boolean>(true);
 
@@ -162,25 +204,118 @@ export class DataTreeComponent {
   readonly showThreadLines = input<boolean>(true);
 
   /**
+   * Internal signal tracking which paths are currently expanded.
+   *
+   * Uses null to represent "all expanded" state (FR-009 default), which
+   * avoids needing to pre-compute all expandable paths. When a toggle
+   * occurs, this converts to an explicit Set tracking individual states.
+   *
+   * When expanded input is false, initializes to empty Set (all collapsed).
+   */
+  private readonly _expandedPaths = signal<Set<string> | null>(null);
+
+  /**
+   * Publicly readable expansion state.
+   */
+  readonly expandedPaths = this._expandedPaths.asReadonly();
+
+  constructor() {
+    // Initialize expandedPaths based on the expanded input.
+    // Using effect to react to input changes.
+    effect(() => {
+      const isExpanded = this.expanded();
+      // When expanded is true, use null to mean "all expanded"
+      // When expanded is false, use empty Set to mean "all collapsed"
+      this._expandedPaths.set(isExpanded ? null : new Set<string>());
+    });
+  }
+
+  /**
    * Computed signal that flattens the input data into TreeNode array.
    *
    * Uses the flattenTree utility which:
    * - Recursively traverses the data structure
    * - Creates TreeNode for each value with path, depth, and display info
-   * - Respects expansion state (all expanded when expandedPaths is null)
+   * - Respects expansion state (all expanded when expandedPaths is undefined)
    *
    * The flattened array is suitable for @for iteration with trackBy on path.
    */
   readonly flatNodes = computed<TreeNode[]>(() => {
     const data = this.data();
-    const isExpanded = this.expanded();
+    const pathsSet = this._expandedPaths();
 
-    // When expanded is true, pass undefined to flattenTree to expand all nodes
-    // When expanded is false, pass an empty Set to collapse all nodes
-    const expandedPaths = isExpanded ? undefined : new Set<string>();
+    // flattenTree interprets undefined as "expand all", and a Set as explicit tracking
+    // Convert null to undefined for the utility
+    const expandedPaths = pathsSet ?? undefined;
 
     return flattenTree(data, expandedPaths);
   });
+
+  /**
+   * Toggles the expansion state of a node at the given path.
+   *
+   * On first toggle when starting in "all expanded" state (null), this
+   * materializes the full set of expandable paths, then removes the toggled one.
+   *
+   * @param path - The path of the node to toggle
+   */
+  toggleNode(path: string): void {
+    this._expandedPaths.update((paths) => {
+      if (paths === null) {
+        // First toggle from "all expanded" state - materialize all expandable paths
+        // then remove the one being collapsed
+        const allPaths = this.collectExpandablePaths();
+        allPaths.delete(path);
+        return allPaths;
+      }
+
+      // Explicit tracking mode - toggle the path
+      const newPaths = new Set(paths);
+      if (newPaths.has(path)) {
+        newPaths.delete(path);
+      } else {
+        newPaths.add(path);
+      }
+      return newPaths;
+    });
+  }
+
+  /**
+   * Collects all expandable node paths from the current data.
+   *
+   * Used when transitioning from "all expanded" (null) state to explicit tracking.
+   * Walks the entire data structure to find all object/array nodes.
+   *
+   * @returns Set of all expandable paths
+   */
+  private collectExpandablePaths(): Set<string> {
+    const paths = new Set<string>();
+    this.collectPaths(this.data(), 'root', paths);
+    return paths;
+  }
+
+  /**
+   * Recursively collects paths of expandable nodes.
+   */
+  private collectPaths(value: unknown, path: string, paths: Set<string>): void {
+    if (value === null || value === undefined) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      paths.add(path);
+      for (const [index, item] of value.entries()) {
+        this.collectPaths(item, `${path}[${String(index)}]`, paths);
+      }
+    } else if (typeof value === 'object') {
+      paths.add(path);
+      const obj = value as Record<string, unknown>;
+      for (const key of Object.keys(obj)) {
+        this.collectPaths(obj[key], `${path}.${key}`, paths);
+      }
+    }
+    // Primitives are not expandable, skip
+  }
 
   /**
    * Calculate indentation in pixels for a given depth level.
