@@ -8,6 +8,8 @@
  * @see mddocs/frontend/frontend-tdd.md#event-stream-components
  */
 
+export type { TreeNode } from './data-tree';
+export { DataTreeComponent, flattenTree, ValueType } from './data-tree';
 export type { BlockType } from './event-block';
 export { EventBlockComponent } from './event-block';
 export { EventStreamComponent } from './event-stream.component';
