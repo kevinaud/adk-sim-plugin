@@ -117,6 +117,10 @@ jobs:
         run: docker pull mcr.microsoft.com/playwright:v1.57.0-noble
 
       - name: Run component tests
+        # Use --update-snapshots to capture screenshots without enforcing matches.
+        # Screenshots are captured for documentation and visual review but size/pixel
+        # differences across environments won't fail the build.
+        # See: https://github.com/kevinaud/adk-sim-plugin/issues/203
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/app \
@@ -124,10 +128,10 @@ jobs:
             --ipc=host \
             -u $(id -u):$(id -g) \
             mcr.microsoft.com/playwright:v1.57.0-noble \
-            npm exec playwright test -- -c playwright-ct.config.ts
+            npm exec playwright test -- -c playwright-ct.config.ts --update-snapshots
 
-      - name: Upload test results on failure
-        if: failure()
+      - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: component-test-results

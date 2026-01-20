@@ -79,13 +79,8 @@ function formatDisplayValue(value: unknown, valueType: ValueType): string | null
     case ValueType.Null: {
       return 'null';
     }
-    case ValueType.Boolean: {
-      return String(value);
-    }
-    case ValueType.Number: {
-      return String(value);
-    }
     default: {
+      // Boolean, Number, and any unexpected types
       return String(value);
     }
   }

@@ -132,8 +132,9 @@ Check out [this link](https://example.com)`;
     });
   });
 
-  // Skipped: See https://github.com/kevinaud/adk-sim-plugin/issues/203
-  test.describe.skip('visual regression', () => {
+  // Screenshots captured for documentation but not enforced (maxDiffPixelRatio: 1)
+  // See: https://github.com/kevinaud/adk-sim-plugin/issues/203
+  test.describe('visual regression', () => {
     test('JSON content visual appearance', async ({ mount }) => {
       const content = JSON.stringify(
         {
