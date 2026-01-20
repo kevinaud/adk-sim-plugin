@@ -453,6 +453,201 @@ describe('DataTreeComponent', () => {
     });
   });
 
+  describe('expand all / collapse all buttons', () => {
+    /**
+     * Helper to get the tree header element.
+     */
+    function getTreeHeader(): HTMLElement | null {
+      return fixture.nativeElement.querySelector('[data-testid="tree-header"]');
+    }
+
+    /**
+     * Helper to get the expand all button.
+     */
+    function getExpandAllButton(): HTMLButtonElement | null {
+      return fixture.nativeElement.querySelector('[data-testid="expand-all"]');
+    }
+
+    /**
+     * Helper to get the collapse all button.
+     */
+    function getCollapseAllButton(): HTMLButtonElement | null {
+      return fixture.nativeElement.querySelector('[data-testid="collapse-all"]');
+    }
+
+    /**
+     * Helper to check if a node is expanded based on its CSS class.
+     */
+    function isNodeExpanded(path: string): boolean {
+      const node = getNodeByPath(path);
+      return node?.classList.contains('expanded') ?? false;
+    }
+
+    it('should show tree header when tree has expandable nodes', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      fixture.detectChanges();
+
+      expect(getTreeHeader()).toBeTruthy();
+      expect(getExpandAllButton()).toBeTruthy();
+      expect(getCollapseAllButton()).toBeTruthy();
+    });
+
+    it('should not show tree header when tree has no expandable nodes', () => {
+      // Only a primitive value - no expandable nodes
+      hostComponent.data.set('just a string');
+      fixture.detectChanges();
+
+      expect(getTreeHeader()).toBeNull();
+      expect(getExpandAllButton()).toBeNull();
+      expect(getCollapseAllButton()).toBeNull();
+    });
+
+    it('should have correct icons on buttons', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      fixture.detectChanges();
+
+      const expandAllBtn = getExpandAllButton();
+      const collapseAllBtn = getCollapseAllButton();
+
+      expect(expandAllBtn?.querySelector('mat-icon')?.textContent?.trim()).toBe('unfold_more');
+      expect(collapseAllBtn?.querySelector('mat-icon')?.textContent?.trim()).toBe('unfold_less');
+    });
+
+    it('should have correct title attributes on buttons', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      fixture.detectChanges();
+
+      expect(getExpandAllButton()?.getAttribute('title')).toBe('Expand all nodes');
+      expect(getCollapseAllButton()?.getAttribute('title')).toBe('Collapse all nodes');
+    });
+
+    it('should collapse all nodes when clicking collapse all button', () => {
+      hostComponent.data.set({
+        a: { x: 1 },
+        b: { y: 2 },
+      });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // All expanded initially: root + a + x + b + y = 5
+      expect(getTreeNodes().length).toBe(5);
+
+      // Click collapse all
+      getCollapseAllButton()?.click();
+      fixture.detectChanges();
+
+      // Only root should be visible
+      expect(getTreeNodes().length).toBe(1);
+      expect(isNodeExpanded('root')).toBe(false);
+    });
+
+    it('should expand all nodes when clicking expand all button', () => {
+      hostComponent.data.set({
+        a: { x: 1 },
+        b: { y: 2 },
+      });
+      hostComponent.expanded.set(false);
+      fixture.detectChanges();
+
+      // All collapsed initially: only root
+      expect(getTreeNodes().length).toBe(1);
+
+      // Click expand all
+      getExpandAllButton()?.click();
+      fixture.detectChanges();
+
+      // All nodes visible: root + a + x + b + y = 5
+      expect(getTreeNodes().length).toBe(5);
+      expect(isNodeExpanded('root')).toBe(true);
+      expect(isNodeExpanded('root.a')).toBe(true);
+      expect(isNodeExpanded('root.b')).toBe(true);
+    });
+
+    it('should expand all after manual collapse', () => {
+      hostComponent.data.set({
+        a: { x: 1 },
+        b: { y: 2 },
+      });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // Manually collapse 'a'
+      const nodeA = getNodeByPath('root.a');
+      const toggleA = nodeA?.querySelector('[data-testid="expand-toggle"]') as HTMLButtonElement;
+      toggleA?.click();
+      fixture.detectChanges();
+
+      // Should be 4 nodes now (x is hidden)
+      expect(getTreeNodes().length).toBe(4);
+
+      // Click expand all
+      getExpandAllButton()?.click();
+      fixture.detectChanges();
+
+      // All 5 nodes visible again
+      expect(getTreeNodes().length).toBe(5);
+    });
+
+    it('should collapse all after partial expansion', () => {
+      hostComponent.data.set({
+        a: { x: 1 },
+        b: { y: 2 },
+      });
+      hostComponent.expanded.set(false);
+      fixture.detectChanges();
+
+      // Start with only root
+      expect(getTreeNodes().length).toBe(1);
+
+      // Manually expand root
+      const rootNode = getNodeByPath('root');
+      const rootToggle = rootNode?.querySelector(
+        '[data-testid="expand-toggle"]',
+      ) as HTMLButtonElement;
+      rootToggle?.click();
+      fixture.detectChanges();
+
+      // Root expanded, showing a and b (but not their children)
+      expect(getTreeNodes().length).toBe(3);
+
+      // Click collapse all
+      getCollapseAllButton()?.click();
+      fixture.detectChanges();
+
+      // Back to only root
+      expect(getTreeNodes().length).toBe(1);
+    });
+
+    it('should work with arrays', () => {
+      hostComponent.data.set([{ id: 1 }, { id: 2 }]);
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // root + [0] + id + [1] + id = 5
+      expect(getTreeNodes().length).toBe(5);
+
+      // Collapse all
+      getCollapseAllButton()?.click();
+      fixture.detectChanges();
+
+      expect(getTreeNodes().length).toBe(1);
+
+      // Expand all
+      getExpandAllButton()?.click();
+      fixture.detectChanges();
+
+      expect(getTreeNodes().length).toBe(5);
+    });
+
+    it('should show buttons for empty objects (which are expandable)', () => {
+      hostComponent.data.set({});
+      fixture.detectChanges();
+
+      // Empty object is still expandable (has child count 0)
+      expect(getTreeHeader()).toBeTruthy();
+    });
+  });
+
   describe('expand/collapse toggle behavior', () => {
     /**
      * Helper to click toggle button for a specific node.

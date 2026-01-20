@@ -65,6 +65,28 @@ function calculateIndent(depth: number): number {
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (hasExpandableNodes()) {
+      <div class="tree-header" data-testid="tree-header">
+        <button
+          type="button"
+          class="action-btn"
+          (click)="expandAll()"
+          data-testid="expand-all"
+          title="Expand all nodes"
+        >
+          <mat-icon>unfold_more</mat-icon>
+        </button>
+        <button
+          type="button"
+          class="action-btn"
+          (click)="collapseAll()"
+          data-testid="collapse-all"
+          title="Collapse all nodes"
+        >
+          <mat-icon>unfold_less</mat-icon>
+        </button>
+      </div>
+    }
     <div class="data-tree" [class.thread-lines]="showThreadLines()" data-testid="data-tree">
       @for (node of flatNodes(); track node.path) {
         <div
@@ -109,6 +131,46 @@ function calculateIndent(depth: number): number {
     </div>
   `,
   styles: `
+    /* =========================================================================
+       Tree Header with Expand All / Collapse All buttons
+       ========================================================================= */
+
+    .tree-header {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--sys-on-surface-variant);
+      opacity: 0.7;
+
+      &:hover {
+        background: var(--sys-surface-container-high);
+        opacity: 1;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--sys-primary);
+        outline-offset: 1px;
+        opacity: 1;
+      }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     .data-tree {
       font-family: 'Roboto Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
       font-size: 13px;
@@ -382,6 +444,30 @@ export class DataTreeComponent {
 
     return flattenTree(data, expandedPaths);
   });
+
+  /**
+   * Computed signal indicating whether the tree has any expandable nodes.
+   * Used to conditionally show the expand all / collapse all buttons.
+   */
+  readonly hasExpandableNodes = computed(() => {
+    return this.flatNodes().some((node) => node.expandable);
+  });
+
+  /**
+   * Expands all nodes in the tree.
+   * Sets _expandedPaths to null, which signals "all expanded" state.
+   */
+  expandAll(): void {
+    this._expandedPaths.set(null);
+  }
+
+  /**
+   * Collapses all nodes in the tree.
+   * Sets _expandedPaths to empty Set, which means no nodes are expanded.
+   */
+  collapseAll(): void {
+    this._expandedPaths.set(new Set());
+  }
 
   /**
    * Toggles the expansion state of a node at the given path.
