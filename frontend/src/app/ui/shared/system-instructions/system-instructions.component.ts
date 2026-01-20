@@ -1,28 +1,29 @@
 /**
- * @fileoverview System instructions component with collapsible accordion.
+ * @fileoverview System instructions component for displaying agent instructions.
  *
- * Displays system instructions in a collapsible section with:
- * - Header button with psychology icon and expand/collapse indicator
+ * Displays system instructions with:
+ * - Header with psychology icon and "System Instructions" label
  * - Content area using SmartBlobComponent for markdown rendering
- * - Accessible ARIA attributes for accordion pattern
+ *
+ * Height is controlled by the parent container (typically a vertical split-pane).
  *
  * @see mddocs/frontend/frontend-spec.md#system-instructions
  */
 
-import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 import { SmartBlobComponent } from '../smart-blob';
 
 /**
- * System instructions component with collapsible accordion.
+ * System instructions component.
+ *
+ * Displays system instructions with a header and scrollable content area.
+ * The height is controlled by the parent container.
  *
  * @example
  * ```html
- * <app-system-instructions
- *   [content]="systemInstructionText()"
- *   [initiallyExpanded]="true"
- * />
+ * <app-system-instructions [content]="systemInstructionText()" />
  * ```
  */
 @Component({
@@ -31,56 +32,35 @@ import { SmartBlobComponent } from '../smart-blob';
   imports: [MatIconModule, SmartBlobComponent],
   template: `
     <div class="system-instructions" data-testid="system-instructions">
-      <button
-        class="instructions-header"
-        (click)="toggle()"
-        type="button"
-        [attr.aria-expanded]="expanded()"
-        aria-controls="instructions-content"
-      >
+      <div class="instructions-header">
         <mat-icon class="instructions-icon">psychology</mat-icon>
         <span class="instructions-label">System Instructions</span>
-        <mat-icon class="expand-icon">
-          {{ expanded() ? 'expand_less' : 'expand_more' }}
-        </mat-icon>
-      </button>
-      @if (expanded()) {
-        <div
-          class="instructions-content"
-          id="instructions-content"
-          data-testid="instructions-content"
-        >
-          @if (content()) {
-            <app-smart-blob [content]="content()!" />
-          } @else {
-            <p class="no-instructions">No system instructions provided.</p>
-          }
-        </div>
-      }
+      </div>
+      <div class="instructions-content" data-testid="instructions-content">
+        @if (content()) {
+          <app-smart-blob [content]="content()!" />
+        } @else {
+          <p class="no-instructions">No system instructions provided.</p>
+        }
+      </div>
     </div>
   `,
   styles: `
     .system-instructions {
-      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       background-color: var(--sys-surface);
-      border-bottom: 1px solid var(--sys-outline-variant);
     }
 
     .instructions-header {
       display: flex;
       align-items: center;
-      width: 100%;
       padding: 12px 24px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-align: left;
       gap: 12px;
       color: var(--sys-on-surface);
-    }
-
-    .instructions-header:hover {
-      background-color: var(--sys-surface-container-high);
+      border-bottom: 1px solid var(--sys-outline-variant);
+      flex-shrink: 0;
     }
 
     .instructions-icon {
@@ -88,19 +68,15 @@ import { SmartBlobComponent } from '../smart-blob';
     }
 
     .instructions-label {
-      flex: 1;
       font-size: 14px;
       font-weight: 500;
     }
 
-    .expand-icon {
-      color: var(--sys-on-surface-variant);
-    }
-
     .instructions-content {
-      padding: 0 24px 16px 60px;
-      max-height: 300px;
+      flex: 1;
+      padding: 16px 24px 16px 60px;
       overflow-y: auto;
+      min-height: 0;
     }
 
     .no-instructions {
@@ -118,39 +94,4 @@ export class SystemInstructionsComponent {
    * Supports markdown rendering via SmartBlobComponent.
    */
   readonly content = input<string>();
-
-  /**
-   * Whether the accordion should start expanded.
-   * @default true
-   */
-  readonly initiallyExpanded = input(true);
-
-  /** Tracks whether user has toggled (to stop reacting to input changes) */
-  private hasUserToggled = false;
-
-  /** Internal expanded state */
-  private readonly _expanded = signal(true);
-
-  /** Whether the instructions section is currently expanded */
-  readonly expanded = this._expanded.asReadonly();
-
-  constructor() {
-    // Initialize from input when it becomes available
-    effect(
-      () => {
-        const initial = this.initiallyExpanded();
-        // Only sync if user hasn't manually toggled yet
-        if (!this.hasUserToggled) {
-          this._expanded.set(initial);
-        }
-      },
-      { allowSignalWrites: true },
-    );
-  }
-
-  /** Toggle the expanded state */
-  toggle(): void {
-    this.hasUserToggled = true;
-    this._expanded.update((v) => !v);
-  }
 }

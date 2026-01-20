@@ -3,8 +3,9 @@
  *
  * This component provides the main simulation interface with:
  * - Blue header bar with "Simulating: {agentName}" and status badge
- * - Collapsible "System Instructions" section
- * - Split-pane layout with Event Stream (left) and Control Panel (right sidebar)
+ * - Nested split-pane layout:
+ *   - Outer (horizontal): Main area (left) and Control Panel (right)
+ *   - Inner (vertical): System Instructions (top) and Event Stream (bottom)
  *
  * Implements FR-001 (Session Navigation), FR-005 (Split-Pane Layout).
  *
@@ -43,7 +44,11 @@ import {
   type ToolFormConfig,
 } from '../../ui/control-panel';
 import { EventStreamComponent } from '../../ui/event-stream';
-import { SplitPaneComponent, SystemInstructionsComponent } from '../../ui/shared';
+import {
+  SplitPaneComponent,
+  type SplitPaneConfig,
+  SystemInstructionsComponent,
+} from '../../ui/shared';
 import { SimulationStore } from './simulation.store';
 
 /**
@@ -55,12 +60,11 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
 /**
  * Session component that displays an individual simulation session.
  *
- * Layout structure (from mocks):
+ * Layout structure:
  * - Header bar: Blue background with "Simulating: {agentName}" and status badge
- * - System Instructions: Collapsible accordion section
- * - Split-pane:
- *   - Left (main): Event Stream with header and placeholder content
- *   - Right (sidebar): Control Panel (400px width)
+ * - Nested split-pane layout:
+ *   - Outer (horizontal): 70% main area, 30% control panel (draggable, 30-70% range)
+ *   - Inner (vertical): System instructions (100-600px, content-aware) + Event stream
  *
  * @example
  * ```html
@@ -99,39 +103,41 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
         </div>
       </header>
 
-      <!-- Split-Pane Layout -->
-      <app-split-pane [sidebarWidth]="400" class="flex-1">
-        <!-- Left Pane: System Instructions + Event Stream -->
-        <div main class="main-pane" data-testid="main-pane">
-          <!-- System Instructions (Collapsible) -->
-          <app-system-instructions [content]="systemInstructionText()" />
+      <!-- Outer Split-Pane: Main Area (left) | Control Panel (right) -->
+      <app-split-pane orientation="horizontal" [config]="horizontalSplitConfig" class="flex-1">
+        <!-- Left Pane: System Instructions + Event Stream (nested vertical split) -->
+        <div primary class="main-pane" data-testid="main-pane">
+          <app-split-pane orientation="vertical" [config]="verticalSplitConfig">
+            <!-- Top: System Instructions -->
+            <app-system-instructions primary [content]="systemInstructionText()" />
 
-          <!-- Event Stream Section -->
-          <div class="event-stream-pane" data-testid="event-stream-pane">
-            <div class="event-stream-header">
-              <span class="event-stream-title">Event Stream</span>
-              <div class="event-stream-actions">
-                <button mat-icon-button type="button" aria-label="Expand all" title="Expand all">
-                  <mat-icon>unfold_more</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  type="button"
-                  aria-label="Collapse all"
-                  title="Collapse all"
-                >
-                  <mat-icon>unfold_less</mat-icon>
-                </button>
+            <!-- Bottom: Event Stream -->
+            <div secondary class="event-stream-pane" data-testid="event-stream-pane">
+              <div class="event-stream-header">
+                <span class="event-stream-title">Event Stream</span>
+                <div class="event-stream-actions">
+                  <button mat-icon-button type="button" aria-label="Expand all" title="Expand all">
+                    <mat-icon>unfold_more</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    aria-label="Collapse all"
+                    title="Collapse all"
+                  >
+                    <mat-icon>unfold_less</mat-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="event-stream-content" data-testid="event-stream-content">
+                <app-event-stream [events]="eventStreamContents()" />
               </div>
             </div>
-            <div class="event-stream-content" data-testid="event-stream-content">
-              <app-event-stream [events]="eventStreamContents()" />
-            </div>
-          </div>
+          </app-split-pane>
         </div>
 
         <!-- Right Sidebar: Control Panel -->
-        <div sidebar class="control-panel-sidebar" data-testid="control-panel-sidebar">
+        <div secondary class="control-panel-sidebar" data-testid="control-panel-sidebar">
           <app-control-panel
             [tools]="availableTools()"
             [formConfigCreator]="boundCreateFormConfig"
@@ -212,22 +218,19 @@ type SessionStatus = 'awaiting' | 'active' | 'completed';
       min-height: 0;
     }
 
-    /* Main Pane (contains instructions + event stream) */
+    /* Main Pane (contains nested vertical split-pane) */
     .main-pane {
-      display: flex;
-      flex-direction: column;
       height: 100%;
       overflow: hidden;
     }
 
-    /* Event Stream Pane */
+    /* Event Stream Pane (secondary in vertical split) */
     .event-stream-pane {
       display: flex;
       flex-direction: column;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
+      height: 100%;
       padding: 16px 24px;
+      box-sizing: border-box;
     }
 
     .event-stream-header {
@@ -271,6 +274,29 @@ export class SessionComponent {
   private readonly toolFormService = inject(ToolFormService);
   private readonly gateway = inject(SessionGateway);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * Configuration for the horizontal split-pane (main area | control panel).
+   * Primary (left): 70% initial, 30-70% range
+   */
+  readonly horizontalSplitConfig: SplitPaneConfig = {
+    initialPrimaryPercent: 70,
+    primaryMinPercent: 30,
+    primaryMaxPercent: 70,
+  };
+
+  /**
+   * Configuration for the vertical split-pane (system instructions | event stream).
+   * Primary (top): 100px min, 600px max, starts at minimum.
+   * Content-aware max is disabled because scrollHeight measurement doesn't work
+   * reliably with flex containers and projected content.
+   */
+  readonly verticalSplitConfig: SplitPaneConfig = {
+    primaryMinPx: 100,
+    primaryMaxPx: 600,
+    contentAwareMax: false,
+    initialPrimaryPx: 250, // Start at a reasonable size
+  };
 
   /** Observable stream of route params converted to signal */
   private readonly params = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))));
