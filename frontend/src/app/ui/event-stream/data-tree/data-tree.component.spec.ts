@@ -382,4 +382,203 @@ describe('DataTreeComponent', () => {
       expect(getTreeNodes().length).toBe(1);
     });
   });
+
+  describe('toggle button rendering', () => {
+    /**
+     * Helper to get all toggle buttons from the DOM.
+     */
+    function getToggleButtons(): HTMLButtonElement[] {
+      return Array.from(fixture.nativeElement.querySelectorAll('[data-testid="expand-toggle"]'));
+    }
+
+    /**
+     * Helper to get toggle button for a specific node.
+     */
+    function getToggleForPath(path: string): HTMLButtonElement | null {
+      const node = getNodeByPath(path);
+      return node?.querySelector('[data-testid="expand-toggle"]') ?? null;
+    }
+
+    /**
+     * Helper to get the icon name from a mat-icon element.
+     */
+    function getIconName(button: HTMLButtonElement | null): string | null {
+      const icon = button?.querySelector('mat-icon');
+      return icon?.textContent?.trim() ?? null;
+    }
+
+    it('should render toggle button for expandable nodes', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      fixture.detectChanges();
+
+      // Root and nested are expandable objects
+      const toggles = getToggleButtons();
+      expect(toggles.length).toBe(2); // root + nested
+    });
+
+    it('should not render toggle button for primitive nodes', () => {
+      hostComponent.data.set({ name: 'Alice', age: 30 });
+      fixture.detectChanges();
+
+      // Only root is expandable, name and age are primitives
+      const toggles = getToggleButtons();
+      expect(toggles.length).toBe(1); // Only root
+    });
+
+    it('should show expand_more icon when node is expanded', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      const rootToggle = getToggleForPath('root');
+      expect(getIconName(rootToggle)).toBe('expand_more');
+    });
+
+    it('should show chevron_right icon when node is collapsed', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      hostComponent.expanded.set(false);
+      fixture.detectChanges();
+
+      const rootToggle = getToggleForPath('root');
+      expect(getIconName(rootToggle)).toBe('chevron_right');
+    });
+
+    it('should render toggle buttons for arrays', () => {
+      hostComponent.data.set([{ id: 1 }, { id: 2 }]);
+      fixture.detectChanges();
+
+      // root array + 2 nested objects = 3 toggles
+      const toggles = getToggleButtons();
+      expect(toggles.length).toBe(3);
+    });
+  });
+
+  describe('expand/collapse toggle behavior', () => {
+    /**
+     * Helper to click toggle button for a specific node.
+     */
+    function clickToggle(path: string): void {
+      const node = getNodeByPath(path);
+      const toggle = node?.querySelector('[data-testid="expand-toggle"]') as HTMLButtonElement;
+      toggle?.click();
+      fixture.detectChanges();
+    }
+
+    /**
+     * Helper to check if a node is expanded based on its CSS class.
+     */
+    function isNodeExpanded(path: string): boolean {
+      const node = getNodeByPath(path);
+      return node?.classList.contains('expanded') ?? false;
+    }
+
+    it('should collapse node when clicking toggle on expanded node', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // Verify initially expanded
+      expect(getTreeNodes().length).toBe(3); // root + nested + value
+
+      // Click root toggle to collapse
+      clickToggle('root');
+
+      // Children should be hidden
+      expect(getTreeNodes().length).toBe(1); // Only root
+      expect(isNodeExpanded('root')).toBe(false);
+    });
+
+    it('should expand node when clicking toggle on collapsed node', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      hostComponent.expanded.set(false);
+      fixture.detectChanges();
+
+      // Verify initially collapsed
+      expect(getTreeNodes().length).toBe(1); // Only root
+
+      // Click root toggle to expand
+      clickToggle('root');
+
+      // Children should be visible
+      expect(getTreeNodes().length).toBeGreaterThan(1);
+      expect(isNodeExpanded('root')).toBe(true);
+    });
+
+    it('should toggle individual nested nodes independently', () => {
+      hostComponent.data.set({
+        a: { x: 1 },
+        b: { y: 2 },
+      });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // All expanded: root + a + x + b + y = 5
+      expect(getTreeNodes().length).toBe(5);
+
+      // Collapse only 'a'
+      clickToggle('root.a');
+
+      // Should hide 'x' but keep 'b.y' visible
+      expect(getTreeNodes().length).toBe(4); // root + a + b + y
+      expect(isNodeExpanded('root.a')).toBe(false);
+      expect(isNodeExpanded('root.b')).toBe(true);
+    });
+
+    it('should hide nested children when collapsing parent', () => {
+      hostComponent.data.set({
+        level1: {
+          level2: {
+            level3: 'deep',
+          },
+        },
+      });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // All expanded: root + level1 + level2 + level3 = 4
+      expect(getTreeNodes().length).toBe(4);
+
+      // Collapse level1 - should hide level2 and level3
+      clickToggle('root.level1');
+
+      // Only root + level1 visible
+      expect(getTreeNodes().length).toBe(2);
+      expect(getNodeByPath('root.level1.level2')).toBeNull();
+      expect(getNodeByPath('root.level1.level2.level3')).toBeNull();
+    });
+
+    it('should change icon when toggling', () => {
+      hostComponent.data.set({ nested: { value: 1 } });
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      const node = getNodeByPath('root');
+      const getIcon = () => node?.querySelector('mat-icon')?.textContent?.trim();
+
+      expect(getIcon()).toBe('expand_more');
+
+      clickToggle('root');
+      expect(getIcon()).toBe('chevron_right');
+
+      clickToggle('root');
+      expect(getIcon()).toBe('expand_more');
+    });
+
+    it('should work with arrays', () => {
+      hostComponent.data.set([{ a: 1 }, { b: 2 }]);
+      hostComponent.expanded.set(true);
+      fixture.detectChanges();
+
+      // root + [0] + a + [1] + b = 5
+      expect(getTreeNodes().length).toBe(5);
+
+      // Collapse first array element
+      clickToggle('root[0]');
+
+      // root + [0] + [1] + b = 4
+      expect(getTreeNodes().length).toBe(4);
+      expect(getNodeByPath('root[0].a')).toBeNull();
+      expect(getNodeByPath('root[1].b')).toBeTruthy();
+    });
+  });
 });
