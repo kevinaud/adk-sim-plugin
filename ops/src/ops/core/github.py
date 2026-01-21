@@ -106,31 +106,72 @@ class GitHubClient:
     data = json.loads(output)
     return [CheckStatus(name=c["name"], state=c["state"]) for c in data]
 
-  def wait_for_checks(self, pr_number: int, timeout_minutes: int = 30) -> bool:
-    """Wait for all PR checks to complete. Returns True if all pass."""
-    try:
-      subprocess.run(
-        [
-          "gh",
-          "pr",
-          "checks",
-          str(pr_number),
-          "--watch",
-          "--fail-fast",
-        ],
-        check=True,
-        cwd=REPO_ROOT,
-        timeout=timeout_minutes * 60,
-      )
-    except subprocess.CalledProcessError:
-      return False
-    except subprocess.TimeoutExpired:
-      console.print(
-        f"[yellow]Warning:[/yellow] Checks timed out after {timeout_minutes}m"
-      )
-      return False
-    else:
-      return True
+  def wait_for_checks(
+    self, pr_number: int, timeout_minutes: int = 30, poll_interval: int = 15
+  ) -> bool:
+    """Wait for all PR checks to complete. Returns True if all pass.
+
+    Polls the GitHub API instead of using `gh pr checks --watch` which
+    requires an interactive terminal.
+    """
+    import time
+
+    start = time.time()
+    timeout_seconds = timeout_minutes * 60
+
+    while True:
+      elapsed = time.time() - start
+      if elapsed > timeout_seconds:
+        console.print(
+          f"[yellow]Warning:[/yellow] Checks timed out after {timeout_minutes}m"
+        )
+        return False
+
+      # Get check status via API
+      try:
+        output = self._run(
+          [
+            "pr",
+            "view",
+            str(pr_number),
+            "--json",
+            "statusCheckRollup",
+            "-q",
+            ".statusCheckRollup",
+          ]
+        )
+        checks = json.loads(output) if output else []
+      except (subprocess.CalledProcessError, json.JSONDecodeError):
+        checks = []
+
+      if not checks:
+        # No checks yet, wait for them to start
+        time.sleep(poll_interval)
+        continue
+
+      # Check status of all checks
+      pending = []
+      failed = []
+      for check in checks:
+        status = check.get("status", "")
+        conclusion = check.get("conclusion", "")
+        name = check.get("name", "unknown")
+
+        if status != "COMPLETED":
+          pending.append(name)
+        elif conclusion not in ("SUCCESS", "SKIPPED", "NEUTRAL"):
+          failed.append(name)
+
+      if failed:
+        console.print(f"[red]Failed checks:[/red] {', '.join(failed)}")
+        return False
+
+      if not pending:
+        # All checks completed successfully
+        return True
+
+      # Still waiting
+      time.sleep(poll_interval)
 
   def merge_pr(self, pr_number: int, squash: bool = True, rebase: bool = False) -> None:
     """Merge a pull request.
