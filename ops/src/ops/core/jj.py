@@ -152,11 +152,34 @@ def git_push_tag(tag: str, revision: str = "main", verbose: bool = False) -> Non
     tag: The tag name (e.g., "v1.0.0")
     revision: The revision to tag (default: main)
     verbose: Show command output
+
+  Note: jj doesn't have native tag support, so we use git directly.
   """
-  _run_jj(
-    ["jj", "git", "push", "--change", revision, f"--set-tag={tag}"],
-    verbose=verbose,
+  # Create the tag using git
+  result = subprocess.run(
+    ["git", "tag", tag, revision],
+    cwd=REPO_ROOT,
+    capture_output=not verbose,
+    text=True,
   )
+  if result.returncode != 0:
+    console.print(f"[red]Error:[/red] Failed to create tag {tag}")
+    if not verbose and result.stderr:
+      console.print(result.stderr)
+    raise typer.Exit(ExitCode.EXTERNAL)
+
+  # Push the tag (with --no-verify to skip pre-commit hooks)
+  result = subprocess.run(
+    ["git", "push", "origin", tag, "--no-verify"],
+    cwd=REPO_ROOT,
+    capture_output=not verbose,
+    text=True,
+  )
+  if result.returncode != 0:
+    console.print(f"[red]Error:[/red] Failed to push tag {tag}")
+    if not verbose and result.stderr:
+      console.print(result.stderr)
+    raise typer.Exit(ExitCode.EXTERNAL)
 
 
 def rebase(source: str, destination: str, verbose: bool = False) -> None:
