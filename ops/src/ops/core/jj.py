@@ -115,6 +115,11 @@ def bookmark_create(name: str, revision: str = "@", verbose: bool = False) -> No
   _run_jj(["jj", "bookmark", "create", name, "-r", revision], verbose=verbose)
 
 
+def bookmark_set(name: str, revision: str = "@", verbose: bool = False) -> None:
+  """Create or move a bookmark to the given revision."""
+  _run_jj(["jj", "bookmark", "set", name, "-r", revision], verbose=verbose)
+
+
 def bookmark_move(name: str, revision: str = "@", verbose: bool = False) -> None:
   """Move a bookmark to the given revision."""
   _run_jj(["jj", "bookmark", "move", name, "--to", revision], verbose=verbose)
