@@ -135,6 +135,20 @@ def git_push(bookmark: str, verbose: bool = False) -> None:
   _run_jj(["jj", "git", "push", "--bookmark", bookmark], verbose=verbose)
 
 
+def git_push_tag(tag: str, revision: str = "main", verbose: bool = False) -> None:
+  """Create and push a tag to git remote.
+
+  Args:
+    tag: The tag name (e.g., "v1.0.0")
+    revision: The revision to tag (default: main)
+    verbose: Show command output
+  """
+  _run_jj(
+    ["jj", "git", "push", "--change", revision, f"--set-tag={tag}"],
+    verbose=verbose,
+  )
+
+
 def rebase(source: str, destination: str, verbose: bool = False) -> None:
   """Rebase a change and its descendants onto a new destination."""
   _run_jj(["jj", "rebase", "-s", source, "-d", destination], verbose=verbose)

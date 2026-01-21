@@ -5,7 +5,9 @@ Uses Jujutsu (jj) for version control operations.
 
 import json
 from enum import Enum
+from pathlib import Path
 
+import tomlkit
 import typer
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
@@ -13,7 +15,7 @@ from ops.core import jj
 from ops.core.console import console
 from ops.core.github import GitHubClient
 from ops.core.paths import PACKAGES_DIR, REPO_ROOT
-from ops.core.process import ExitCode, require_tools, run
+from ops.core.process import ExitCode, require_tools
 
 app = typer.Typer(help="Create and publish releases.")
 
@@ -43,13 +45,165 @@ def _bump_version(current: str, bump: BumpType) -> str:
   return f"{major}.{minor}.{patch_num + 1}"
 
 
+# Python packages to update (relative to repo root)
+_PYTHON_PACKAGES = [
+  Path("packages/adk-sim-protos/pyproject.toml"),
+  Path("packages/adk-sim-testing/pyproject.toml"),
+  Path("server/pyproject.toml"),
+  Path("plugins/python/pyproject.toml"),
+]
+
+# TypeScript packages to update (relative to repo root)
+_TS_PACKAGES = [
+  Path("packages/adk-sim-protos-ts/package.json"),
+  Path("packages/adk-converters-ts/package.json"),
+]
+
+# Internal package names that should use exact version pinning
+_INTERNAL_PACKAGES = frozenset(
+  {
+    "adk-sim-protos",
+    "adk-sim-testing",
+    "adk-sim-server",
+    "adk-agent-sim",
+  }
+)
+
+
+def _update_dependency_version(dep: str, version: str) -> str | None:
+  """Update an internal dependency string to use exact version pinning.
+
+  Args:
+      dep: The dependency string (e.g., "adk-sim-protos" or "adk-sim-protos>=1.0.0")
+      version: The new version to pin to
+
+  Returns:
+      Updated dependency string with exact version, or None if not an internal package
+  """
+  # Extract package name (before any version specifier)
+  package_name = dep.split(">=")[0].split("==")[0].split("<")[0].split(">")[0].strip()
+
+  if package_name in _INTERNAL_PACKAGES:
+    return f"{package_name}=={version}"
+
+  return None
+
+
+def _update_pyproject(path: Path, version: str) -> bool:
+  """Update a pyproject.toml file with the new version.
+
+  Args:
+      path: Path to the pyproject.toml file
+      version: The new version to set
+
+  Returns:
+      True if changes were made, False otherwise
+  """
+  with path.open() as f:
+    doc = tomlkit.load(f)
+
+  changed = False
+
+  # Update project.version
+  project = doc.get("project")
+  if project is not None:
+    if project.get("version") != version:  # type: ignore[union-attr]
+      project["version"] = version  # type: ignore[index]
+      changed = True
+
+    # Update internal dependencies in project.dependencies
+    if "dependencies" in project:
+      deps = list(project["dependencies"])  # type: ignore[index]
+      for i, dep in enumerate(deps):
+        updated = _update_dependency_version(str(dep), version)
+        if updated and deps[i] != updated:
+          deps[i] = updated
+          changed = True
+      if changed:
+        project["dependencies"] = deps  # type: ignore[index]
+
+  # Update internal dependencies in dependency-groups.dev (if present)
+  dep_groups = doc.get("dependency-groups")
+  if dep_groups is not None and "dev" in dep_groups:  # type: ignore[operator]
+    dev_deps = list(dep_groups["dev"])  # type: ignore[index]
+    deps_changed = False
+    for i, dep in enumerate(dev_deps):
+      updated = _update_dependency_version(str(dep), version)
+      if updated and dev_deps[i] != updated:
+        dev_deps[i] = updated
+        deps_changed = True
+    if deps_changed:
+      dep_groups["dev"] = dev_deps  # type: ignore[index]
+      changed = True
+
+  if changed:
+    with path.open("w") as f:
+      tomlkit.dump(doc, f)
+
+  return changed
+
+
+def _update_ts_package(path: Path, version: str) -> bool:
+  """Update a TypeScript package.json with the new version.
+
+  Args:
+      path: Path to the package.json file
+      version: The new version to set
+
+  Returns:
+      True if changes were made, False otherwise
+  """
+  with path.open() as f:
+    data = json.load(f)
+
+  if data.get("version") == version:
+    return False
+
+  data["version"] = version
+  with path.open("w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")  # Trailing newline for POSIX compliance
+
+  return True
+
+
 def _sync_versions(version: str, verbose: bool = False) -> None:
-  """Update version in all package files."""
-  run(
-    ["uv", "run", "python", "scripts/sync_versions.py", version],
-    cwd=REPO_ROOT,
-    verbose=verbose,
-  )
+  """Update version in all package files.
+
+  Updates:
+  - TypeScript package.json files
+  - Python pyproject.toml files (version and internal dependency pins)
+  """
+  updated_files: list[str] = []
+
+  # Update TypeScript packages
+  for path in _TS_PACKAGES:
+    full_path = REPO_ROOT / path
+    if not full_path.exists():
+      if verbose:
+        console.print(f"[yellow]Skipping {path} (not found)[/yellow]")
+      continue
+
+    if _update_ts_package(full_path, version):
+      updated_files.append(str(path))
+      if verbose:
+        console.print(f"[green]Updated {path}[/green]")
+
+  # Update Python packages
+  for path in _PYTHON_PACKAGES:
+    full_path = REPO_ROOT / path
+    if not full_path.exists():
+      if verbose:
+        console.print(f"[yellow]Skipping {path} (not found)[/yellow]")
+      continue
+
+    if _update_pyproject(full_path, version):
+      updated_files.append(str(path))
+      if verbose:
+        console.print(f"[green]Updated {path}[/green]")
+
+  if verbose:
+    console.print(f"\n[green]Synced {len(updated_files)} files to v{version}[/green]")
 
 
 @app.command()
@@ -274,12 +428,7 @@ def _do_release(
     progress.update(task, description="Creating tag...")
 
   # Create and push the tag using jj git
-  # First, find the commit on main that has the release
-  run(
-    ["jj", "git", "push", "--change", "main", f"--set-tag={tag_name}"],
-    cwd=REPO_ROOT,
-    verbose=verbose,
-  )
+  jj.git_push_tag(tag_name, revision="main", verbose=verbose)
 
   # Return to original work if we were somewhere else
   if original_change:
