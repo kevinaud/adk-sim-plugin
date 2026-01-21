@@ -1,6 +1,6 @@
 {
   "name": "@adk-sim/converters",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "Conversion utilities between ADK types and Simulator proto types",
   "type": "module",
   "main": "./dist/index.js",
