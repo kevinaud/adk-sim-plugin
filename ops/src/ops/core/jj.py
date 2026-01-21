@@ -130,6 +130,11 @@ def bookmark_delete(name: str, verbose: bool = False) -> None:
   _run_jj(["jj", "bookmark", "delete", name], verbose=verbose)
 
 
+def bookmark_track(name: str, remote: str = "origin", verbose: bool = False) -> None:
+  """Track a remote bookmark, enabling push to create it."""
+  _run_jj(["jj", "bookmark", "track", name, f"--remote={remote}"], verbose=verbose)
+
+
 def git_fetch(verbose: bool = False) -> None:
   """Fetch from git remote."""
   _run_jj(["jj", "git", "fetch"], verbose=verbose)
