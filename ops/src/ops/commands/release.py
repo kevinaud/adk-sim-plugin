@@ -368,6 +368,9 @@ def _do_release(
     progress.update(task, description="Creating bookmark...")
     jj.bookmark_set(bookmark_name, revision="@", verbose=verbose)
 
+    # Track the bookmark on origin so we can push it
+    jj.bookmark_track(bookmark_name, verbose=verbose)
+
     progress.update(task, description="Pushing bookmark...")
     jj.git_push(bookmark_name, verbose=verbose)
 
