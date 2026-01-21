@@ -1,14 +1,16 @@
-"""Release management commands."""
+"""Release management commands.
+
+Uses Jujutsu (jj) for version control operations.
+"""
 
 import json
-import subprocess
 from enum import Enum
 
 import typer
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from ops.core import jj
 from ops.core.console import console
-from ops.core.git import ensure_clean_tree, get_current_branch
 from ops.core.github import GitHubClient
 from ops.core.paths import PACKAGES_DIR, REPO_ROOT
 from ops.core.process import ExitCode, require_tools, run
@@ -59,36 +61,25 @@ def status() -> None:
     ops release status
   """
   version = _get_current_version()
-  branch = get_current_branch()
 
   console.print(f"Current version: [cyan]{version}[/cyan]")
-  console.print(f"Current branch:  [cyan]{branch}[/cyan]")
 
-  # Check for uncommitted changes
-  result = subprocess.run(
-    ["git", "status", "--porcelain"],
-    cwd=REPO_ROOT,
-    capture_output=True,
-    text=True,
-    check=False,
-  )
-  if result.stdout.strip():
-    lines = result.stdout.strip().split("\n")
-    console.print(f"Uncommitted:     [yellow]{len(lines)} files[/yellow]")
+  # Check working copy status via jj
+  status_output = jj.get_status()
+  if "The working copy has no changes" in status_output:
+    console.print("Working copy:    [green]clean[/green]")
   else:
-    console.print("Working tree:    [green]clean[/green]")
+    console.print("Working copy:    [yellow]has changes[/yellow]")
 
-  # Check for unpushed commits
-  result = subprocess.run(
-    ["git", "log", "@{u}..HEAD", "--oneline"],
-    cwd=REPO_ROOT,
-    capture_output=True,
-    text=True,
-    check=False,
-  )
-  if result.returncode == 0 and result.stdout.strip():
-    commits = result.stdout.strip().split("\n")
-    console.print(f"Unpushed:        [yellow]{len(commits)} commits[/yellow]")
+  # Check if on main
+  if jj.is_on_main():
+    console.print("On main:         [green]yes[/green]")
+  else:
+    bookmark = jj.get_current_bookmark()
+    if bookmark:
+      console.print(f"Current bookmark: [cyan]{bookmark}[/cyan]")
+    else:
+      console.print("On main:         [yellow]no[/yellow]")
 
 
 @app.command()
@@ -163,26 +154,37 @@ def _do_release(
   dry_run: bool,
   verbose: bool,
 ) -> None:
-  """Execute the release workflow."""
-  require_tools("git", "gh")
+  """Execute the release workflow using Jujutsu.
+
+  Workflow:
+  1. Ensure clean working copy
+  2. Create release change with version bumps
+  3. Create bookmark and push for PR
+  4. Wait for CI (unless --skip-ci)
+  5. Merge PR via GitHub
+  6. Fetch merged changes, create and push tag
+  """
+  require_tools("jj", "gh")
 
   # 1. Validation
   console.print("Validating prerequisites...")
-  ensure_clean_tree()
+  jj.ensure_clean_working_copy()
 
   current = _get_current_version()
   next_version = _bump_version(current, bump)
-  branch_name = f"release/v{next_version}"
+  bookmark_name = f"release/v{next_version}"
+  tag_name = f"v{next_version}"
 
   console.print(f"Version: [cyan]{current}[/cyan] -> [green]{next_version}[/green]")
 
   if dry_run:
     console.print("\n[yellow]Dry run - no changes made[/yellow]")
     console.print("\nWould execute:")
-    console.print(f"  1. Create branch {branch_name}")
+    console.print(f"  1. Create change with bookmark {bookmark_name}")
     console.print("  2. Update version in all package files")
-    console.print("  3. Create PR and wait for CI")
-    console.print(f"  4. Merge PR and tag v{next_version}")
+    console.print("  3. Push bookmark and create PR")
+    console.print("  4. Wait for CI")
+    console.print(f"  5. Merge PR and tag {tag_name}")
     return
 
   # 2. Confirmation (unless --yes)
@@ -191,48 +193,36 @@ def _do_release(
     if not proceed:
       raise typer.Abort()
 
-  # 3. Create release branch
+  # 3. Create release change
+  # Save current change ID to return to after release setup
+  original_change = jj.get_change_id()
+
   with Progress(
     SpinnerColumn(),
     TextColumn("[progress.description]{task.description}"),
     console=console,
   ) as progress:
-    task = progress.add_task("Creating release branch...", total=None)
+    task = progress.add_task("Creating release change...", total=None)
 
-    run(
-      ["git", "checkout", "-b", branch_name],
-      cwd=REPO_ROOT,
-      verbose=verbose,
-    )
+    # Create new change on main for the release
+    jj.new(message=f"chore: release v{next_version}", revision="main", verbose=verbose)
 
     progress.update(task, description="Updating version files...")
     _sync_versions(next_version, verbose=verbose)
 
-    run(
-      ["git", "add", "-A"],
-      cwd=REPO_ROOT,
-      verbose=verbose,
-    )
+    # Create bookmark for the release branch
+    progress.update(task, description="Creating bookmark...")
+    jj.bookmark_create(bookmark_name, revision="@", verbose=verbose)
 
-    run(
-      ["git", "commit", "-m", f"chore: release v{next_version}"],
-      cwd=REPO_ROOT,
-      verbose=verbose,
-    )
-
-    progress.update(task, description="Pushing branch...")
-    run(
-      ["git", "push", "-u", "origin", branch_name],
-      cwd=REPO_ROOT,
-      verbose=verbose,
-    )
+    progress.update(task, description="Pushing bookmark...")
+    jj.git_push(bookmark_name, verbose=verbose)
 
     progress.update(task, description="Creating PR...")
 
   gh = GitHubClient()
   pr_url = gh.create_pr(
     title=f"chore: release v{next_version}",
-    branch=branch_name,
+    branch=bookmark_name,
     body=f"Release v{next_version}\n\nBump type: {bump.value}",
   )
 
@@ -271,20 +261,29 @@ def _do_release(
     TextColumn("[progress.description]{task.description}"),
     console=console,
   ) as progress:
-    progress.add_task("Merging PR...", total=None)
-    gh.merge_pr(pr_number, squash=True)
+    task = progress.add_task("Merging PR...", total=None)
+    # Use rebase merge so jj recognizes the commit on main
+    gh.merge_pr(pr_number, squash=False, rebase=True)
 
-  # Pull the merged changes and tag
-  run(["git", "checkout", "main"], cwd=REPO_ROOT, verbose=verbose)
-  run(["git", "pull"], cwd=REPO_ROOT, verbose=verbose)
+    # Fetch the merged changes
+    progress.update(task, description="Fetching merged changes...")
+    jj.git_fetch(verbose=verbose)
 
-  tag_name = f"v{next_version}"
+    # Clean up the local release change (it's now on main)
+    # The bookmark will be deleted automatically after merge
+    progress.update(task, description="Creating tag...")
+
+  # Create and push the tag using jj git
+  # First, find the commit on main that has the release
   run(
-    ["git", "tag", "-a", tag_name, "-m", f"Release {tag_name}"],
+    ["jj", "git", "push", "--change", "main", f"--set-tag={tag_name}"],
     cwd=REPO_ROOT,
     verbose=verbose,
   )
-  run(["git", "push", "origin", tag_name], cwd=REPO_ROOT, verbose=verbose)
+
+  # Return to original work if we were somewhere else
+  if original_change:
+    jj.edit(original_change, verbose=verbose)
 
   console.print(f"\n[green]![/green] Released {tag_name}!")
   console.print("[dim]Publish workflow triggered[/dim]")
