@@ -132,10 +132,20 @@ class GitHubClient:
     else:
       return True
 
-  def merge_pr(self, pr_number: int, squash: bool = True) -> None:
-    """Merge a pull request."""
+  def merge_pr(self, pr_number: int, squash: bool = True, rebase: bool = False) -> None:
+    """Merge a pull request.
+
+    Args:
+      pr_number: The PR number to merge
+      squash: Use squash merge (default)
+      rebase: Use rebase merge (preferred for jj compatibility)
+
+    Note: When using jj, prefer rebase=True so jj recognizes merged commits.
+    """
     args = ["pr", "merge", str(pr_number), "--delete-branch"]
-    if squash:
+    if rebase:
+      args.append("--rebase")
+    elif squash:
       args.append("--squash")
     self._run(args)
 

@@ -693,7 +693,7 @@ ops ci test publish
 
 **Command**: `ops release {patch|minor|major}`
 
-Automated release process:
+Automated release process using Jujutsu (jj) for version control:
 
 ```bash
 ops release patch   # Bug fixes (0.1.0 -> 0.1.1)
@@ -701,13 +701,19 @@ ops release minor   # New features (0.1.0 -> 0.2.0)
 ops release major   # Breaking changes (0.1.0 -> 1.0.0)
 ```
 
-**Steps**:
-1. Create release PR with version bumps
-2. Monitor CI checks until pass
-3. Prompt to merge PR
-4. Pull merged changes
-5. Create and push version tag
-6. Tag push triggers publish workflow
+**Workflow**:
+1. **Validation**: Ensure clean working copy (`jj status`)
+2. **Create release change**: New change on main with version bumps
+3. **Create bookmark**: `release/v{version}` bookmark for PR
+4. **Push and create PR**: Via `jj git push` and GitHub CLI
+5. **Wait for CI**: Monitor checks until pass (unless `--skip-ci`)
+6. **Merge PR**: Uses **rebase merge** (important for jj compatibility)
+7. **Fetch and tag**: `jj git fetch`, then create and push version tag
+8. **Return to work**: Edit back to original change if needed
+
+**Why Rebase Merge?**: Jujutsu tracks commits by their content hash. With rebase-merge,
+jj recognizes that the release commit is now on main. Squash-merge creates a new hash,
+leaving orphaned "zombie" commits that require manual cleanup.
 
 **Options**:
 
@@ -823,6 +829,9 @@ ops release patch --dry-run
 | File | Purpose |
 |------|---------|
 | `ops/` | Unified developer CLI (Python package) |
+| `ops/src/ops/core/jj.py` | Jujutsu (jj) operations utilities |
+| `ops/src/ops/core/github.py` | GitHub CLI wrapper utilities |
+| `ops/src/ops/commands/release.py` | Release management (uses jj for VCS) |
 | `.jj/repo/config.toml` | Jujutsu quality gates (jj fix, secure-push) |
 | `.pre-commit-config.yaml` | Quality gates (CI fallback) |
 | `pyproject.toml` | Python workspace, ruff, pyright, pytest config |
