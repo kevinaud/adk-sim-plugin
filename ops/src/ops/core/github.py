@@ -182,8 +182,10 @@ class GitHubClient:
       rebase: Use rebase merge (preferred for jj compatibility)
 
     Note: When using jj, prefer rebase=True so jj recognizes merged commits.
+    Note: We don't use --delete-branch as it fails with jj ("not on any branch").
+          The remote branch is deleted automatically by GitHub after merge.
     """
-    args = ["pr", "merge", str(pr_number), "--delete-branch"]
+    args = ["pr", "merge", str(pr_number)]
     if rebase:
       args.append("--rebase")
     elif squash:
