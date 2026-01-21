@@ -364,9 +364,9 @@ def _do_release(
     progress.update(task, description="Updating version files...")
     _sync_versions(next_version, verbose=verbose)
 
-    # Create bookmark for the release branch
+    # Create or update bookmark for the release branch
     progress.update(task, description="Creating bookmark...")
-    jj.bookmark_create(bookmark_name, revision="@", verbose=verbose)
+    jj.bookmark_set(bookmark_name, revision="@", verbose=verbose)
 
     progress.update(task, description="Pushing bookmark...")
     jj.git_push(bookmark_name, verbose=verbose)
