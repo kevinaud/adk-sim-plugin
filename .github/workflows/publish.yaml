@@ -118,11 +118,15 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+      # Trusted publishing requires npm 11.5.1+, Node 22 ships with npm 10.x
+      - run: npm install -g npm@latest
       - run: |
           npm ci
           npm run build --workspace=packages/adk-sim-protos-ts
           npm run build --workspace=packages/adk-converters-ts
       - name: Publish packages
+        # unset NODE_AUTH_TOKEN because setup-node sets a fake token that blocks OIDC
+        # See: https://github.com/actions/setup-node/issues/1440
         run: |
-          cd packages/adk-sim-protos-ts && unset NODE_AUTH_TOKEN && npm publish --provenance --access public
-          cd ../adk-converters-ts && unset NODE_AUTH_TOKEN && npm publish --provenance --access public
+          cd packages/adk-sim-protos-ts && unset NODE_AUTH_TOKEN && npm publish --access public
+          cd ../adk-converters-ts && unset NODE_AUTH_TOKEN && npm publish --access public
