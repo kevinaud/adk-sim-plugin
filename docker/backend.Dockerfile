@@ -10,7 +10,7 @@
 # ============================================================
 # Stage 1: Build Angular Frontend
 # ============================================================
-FROM node:22-slim AS frontend-build
+FROM node:25-slim AS frontend-build
 
 WORKDIR /app
 
