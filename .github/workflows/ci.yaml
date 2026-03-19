@@ -246,7 +246,7 @@ jobs:
 
       - name: Check for devcontainer changes
         id: changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             devcontainer:
